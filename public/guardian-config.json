@@ -1,0 +1,61 @@
+{
+  "statusBands": {
+    "safeMax": 29,
+    "warningMax": 59
+  },
+  "liquidity": {
+    "criticalUsd": 5000,
+    "lowUsd": 20000,
+    "criticalScore": 30,
+    "lowScore": 15
+  },
+  "concentration": {
+    "topWalletPct": 25,
+    "top5WalletsPct": 50,
+    "top10WalletsPct": 70,
+    "topWalletScore": 25,
+    "top5Score": 20,
+    "top10Score": 15
+  },
+  "age": {
+    "under24hScore": 20,
+    "under7dScore": 10,
+    "under24hLimitHours": 24,
+    "under7dLimitHours": 168
+  },
+  "volatility": {
+    "move1hPct": 30,
+    "move24hPct": 70,
+    "move1hScore": 10,
+    "move24hScore": 15,
+    "pumpDumpScore": 20
+  },
+  "volumeQuality": {
+    "highVolumeLowLiquidityScore": 15,
+    "suspiciousVolumeScore": 20
+  },
+  "nameRisk": {
+    "similarNameScore": 20,
+    "similarTickerScore": 15,
+    "impersonationScore": 25
+  },
+  "reports": {
+    "reports5Threshold": 5,
+    "reports20Threshold": 20,
+    "reports5Score": 10,
+    "reports20Score": 20,
+    "repeatedScamScore": 25
+  },
+  "metadata": {
+    "missingSocialsScore": 5,
+    "brokenSocialsScore": 10,
+    "activeAuthorityScore": 15
+  },
+  "confidence": {
+    "min": 55,
+    "max": 98,
+    "base": 70,
+    "reasonBoost": 4,
+    "reportsBoost": 4
+  }
+}
