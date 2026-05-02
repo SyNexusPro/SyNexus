@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   addWatchlistToken,
   createWatchlist,
@@ -15,6 +15,11 @@ import {
   upsertProfile,
   upsertTrackedToken,
 } from "../lib/supabaseData";
+import {
+  buildNeoBriefing,
+  buildNeoDailyReport,
+  buildSyntheticWatchers,
+} from "../data/syntheticWatchers";
 import { hasSupabaseEnv } from "../lib/supabaseClient";
 import { getWatcherIdleMessage, getWatcherMessage } from "../lib/watcherVoice";
 import { fetchMvpTokenFeed } from "../services/marketDataService";
@@ -47,6 +52,8 @@ type PaidSignal = {
 };
 
 const PLAN_STORAGE_KEY = "hivemind_paid_plan";
+const DEMO_SESSION_KEY = "hivemind_demo_session";
+const LOCAL_REPORTS_KEY = "hivemind_pending_reports";
 const TIER_DEFINITIONS = {
   FREE: {
     price: "$0",
@@ -78,6 +85,7 @@ export function Pulse() {
   const [watcherIdle, setWatcherIdle] = useState(getWatcherIdleMessage(Date.now()));
   const [authBusy, setAuthBusy] = useState(false);
   const [checkoutBusy, setCheckoutBusy] = useState(false);
+  const [neoReportStamp, setNeoReportStamp] = useState(() => Date.now());
 
   async function loadData() {
     const marketFeed = await fetchMvpTokenFeed();
@@ -135,8 +143,13 @@ export function Pulse() {
   }
 
   useEffect(() => {
-    if (!hasSupabaseEnv) return;
+    const demoSession = localStorage.getItem(DEMO_SESSION_KEY);
+    if (demoSession) {
+      setUserId(demoSession);
+      setStatus("Demo session active. Connect Supabase for real accounts.");
+    }
     setWatcherIdle(getWatcherIdleMessage(Date.now()));
+    if (!hasSupabaseEnv) return;
     loadData().catch((err: Error) => setStatus(err.message));
   }, []);
 
@@ -148,6 +161,13 @@ export function Pulse() {
     }
     try {
       setAuthBusy(true);
+      if (!hasSupabaseEnv) {
+        const demoId = `demo-${Date.now()}`;
+        localStorage.setItem(DEMO_SESSION_KEY, demoId);
+        setUserId(demoId);
+        setStatus("Demo account started locally. Add Supabase env vars for real sign up.");
+        return;
+      }
       await signUpWithEmail(email, password);
       setStatus("Sign-up request sent. Check your inbox for confirmation.");
       await loadData();
@@ -171,6 +191,13 @@ export function Pulse() {
     }
     try {
       setAuthBusy(true);
+      if (!hasSupabaseEnv) {
+        const demoId = localStorage.getItem(DEMO_SESSION_KEY) ?? `demo-${Date.now()}`;
+        localStorage.setItem(DEMO_SESSION_KEY, demoId);
+        setUserId(demoId);
+        setStatus("Signed in locally for demo mode. Add Supabase env vars for real auth.");
+        return;
+      }
       await signInWithEmail(email, password);
       setStatus("Signed in.");
       await loadData();
@@ -181,9 +208,45 @@ export function Pulse() {
     }
   }
 
+  function handleDemoMode() {
+    const demoId = localStorage.getItem(DEMO_SESSION_KEY) ?? `demo-${Date.now()}`;
+    localStorage.setItem(DEMO_SESSION_KEY, demoId);
+    setUserId(demoId);
+    setDisplayName(displayName || "HiveMind Demo");
+    setUsername(username || "demo_watcher");
+    setWatchlist(["Guardian Watchlist: HIVE"]);
+    setTracked([
+      {
+        token_symbol: "HIVE",
+        token_name: "HiveMind",
+        guardian_status: "WARNING",
+        guardian_score: 63,
+      },
+      {
+        token_symbol: "SOL",
+        token_name: "Solana",
+        guardian_status: "SAFE",
+        guardian_score: 82,
+      },
+    ]);
+    setAlerts([
+      {
+        token_symbol: "SCAM",
+        severity: "DANGER",
+        title: "Demo scam report",
+        message: "Suspicious liquidity movement.",
+      },
+    ]);
+    setStatus("Demo mode launched. Buttons are active locally while live services are configured.");
+  }
+
   async function handleProfileSave() {
     if (!userId) {
       setStatus("Sign in before saving your profile.");
+      return;
+    }
+    if (!hasSupabaseEnv || userId.startsWith("demo-")) {
+      setStatus("Profile saved locally for demo mode.");
       return;
     }
     try {
@@ -197,6 +260,27 @@ export function Pulse() {
   async function handleSeedData() {
     if (!userId) {
       setStatus("Sign in before writing watchlist or report data.");
+      return;
+    }
+    if (!hasSupabaseEnv || userId.startsWith("demo-")) {
+      setWatchlist(["Guardian Watchlist: HIVE"]);
+      setTracked([
+        {
+          token_symbol: "HIVE",
+          token_name: "HiveMind",
+          guardian_status: "WARNING",
+          guardian_score: 63,
+        },
+      ]);
+      setAlerts([
+        {
+          token_symbol: "SCAM",
+          severity: "DANGER",
+          title: "Demo scam report",
+          message: "Suspicious liquidity movement.",
+        },
+      ]);
+      setStatus("Demo watchlist, report, and tracked token data added locally.");
       return;
     }
     try {
@@ -237,6 +321,15 @@ export function Pulse() {
       setStatus("No active session to sign out.");
       return;
     }
+    if (!hasSupabaseEnv || userId.startsWith("demo-")) {
+      localStorage.removeItem(DEMO_SESSION_KEY);
+      setUserId(null);
+      setWatchlist([]);
+      setAlerts([]);
+      setTracked([]);
+      setStatus("Signed out of demo mode.");
+      return;
+    }
     try {
       await signOut();
       setUserId(null);
@@ -252,8 +345,8 @@ export function Pulse() {
   async function handlePlanChange(nextPlan: "FREE" | "PRO" | "PREMIUM") {
     setPlan(nextPlan);
     localStorage.setItem(PLAN_STORAGE_KEY, nextPlan);
-    if (!userId) {
-      setStatus("Plan saved locally. Sign in to sync across devices.");
+    if (!userId || userId.startsWith("demo-")) {
+      setStatus(`${nextPlan} plan enabled locally. Connect Stripe/Supabase for paid accounts.`);
       return;
     }
     try {
@@ -270,6 +363,11 @@ export function Pulse() {
     if (checkoutBusy) return;
     try {
       setCheckoutBusy(true);
+      if (!email && !userId) {
+        await handlePlanChange(targetPlan);
+        setStatus(`Demo ${targetPlan} plan enabled locally. Add Stripe env vars for checkout.`);
+        return;
+      }
       setStatus(`Opening Stripe checkout for ${targetPlan}...`);
       const response = await fetch("/api/checkout", {
         method: "POST",
@@ -285,7 +383,10 @@ export function Pulse() {
         error?: string;
       };
       if (!response.ok || !data.url) {
-        throw new Error(data.error ?? "Checkout is not configured yet.");
+        await handlePlanChange(targetPlan);
+        throw new Error(
+          `${data.error ?? "Checkout is not configured yet."} Demo ${targetPlan} plan was enabled locally.`,
+        );
       }
       window.location.assign(data.url);
     } catch (err) {
@@ -303,6 +404,11 @@ export function Pulse() {
     await handleUpgradeTrigger(targetPlan);
   }
 
+  function handleNeoReport() {
+    setNeoReportStamp(Date.now());
+    setStatus("NEO generated a fresh oversight report for the hive.");
+  }
+
   const warningCalls = tracked.filter((token) => token.guardian_status === "WARNING");
   const safeCalls = tracked.filter((token) => token.guardian_status === "SAFE");
   const dangerAlerts = alerts.filter((alert) => alert.severity?.toUpperCase() === "DANGER");
@@ -312,20 +418,35 @@ export function Pulse() {
       (signal.tier === "PREMIUM" && plan !== "PREMIUM");
     return { ...signal, isLocked };
   });
+  const watcherSignals = useMemo(() => {
+    let reportCount = 0;
+    try {
+      const localReports = localStorage.getItem(LOCAL_REPORTS_KEY);
+      reportCount = localReports ? (JSON.parse(localReports) as unknown[]).length : 0;
+    } catch {
+      reportCount = 0;
+    }
 
-  if (!hasSupabaseEnv) {
-    return (
-      <div className="page">
-        <div className="pulse-card">
-          <p className="pulse-card__title">Supabase setup needed</p>
-          <p className="pulse-card__body">
-            Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in a local `.env`
-            file, then restart the dev server.
-          </p>
-        </div>
-      </div>
-    );
-  }
+    return {
+      watchlistCount: watchlist.length,
+      alertCount: alerts.length + watcherAlerts.length,
+      trackedCount: tracked.length,
+      reportCount,
+      plan,
+    };
+  }, [alerts.length, plan, tracked.length, watcherAlerts.length, watchlist.length]);
+  const syntheticWatchers = useMemo(
+    () => buildSyntheticWatchers(watcherSignals),
+    [watcherSignals],
+  );
+  const neoBriefing = useMemo(
+    () => buildNeoBriefing(syntheticWatchers, watcherSignals),
+    [syntheticWatchers, watcherSignals],
+  );
+  const neoDailyReport = useMemo(
+    () => buildNeoDailyReport(syntheticWatchers, watcherSignals),
+    [neoReportStamp, syntheticWatchers, watcherSignals],
+  );
 
   return (
     <div className="page">
@@ -334,6 +455,88 @@ export function Pulse() {
         <p className="page__lede">
           Watcher command center with live warnings, safe calls, and active alerts.
         </p>
+      </section>
+
+      <div className="pulse-status-banner">
+        <p className="pulse-status-banner__label">Action status</p>
+        <p className="pulse-status-banner__message">{status}</p>
+        {!hasSupabaseEnv ? (
+          <p className="pulse-status-banner__hint">
+            Demo mode is active. Add Supabase and Stripe env vars in Vercel for real accounts and payments.
+          </p>
+        ) : null}
+      </div>
+
+      <section className="neo-command">
+        <div className="neo-command__head">
+          <img className="neo-command__logo" src="/hivemind-logo.svg" alt="" aria-hidden />
+          <div>
+            <p className="neo-command__eyebrow">NEO OVERSEER ONLINE</p>
+            <h2>NEO watches the Watchers.</h2>
+          </div>
+        </div>
+        <p className="neo-command__briefing">{neoBriefing}</p>
+        <p className="neo-command__copy">
+          NEO audits Scout, Sentinel, Oracle, and Warden so each Guardian learns from reports,
+          alerts, watchlists, and mistakes over time.
+        </p>
+        <div className="neo-report">
+          <div className="neo-report__metrics">
+            <span>Mood: {neoDailyReport.mood}</span>
+            <span>Health: {neoDailyReport.systemHealth}%</span>
+            <span>Grade: {neoDailyReport.oversightGrade}</span>
+          </div>
+          <h3>{neoDailyReport.headline}</h3>
+          <p>{neoDailyReport.daySummary}</p>
+          <ul>
+            {neoDailyReport.priorities.map((priority) => (
+              <li key={priority}>{priority}</li>
+            ))}
+          </ul>
+          <p className="neo-report__closing">{neoDailyReport.closingNote}</p>
+          <button className="neo-report__button" type="button" onClick={handleNeoReport}>
+            Ask NEO for report
+          </button>
+        </div>
+      </section>
+
+      <section className="watcher-grid-panel">
+        <div className="token-section__head">
+          <h2 className="token-section__title">Synthetic Watchers</h2>
+          <p className="token-section__lede">Levels, XP, confidence, and learning memory</p>
+        </div>
+        <div className="synthetic-watchers">
+          {syntheticWatchers.map((watcher) => {
+            const progress =
+              watcher.level >= 5
+                ? 100
+                : Math.min(100, Math.round((watcher.xp / watcher.nextLevelXp) * 100));
+            return (
+              <article
+                className={`synthetic-watcher synthetic-watcher--${watcher.accent}`}
+                key={watcher.id}
+              >
+                <div className="synthetic-watcher__top">
+                  <div>
+                    <p className="synthetic-watcher__name">{watcher.name}</p>
+                    <p className="synthetic-watcher__role">{watcher.role}</p>
+                  </div>
+                  <span className="synthetic-watcher__level">
+                    Lv {watcher.level} {watcher.levelName}
+                  </span>
+                </div>
+                <div className="synthetic-watcher__meter">
+                  <span style={{ width: `${progress}%` }} />
+                </div>
+                <p className="synthetic-watcher__status">{watcher.status}</p>
+                <p className="synthetic-watcher__lesson">{watcher.lesson}</p>
+                <p className="synthetic-watcher__confidence">
+                  Confidence: {watcher.confidence}% · XP: {watcher.xp}
+                </p>
+              </article>
+            );
+          })}
+        </div>
       </section>
 
       <div className="pulse-card">
@@ -357,6 +560,9 @@ export function Pulse() {
               Sign out
             </button>
           </div>
+          <button className="pulse-demo-button" onClick={handleDemoMode} type="button">
+            Launch demo mode
+          </button>
         </div>
       </div>
 

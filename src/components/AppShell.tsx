@@ -6,9 +6,7 @@ export function AppShell() {
     <div className="app-shell">
       <header className="app-header">
         <div className="app-header__brand">
-          <span className="app-header__logo" aria-hidden>
-            ⬡
-          </span>
+          <img className="app-header__logo" src="/hivemind-logo-art.png" alt="" aria-hidden />
           <div>
             <p className="app-header__title">HiveMind</p>
             <p className="app-header__domain">

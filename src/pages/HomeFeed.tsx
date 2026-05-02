@@ -64,6 +64,13 @@ export function HomeFeed() {
           HiveMind scans market activity, liquidity changes, and risk signals so
           traders can move smarter.
         </p>
+        <div className="neural-hero-art" aria-hidden>
+          <span className="neural-node neural-node--left" />
+          <span className="neural-node neural-node--mid-left" />
+          <img className="neural-brain-logo neural-brain-logo--art" src="/hivemind-logo-art.png" alt="" />
+          <span className="neural-node neural-node--mid-right" />
+          <span className="neural-node neural-node--right" />
+        </div>
       </section>
 
       <section className="guardian-banner">
