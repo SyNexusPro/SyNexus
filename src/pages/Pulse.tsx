@@ -418,32 +418,20 @@ export function Pulse() {
     if (checkoutBusy) return;
     try {
       setCheckoutBusy(true);
-      if (!email && !userId) {
-        await handlePlanChange(targetPlan);
-        setStatus(`Demo ${formatPlanName(targetPlan)} plan enabled locally. Add Stripe env vars for checkout.`);
-        return;
-      }
       setStatus(`Opening Stripe checkout for ${formatPlanName(targetPlan)}...`);
       const response = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          plan: targetPlan,
-          userId,
-          email: email || undefined,
-        }),
+        body: JSON.stringify({ plan: targetPlan }),
       });
       const data = (await response.json().catch(() => ({}))) as {
         url?: string;
         error?: string;
       };
       if (!response.ok || !data.url) {
-        await handlePlanChange(targetPlan);
-        throw new Error(
-          `${data.error ?? "Checkout is not configured yet."} Demo ${formatPlanName(targetPlan)} plan was enabled locally.`,
-        );
+        throw new Error(data.error ?? "Checkout is not configured yet.");
       }
-      window.location.assign(data.url);
+      window.location.href = data.url;
     } catch (err) {
       setStatus(`Upgrade failed: ${(err as Error).message}`);
     } finally {
