@@ -54,6 +54,11 @@ type PaidSignal = {
   detail: string;
 };
 
+type AuthMessage = {
+  tone: "info" | "success" | "error";
+  text: string;
+};
+
 const PLAN_STORAGE_KEY = "hivemind_paid_plan";
 const DEMO_SESSION_KEY = "hivemind_demo_session";
 const LOCAL_REPORTS_KEY = "hivemind_pending_reports";
@@ -101,6 +106,12 @@ export function Pulse() {
   const [paidSignals, setPaidSignals] = useState<PaidSignal[]>([]);
   const [watcherIdle, setWatcherIdle] = useState(getWatcherIdleMessage(Date.now()));
   const [authBusy, setAuthBusy] = useState(false);
+  const [authMessage, setAuthMessage] = useState<AuthMessage>({
+    tone: "info",
+    text: hasSupabaseEnv
+      ? "Supabase auth is ready."
+      : "Supabase keys are missing. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to enable real sign up and sign in.",
+  });
   const [checkoutBusy, setCheckoutBusy] = useState(false);
   const [neoReportStamp, setNeoReportStamp] = useState(() => Date.now());
 
@@ -173,28 +184,38 @@ export function Pulse() {
   async function handleSignUp() {
     if (authBusy) return;
     if (!email || !password) {
+      setAuthMessage({ tone: "error", text: "Enter an email and password before signing up." });
       setStatus("Enter an email and password first.");
       return;
     }
     try {
       setAuthBusy(true);
+      setAuthMessage({ tone: "info", text: "Sending sign-up request to Supabase..." });
       if (!hasSupabaseEnv) {
         const demoId = `demo-${Date.now()}`;
         localStorage.setItem(DEMO_SESSION_KEY, demoId);
         setUserId(demoId);
-        setStatus("Demo account started locally. Add Supabase env vars for real sign up.");
+        const message =
+          "Demo account started locally. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY for real sign up.";
+        setAuthMessage({ tone: "error", text: message });
+        setStatus(message);
         return;
       }
-      await signUpWithEmail(email, password);
-      setStatus("Sign-up request sent. Check your inbox for confirmation.");
+      const result = await signUpWithEmail(email, password);
+      const message = result.session
+        ? "Sign up successful. You are signed in with Supabase."
+        : "Sign-up request sent through Supabase. Check your inbox for confirmation.";
+      setAuthMessage({ tone: "success", text: message });
+      setStatus(message);
       await loadData();
     } catch (err) {
       const message = (err as Error).message;
-      setStatus(
+      const friendlyMessage =
         message.toLowerCase().includes("rate")
           ? "Too many sign-up attempts. Please wait a minute before trying again."
-          : message,
-      );
+          : `Sign up failed: ${message}`;
+      setAuthMessage({ tone: "error", text: friendlyMessage });
+      setStatus(friendlyMessage);
     } finally {
       setAuthBusy(false);
     }
@@ -203,23 +224,34 @@ export function Pulse() {
   async function handleSignIn() {
     if (authBusy) return;
     if (!email || !password) {
+      setAuthMessage({ tone: "error", text: "Enter an email and password before signing in." });
       setStatus("Enter an email and password first.");
       return;
     }
     try {
       setAuthBusy(true);
+      setAuthMessage({ tone: "info", text: "Signing in with Supabase..." });
       if (!hasSupabaseEnv) {
         const demoId = localStorage.getItem(DEMO_SESSION_KEY) ?? `demo-${Date.now()}`;
         localStorage.setItem(DEMO_SESSION_KEY, demoId);
         setUserId(demoId);
-        setStatus("Signed in locally for demo mode. Add Supabase env vars for real auth.");
+        const message =
+          "Signed in locally for demo mode. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY for real auth.";
+        setAuthMessage({ tone: "error", text: message });
+        setStatus(message);
         return;
       }
-      await signInWithEmail(email, password);
-      setStatus("Signed in.");
+      const result = await signInWithEmail(email, password);
+      const message = result.user?.email
+        ? `Signed in with Supabase as ${result.user.email}.`
+        : "Signed in with Supabase.";
+      setAuthMessage({ tone: "success", text: message });
+      setStatus(message);
       await loadData();
     } catch (err) {
-      setStatus((err as Error).message);
+      const message = `Sign in failed: ${(err as Error).message}`;
+      setAuthMessage({ tone: "error", text: message });
+      setStatus(message);
     } finally {
       setAuthBusy(false);
     }
@@ -229,6 +261,7 @@ export function Pulse() {
     const demoId = localStorage.getItem(DEMO_SESSION_KEY) ?? `demo-${Date.now()}`;
     localStorage.setItem(DEMO_SESSION_KEY, demoId);
     setUserId(demoId);
+    setAuthMessage({ tone: "success", text: "Demo mode launched locally." });
     setDisplayName(displayName || "HiveMind Demo");
     setUsername(username || "demo_watcher");
     setWatchlist(["Guardian Watchlist: HIVE"]);
@@ -335,6 +368,7 @@ export function Pulse() {
 
   async function handleSignOut() {
     if (!userId) {
+      setAuthMessage({ tone: "error", text: "No active session to sign out." });
       setStatus("No active session to sign out.");
       return;
     }
@@ -344,6 +378,7 @@ export function Pulse() {
       setWatchlist([]);
       setAlerts([]);
       setTracked([]);
+      setAuthMessage({ tone: "success", text: "Signed out of demo mode." });
       setStatus("Signed out of demo mode.");
       return;
     }
@@ -353,9 +388,12 @@ export function Pulse() {
       setWatchlist([]);
       setAlerts([]);
       setTracked([]);
-      setStatus("Signed out.");
+      setAuthMessage({ tone: "success", text: "Signed out of Supabase." });
+      setStatus("Signed out of Supabase.");
     } catch (err) {
-      setStatus((err as Error).message);
+      const message = `Sign out failed: ${(err as Error).message}`;
+      setAuthMessage({ tone: "error", text: message });
+      setStatus(message);
     }
   }
 
@@ -559,6 +597,9 @@ export function Pulse() {
       <div className="pulse-card">
         <p className="pulse-card__title">Auth</p>
         <div className="pulse-form">
+          <p className={`pulse-auth-message pulse-auth-message--${authMessage.tone}`} role="status">
+            {authMessage.text}
+          </p>
           <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
           <input
             type="password"
