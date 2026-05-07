@@ -12,6 +12,12 @@ export function BottomNav() {
         </span>
         Feed
       </NavLink>
+      <NavLink to="/hub" className={linkClass}>
+        <span className="bottom-nav__icon" aria-hidden>
+          ⧉
+        </span>
+        Hub
+      </NavLink>
       <NavLink to="/pulse" className={linkClass}>
         <span className="bottom-nav__icon" aria-hidden>
           ∿

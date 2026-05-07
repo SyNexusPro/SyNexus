@@ -56,6 +56,9 @@ export function TokenCard({ token }: Props) {
   const up = token.change24hPct >= 0;
   const [reportBusy, setReportBusy] = useState(false);
   const [reportNote, setReportNote] = useState<string | null>(null);
+  const marketUrl = token.mintAddress
+    ? `https://dexscreener.com/solana/${token.mintAddress}`
+    : `https://dexscreener.com/search?q=${encodeURIComponent(token.symbol)}`;
 
   async function handleReport() {
     setReportBusy(true);
@@ -120,6 +123,18 @@ export function TokenCard({ token }: Props) {
         </p>
       ) : null}
       <div className="token-card__actions">
+        <a href={marketUrl} target="_blank" rel="noopener noreferrer" className="token-card__trade">
+          Buy
+        </a>
+        <a href={marketUrl} target="_blank" rel="noopener noreferrer" className="token-card__trade">
+          Sell
+        </a>
+        <Link
+          className="token-card__trade"
+          to={`/hub?intent=stake&symbol=${encodeURIComponent(token.symbol)}`}
+        >
+          Stake
+        </Link>
         <button
           type="button"
           className="token-card__report"

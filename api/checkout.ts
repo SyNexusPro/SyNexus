@@ -47,6 +47,22 @@ function getHeaderValue(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
 }
 
+function getCheckoutErrorMessage(error: unknown) {
+  if (!(error instanceof Error)) {
+    return "Failed to create checkout session";
+  }
+
+  const message = error.message.toLowerCase();
+  if (message.includes("expired api key") || message.includes("invalid api key")) {
+    return "Stripe rejected the secret key. Replace STRIPE_SECRET_KEY with an active Stripe secret key, then redeploy or restart.";
+  }
+  if (message.includes("no such price")) {
+    return "Stripe price ID was not found. Check STRIPE_PRICE_ID_BASIC and STRIPE_PRICE_ID_PRO.";
+  }
+
+  return error.message;
+}
+
 async function createCheckoutResponse(
   payload: CheckoutPayload,
   headers: Record<string, string | string[] | undefined>,
@@ -104,7 +120,7 @@ async function createCheckoutResponse(
     return {
       statusCode: 500,
       body: {
-        error: error instanceof Error ? error.message : "Failed to create checkout session",
+        error: getCheckoutErrorMessage(error),
       },
     };
   }

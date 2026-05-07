@@ -22,6 +22,30 @@ type DexPair = {
 
 type FeedSource = "live" | "mock";
 
+export type PriceHistoryRange = "1D" | "1W" | "1Y";
+
+export type PriceHistoryPoint = {
+  timestamp: number;
+  priceUsd: number;
+};
+
+export type PriceHistoryResult = {
+  range: PriceHistoryRange;
+  points: PriceHistoryPoint[];
+  source: FeedSource;
+  intervalLabel: string;
+  updatedAt: number;
+};
+
+const HISTORY_CONFIG: Record<
+  PriceHistoryRange,
+  { seconds: number; type: string; intervalLabel: string; fallbackPoints: number }
+> = {
+  "1D": { seconds: 24 * 60 * 60, type: "1m", intervalLabel: "1-minute", fallbackPoints: 48 },
+  "1W": { seconds: 7 * 24 * 60 * 60, type: "1H", intervalLabel: "1-hour", fallbackPoints: 56 },
+  "1Y": { seconds: 365 * 24 * 60 * 60, type: "1D", intervalLabel: "1-day", fallbackPoints: 52 },
+};
+
 function toFiniteNumber(value: number | string | undefined): number | undefined {
   const numberValue =
     typeof value === "string" ? Number(value) : value;
@@ -42,6 +66,46 @@ function patchFromDexPair(pair: DexPair): TokenPatch {
     liquidityUsd: toFiniteNumber(pair.liquidity?.usd),
     marketCapUsd: toFiniteNumber(pair.fdv),
     mintAddress: pair.baseToken?.address,
+  });
+}
+
+function readHistoryPrice(item: Record<string, unknown>): number | undefined {
+  return (
+    toFiniteNumber(item.value as number | string | undefined) ??
+    toFiniteNumber(item.price as number | string | undefined) ??
+    toFiniteNumber(item.close as number | string | undefined) ??
+    toFiniteNumber(item.c as number | string | undefined)
+  );
+}
+
+function readHistoryTimestamp(item: Record<string, unknown>): number | undefined {
+  const raw =
+    toFiniteNumber(item.unixTime as number | string | undefined) ??
+    toFiniteNumber(item.timestamp as number | string | undefined) ??
+    toFiniteNumber(item.time as number | string | undefined);
+  if (!raw) return undefined;
+  return raw > 10_000_000_000 ? raw : raw * 1000;
+}
+
+function generateFallbackHistory(token: Token, range: PriceHistoryRange): PriceHistoryPoint[] {
+  const config = HISTORY_CONFIG[range];
+  const now = Date.now();
+  const start = now - config.seconds * 1000;
+  const count = config.fallbackPoints;
+  const currentPrice = token.priceUsd;
+  const totalChangePct = token.change24hPct / 100;
+  const startPrice = currentPrice / (1 + totalChangePct || 1);
+
+  return Array.from({ length: count }, (_, index) => {
+    const progress = count === 1 ? 1 : index / (count - 1);
+    const wave = Math.sin(progress * Math.PI * 4 + token.symbol.length) * 0.012;
+    const pulse = Math.cos(progress * Math.PI * 7 + token.name.length) * 0.006;
+    const priceUsd = startPrice + (currentPrice - startPrice) * progress;
+
+    return {
+      timestamp: Math.round(start + (now - start) * progress),
+      priceUsd: Math.max(0, priceUsd * (1 + wave + pulse)),
+    };
   });
 }
 
@@ -177,6 +241,67 @@ function applyPatches(tokens: Token[], patches: Record<string, TokenPatch>): Tok
     const patch = compactPatch(patches[token.symbol.toUpperCase()] ?? {});
     return patch ? { ...token, ...patch } : token;
   });
+}
+
+export async function fetchTokenPriceHistory(
+  token: Token,
+  range: PriceHistoryRange,
+): Promise<PriceHistoryResult> {
+  const config = HISTORY_CONFIG[range];
+  const now = Date.now();
+  const from = Math.floor((now - config.seconds * 1000) / 1000);
+  const to = Math.floor(now / 1000);
+  const apiKey = import.meta.env.VITE_BIRDEYE_API_KEY;
+
+  if (apiKey && token.mintAddress) {
+    try {
+      const params = new URLSearchParams({
+        address: token.mintAddress,
+        address_type: "token",
+        type: config.type,
+        time_from: String(from),
+        time_to: String(to),
+      });
+      const response = await fetch(`https://public-api.birdeye.so/defi/history_price?${params}`, {
+        headers: {
+          "X-API-KEY": apiKey,
+          "x-chain": "solana",
+        },
+      });
+      if (!response.ok) throw new Error("Birdeye history request failed");
+      const data = (await response.json()) as {
+        data?: { items?: Record<string, unknown>[] };
+      };
+      const points = (data.data?.items ?? [])
+        .map((item) => {
+          const timestamp = readHistoryTimestamp(item);
+          const priceUsd = readHistoryPrice(item);
+          return timestamp && priceUsd ? { timestamp, priceUsd } : null;
+        })
+        .filter((point): point is PriceHistoryPoint => Boolean(point))
+        .sort((a, b) => a.timestamp - b.timestamp);
+
+      if (points.length >= 2) {
+        return {
+          range,
+          points,
+          source: "live",
+          intervalLabel: config.intervalLabel,
+          updatedAt: now,
+        };
+      }
+    } catch {
+      // Fall through to generated history so the chart stays usable.
+    }
+  }
+
+  return {
+    range,
+    points: generateFallbackHistory(token, range),
+    source: "mock",
+    intervalLabel: config.intervalLabel,
+    updatedAt: now,
+  };
 }
 
 export async function fetchMvpTokenFeed() {

@@ -48,12 +48,12 @@ const watcherSeeds = [
     isNeo: true,
   },
   {
-    id: "scout",
-    name: "Scout",
-    role: "New-token scanner",
+    id: "morpheus",
+    name: "Morpheus",
+    role: "Trending token momentum and hype tracker",
     baseXp: 40,
-    status: "Searching for early movement and fresh suspicious launches.",
-    lesson: "Learning which early patterns become real risk.",
+    status: "Tracking trending tokens, momentum spikes, hype waves, and fresh suspicious launches.",
+    lesson: "Learning which hype patterns become real movement and which ones become real risk.",
     accent: "green" as const,
   },
   {
@@ -66,6 +66,15 @@ const watcherSeeds = [
     accent: "green" as const,
   },
   {
+    id: "surge",
+    name: "Surge",
+    role: "Sudden volume spike detector",
+    baseXp: 104,
+    status: "Watching for sudden volume spikes, abnormal trading bursts, and fast momentum breaks.",
+    lesson: "Learning which volume spikes are real demand and which ones are manipulation.",
+    accent: "green" as const,
+  },
+  {
     id: "oracle",
     name: "Oracle",
     role: "Pattern intelligence",
@@ -75,12 +84,12 @@ const watcherSeeds = [
     accent: "gold" as const,
   },
   {
-    id: "warden",
-    name: "Warden",
-    role: "Community report enforcer",
+    id: "whale-watcher",
+    name: "Whale Watcher",
+    role: "Large wallet, big buy, and big sell tracker",
     baseXp: 92,
-    status: "Weighing hive reports and repeated scam categories.",
-    lesson: "Learning from what the community confirms or rejects.",
+    status: "Tracking large wallets, big buys, big sells, whale concentration, and fast exits.",
+    lesson: "Learning which whale buys show real demand and which whale sells become danger.",
     accent: "danger" as const,
   },
 ];
@@ -161,8 +170,8 @@ export function buildNeoDailyReport(
         ? "Review active alerts and confirm whether each warning was useful."
         : "Add tokens to the watchlist so the Watchers can start building memory.",
       signals.reportCount > 0
-        ? "Keep collecting community reports so Warden can strengthen scam-pattern memory."
-        : "Use report buttons on suspicious tokens to train Warden and NEO.",
+        ? "Keep collecting community reports so Whale Watcher can strengthen scam-pattern memory."
+        : "Use report buttons on suspicious tokens to train Whale Watcher and NEO.",
       topWatcher
         ? `${topWatcher.name} is leading today at level ${topWatcher.level}. Feed it more signals to push toward ${topWatcher.levelName}.`
         : "Launch demo mode to wake the Watchers and generate a training baseline.",

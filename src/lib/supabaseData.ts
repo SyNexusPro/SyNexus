@@ -1,5 +1,58 @@
-import type { User } from "@supabase/supabase-js";
+import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "./supabaseClient";
+
+function flattenErrorDiagnostics(err: unknown): string {
+  const parts: string[] = [];
+  const visit = (e: unknown): void => {
+    if (e == null || typeof e === "boolean") return;
+    if (typeof e === "string") {
+      parts.push(e);
+      return;
+    }
+    if (typeof e !== "object") return;
+    const o = e as Record<string, unknown>;
+    if (typeof o.message === "string") parts.push(o.message);
+    if (typeof o.details === "string") parts.push(o.details);
+    if (typeof o.hint === "string") parts.push(o.hint);
+    if (typeof o.code === "string" || typeof o.code === "number") parts.push(String(o.code));
+    if ("cause" in o && o.cause !== e) visit(o.cause);
+  };
+  visit(err);
+  return parts.join(" ");
+}
+
+/**
+ * Missing tables/functions (often `… does not exist`, PGRST schema cache) sometimes bubble up via auth
+ * triggers or hooks; map to a concrete fix instead of a raw Postgres string.
+ */
+function throwIfStructuralDbFailure(err: unknown): never {
+  const blob = flattenErrorDiagnostics(err).toLowerCase();
+  const plainAuth =
+    blob.includes("invalid login credentials") ||
+    blob.includes("invalid_grant") ||
+    blob.includes("invalid email") ||
+    blob.includes("email not confirmed") ||
+    blob.includes("email address not authorized") ||
+    blob.includes("user already registered");
+
+  const structural =
+    blob.includes("does not exist") ||
+    blob.includes("undefined_table") ||
+    blob.includes("undefined function") ||
+    blob.includes("42p01") || // undefined_table
+    blob.includes("42883") || // undefined_function
+    blob.includes("could not find the table") ||
+    blob.includes("schema cache") ||
+    blob.includes("pgrst205");
+
+  if (!plainAuth && structural) {
+    throw new Error(
+      "Supabase is missing HiveMind tables or a database object (often guardian_alerts, profiles, or a trigger target). Run supabase/hivemind-complete-schema.sql in the Supabase SQL Editor for this project, then try again.",
+    );
+  }
+
+  throw err instanceof Error ? err : new Error(flattenErrorDiagnostics(err) || "Unexpected error");
+}
 
 type AppProfile = {
   id: string;
@@ -18,15 +71,22 @@ export type WatchlistRecord = {
 export async function signUpWithEmail(email: string, password: string) {
   if (!supabase) throw new Error("Supabase env vars are missing.");
   const { data, error } = await supabase.auth.signUp({ email, password });
-  if (error) throw error;
+  if (error) throwIfStructuralDbFailure(error);
   return data;
 }
 
 export async function signInWithEmail(email: string, password: string) {
   if (!supabase) throw new Error("Supabase env vars are missing.");
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) throw error;
-  return data;
+  if (error) throwIfStructuralDbFailure(error);
+  let session: Session | null = data.session;
+  let user: User | null = data.user;
+  if (user && !session) {
+    const { data: refreshed } = await supabase.auth.getSession();
+    session = refreshed.session;
+    user = refreshed.session?.user ?? user;
+  }
+  return { ...data, session, user };
 }
 
 export async function signOut() {
@@ -37,9 +97,9 @@ export async function signOut() {
 
 export async function getCurrentUser(): Promise<User | null> {
   if (!supabase) return null;
-  const { data, error } = await supabase.auth.getUser();
-  if (error) throw error;
-  return data.user;
+  const { data, error } = await supabase.auth.getSession();
+  if (error) return null;
+  return data.session?.user ?? null;
 }
 
 export async function upsertProfile(userId: string, displayName: string, username: string) {
@@ -62,23 +122,25 @@ export async function updatePaidPlan(userId: string, paidPlan: "FREE" | "BASIC" 
 }
 
 export async function fetchProfile(userId: string): Promise<AppProfile | null> {
-  if (!supabase) throw new Error("Supabase env vars are missing.");
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("id, username, display_name, paid_plan")
-    .eq("id", userId)
-    .maybeSingle();
-  if (error) {
-    // Backward compatibility for schemas that do not have paid_plan yet.
+  if (!supabase) return null;
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, username, display_name, paid_plan")
+      .eq("id", userId)
+      .maybeSingle();
+    if (!error) return data;
+
     const fallback = await supabase
       .from("profiles")
       .select("id, username, display_name")
       .eq("id", userId)
       .maybeSingle();
-    if (fallback.error) throw fallback.error;
-    return fallback.data;
+    if (!fallback.error) return fallback.data as AppProfile | null;
+  } catch {
+    /* empty profile / missing table / RLS — do not break auth */
   }
-  return data;
+  return null;
 }
 
 export async function createWatchlist(userId: string, name: string) {
@@ -109,21 +171,25 @@ export async function addWatchlistToken(
 }
 
 export async function fetchWatchlistTokens(userId: string): Promise<WatchlistRecord[]> {
-  if (!supabase) throw new Error("Supabase env vars are missing.");
-  const { data, error } = await supabase
-    .from("watchlists")
-    .select("id, name, watchlist_tokens(token_symbol, token_name)")
-    .eq("user_id", userId);
-  if (error) throw error;
+  if (!supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from("watchlists")
+      .select("id, name, watchlist_tokens(token_symbol, token_name)")
+      .eq("user_id", userId);
+    if (error) return [];
 
-  return (data ?? []).flatMap((item) =>
-    (item.watchlist_tokens ?? []).map((token) => ({
-      id: item.id,
-      name: item.name,
-      token_symbol: token.token_symbol,
-      token_name: token.token_name,
-    })),
-  );
+    return (data ?? []).flatMap((item) =>
+      (item.watchlist_tokens ?? []).map((token) => ({
+        id: item.id,
+        name: item.name,
+        token_symbol: token.token_symbol,
+        token_name: token.token_name,
+      })),
+    );
+  } catch {
+    return [];
+  }
 }
 
 export async function submitTokenReport(
@@ -147,15 +213,19 @@ export async function submitTokenReport(
 }
 
 export async function fetchGuardianAlerts() {
-  if (!supabase) throw new Error("Supabase env vars are missing.");
-  const { data, error } = await supabase
-    .from("guardian_alerts")
-    .select("id, token_symbol, severity, title, message, created_at")
-    .eq("active", true)
-    .order("created_at", { ascending: false })
-    .limit(10);
-  if (error) throw error;
-  return data ?? [];
+  if (!supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from("guardian_alerts")
+      .select("id, token_symbol, severity, title, message, created_at")
+      .eq("active", true)
+      .order("created_at", { ascending: false })
+      .limit(10);
+    if (error) return [];
+    return data ?? [];
+  } catch {
+    return [];
+  }
 }
 
 export async function upsertTrackedToken(input: {
@@ -188,14 +258,18 @@ export async function upsertTrackedToken(input: {
 }
 
 export async function fetchTrackedTokens() {
-  if (!supabase) throw new Error("Supabase env vars are missing.");
-  const { data, error } = await supabase
-    .from("tracked_tokens")
-    .select(
-      "id, token_symbol, token_name, chain, price, volume_24h, liquidity, market_cap, guardian_score, guardian_status, updated_at",
-    )
-    .order("updated_at", { ascending: false })
-    .limit(20);
-  if (error) throw error;
-  return data ?? [];
+  if (!supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from("tracked_tokens")
+      .select(
+        "id, token_symbol, token_name, chain, price, volume_24h, liquidity, market_cap, guardian_score, guardian_status, updated_at",
+      )
+      .order("updated_at", { ascending: false })
+      .limit(20);
+    if (error) return [];
+    return data ?? [];
+  } catch {
+    return [];
+  }
 }

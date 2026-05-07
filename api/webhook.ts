@@ -8,6 +8,7 @@ type WebhookEnv = {
   STRIPE_SECRET_KEY?: string;
   STRIPE_WEBHOOK_SECRET?: string;
   VITE_SUPABASE_URL?: string;
+  SUPABASE_URL?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
 };
 
@@ -43,7 +44,7 @@ export function configureStripeWebhookApi(server: ViteDevServer, env: WebhookEnv
 
     const stripeSecretKey = env.STRIPE_SECRET_KEY;
     const webhookSecret = env.STRIPE_WEBHOOK_SECRET;
-    const supabaseUrl = env.VITE_SUPABASE_URL;
+    const supabaseUrl = env.SUPABASE_URL || env.VITE_SUPABASE_URL;
     const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!stripeSecretKey || !webhookSecret || !supabaseUrl || !serviceRoleKey) {

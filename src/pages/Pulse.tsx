@@ -1,3 +1,4 @@
+import type { User } from "@supabase/supabase-js";
 import { useEffect, useMemo, useState } from "react";
 import {
   addWatchlistToken,
@@ -89,12 +90,43 @@ function formatPlanName(plan: AppPlan | PaidPlan) {
   return "Pro";
 }
 
+function describeAuthError(err: unknown): string {
+  const msg = err instanceof Error ? err.message : String(err);
+  const lower = msg.toLowerCase();
+  if (
+    lower.includes("missing hivemind tables") ||
+    lower.includes("missing required tables") ||
+    lower.includes("hivemind-complete-schema")
+  ) {
+    return msg;
+  }
+  if (lower.includes("invalid login credentials") || lower.includes("invalid_grant")) {
+    return "Wrong email or password.";
+  }
+  if (lower.includes("email not confirmed")) {
+    return "Confirm your email (link from Supabase) before signing in.";
+  }
+  if (lower.includes("too many requests") || lower.includes("rate")) {
+    return "Too many attempts. Wait a minute and try again.";
+  }
+  if (
+    lower.includes("does not exist") ||
+    lower.includes("schema cache") ||
+    lower.includes("could not find the table") ||
+    lower.includes("pgrst205")
+  ) {
+    return `${msg} If you are the project owner: run supabase/hivemind-complete-schema.sql in the Supabase SQL Editor, or remove broken auth triggers that reference missing tables.`;
+  }
+  return msg;
+}
+
 export function Pulse() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [status, setStatus] = useState("Waiting for connection.");
   const [watchlist, setWatchlist] = useState<string[]>([]);
   const [alerts, setAlerts] = useState<GuardianAlertItem[]>([]);
@@ -115,7 +147,7 @@ export function Pulse() {
   const [checkoutBusy, setCheckoutBusy] = useState(false);
   const [neoReportStamp, setNeoReportStamp] = useState(() => Date.now());
 
-  async function loadData() {
+  async function refreshMarketSignals() {
     const marketFeed = await fetchMvpTokenFeed();
     const marketAlerts: WatcherAlertItem[] = marketFeed.all
       .filter(
@@ -147,39 +179,113 @@ export function Pulse() {
       },
     ]);
     setPaidSignals(generatedSignals.slice(0, 6));
+  }
 
-    const user = await getCurrentUser();
-    setUserId(user?.id ?? null);
-    if (!user) return;
+  async function loadData(sessionHint?: User) {
+    try {
+      try {
+        await refreshMarketSignals();
+      } catch {
+        /* Market feed optional */
+      }
 
-    const profile = await fetchProfile(user.id);
-    setDisplayName(profile?.display_name ?? "");
-    setUsername(profile?.username ?? "");
-    const persistedPlan = profile?.paid_plan ?? localStorage.getItem(PLAN_STORAGE_KEY) ?? "FREE";
-    const normalizedPlan = normalizeStoredPlan(persistedPlan);
-    setPlan(normalizedPlan);
-    localStorage.setItem(PLAN_STORAGE_KEY, normalizedPlan);
+      /** Prefer caller hint right after password auth */
+      let user: User | null = sessionHint ?? null;
+      if (!user) {
+        try {
+          user = await getCurrentUser();
+        } catch {
+          user = null;
+        }
+      }
+      const demoSession = localStorage.getItem(DEMO_SESSION_KEY);
 
-    const watchlistRows = await fetchWatchlistTokens(user.id);
-    setWatchlist(watchlistRows.map((r) => `${r.name}: ${r.token_symbol}`));
+      if (user) {
+        setUserId(user.id);
+        setUserEmail(user.email ?? null);
+      } else if (demoSession) {
+        setUserId(demoSession);
+        setUserEmail(null);
+      } else {
+        setUserId(null);
+        setUserEmail(null);
+      }
 
-    const alertRows = await fetchGuardianAlerts();
-    setAlerts(alertRows);
+      if (!user) return;
 
-    const trackedRows = await fetchTrackedTokens();
-    setTracked(trackedRows);
+      /** Non-blocking for auth: rows may be empty or tables missing — never throw outward */
+      const profile = await fetchProfile(user.id);
+      setDisplayName(profile?.display_name ?? "");
+      setUsername(profile?.username ?? "");
+      const persistedPlan = profile?.paid_plan ?? localStorage.getItem(PLAN_STORAGE_KEY) ?? "FREE";
+      const normalizedPlan = normalizeStoredPlan(persistedPlan);
+      setPlan(normalizedPlan);
+      localStorage.setItem(PLAN_STORAGE_KEY, normalizedPlan);
+
+      const watchlistRows = await fetchWatchlistTokens(user.id);
+      setWatchlist(watchlistRows.map((r) => `${r.name}: ${r.token_symbol}`));
+
+      const alertRows = await fetchGuardianAlerts();
+      setAlerts(alertRows);
+
+      const trackedRows = await fetchTrackedTokens();
+      setTracked(trackedRows);
+    } catch {
+      /* Belt-and-suspenders: hydration must never invalidate a successful auth */
+    }
   }
 
   useEffect(() => {
     const demoSession = localStorage.getItem(DEMO_SESSION_KEY);
     if (demoSession) {
       setUserId(demoSession);
+      setUserEmail(null);
       setStatus("Demo session active. Connect Supabase for real accounts.");
     }
     setWatcherIdle(getWatcherIdleMessage(Date.now()));
     if (!hasSupabaseEnv) return;
-    loadData().catch((err: Error) => setStatus(err.message));
+    void loadData();
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const checkoutStatus = params.get("checkout");
+    const checkoutPlan = normalizeStoredPlan(params.get("plan"));
+
+    if (checkoutStatus === "cancel") {
+      setStatus("Checkout canceled. Your plan was not changed.");
+      window.history.replaceState(null, "", window.location.pathname);
+      return;
+    }
+
+    if (checkoutStatus !== "success" || checkoutPlan === "FREE") return;
+
+    if (!hasSupabaseEnv) {
+      setStatus("Checkout succeeded, but Supabase is not configured to remember the subscription.");
+      return;
+    }
+
+    if (!userId) {
+      setStatus("Checkout succeeded. Sign in so HiveMind can remember your subscription.");
+      return;
+    }
+
+    if (userId.startsWith("demo-")) {
+      setStatus("Checkout succeeded, but demo users cannot save subscriptions.");
+      return;
+    }
+
+    updatePaidPlan(userId, checkoutPlan)
+      .then(() => {
+        setPlan(checkoutPlan);
+        localStorage.setItem(PLAN_STORAGE_KEY, checkoutPlan);
+        setStatus(`${formatPlanName(checkoutPlan)} subscription saved to your HiveMind profile.`);
+        window.history.replaceState(null, "", window.location.pathname);
+      })
+      .catch((err: Error) => {
+        setStatus(`Checkout succeeded, but saving subscription failed: ${err.message}`);
+      });
+  }, [userId]);
 
   async function handleSignUp() {
     if (authBusy) return;
@@ -195,6 +301,7 @@ export function Pulse() {
         const demoId = `demo-${Date.now()}`;
         localStorage.setItem(DEMO_SESSION_KEY, demoId);
         setUserId(demoId);
+        setUserEmail(null);
         const message =
           "Demo account started locally. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY for real sign up.";
         setAuthMessage({ tone: "error", text: message });
@@ -202,18 +309,25 @@ export function Pulse() {
         return;
       }
       const result = await signUpWithEmail(email, password);
+      localStorage.removeItem(DEMO_SESSION_KEY);
+      const signupUser = result.session?.user ?? result.user ?? null;
+      setUserId(signupUser?.id ?? null);
+      setUserEmail(signupUser?.email ?? email);
       const message = result.session
         ? "Sign up successful. You are signed in with Supabase."
         : "Sign-up request sent through Supabase. Check your inbox for confirmation.";
       setAuthMessage({ tone: "success", text: message });
       setStatus(message);
-      await loadData();
+      if (result.session && signupUser) {
+        void loadData(signupUser);
+      } else {
+        void refreshMarketSignals();
+      }
     } catch (err) {
-      const message = (err as Error).message;
       const friendlyMessage =
-        message.toLowerCase().includes("rate")
+        (err as Error).message?.toLowerCase().includes("rate")
           ? "Too many sign-up attempts. Please wait a minute before trying again."
-          : `Sign up failed: ${message}`;
+          : `Sign up failed: ${describeAuthError(err)}`;
       setAuthMessage({ tone: "error", text: friendlyMessage });
       setStatus(friendlyMessage);
     } finally {
@@ -235,6 +349,7 @@ export function Pulse() {
         const demoId = localStorage.getItem(DEMO_SESSION_KEY) ?? `demo-${Date.now()}`;
         localStorage.setItem(DEMO_SESSION_KEY, demoId);
         setUserId(demoId);
+        setUserEmail(null);
         const message =
           "Signed in locally for demo mode. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY for real auth.";
         setAuthMessage({ tone: "error", text: message });
@@ -242,14 +357,27 @@ export function Pulse() {
         return;
       }
       const result = await signInWithEmail(email, password);
-      const message = result.user?.email
-        ? `Signed in with Supabase as ${result.user.email}.`
+      localStorage.removeItem(DEMO_SESSION_KEY);
+      const signedIn = result.session?.user ?? result.user ?? null;
+      if (!signedIn) {
+        setAuthMessage({
+          tone: "error",
+          text: "Sign in failed: Supabase returned no user. Try email confirmation first, or reset password.",
+        });
+        setStatus("Sign in failed: no Supabase session. Confirm your email or check project settings.");
+        return;
+      }
+      setUserId(signedIn.id);
+      setUserEmail(signedIn.email ?? email);
+      const message = signedIn.email
+        ? `Signed in with Supabase as ${signedIn.email}.`
         : "Signed in with Supabase.";
       setAuthMessage({ tone: "success", text: message });
       setStatus(message);
-      await loadData();
+      void loadData(signedIn);
     } catch (err) {
-      const message = `Sign in failed: ${(err as Error).message}`;
+      const detail = describeAuthError(err);
+      const message = `Sign in failed: ${detail}`;
       setAuthMessage({ tone: "error", text: message });
       setStatus(message);
     } finally {
@@ -261,6 +389,7 @@ export function Pulse() {
     const demoId = localStorage.getItem(DEMO_SESSION_KEY) ?? `demo-${Date.now()}`;
     localStorage.setItem(DEMO_SESSION_KEY, demoId);
     setUserId(demoId);
+    setUserEmail(null);
     setAuthMessage({ tone: "success", text: "Demo mode launched locally." });
     setDisplayName(displayName || "HiveMind Demo");
     setUsername(username || "demo_watcher");
@@ -375,6 +504,7 @@ export function Pulse() {
     if (!hasSupabaseEnv || userId.startsWith("demo-")) {
       localStorage.removeItem(DEMO_SESSION_KEY);
       setUserId(null);
+      setUserEmail(null);
       setWatchlist([]);
       setAlerts([]);
       setTracked([]);
@@ -384,7 +514,9 @@ export function Pulse() {
     }
     try {
       await signOut();
+      localStorage.removeItem(DEMO_SESSION_KEY);
       setUserId(null);
+      setUserEmail(null);
       setWatchlist([]);
       setAlerts([]);
       setTracked([]);
@@ -416,13 +548,21 @@ export function Pulse() {
 
   async function handleUpgradeTrigger(targetPlan: PaidPlan) {
     if (checkoutBusy) return;
+    if (!hasSupabaseEnv || !userId || userId.startsWith("demo-")) {
+      setStatus("Sign in with Supabase before upgrading so your subscription can be remembered.");
+      return;
+    }
     try {
       setCheckoutBusy(true);
       setStatus(`Opening Stripe checkout for ${formatPlanName(targetPlan)}...`);
       const response = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: targetPlan }),
+        body: JSON.stringify({
+          plan: targetPlan,
+          userId,
+          email: userEmail ?? (email || undefined),
+        }),
       });
       const data = (await response.json().catch(() => ({}))) as {
         url?: string;
@@ -520,7 +660,7 @@ export function Pulse() {
         </div>
         <p className="neo-command__briefing">{neoBriefing}</p>
         <p className="neo-command__copy">
-          NEO audits Scout, Sentinel, Oracle, and Warden so each Guardian learns from reports,
+          NEO audits Morpheus, Sentinel, Surge, Oracle, and Whale Watcher so each Guardian learns from reports,
           alerts, watchlists, and mistakes over time.
         </p>
         <div className="neo-report">
