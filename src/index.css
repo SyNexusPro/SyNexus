@@ -456,6 +456,66 @@ a {
   color: rgba(220, 255, 206, 0.95);
 }
 
+.ecosystem-hub__payout-row {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.ecosystem-hub__payout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 48px;
+  padding: 12px 20px;
+  border-radius: 10px;
+  border: 1px solid rgba(137, 255, 47, 0.5);
+  background: linear-gradient(165deg, rgba(18, 40, 22, 0.95) 0%, rgba(6, 14, 8, 0.98) 100%);
+  color: #ecffd2;
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  text-align: center;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 0 28px rgba(120, 255, 100, 0.12);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
+  cursor: pointer;
+}
+
+.ecosystem-hub__payout:hover {
+  filter: brightness(1.08);
+  border-color: rgba(186, 255, 140, 0.65);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 36px rgba(120, 255, 100, 0.2);
+}
+
+.ecosystem-hub__payout--pending {
+  appearance: none;
+}
+
+.ecosystem-hub__payout-hint {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+  border: 1px solid rgba(137, 255, 47, 0.2);
+  background: rgba(0, 12, 4, 0.55);
+}
+
 .ecosystem-hub__fineprint {
   margin: 12px 0 0;
   font-size: 0.71rem;
@@ -504,33 +564,52 @@ a {
 
 .ecosystem-hub__wallet-actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
   margin-top: 16px;
-  align-items: center;
 }
 
 .ecosystem-hub__phantom {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 14px;
-  border-radius: 999px;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 48px;
+  padding: 12px 20px;
+  border-radius: 10px;
   border: 1px solid rgba(171, 159, 242, 0.55);
   background: rgba(43, 27, 87, 0.35);
   color: #f0e9ff;
-  font-size: 0.76rem;
+  font-size: 0.74rem;
   font-weight: 800;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
+  text-decoration: none;
+  text-align: center;
+  box-shadow: 0 0 22px rgba(171, 159, 242, 0.2);
+  transition:
+    filter 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-.ecosystem-hub__wallet-actions a:not(.ecosystem-hub__phantom) {
+.ecosystem-hub__phantom:hover {
+  filter: brightness(1.08);
+  border-color: rgba(201, 190, 255, 0.75);
+  box-shadow: 0 0 30px rgba(171, 159, 242, 0.35);
+}
+
+.ecosystem-hub__wallet-terms {
+  display: block;
+  text-align: center;
   font-size: 0.78rem;
   font-weight: 700;
   text-decoration: underline;
   text-underline-offset: 3px;
   color: var(--accent-cyan);
+  padding: 6px 0;
 }
 
 @media (min-width: 520px) {

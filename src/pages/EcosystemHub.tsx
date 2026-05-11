@@ -16,6 +16,9 @@ export function EcosystemHub() {
   const [affiliateHandle, setAffiliateHandle] = useState(() =>
     typeof localStorage !== "undefined" ? localStorage.getItem(STORAGE_KEYS.affiliateHandle) ?? "" : "",
   );
+  const [payoutHintOpen, setPayoutHintOpen] = useState(false);
+
+  const payoutPortalUrl = (import.meta.env.VITE_AFFILIATE_PAYOUT_URL ?? "").trim() || undefined;
 
   const referralPreview = useMemo(() => {
     const handle = affiliateHandle.trim().replace(/\s+/g, "-").toLowerCase().replace(/[^a-z0-9-_]/g, "");
@@ -106,6 +109,32 @@ export function EcosystemHub() {
           <span>Preview link</span>
           <code>{referralPreview}</code>
         </p>
+        <div className="ecosystem-hub__payout-row">
+          {payoutPortalUrl ? (
+            <a
+              className="ecosystem-hub__payout"
+              href={payoutPortalUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Affiliate payout dashboard
+            </a>
+          ) : (
+            <button
+              type="button"
+              className="ecosystem-hub__payout ecosystem-hub__payout--pending"
+              onClick={() => setPayoutHintOpen((open) => !open)}
+            >
+              Affiliate payout dashboard
+            </button>
+          )}
+          {payoutHintOpen && !payoutPortalUrl ? (
+            <p className="ecosystem-hub__payout-hint" role="status">
+              Payout withdrawals open when the affiliate program goes live. Your referral handle is saved on this
+              device; we’ll route you to a secure portal as soon as commissions are enabled.
+            </p>
+          ) : null}
+        </div>
         <p className="ecosystem-hub__fineprint">
           Affiliates must disclose material connections (FTC / platform rules). No guaranteed income. Payouts only on
           qualified actions per program terms.
@@ -164,7 +193,9 @@ export function EcosystemHub() {
           >
             Get Phantom Wallet
           </a>
-          <Link to="/terms">Read Terms of Service</Link>
+          <Link className="ecosystem-hub__wallet-terms" to="/terms">
+            Read Terms of Service
+          </Link>
         </div>
       </section>
     </div>
