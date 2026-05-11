@@ -110,7 +110,7 @@ export function Pulse() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
-  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [, setUserEmail] = useState<string | null>(null);
   const [status, setStatus] = useState("Waiting for connection.");
   const [watchlist, setWatchlist] = useState<string[]>([]);
   const [alerts, setAlerts] = useState<GuardianAlertItem[]>([]);
@@ -205,10 +205,7 @@ export function Pulse() {
       if (!user) return;
 
       const profile = await fetchProfile(user.id);
-      const rawPlan =
-        profile?.paid_plan === "BASIC"
-          ? "FREE"
-          : (profile?.paid_plan ?? localStorage.getItem(PLAN_STORAGE_KEY) ?? "FREE");
+      const rawPlan = profile?.paid_plan ?? localStorage.getItem(PLAN_STORAGE_KEY) ?? "FREE";
       const normalizedPlan = normalizeStoredPlan(rawPlan);
       setPlan(normalizedPlan);
       localStorage.setItem(PLAN_STORAGE_KEY, normalizedPlan);
@@ -509,32 +506,26 @@ export function Pulse() {
 
   async function handleUpgradeTrigger() {
     if (checkoutBusy) return;
-    if (!hasSupabaseEnv || !userId || userId.startsWith("demo-")) {
-      setStatus("Sign in with Supabase before upgrading so Nexus Pro links to your account.");
-      return;
-    }
+    const checkoutError = "Checkout could not start. Please try again.";
     try {
       setCheckoutBusy(true);
       setStatus("Opening secure checkout…");
       const response = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          plan: "PRO",
-          userId,
-          email: userEmail ?? (email || undefined),
-        }),
+        body: JSON.stringify({ plan: "PRO" }),
       });
       const data = (await response.json().catch(() => ({}))) as {
         url?: string;
         error?: string;
       };
       if (!response.ok || !data.url) {
-        throw new Error(data.error ?? "unavailable");
+        throw new Error(data.error ?? checkoutError);
       }
       window.location.href = data.url;
     } catch {
-      setStatus("Checkout is not available right now. Please try again later.");
+      setAuthMessage({ tone: "error", text: checkoutError });
+      setStatus(checkoutError);
     } finally {
       setCheckoutBusy(false);
     }
