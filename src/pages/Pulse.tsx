@@ -106,6 +106,20 @@ function friendlyActionError(): string {
   return "We could not complete that action. Please try again shortly.";
 }
 
+/** Pulse: show Aegis, Pulse, Titan, Cipher (no “Sentinel …” prefix). */
+function pulseSentinelDisplayName(fullName: string) {
+  return fullName.startsWith("Sentinel ") ? fullName.slice("Sentinel ".length) : fullName;
+}
+
+/** Pulse: shorten known agent names inside Mother-generated strings. */
+function pulseFormatSentinelNamesInText(text: string) {
+  return text
+    .replace(/Sentinel Aegis/g, "Aegis")
+    .replace(/Sentinel Pulse/g, "Pulse")
+    .replace(/Sentinel Titan/g, "Titan")
+    .replace(/Sentinel Cipher/g, "Cipher");
+}
+
 export function Pulse() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -616,10 +630,10 @@ export function Pulse() {
           <p className="nexus-core-panel__status-line">4 Sentinels active.</p>
         </div>
 
-        <p className="nexus-core-panel__briefing">{motherBriefing}</p>
+        <p className="nexus-core-panel__briefing">{pulseFormatSentinelNamesInText(motherBriefing)}</p>
         <p className="nexus-core-panel__copy">
-          Mother coordinates Sentinel Aegis, Sentinel Pulse, Sentinel Titan, and Sentinel Cipher—each lane learns
-          from reports, alerts, watchlists, and hive memory over time.
+          Mother coordinates Aegis, Pulse, Titan, and Cipher—each lane learns from reports, alerts, watchlists, and
+          hive memory over time.
         </p>
         <div className="mother-report">
           <div className="mother-report__metrics">
@@ -631,7 +645,7 @@ export function Pulse() {
           <p>{motherDailyReport.daySummary}</p>
           <ul>
             {motherDailyReport.priorities.map((priority) => (
-              <li key={priority}>{priority}</li>
+              <li key={priority}>{pulseFormatSentinelNamesInText(priority)}</li>
             ))}
           </ul>
           <p className="mother-report__closing">{motherDailyReport.closingNote}</p>
@@ -663,7 +677,7 @@ export function Pulse() {
                 >
                   <div className="synthetic-sentinel__top">
                     <div>
-                      <p className="synthetic-sentinel__name">{sentinel.name}</p>
+                      <p className="synthetic-sentinel__name">{pulseSentinelDisplayName(sentinel.name)}</p>
                       <p className="synthetic-sentinel__desc">{sentinel.role}</p>
                     </div>
                     <span className="synthetic-sentinel__level">
