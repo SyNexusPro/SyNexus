@@ -1,15 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { isSynexusBootComplete, subscribeSynexusBootComplete } from "../lib/synexusBootComplete";
 
 const PLAN_STORAGE_KEY = "hivemind_paid_plan";
-const DISMISS_STORAGE_KEY = "hivemind_nexus_pro_upsell_dismissed_at";
+const DISMISS_STORAGE_KEY = "hivemind_synexus_pro_upsell_dismissed_at";
 /** Show again after this many ms if the user closes without upgrading. */
 const DISMISS_COOLDOWN_MS = 24 * 60 * 60 * 1000;
-const OPEN_DELAY_MS = 1600;
+/** After boot intro completes, extra pause before the floating promo appears. */
+const OPEN_DELAY_MS = 900;
 const UNMOUNT_AFTER_CLOSE_MS = 480;
 const USER_ERROR = "Something went wrong. Please try again.";
 
-function isNexusProPlan(): boolean {
+function isSynexusProPlan(): boolean {
   try {
     return localStorage.getItem(PLAN_STORAGE_KEY) === "PRO";
   } catch {
@@ -29,8 +31,9 @@ function cooldownElapsed(): boolean {
   }
 }
 
-export function NexusProUpsellModal() {
+export function SynexusProUpsellModal() {
   const location = useLocation();
+  const [bootComplete, setBootComplete] = useState(() => isSynexusBootComplete());
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -57,11 +60,13 @@ export function NexusProUpsellModal() {
     if (reopenRef.current) clearTimeout(reopenRef.current);
     reopenRef.current = setTimeout(() => {
       reopenRef.current = null;
-      if (isNexusProPlan() || !cooldownElapsed()) return;
+      if (isSynexusProPlan() || !cooldownElapsed()) return;
       setMounted(true);
       requestAnimationFrame(() => setOpen(true));
     }, DISMISS_COOLDOWN_MS);
   }, []);
+
+  useEffect(() => subscribeSynexusBootComplete(() => setBootComplete(true)), []);
 
   useEffect(() => {
     if (openDelayRef.current) {
@@ -70,7 +75,7 @@ export function NexusProUpsellModal() {
     }
     setError(null);
 
-    if (isNexusProPlan()) {
+    if (isSynexusProPlan()) {
       if (reopenRef.current) {
         clearTimeout(reopenRef.current);
         reopenRef.current = null;
@@ -90,9 +95,11 @@ export function NexusProUpsellModal() {
       return;
     }
 
+    if (!bootComplete) return;
+
     openDelayRef.current = setTimeout(() => {
       openDelayRef.current = null;
-      if (isNexusProPlan() || !cooldownElapsed()) return;
+      if (isSynexusProPlan() || !cooldownElapsed()) return;
       setMounted(true);
       requestAnimationFrame(() => setOpen(true));
     }, OPEN_DELAY_MS);
@@ -103,11 +110,11 @@ export function NexusProUpsellModal() {
         openDelayRef.current = null;
       }
     };
-  }, [location.pathname]);
+  }, [bootComplete, location.pathname]);
 
   useEffect(() => {
     function onFocus() {
-      if (!isNexusProPlan()) return;
+      if (!isSynexusProPlan()) return;
       if (reopenRef.current) {
         clearTimeout(reopenRef.current);
         reopenRef.current = null;
@@ -136,15 +143,6 @@ export function NexusProUpsellModal() {
     [],
   );
 
-  useEffect(() => {
-    if (!mounted) return;
-    const prev = document.body.style.overflow;
-    if (open) document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [mounted, open]);
-
   async function handleStartTrial() {
     if (busy) return;
     setError(null);
@@ -169,52 +167,48 @@ export function NexusProUpsellModal() {
 
   return (
     <div
-      className={`nexus-pro-upsell${open ? " nexus-pro-upsell--open" : ""}`}
+      className={`synexus-pro-upsell${open ? " synexus-pro-upsell--open" : ""}`}
       role="dialog"
-      aria-modal="true"
-      aria-labelledby="nexus-pro-upsell-headline"
+      aria-modal="false"
+      aria-labelledby="synexus-pro-upsell-headline"
     >
-      <div className="nexus-pro-upsell__backdrop" aria-hidden />
-      <div className="nexus-pro-upsell__panel">
-        <div className="nexus-pro-upsell__honeycomb" aria-hidden />
-        <button type="button" className="nexus-pro-upsell__close" onClick={close} aria-label="Close">
-          ×
-        </button>
+      <div className="synexus-pro-upsell__backdrop" aria-hidden />
+      <div className="synexus-pro-upsell__float-shell">
+        <div className="synexus-pro-upsell__drift" aria-hidden={!open}>
+          <div className="synexus-pro-upsell__panel">
+            <div className="synexus-pro-upsell__honeycomb" aria-hidden />
+            <button type="button" className="synexus-pro-upsell__close" onClick={close} aria-label="Close">
+              ×
+            </button>
 
-        <p id="nexus-pro-upsell-headline" className="nexus-pro-upsell__headline">
-          FIRST MONTH FREE
-        </p>
-        <p className="nexus-pro-upsell__sub">
-          Unlimited Nexus intelligence for $19.99/month after trial.
-        </p>
+            <p id="synexus-pro-upsell-headline" className="synexus-pro-upsell__headline">
+              FIRST MONTH FREE
+            </p>
+            <p className="synexus-pro-upsell__sub">
+              Synexus Pro — unlimited intel. $19.99/mo after trial.
+            </p>
+            <p className="synexus-pro-upsell__perks">
+              Sentinel lanes · Whale watch · Risk &amp; scam alerts · Momentum cues
+            </p>
 
-        <p className="nexus-pro-upsell__unlock-label">Unlock:</p>
-        <ul className="nexus-pro-upsell__list">
-          <li>Real-time Sentinel analysis</li>
-          <li>Unlimited trading intelligence</li>
-          <li>Scam and risk alerts</li>
-          <li>Whale tracking</li>
-          <li>Momentum signals</li>
-          <li>Pattern recognition</li>
-          <li>Fast trade access</li>
-        </ul>
+            {error ? (
+              <p className="synexus-pro-upsell__error" role="alert">
+                {error}
+              </p>
+            ) : null}
 
-        {error ? (
-          <p className="nexus-pro-upsell__error" role="alert">
-            {error}
-          </p>
-        ) : null}
+            <button
+              type="button"
+              className="synexus-pro-upsell__cta"
+              disabled={busy}
+              onClick={() => void handleStartTrial()}
+            >
+              {busy ? "Opening…" : "Start free trial"}
+            </button>
 
-        <button
-          type="button"
-          className="nexus-pro-upsell__cta"
-          disabled={busy}
-          onClick={() => void handleStartTrial()}
-        >
-          {busy ? "Opening…" : "Start Free Trial"}
-        </button>
-
-        <p className="nexus-pro-upsell__fineprint">Cancel anytime. Trade at your own risk.</p>
+            <p className="synexus-pro-upsell__fineprint">Cancel anytime. Trade at your own risk.</p>
+          </div>
+        </div>
       </div>
     </div>
   );

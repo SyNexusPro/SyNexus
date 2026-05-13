@@ -324,7 +324,7 @@ export function TokenDetail() {
       </section>
 
       <section className="detail-guardian">
-        <h2>The Nexus</h2>
+        <h2>The Synexus</h2>
         <p className="detail-guardian__lede">Sentinel intelligence for this token</p>
         <p>{token.guardianMessage}</p>
       </section>

@@ -1887,7 +1887,7 @@ a {
 .pulse-card::after,
 .token-card::after,
 .guardian-banner::after,
-.nexus-core-panel::after,
+.synexus-core-panel::after,
 .sentinel-grid-panel::after {
   content: "";
   position: absolute;
@@ -1965,7 +1965,7 @@ a {
   letter-spacing: 0.04em;
 }
 
-.pulse-nexus-loading {
+.pulse-synexus-loading {
   margin: 0;
   text-align: center;
   font-size: 0.88rem;
@@ -1975,10 +1975,10 @@ a {
   text-shadow:
     0 0 8px rgba(137, 255, 47, 0.95),
     0 0 22px rgba(70, 255, 120, 0.55);
-  animation: pulse-nexus-glow 1.4s ease-in-out infinite alternate;
+  animation: pulse-synexus-glow 1.4s ease-in-out infinite alternate;
 }
 
-@keyframes pulse-nexus-glow {
+@keyframes pulse-synexus-glow {
   from {
     opacity: 0.75;
     filter: brightness(1);
@@ -1989,16 +1989,16 @@ a {
   }
 }
 
-.pulse-nexus-pro-wrap {
+.pulse-synexus-pro-wrap {
   position: relative;
   overflow: hidden;
 }
 
-.pulse-nexus-pro-wrap__plan {
+.pulse-synexus-pro-wrap__plan {
   margin-top: 16px;
 }
 
-.pulse-nexus-pro-promo {
+.pulse-synexus-pro-promo {
   position: relative;
   border-radius: 16px;
   padding: 20px 18px 18px;
@@ -2011,7 +2011,7 @@ a {
     0 0 40px rgba(80, 200, 100, 0.08);
 }
 
-.pulse-nexus-pro-promo__honeycomb {
+.pulse-synexus-pro-promo__honeycomb {
   position: absolute;
   inset: 0;
   opacity: 0.18;
@@ -2023,7 +2023,7 @@ a {
   mask-image: linear-gradient(to bottom, black 0%, transparent 88%);
 }
 
-.pulse-nexus-pro-promo__label {
+.pulse-synexus-pro-promo__label {
   position: relative;
   margin: 0;
   font-size: 0.72rem;
@@ -2034,7 +2034,7 @@ a {
   text-shadow: 0 0 16px rgba(137, 255, 47, 0.45);
 }
 
-.pulse-nexus-pro-promo__price {
+.pulse-synexus-pro-promo__price {
   position: relative;
   margin: 8px 0 0;
   font-size: 1.45rem;
@@ -2043,7 +2043,7 @@ a {
   letter-spacing: 0.02em;
 }
 
-.pulse-nexus-pro-promo__headline {
+.pulse-synexus-pro-promo__headline {
   position: relative;
   margin: 14px 0 0;
   font-size: 1.02rem;
@@ -2052,7 +2052,7 @@ a {
   color: #f2ffe8;
 }
 
-.pulse-nexus-pro-promo__body {
+.pulse-synexus-pro-promo__body {
   position: relative;
   margin: 10px 0 0;
   font-size: 0.86rem;
@@ -2060,7 +2060,7 @@ a {
   color: rgba(200, 230, 210, 0.88);
 }
 
-.pulse-nexus-pro-promo__bullets {
+.pulse-synexus-pro-promo__bullets {
   position: relative;
   margin: 14px 0 0;
   padding: 0 0 0 18px;
@@ -2071,28 +2071,28 @@ a {
   color: rgba(220, 255, 215, 0.82);
 }
 
-.pulse-nexus-pro-promo__bullets li {
+.pulse-synexus-pro-promo__bullets li {
   padding-left: 2px;
 }
 
-.pulse-nexus-pro-promo__cta-wrap {
+.pulse-synexus-pro-promo__cta-wrap {
   position: relative;
   margin-top: 18px;
 }
 
-.pulse-nexus-pro-promo__cta {
+.pulse-synexus-pro-promo__cta {
   width: 100%;
-  animation: pulse-nexus-cta-glow 2.4s ease-in-out infinite;
+  animation: pulse-synexus-cta-glow 2.4s ease-in-out infinite;
 }
 
-.pulse-nexus-pro-promo__active {
+.pulse-synexus-pro-promo__active {
   margin: 0;
   text-align: center;
   font-size: 0.92rem;
   color: #c8ffc4;
 }
 
-.pulse-nexus-pro-promo__disclaimer {
+.pulse-synexus-pro-promo__disclaimer {
   position: relative;
   margin: 14px 0 0;
   font-size: 0.68rem;
@@ -2101,7 +2101,7 @@ a {
   text-align: center;
 }
 
-@keyframes pulse-nexus-cta-glow {
+@keyframes pulse-synexus-cta-glow {
   0%,
   100% {
     box-shadow:
@@ -2119,88 +2119,115 @@ a {
   }
 }
 
-/* ----- Nexus Pro upsell modal (app-wide, non-Pro users) ----- */
-.nexus-pro-upsell {
+/* ----- Synexus Pro floating promo (after boot intro) ----- */
+@keyframes synexus-pro-upsell-drift {
+  from {
+    transform: translate3d(calc(-100% - 16px), 0, 0);
+  }
+  to {
+    transform: translate3d(calc(100vw + 16px), 0, 0);
+  }
+}
+
+.synexus-pro-upsell {
   position: fixed;
   inset: 0;
   z-index: 99990;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: max(16px, env(safe-area-inset-top, 0)) max(16px, env(safe-area-inset-right, 0))
-    max(max(16px, env(safe-area-inset-bottom, 0)), 12px) max(16px, env(safe-area-inset-left, 0));
+  padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0)
+    env(safe-area-inset-left, 0);
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.4s ease;
+  transition: opacity 0.45s ease;
 }
 
-.nexus-pro-upsell--open {
+.synexus-pro-upsell--open {
   opacity: 1;
   pointer-events: auto;
 }
 
-.nexus-pro-upsell__backdrop {
+.synexus-pro-upsell__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(2, 3, 2, 0.82);
-  backdrop-filter: blur(5px);
+  pointer-events: none;
+  background: rgba(2, 4, 3, 0.12);
 }
 
-.nexus-pro-upsell__panel {
+.synexus-pro-upsell__float-shell {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: clamp(76px, 16vh, 160px);
+  height: min(148px, 22vh);
+  overflow: visible;
+  pointer-events: none;
+}
+
+.synexus-pro-upsell--open .synexus-pro-upsell__float-shell {
+  pointer-events: auto;
+}
+
+.synexus-pro-upsell__drift {
+  position: absolute;
+  left: 0;
+  top: 0;
+  will-change: transform;
+  animation: synexus-pro-upsell-drift 28s linear infinite;
+  animation-play-state: paused;
+}
+
+.synexus-pro-upsell--open .synexus-pro-upsell__drift {
+  animation-play-state: running;
+}
+
+.synexus-pro-upsell__panel {
   position: relative;
-  width: 100%;
-  max-width: 400px;
-  max-height: min(90vh, 640px);
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  padding: 24px 20px 20px;
-  border-radius: 16px;
-  border: 1px solid rgba(137, 255, 47, 0.4);
+  width: min(268px, 86vw);
+  max-height: none;
+  overflow: visible;
+  padding: 12px 42px 12px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(137, 255, 47, 0.35);
   background:
-    radial-gradient(ellipse 95% 55% at 50% 0%, rgba(137, 255, 47, 0.12), transparent 55%),
-    linear-gradient(168deg, #0c0e0d 0%, #050605 55%, #030403 100%);
+    radial-gradient(ellipse 95% 80% at 50% 0%, rgba(137, 255, 47, 0.1), transparent 58%),
+    linear-gradient(168deg, #0d100e 0%, #060907 62%, #040504 100%);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    0 0 0 1px rgba(0, 0, 0, 0.55),
-    0 20px 56px rgba(0, 0, 0, 0.55),
-    0 0 48px rgba(90, 220, 110, 0.12);
-  transform: translateY(20px) scale(0.97);
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 10px 32px rgba(0, 0, 0, 0.45),
+    0 0 32px rgba(90, 220, 110, 0.1);
   opacity: 0;
-  transition:
-    transform 0.48s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.42s ease;
+  transition: opacity 0.42s ease;
 }
 
-.nexus-pro-upsell--open .nexus-pro-upsell__panel {
-  transform: translateY(0) scale(1);
+.synexus-pro-upsell--open .synexus-pro-upsell__panel {
   opacity: 1;
 }
 
-.nexus-pro-upsell__honeycomb {
+.synexus-pro-upsell__honeycomb {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  opacity: 0.16;
+  opacity: 0.13;
   pointer-events: none;
   background-image:
-    linear-gradient(rgba(137, 255, 47, 0.11) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(137, 255, 47, 0.08) 1px, transparent 1px);
-  background-size: 18px 18px;
-  mask-image: linear-gradient(to bottom, black 0%, transparent 90%);
+    linear-gradient(rgba(137, 255, 47, 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(137, 255, 47, 0.07) 1px, transparent 1px);
+  background-size: 14px 14px;
+  mask-image: linear-gradient(to bottom, black 0%, transparent 88%);
 }
 
-.nexus-pro-upsell__close {
+.synexus-pro-upsell__close {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 8px;
+  right: 8px;
   z-index: 2;
-  width: 38px;
-  height: 38px;
-  border: 1px solid rgba(137, 255, 47, 0.38);
-  border-radius: 10px;
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(137, 255, 47, 0.32);
+  border-radius: 9px;
   background: rgba(5, 10, 7, 0.92);
   color: #c8ffc4;
-  font-size: 1.4rem;
+  font-size: 1.25rem;
   line-height: 1;
   cursor: pointer;
   display: grid;
@@ -2211,88 +2238,91 @@ a {
     box-shadow 0.2s ease;
 }
 
-.nexus-pro-upsell__close:hover {
+.synexus-pro-upsell__close:hover {
   border-color: rgba(186, 255, 140, 0.55);
-  box-shadow: 0 0 18px rgba(120, 255, 100, 0.18);
+  box-shadow: 0 0 14px rgba(120, 255, 100, 0.16);
 }
 
-.nexus-pro-upsell__headline {
+.synexus-pro-upsell__headline {
   position: relative;
-  margin: 4px 42px 0 0;
-  font-size: 1rem;
+  margin: 0 32px 0 0;
+  font-size: 0.74rem;
   font-weight: 800;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.14em;
   color: #baff2f;
-  text-shadow: 0 0 22px rgba(137, 255, 47, 0.45);
+  text-shadow: 0 0 14px rgba(137, 255, 47, 0.4);
 }
 
-.nexus-pro-upsell__sub {
+.synexus-pro-upsell__sub {
   position: relative;
-  margin: 12px 0 0;
-  font-size: 0.92rem;
+  margin: 6px 0 0;
+  font-size: 0.75rem;
   font-weight: 650;
-  line-height: 1.4;
-  color: rgba(235, 255, 225, 0.92);
+  line-height: 1.38;
+  color: rgba(235, 255, 225, 0.9);
 }
 
-.nexus-pro-upsell__unlock-label {
+.synexus-pro-upsell__perks {
   position: relative;
-  margin: 18px 0 8px;
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: rgba(170, 255, 195, 0.75);
-}
-
-.nexus-pro-upsell__list {
-  position: relative;
-  margin: 0;
-  padding: 0 0 0 18px;
-  display: grid;
-  gap: 6px;
-  font-size: 0.82rem;
+  margin: 7px 0 0;
+  font-size: 0.62rem;
   line-height: 1.42;
-  color: rgba(210, 245, 215, 0.88);
+  color: rgba(188, 230, 200, 0.78);
 }
 
-.nexus-pro-upsell__error {
+.synexus-pro-upsell__error {
   position: relative;
-  margin: 12px 0 0;
-  font-size: 0.82rem;
+  margin: 8px 0 0;
+  font-size: 0.72rem;
   color: #ffc8c8;
 }
 
-.nexus-pro-upsell__cta {
+.synexus-pro-upsell__cta {
   position: relative;
   width: 100%;
-  margin-top: 20px;
-  padding: 14px 16px;
-  border-radius: 10px;
-  border: 1px solid rgba(170, 255, 130, 0.52);
-  background: linear-gradient(165deg, rgba(24, 44, 28, 0.98) 0%, rgba(8, 14, 10, 1) 100%);
+  margin-top: 9px;
+  padding: 9px 11px;
+  border-radius: 8px;
+  border: 1px solid rgba(170, 255, 130, 0.45);
+  background: linear-gradient(165deg, rgba(22, 40, 26, 0.98) 0%, rgba(8, 14, 10, 1) 100%);
   color: #ecffd2;
   font-family: inherit;
-  font-size: 0.74rem;
+  font-size: 0.62rem;
   font-weight: 800;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
-  animation: pulse-nexus-cta-glow 2.5s ease-in-out infinite;
+  animation: pulse-synexus-cta-glow 2.5s ease-in-out infinite;
 }
 
-.nexus-pro-upsell__cta:disabled {
+.synexus-pro-upsell__cta:disabled {
   opacity: 0.65;
   cursor: wait;
 }
 
-.nexus-pro-upsell__fineprint {
+.synexus-pro-upsell__fineprint {
   position: relative;
-  margin: 14px 0 0;
-  font-size: 0.68rem;
-  line-height: 1.45;
+  margin: 7px 0 0;
+  font-size: 0.56rem;
+  line-height: 1.42;
   text-align: center;
-  color: rgba(165, 195, 175, 0.62);
+  color: rgba(165, 195, 175, 0.58);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .synexus-pro-upsell__drift {
+    position: relative;
+    left: 50%;
+    transform: translate3d(-50%, 0, 0);
+    animation: none;
+    animation-play-state: paused;
+    margin-inline: auto;
+    width: max-content;
+  }
+
+  .synexus-pro-upsell__panel {
+    width: min(268px, 86vw);
+  }
 }
 
 .pulse-tier-grid--single {
@@ -2786,7 +2816,7 @@ a {
   top: 42%;
 }
 
-.nexus-core-panel,
+.synexus-core-panel,
 .sentinel-grid-panel {
   position: relative;
   overflow: hidden;
@@ -2800,13 +2830,13 @@ a {
   box-shadow: var(--shadow), var(--glow);
 }
 
-.nexus-core-panel__head {
+.synexus-core-panel__head {
   display: flex;
   gap: 12px;
   align-items: center;
 }
 
-.nexus-core-panel__logo {
+.synexus-core-panel__logo {
   width: 58px;
   height: 58px;
   border-radius: 16px;
@@ -2814,7 +2844,7 @@ a {
   box-shadow: 0 0 26px rgba(137, 255, 47, 0.55);
 }
 
-.nexus-core-panel__eyebrow {
+.synexus-core-panel__eyebrow {
   margin: 0;
   color: var(--accent);
   font-size: 0.68rem;
@@ -2823,7 +2853,7 @@ a {
   text-transform: uppercase;
 }
 
-.nexus-core-panel__title {
+.synexus-core-panel__title {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -2834,7 +2864,7 @@ a {
   line-height: 1.15;
 }
 
-.nexus-core-panel__core-ai {
+.synexus-core-panel__core-ai {
   font-size: 0.68rem;
   font-weight: 750;
   letter-spacing: 0.16em;
@@ -2843,7 +2873,7 @@ a {
   text-shadow: 0 0 12px rgba(120, 255, 160, 0.35);
 }
 
-.nexus-core-panel__status {
+.synexus-core-panel__status {
   margin: 16px 0 0;
   padding: 14px 16px;
   border-radius: 14px;
@@ -2852,10 +2882,10 @@ a {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
     0 0 32px rgba(100, 255, 140, 0.1);
-  animation: nexus-status-breathe 4.5s ease-in-out infinite;
+  animation: synexus-status-breathe 4.5s ease-in-out infinite;
 }
 
-.nexus-core-panel__status-title {
+.synexus-core-panel__status-title {
   margin: 0 0 10px;
   font-size: 0.72rem;
   font-weight: 800;
@@ -2864,18 +2894,18 @@ a {
   text-shadow: 0 0 18px rgba(137, 255, 47, 0.5);
 }
 
-.nexus-core-panel__status-line {
+.synexus-core-panel__status-line {
   margin: 0;
   font-size: 0.88rem;
   color: rgba(230, 255, 220, 0.9);
   line-height: 1.5;
 }
 
-.nexus-core-panel__status-line + .nexus-core-panel__status-line {
+.synexus-core-panel__status-line + .synexus-core-panel__status-line {
   margin-top: 4px;
 }
 
-@keyframes nexus-status-breathe {
+@keyframes synexus-status-breathe {
   0%,
   100% {
     box-shadow:
@@ -2889,13 +2919,13 @@ a {
   }
 }
 
-.nexus-core-panel__briefing {
+.synexus-core-panel__briefing {
   margin: 14px 0 0;
   color: #ecffd2;
   font-weight: 700;
 }
 
-.nexus-core-panel__copy {
+.synexus-core-panel__copy {
   margin: 8px 0 0;
   color: var(--text-muted);
   font-size: 0.86rem;
@@ -3107,7 +3137,7 @@ a {
 .pulse-card,
 .pulse-status-banner,
 .pulse-tier-card,
-.nexus-core-panel,
+.synexus-core-panel,
 .sentinel-grid-panel,
 .synthetic-sentinel {
   border-color: rgba(137, 255, 47, 0.42);
@@ -3121,7 +3151,7 @@ a {
 .pulse-card,
 .pulse-status-banner,
 .pulse-tier-card,
-.nexus-core-panel,
+.synexus-core-panel,
 .sentinel-grid-panel,
 .synthetic-sentinel {
   background-color: rgba(3, 15, 4, 0.9);
@@ -3131,7 +3161,7 @@ a {
 .page__headline,
 .token-section__title,
 .pulse-card__title,
-.nexus-core-panel__title,
+.synexus-core-panel__title,
 .synthetic-sentinel__name {
   text-shadow: 0 0 18px rgba(137, 255, 47, 0.38);
 }
@@ -3141,7 +3171,7 @@ a {
 .page__lede,
 .token-section__lede,
 .pulse-status-banner__label,
-.nexus-core-panel__eyebrow,
+.synexus-core-panel__eyebrow,
 .pulse-tier-card__name,
 .synthetic-sentinel__confidence {
   color: #baff2f;
@@ -3166,8 +3196,8 @@ a {
   border-color: rgba(170, 255, 115, 0.48);
 }
 
-/* ----- Nexus boot sequence (fullscreen, mobile-optimized: opacity + transform only) ----- */
-.nexus-boot {
+/* ----- Synexus boot sequence (fullscreen, mobile-optimized: opacity + transform only) ----- */
+.synexus-boot {
   position: fixed;
   inset: 0;
   z-index: 100000;
@@ -3177,15 +3207,15 @@ a {
   contain: layout style;
   pointer-events: auto;
   opacity: 0;
-  animation: nexus-boot-shell-in 0.58s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: synexus-boot-shell-in 0.58s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-.nexus-boot.nexus-boot--exit {
+.synexus-boot.synexus-boot--exit {
   pointer-events: none;
-  animation: nexus-boot-shell-out 0.68s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: synexus-boot-shell-out 0.68s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-.nexus-boot__bg {
+.synexus-boot__bg {
   position: absolute;
   inset: 0;
   background:
@@ -3195,7 +3225,7 @@ a {
     #050505;
 }
 
-.nexus-boot__grid {
+.synexus-boot__grid {
   position: absolute;
   inset: 0;
   opacity: 0.28;
@@ -3203,11 +3233,11 @@ a {
     linear-gradient(rgba(120, 255, 95, 0.04) 1px, transparent 1px),
     linear-gradient(90deg, rgba(120, 255, 95, 0.04) 1px, transparent 1px);
   background-size: 56px 56px;
-  animation: nexus-boot-grid-shift 22s linear infinite;
+  animation: synexus-boot-grid-shift 22s linear infinite;
   will-change: transform;
 }
 
-.nexus-boot__honeycomb {
+.synexus-boot__honeycomb {
   position: absolute;
   inset: -15%;
   opacity: 0.2;
@@ -3226,17 +3256,17 @@ a {
       rgba(120, 255, 95, 0.045) 14px,
       rgba(120, 255, 95, 0.045) 15px
     );
-  animation: nexus-boot-honeycomb-drift 28s linear infinite;
+  animation: synexus-boot-honeycomb-drift 28s linear infinite;
   will-change: transform;
 }
 
-.nexus-boot__scan {
+.synexus-boot__scan {
   position: absolute;
   will-change: transform, opacity;
   pointer-events: none;
 }
 
-.nexus-boot__scan--vertical {
+.synexus-boot__scan--vertical {
   left: 0;
   right: 0;
   top: -8%;
@@ -3253,10 +3283,10 @@ a {
     0 0 14px rgba(88, 195, 255, 0.18),
     0 0 26px rgba(120, 255, 95, 0.08);
   opacity: 0.4;
-  animation: nexus-boot-scan-sweep 2.85s ease-in-out infinite;
+  animation: synexus-boot-scan-sweep 2.85s ease-in-out infinite;
 }
 
-.nexus-boot__scan--horizontal {
+.synexus-boot__scan--horizontal {
   top: 38%;
   left: 0;
   width: 3px;
@@ -3274,25 +3304,25 @@ a {
     0 0 12px rgba(88, 195, 255, 0.16),
     0 0 22px rgba(120, 255, 95, 0.07);
   opacity: 0.32;
-  animation: nexus-boot-scan-sweep-h 3.6s ease-in-out infinite;
+  animation: synexus-boot-scan-sweep-h 3.6s ease-in-out infinite;
   animation-delay: 0.45s;
 }
 
-.nexus-boot__vignette {
+.synexus-boot__vignette {
   position: absolute;
   inset: 0;
   background: radial-gradient(ellipse 70% 65% at 50% 50%, transparent 30%, rgba(0, 0, 0, 0.72) 100%);
   pointer-events: none;
 }
 
-.nexus-boot__particles {
+.synexus-boot__particles {
   position: absolute;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
 }
 
-.nexus-boot__particle {
+.synexus-boot__particle {
   position: absolute;
   width: 3px;
   height: 3px;
@@ -3301,20 +3331,20 @@ a {
   background: rgba(180, 255, 120, 0.55);
   box-shadow: 0 0 10px rgba(137, 255, 47, 0.45);
   opacity: 0;
-  animation: nexus-boot-particle var(--nexus-d, 3s) ease-in-out infinite;
+  animation: synexus-boot-particle var(--synexus-d, 3s) ease-in-out infinite;
   will-change: transform, opacity;
 }
 
-.nexus-boot__frame {
+.synexus-boot__frame {
   position: absolute;
   width: min(38%, 160px);
   height: min(38%, 160px);
   pointer-events: none;
   opacity: 0.55;
-  animation: nexus-boot-frame-pulse 3.2s ease-in-out infinite;
+  animation: synexus-boot-frame-pulse 3.2s ease-in-out infinite;
 }
 
-.nexus-boot__frame--tl {
+.synexus-boot__frame--tl {
   top: max(16px, env(safe-area-inset-top));
   left: max(16px, env(safe-area-inset-left));
   border-right: none;
@@ -3327,7 +3357,7 @@ a {
     inset 0 0 20px rgba(80, 200, 255, 0.04);
 }
 
-.nexus-boot__frame--br {
+.synexus-boot__frame--br {
   bottom: max(16px, env(safe-area-inset-bottom));
   right: max(16px, env(safe-area-inset-right));
   border-top: none;
@@ -3340,7 +3370,7 @@ a {
     inset 0 0 18px rgba(90, 200, 255, 0.04);
 }
 
-.nexus-boot__center {
+.synexus-boot__center {
   position: relative;
   z-index: 1;
   width: min(92vw, 380px);
@@ -3348,7 +3378,7 @@ a {
   text-align: center;
 }
 
-.nexus-boot__eyebrow {
+.synexus-boot__eyebrow {
   margin: 0 0 18px;
   font-size: 0.62rem;
   font-weight: 650;
@@ -3357,7 +3387,7 @@ a {
   color: rgba(160, 210, 255, 0.55);
 }
 
-.nexus-boot__title-wrap {
+.synexus-boot__title-wrap {
   position: relative;
   min-height: 3.2em;
   display: flex;
@@ -3365,13 +3395,13 @@ a {
   justify-content: center;
 }
 
-.nexus-boot__title-block {
+.synexus-boot__title-block {
   position: relative;
   z-index: 1;
-  animation: nexus-boot-title-in 0.52s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: synexus-boot-title-in 0.52s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.nexus-boot__title {
+.synexus-boot__title {
   position: relative;
   margin: 0;
   font-size: clamp(0.78rem, 3.6vw, 0.98rem);
@@ -3385,17 +3415,17 @@ a {
     0 0 42px rgba(90, 200, 255, 0.12);
 }
 
-.nexus-boot[data-phase="4"] .nexus-boot__title-block {
-  animation: nexus-boot-title-finale 0.75s ease-out both;
+.synexus-boot[data-phase="4"] .synexus-boot__title-block {
+  animation: synexus-boot-title-finale 0.75s ease-out both;
 }
 
-.nexus-boot[data-phase="4"] .nexus-boot__title {
+.synexus-boot[data-phase="4"] .synexus-boot__title {
   font-size: clamp(0.82rem, 4vw, 1.05rem);
   letter-spacing: 0.32em;
   font-weight: 700;
 }
 
-.nexus-boot__title-glow {
+.synexus-boot__title-glow {
   position: absolute;
   left: 50%;
   top: 50%;
@@ -3404,11 +3434,11 @@ a {
   transform: translate(-50%, -50%);
   background: radial-gradient(ellipse at 50% 50%, rgba(137, 255, 47, 0.12), transparent 68%);
   opacity: 0.7;
-  animation: nexus-boot-glow-pulse 2.2s ease-in-out infinite;
+  animation: synexus-boot-glow-pulse 2.2s ease-in-out infinite;
   pointer-events: none;
 }
 
-.nexus-boot__sentinels {
+.synexus-boot__sentinels {
   margin-top: 22px;
   max-height: 0;
   opacity: 0;
@@ -3420,13 +3450,13 @@ a {
     transform 0.55s ease;
 }
 
-.nexus-boot__sentinels--visible {
+.synexus-boot__sentinels--visible {
   max-height: 320px;
   opacity: 1;
   transform: translateY(0);
 }
 
-.nexus-boot__sentinel-list {
+.synexus-boot__sentinel-list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -3435,7 +3465,7 @@ a {
   text-align: left;
 }
 
-.nexus-boot__sentinel {
+.synexus-boot__sentinel {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -3447,18 +3477,18 @@ a {
   opacity: 0;
 }
 
-.nexus-boot__sentinels--visible .nexus-boot__sentinel {
-  animation: nexus-boot-sentinel-in 0.48s ease forwards;
+.synexus-boot__sentinels--visible .synexus-boot__sentinel {
+  animation: synexus-boot-sentinel-in 0.48s ease forwards;
 }
 
-.nexus-boot__sentinel-name {
+.synexus-boot__sentinel-name {
   font-size: 0.72rem;
   font-weight: 650;
   letter-spacing: 0.06em;
   color: #c8ffc4;
 }
 
-.nexus-boot__sentinel-role {
+.synexus-boot__sentinel-role {
   font-size: 0.66rem;
   letter-spacing: 0.04em;
   color: rgba(160, 210, 255, 0.62);
@@ -3466,7 +3496,7 @@ a {
   font-variant-numeric: tabular-nums;
 }
 
-.nexus-boot__pulse-ring {
+.synexus-boot__pulse-ring {
   position: absolute;
   left: 50%;
   top: 50%;
@@ -3476,12 +3506,12 @@ a {
   border-radius: 50%;
   border: 1px solid rgba(137, 255, 47, 0.08);
   box-shadow: 0 0 32px rgba(137, 255, 47, 0.06);
-  animation: nexus-boot-ring-pulse 2.6s ease-in-out infinite;
+  animation: synexus-boot-ring-pulse 2.6s ease-in-out infinite;
   pointer-events: none;
   z-index: -1;
 }
 
-@keyframes nexus-boot-shell-in {
+@keyframes synexus-boot-shell-in {
   from {
     opacity: 0;
     filter: brightness(0.88);
@@ -3492,7 +3522,7 @@ a {
   }
 }
 
-@keyframes nexus-boot-shell-out {
+@keyframes synexus-boot-shell-out {
   from {
     opacity: 1;
     filter: blur(0) brightness(1);
@@ -3503,7 +3533,7 @@ a {
   }
 }
 
-@keyframes nexus-boot-grid-shift {
+@keyframes synexus-boot-grid-shift {
   0% {
     transform: translate(0, 0);
   }
@@ -3512,7 +3542,7 @@ a {
   }
 }
 
-@keyframes nexus-boot-honeycomb-drift {
+@keyframes synexus-boot-honeycomb-drift {
   0% {
     transform: translate(0, 0) rotate(0deg);
   }
@@ -3521,7 +3551,7 @@ a {
   }
 }
 
-@keyframes nexus-boot-scan-sweep {
+@keyframes synexus-boot-scan-sweep {
   0% {
     transform: translateY(0);
     opacity: 0.12;
@@ -3538,7 +3568,7 @@ a {
   }
 }
 
-@keyframes nexus-boot-scan-sweep-h {
+@keyframes synexus-boot-scan-sweep-h {
   0% {
     transform: translateX(-8vw);
     opacity: 0;
@@ -3555,7 +3585,7 @@ a {
   }
 }
 
-@keyframes nexus-boot-particle {
+@keyframes synexus-boot-particle {
   0%,
   100% {
     opacity: 0;
@@ -3575,7 +3605,7 @@ a {
   }
 }
 
-@keyframes nexus-boot-frame-pulse {
+@keyframes synexus-boot-frame-pulse {
   0%,
   100% {
     opacity: 0.4;
@@ -3587,7 +3617,7 @@ a {
   }
 }
 
-@keyframes nexus-boot-title-in {
+@keyframes synexus-boot-title-in {
   from {
     opacity: 0;
     transform: translateY(10px) scale(0.98);
@@ -3601,7 +3631,7 @@ a {
 }
 
 @media (max-width: 480px) {
-  @keyframes nexus-boot-title-in {
+  @keyframes synexus-boot-title-in {
     from {
       opacity: 0;
       transform: translateY(8px) scale(0.99);
@@ -3612,7 +3642,7 @@ a {
     }
   }
 
-  @keyframes nexus-boot-title-finale {
+  @keyframes synexus-boot-title-finale {
     0% {
       opacity: 0;
       filter: blur(2px);
@@ -3626,7 +3656,7 @@ a {
   }
 }
 
-@keyframes nexus-boot-title-finale {
+@keyframes synexus-boot-title-finale {
   0% {
     opacity: 0;
     filter: blur(3px);
@@ -3639,7 +3669,7 @@ a {
   }
 }
 
-@keyframes nexus-boot-glow-pulse {
+@keyframes synexus-boot-glow-pulse {
   0%,
   100% {
     opacity: 0.45;
@@ -3651,7 +3681,7 @@ a {
   }
 }
 
-@keyframes nexus-boot-sentinel-in {
+@keyframes synexus-boot-sentinel-in {
   from {
     opacity: 0;
     transform: translateX(-10px);
@@ -3662,7 +3692,7 @@ a {
   }
 }
 
-@keyframes nexus-boot-ring-pulse {
+@keyframes synexus-boot-ring-pulse {
   0%,
   100% {
     transform: scale(0.92);
@@ -3675,7 +3705,7 @@ a {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .nexus-core-panel__status,
+  .synexus-core-panel__status,
   .mother-report {
     animation: none !important;
   }
@@ -3688,47 +3718,47 @@ a {
     transform: none;
   }
 
-  .pulse-nexus-pro-promo__cta {
+  .pulse-synexus-pro-promo__cta {
     animation: none !important;
   }
 
-  .nexus-pro-upsell,
-  .nexus-pro-upsell__panel {
+  .synexus-pro-upsell,
+  .synexus-pro-upsell__panel {
     transition: none !important;
   }
 
-  .nexus-pro-upsell__cta {
+  .synexus-pro-upsell__cta {
     animation: none !important;
   }
 
-  .nexus-pro-upsell--open .nexus-pro-upsell__panel {
+  .synexus-pro-upsell--open .synexus-pro-upsell__panel {
     transform: none !important;
     opacity: 1 !important;
   }
 
-  .nexus-boot {
-    animation: nexus-boot-shell-in 0.15s ease-out forwards;
+  .synexus-boot {
+    animation: synexus-boot-shell-in 0.15s ease-out forwards;
   }
 
-  .nexus-boot.nexus-boot--exit {
-    animation: nexus-boot-shell-out 0.22s ease-out forwards;
+  .synexus-boot.synexus-boot--exit {
+    animation: synexus-boot-shell-out 0.22s ease-out forwards;
   }
 
-  .nexus-boot__grid,
-  .nexus-boot__honeycomb,
-  .nexus-boot__scan,
-  .nexus-boot__particle,
-  .nexus-boot__frame,
-  .nexus-boot__pulse-ring,
-  .nexus-boot__title-glow {
+  .synexus-boot__grid,
+  .synexus-boot__honeycomb,
+  .synexus-boot__scan,
+  .synexus-boot__particle,
+  .synexus-boot__frame,
+  .synexus-boot__pulse-ring,
+  .synexus-boot__title-glow {
     animation: none !important;
   }
 
-  .nexus-boot__title {
-    animation: nexus-boot-title-in 0.25s ease both;
+  .synexus-boot__title {
+    animation: synexus-boot-title-in 0.25s ease both;
   }
 
-  .nexus-boot[data-phase="4"] .nexus-boot__title-block {
-    animation: nexus-boot-title-finale 0.28s ease-out both;
+  .synexus-boot[data-phase="4"] .synexus-boot__title-block {
+    animation: synexus-boot-title-finale 0.28s ease-out both;
   }
 }

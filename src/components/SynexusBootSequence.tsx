@@ -1,12 +1,13 @@
 import type { CSSProperties, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
+import { notifySynexusBootComplete } from "../lib/synexusBootComplete";
 
 const PHASE_COPY: readonly string[] = [
-  "NEXUS INITIALIZING",
+  "SYNEXUS INITIALIZING",
   "Mother Core: Platform intelligence online",
   "Sentinels synchronizing...",
   "Market intelligence connected.",
-  "ENTER THE NEXUS",
+  "ENTER THE SYNEXUS",
 ] as const;
 
 const SENTINELS = [
@@ -30,7 +31,7 @@ type Props = {
   children: ReactNode;
 };
 
-export function NexusBootSequence({ children }: Props) {
+export function SynexusBootSequence({ children }: Props) {
   const [phase, setPhase] = useState(0);
   const [exiting, setExiting] = useState(false);
   const [removed, setRemoved] = useState(false);
@@ -71,6 +72,7 @@ export function NexusBootSequence({ children }: Props) {
     timersRef.current.push(
       setTimeout(() => {
         setRemoved(true);
+        notifySynexusBootComplete();
         clearAll();
       }, acc),
     );
@@ -98,53 +100,53 @@ export function NexusBootSequence({ children }: Props) {
       {children}
       {!removed ? (
         <div
-          className={`nexus-boot${exiting ? " nexus-boot--exit" : ""}`}
+          className={`synexus-boot${exiting ? " synexus-boot--exit" : ""}`}
           data-phase={phase}
           aria-busy={!removed}
         >
-          <div className="nexus-boot__bg" />
-          <div className="nexus-boot__grid" />
-          <div className="nexus-boot__honeycomb" aria-hidden />
-          <div className="nexus-boot__scan nexus-boot__scan--vertical" aria-hidden />
-          <div className="nexus-boot__scan nexus-boot__scan--horizontal" aria-hidden />
-          <div className="nexus-boot__vignette" aria-hidden />
+          <div className="synexus-boot__bg" />
+          <div className="synexus-boot__grid" />
+          <div className="synexus-boot__honeycomb" aria-hidden />
+          <div className="synexus-boot__scan synexus-boot__scan--vertical" aria-hidden />
+          <div className="synexus-boot__scan synexus-boot__scan--horizontal" aria-hidden />
+          <div className="synexus-boot__vignette" aria-hidden />
 
-          <div className="nexus-boot__particles" aria-hidden>
+          <div className="synexus-boot__particles" aria-hidden>
             {PARTICLE_SEEDS.map((seed) => (
-              <span key={seed.i} className="nexus-boot__particle" style={seed.style} />
+              <span key={seed.i} className="synexus-boot__particle" style={seed.style} />
             ))}
           </div>
 
-          <div className="nexus-boot__frame nexus-boot__frame--tl" aria-hidden />
-          <div className="nexus-boot__frame nexus-boot__frame--br" aria-hidden />
+          <div className="synexus-boot__frame synexus-boot__frame--tl" aria-hidden />
+          <div className="synexus-boot__frame synexus-boot__frame--br" aria-hidden />
 
-          <div className="nexus-boot__center">
-            <p className="nexus-boot__eyebrow">THE NEXUS</p>
+          <div className="synexus-boot__center">
+            <p className="synexus-boot__eyebrow">THE SYNEXUS</p>
 
-            <div className="nexus-boot__title-wrap">
-              <div className="nexus-boot__title-block" key={phase}>
-                <h1 className="nexus-boot__title" aria-live="polite">
+            <div className="synexus-boot__title-wrap">
+              <div className="synexus-boot__title-block" key={phase}>
+                <h1 className="synexus-boot__title" aria-live="polite">
                   {title}
                 </h1>
               </div>
-              <div className="nexus-boot__title-glow" aria-hidden />
+              <div className="synexus-boot__title-glow" aria-hidden />
             </div>
 
             <div
-              className={`nexus-boot__sentinels${showSentinels ? " nexus-boot__sentinels--visible" : ""}`}
+              className={`synexus-boot__sentinels${showSentinels ? " synexus-boot__sentinels--visible" : ""}`}
               aria-hidden={!showSentinels}
             >
-              <ul className="nexus-boot__sentinel-list">
+              <ul className="synexus-boot__sentinel-list">
                 {SENTINELS.map((s, i) => (
-                  <li key={s.name} className="nexus-boot__sentinel" style={{ animationDelay: `${i * 0.07}s` }}>
-                    <span className="nexus-boot__sentinel-name">{s.name}</span>
-                    <span className="nexus-boot__sentinel-role">{s.role}</span>
+                  <li key={s.name} className="synexus-boot__sentinel" style={{ animationDelay: `${i * 0.07}s` }}>
+                    <span className="synexus-boot__sentinel-name">{s.name}</span>
+                    <span className="synexus-boot__sentinel-role">{s.role}</span>
                   </li>
                 ))}
               </ul>
             </div>
 
-            <div className="nexus-boot__pulse-ring" aria-hidden />
+            <div className="synexus-boot__pulse-ring" aria-hidden />
           </div>
         </div>
       ) : null}
@@ -154,12 +156,12 @@ export function NexusBootSequence({ children }: Props) {
 
 /** Fixed pseudo-random particle positions (no Math.random per render). */
 const PARTICLE_SEEDS: { i: number; style: CSSProperties }[] = [
-  { i: 0, style: { left: "8%", top: "18%", ["--nexus-d" as string]: "2.8s" } },
-  { i: 1, style: { left: "22%", top: "72%", ["--nexus-d" as string]: "3.2s" } },
-  { i: 2, style: { left: "78%", top: "14%", ["--nexus-d" as string]: "2.5s" } },
-  { i: 3, style: { opacity: 0.85, left: "88%", top: "48%", ["--nexus-d" as string]: "3.6s" } },
-  { i: 4, style: { left: "45%", top: "8%", ["--nexus-d" as string]: "2.9s" } },
-  { i: 5, style: { left: "62%", top: "82%", ["--nexus-d" as string]: "3.1s" } },
-  { i: 6, style: { left: "15%", top: "44%", ["--nexus-d" as string]: "3.4s" } },
-  { i: 7, style: { left: "92%", top: "28%", ["--nexus-d" as string]: "2.7s" } },
+  { i: 0, style: { left: "8%", top: "18%", ["--synexus-d" as string]: "2.8s" } },
+  { i: 1, style: { left: "22%", top: "72%", ["--synexus-d" as string]: "3.2s" } },
+  { i: 2, style: { left: "78%", top: "14%", ["--synexus-d" as string]: "2.5s" } },
+  { i: 3, style: { opacity: 0.85, left: "88%", top: "48%", ["--synexus-d" as string]: "3.6s" } },
+  { i: 4, style: { left: "45%", top: "8%", ["--synexus-d" as string]: "2.9s" } },
+  { i: 5, style: { left: "62%", top: "82%", ["--synexus-d" as string]: "3.1s" } },
+  { i: 6, style: { left: "15%", top: "44%", ["--synexus-d" as string]: "3.4s" } },
+  { i: 7, style: { left: "92%", top: "28%", ["--synexus-d" as string]: "2.7s" } },
 ];

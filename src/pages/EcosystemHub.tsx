@@ -64,15 +64,15 @@ export function EcosystemHub() {
       <section id="hub-content" className="ecosystem-hub__section marketing-panel">
         <h2>Content hub</h2>
         <p>
-          Centralize discovery with The Nexus: live token feed, search, risk snapshots, and Pulse for accounts and
-          Nexus Pro.
+          Centralize discovery with The Synexus: live token feed, search, risk snapshots, and Pulse for accounts and
+          Synexus Pro.
         </p>
         <ul className="ecosystem-hub__links">
           <li>
             <Link to="/">Token feed &amp; search</Link>
           </li>
           <li>
-            <Link to="/pulse">Pulse · accounts &amp; Nexus Pro</Link>
+            <Link to="/pulse">Pulse · accounts &amp; Synexus Pro</Link>
           </li>
         </ul>
       </section>
@@ -145,12 +145,12 @@ export function EcosystemHub() {
         <h2>Token utility platform</h2>
         <p>
           HiveMind token utility is designed around access, incentives, and alignment: unlock deeper feeds from
-          The Nexus Sentinels,
+          The Synexus Sentinels,
           fee discounts, partner campaigns, and (when live) staking participation. Exact tokenomics are published
           separately and may change before launch.
         </p>
         <ul className="ecosystem-hub__bullets">
-          <li>Nexus Pro intelligence surfaces in-app</li>
+          <li>Synexus Pro intelligence surfaces in-app</li>
           <li>Partnership tooling via this hub</li>
           <li>Governance placeholders as the community matures</li>
         </ul>

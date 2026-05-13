@@ -1,6 +1,6 @@
 import type { User } from "@supabase/supabase-js";
 import { useEffect, useMemo, useState } from "react";
-import { nexusRiskBandLabel } from "../data/tokens";
+import { synexusRiskBandLabel } from "../data/tokens";
 import {
   addWatchlistToken,
   createWatchlist,
@@ -70,7 +70,7 @@ function normalizeStoredPlan(plan: string | null | undefined): AppPlan {
 }
 
 function formatPlanName(plan: AppPlan) {
-  if (plan === "PRO") return "Nexus Pro";
+  if (plan === "PRO") return "Synexus Pro";
   return "Free";
 }
 
@@ -137,7 +137,7 @@ export function Pulse() {
   const [paidSignals, setPaidSignals] = useState<PaidSignal[]>([]);
   const [sentinelIdle, setSentinelIdle] = useState(getSentinelIdleMessage(Date.now()));
   const [authBusy, setAuthBusy] = useState(false);
-  const [authLoadPhrase, setAuthLoadPhrase] = useState<"nexus" | "sentinel">("nexus");
+  const [authLoadPhrase, setAuthLoadPhrase] = useState<"synexus" | "sentinel">("synexus");
   const [authMessage, setAuthMessage] = useState<AuthMessage>({
     tone: "info",
     text: hasSupabaseEnv
@@ -149,9 +149,9 @@ export function Pulse() {
 
   useEffect(() => {
     if (!authBusy) return;
-    setAuthLoadPhrase("nexus");
+    setAuthLoadPhrase("synexus");
     const id = window.setInterval(() => {
-      setAuthLoadPhrase((p) => (p === "nexus" ? "sentinel" : "nexus"));
+      setAuthLoadPhrase((p) => (p === "synexus" ? "sentinel" : "synexus"));
     }, 1400);
     return () => window.clearInterval(id);
   }, [authBusy]);
@@ -274,7 +274,7 @@ export function Pulse() {
     }
 
     if (userId.startsWith("demo-")) {
-      setStatus("Checkout succeeded. Sign in with a real account to link Nexus Pro.");
+      setStatus("Checkout succeeded. Sign in with a real account to link Synexus Pro.");
       return;
     }
 
@@ -299,7 +299,7 @@ export function Pulse() {
     }
     try {
       setAuthBusy(true);
-      setAuthMessage({ tone: "info", text: "Connecting to Nexus..." });
+      setAuthMessage({ tone: "info", text: "Connecting to Synexus..." });
       if (!hasSupabaseEnv) {
         const demoId = `demo-${Date.now()}`;
         localStorage.setItem(DEMO_SESSION_KEY, demoId);
@@ -325,7 +325,7 @@ export function Pulse() {
         }
       }
       const message = result.session
-        ? "Welcome to The Nexus. You are signed in."
+        ? "Welcome to The Synexus. You are signed in."
         : "Check your inbox to confirm your email, then sign in.";
       setAuthMessage({ tone: "success", text: message });
       setStatus(message);
@@ -355,7 +355,7 @@ export function Pulse() {
     }
     try {
       setAuthBusy(true);
-      setAuthMessage({ tone: "info", text: "Connecting to Nexus..." });
+      setAuthMessage({ tone: "info", text: "Connecting to Synexus..." });
       if (!hasSupabaseEnv) {
         const demoId = localStorage.getItem(DEMO_SESSION_KEY) ?? `demo-${Date.now()}`;
         localStorage.setItem(DEMO_SESSION_KEY, demoId);
@@ -382,7 +382,7 @@ export function Pulse() {
       setUserEmail(signedIn.email ?? email);
       const message = signedIn.email
         ? `Synchronized as ${signedIn.email}.`
-        : "Synchronized with The Nexus.";
+        : "Synchronized with The Synexus.";
       setAuthMessage({ tone: "success", text: message });
       setStatus(message);
       void loadData(signedIn);
@@ -401,7 +401,7 @@ export function Pulse() {
     setUserId(demoId);
     setUserEmail(null);
     setAuthMessage({ tone: "success", text: "Demo mode is live. Explore freely; sign in to save." });
-    setWatchlist(["Nexus Watchlist: HIVE"]);
+    setWatchlist(["Synexus Watchlist: HIVE"]);
     setTracked([
       {
         token_symbol: "HIVE",
@@ -433,7 +433,7 @@ export function Pulse() {
       return;
     }
     if (!hasSupabaseEnv || userId.startsWith("demo-")) {
-      setWatchlist(["Nexus Watchlist: HIVE"]);
+      setWatchlist(["Synexus Watchlist: HIVE"]);
       setTracked([
         {
           token_symbol: "HIVE",
@@ -454,7 +454,7 @@ export function Pulse() {
       return;
     }
     try {
-      const watchlistId = await createWatchlist(userId, "Nexus Watchlist");
+      const watchlistId = await createWatchlist(userId, "Synexus Watchlist");
       await addWatchlistToken(
         watchlistId,
         "HIVE",
@@ -548,7 +548,7 @@ export function Pulse() {
 
   function handleMotherReport() {
     setMotherReportStamp(Date.now());
-    setStatus("Sentinels refreshed the Nexus overview.");
+    setStatus("Sentinels refreshed the Synexus overview.");
   }
 
   const warningCalls = tracked.filter((token) => token.guardian_status === "WARNING");
@@ -591,14 +591,14 @@ export function Pulse() {
   );
 
   const authBusyLabel =
-    authLoadPhrase === "nexus" ? "Connecting to Nexus..." : "Synchronizing Sentinels...";
+    authLoadPhrase === "synexus" ? "Connecting to Synexus..." : "Synchronizing Sentinels...";
 
   return (
     <div className="page">
       <section className="page__intro">
         <h1 className="page__headline">Pulse</h1>
         <p className="page__lede">
-          The Nexus command center: Sentinel warnings, safe calls, and live alerts.
+          The Synexus command center: Sentinel warnings, safe calls, and live alerts.
         </p>
       </section>
 
@@ -608,32 +608,32 @@ export function Pulse() {
         {!hasSupabaseEnv ? (
           <p className="pulse-status-banner__hint">
             Demo mode works without signup. Add Supabase and Stripe environment variables for live
-            accounts and Nexus Pro.
+            accounts and Synexus Pro.
           </p>
         ) : null}
       </div>
 
-      <section className="nexus-core-panel">
-        <div className="nexus-core-panel__head">
-          <img className="nexus-core-panel__logo" src="/hivemind-logo.svg" alt="" aria-hidden />
+      <section className="synexus-core-panel">
+        <div className="synexus-core-panel__head">
+          <img className="synexus-core-panel__logo" src="/hivemind-logo.svg" alt="" aria-hidden />
           <div>
-            <p className="nexus-core-panel__eyebrow">The Nexus</p>
-            <h2 className="nexus-core-panel__title">
+            <p className="synexus-core-panel__eyebrow">The Synexus</p>
+            <h2 className="synexus-core-panel__title">
               Mother Core
-              <span className="nexus-core-panel__core-ai">Operator intelligence</span>
+              <span className="synexus-core-panel__core-ai">Operator intelligence</span>
             </h2>
           </div>
         </div>
 
-        <div className="nexus-core-panel__status" aria-live="polite">
-          <p className="nexus-core-panel__status-title">NEXUS ONLINE</p>
-          <p className="nexus-core-panel__status-line">Mother Core: Platform intelligence online</p>
-          <p className="nexus-core-panel__status-line">4 Sentinels active</p>
+        <div className="synexus-core-panel__status" aria-live="polite">
+          <p className="synexus-core-panel__status-title">SYNEXUS ONLINE</p>
+          <p className="synexus-core-panel__status-line">Mother Core: Platform intelligence online</p>
+          <p className="synexus-core-panel__status-line">4 Sentinels active</p>
         </div>
 
-        <p className="nexus-core-panel__briefing">{pulseFormatSentinelNamesInText(motherBriefing)}</p>
-        <p className="nexus-core-panel__copy">
-          The Nexus coordinates Aegis, Pulse, Titan, and Cipher—each Sentinel lane learns from reports, alerts,
+        <p className="synexus-core-panel__briefing">{pulseFormatSentinelNamesInText(motherBriefing)}</p>
+        <p className="synexus-core-panel__copy">
+          The Synexus coordinates Aegis, Pulse, Titan, and Cipher—each Sentinel lane learns from reports, alerts,
           watchlists, and hive memory over time.
         </p>
         <div className="mother-report">
@@ -700,19 +700,19 @@ export function Pulse() {
       </section>
 
       <div className="pulse-card">
-        <p className="pulse-card__title">Enter the Nexus</p>
+        <p className="pulse-card__title">Enter the Synexus</p>
         <p className="pulse-card__subtitle pulse-card__subtitle--premium">
           Sentinels online. Market intelligence ready.
         </p>
         <div className="pulse-form">
           <button className="pulse-demo-button pulse-demo-button--first" onClick={handleDemoMode} type="button">
-            Enter the Nexus
+            Enter the Synexus
           </button>
           <p className={`pulse-auth-message pulse-auth-message--${authMessage.tone}`} role="status">
             {authMessage.text}
           </p>
           {authBusy ? (
-            <p className="pulse-nexus-loading" role="status">
+            <p className="pulse-synexus-loading" role="status">
               {authBusyLabel}
             </p>
           ) : null}
@@ -759,7 +759,7 @@ export function Pulse() {
             {warningCalls.map((token) => (
               <li key={`warning-${token.token_symbol}`}>
                 <span>{token.token_symbol ?? "UNKNOWN"}</span>
-                <strong>The Nexus · {nexusRiskBandLabel("WARNING")}</strong>
+                <strong>The Synexus · {synexusRiskBandLabel("WARNING")}</strong>
               </li>
             ))}
           </ul>
@@ -776,7 +776,7 @@ export function Pulse() {
               <li key={`safe-${token.token_symbol}`}>
                 <span>{token.token_symbol ?? "UNKNOWN"}</span>
                 <strong>
-                  The Nexus · {nexusRiskBandLabel(token.guardian_status ?? "SAFE")}
+                  The Synexus · {synexusRiskBandLabel(token.guardian_status ?? "SAFE")}
                   {typeof token.guardian_score === "number"
                     ? ` (${token.guardian_score}/100)`
                     : ""}
@@ -830,18 +830,18 @@ export function Pulse() {
         ) : null}
       </div>
 
-      <div className="pulse-card pulse-nexus-pro-wrap" id="nexus-pro">
-        <div className="pulse-nexus-pro-promo">
-          <div className="pulse-nexus-pro-promo__honeycomb" aria-hidden />
-          <p className="pulse-nexus-pro-promo__label">Nexus Pro</p>
-          <p className="pulse-nexus-pro-promo__price">$19.99/month</p>
-          <p className="pulse-nexus-pro-promo__headline">Unlimited trading intelligence. One simple price.</p>
-          <p className="pulse-nexus-pro-promo__body">
-            Unlock the full Nexus system with real-time Sentinel analysis, risk scanning, momentum tracking, whale
+      <div className="pulse-card pulse-synexus-pro-wrap" id="synexus-pro">
+        <div className="pulse-synexus-pro-promo">
+          <div className="pulse-synexus-pro-promo__honeycomb" aria-hidden />
+          <p className="pulse-synexus-pro-promo__label">Synexus Pro</p>
+          <p className="pulse-synexus-pro-promo__price">$19.99/month</p>
+          <p className="pulse-synexus-pro-promo__headline">Unlimited trading intelligence. One simple price.</p>
+          <p className="pulse-synexus-pro-promo__body">
+            Unlock the full Synexus system with real-time Sentinel analysis, risk scanning, momentum tracking, whale
             activity signals, pattern detection, and unlimited trading intelligence tools.
           </p>
-          <ul className="pulse-nexus-pro-promo__bullets">
-            <li>Unlimited Nexus access</li>
+          <ul className="pulse-synexus-pro-promo__bullets">
+            <li>Unlimited Synexus access</li>
             <li>Real-time Sentinel signals</li>
             <li>Scam and risk alerts</li>
             <li>Whale activity tracking</li>
@@ -850,25 +850,25 @@ export function Pulse() {
             <li>Fast trading links</li>
             <li>Priority platform updates</li>
           </ul>
-          <div className="pulse-nexus-pro-promo__cta-wrap">
+          <div className="pulse-synexus-pro-promo__cta-wrap">
             {plan !== "PRO" ? (
               <button
                 type="button"
-                className="pulse-button--pro pulse-nexus-pro-promo__cta"
+                className="pulse-button--pro pulse-synexus-pro-promo__cta"
                 disabled={checkoutBusy}
                 onClick={() => void handleUpgradeTrigger()}
               >
-                {checkoutBusy ? "Opening…" : "Upgrade to Nexus Pro — $19.99/month"}
+                {checkoutBusy ? "Opening…" : "Upgrade to Synexus Pro — $19.99/month"}
               </button>
             ) : (
-              <p className="pulse-nexus-pro-promo__active">Nexus Pro is active on your account.</p>
+              <p className="pulse-synexus-pro-promo__active">Synexus Pro is active on your account.</p>
             )}
           </div>
-          <p className="pulse-nexus-pro-promo__disclaimer">
+          <p className="pulse-synexus-pro-promo__disclaimer">
             Cancel anytime. No financial advice. Trade at your own risk.
           </p>
         </div>
-        <p className="pulse-card__body pulse-nexus-pro-wrap__plan">Current plan: {formatPlanName(plan)}</p>
+        <p className="pulse-card__body pulse-synexus-pro-wrap__plan">Current plan: {formatPlanName(plan)}</p>
         {visibleSignals.length ? (
           <ul className="pulse-list">
             {visibleSignals.map((signal) => (
@@ -877,7 +877,7 @@ export function Pulse() {
                   {signal.title} — {signal.detail}
                 </span>
                 {signal.isLocked ? (
-                  <strong>Included in Nexus Pro</strong>
+                  <strong>Included in Synexus Pro</strong>
                 ) : (
                   <strong>Unlocked</strong>
                 )}
@@ -885,7 +885,7 @@ export function Pulse() {
             ))}
           </ul>
         ) : (
-          <p className="pulse-card__body">Sentinels are scanning for Nexus Pro signal candidates.</p>
+          <p className="pulse-card__body">Sentinels are scanning for Synexus Pro signal candidates.</p>
         )}
       </div>
     </div>

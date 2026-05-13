@@ -69,7 +69,7 @@ export function HomeFeed() {
                   src="/hivemind-logo-art.png"
                   alt="HiveMind"
                 />
-                <p className="landing-hero__eyebrow landing-hero__eyebrow--logo-frame">The Nexus</p>
+                <p className="landing-hero__eyebrow landing-hero__eyebrow--logo-frame">The Synexus</p>
               </div>
               <span className="neural-node neural-node--mid-right" aria-hidden />
               <span className="neural-node neural-node--right" aria-hidden />
@@ -79,14 +79,14 @@ export function HomeFeed() {
             Detect risky tokens before you buy.
           </h1>
           <p className="landing-hero__subtext">
-            The Nexus Sentinels scan tokens, detect risk, track whales, flag scams, and help you move before
+            The Synexus Sentinels scan tokens, detect risk, track whales, flag scams, and help you move before
             the crowd sees the danger.
           </p>
           <p className="landing-hero__hook">Before the rug. Before the crash.</p>
           <div className="landing-hero__actions">
             <Link to="/pulse">Try demo on Pulse</Link>
-            <Link to="/pulse#nexus-pro" className="landing-hero__actions--pro">
-              Nexus Pro
+            <Link to="/pulse#synexus-pro" className="landing-hero__actions--pro">
+              Synexus Pro
             </Link>
           </div>
         </div>
@@ -96,14 +96,14 @@ export function HomeFeed() {
         <article className="landing-info-card landing-info-card--spotlight">
           <h2>One flash of intel before the candles catch up.</h2>
           <p>
-            The Nexus Sentinels slam liquidity drift, whale-sized moves, violent volume, and swarm reports into a
+            The Synexus Sentinels slam liquidity drift, whale-sized moves, violent volume, and swarm reports into a
             single hit—you feel the shift before the feed goes loud.
           </p>
         </article>
         <article className="landing-info-card">
           <h2>Detect risks. Track whales. Flag scams.</h2>
           <p>
-            The Nexus routes signals through four Sentinels—Sentinel Aegis, Sentinel Pulse, Sentinel Titan, and Sentinel
+            The Synexus routes signals through four Sentinels—Sentinel Aegis, Sentinel Pulse, Sentinel Titan, and Sentinel
             Cipher—so you get one coherent read instead of noise.
           </p>
         </article>
@@ -118,7 +118,7 @@ export function HomeFeed() {
 
       <section className="guardian-banner">
         <p className="guardian-banner__message">
-          {sentinelIdle} The Nexus · Sentinels active.
+          {sentinelIdle} The Synexus · Sentinels active.
         </p>
         <p className="guardian-banner__source">
           Data source: {feedSource === "live" ? "DexScreener live feed" : "Mock fallback feed"}
@@ -179,7 +179,7 @@ export function HomeFeed() {
           <p className="hive-vision__eyebrow">Hivemind Security Grid</p>
           <h2 className="hive-vision__title">Built to be the safest Solana trading command center.</h2>
           <p className="hive-vision__copy">
-            AI risk modeling, crowd intelligence, and real-time signals from The Nexus work as one system.
+            AI risk modeling, crowd intelligence, and real-time signals from The Synexus work as one system.
           </p>
         </div>
         <div className="hive-vision__grid">
@@ -194,7 +194,7 @@ export function HomeFeed() {
             <p className="hive-vision-card__icon">COM</p>
             <p className="hive-vision-card__title">Community Protection</p>
             <p className="hive-vision-card__body">
-              Reports from traders feed into The Nexus scoring so risky tokens are flagged faster.
+              Reports from traders feed into The Synexus scoring so risky tokens are flagged faster.
             </p>
           </article>
           <article className="hive-vision-card">
@@ -223,7 +223,7 @@ export function HomeFeed() {
 
       <section className="token-section">
         <div className="token-section__head">
-          <h2 className="token-section__title">Nexus risk alerts</h2>
+          <h2 className="token-section__title">Synexus risk alerts</h2>
           <p className="token-section__lede">
             Warning and danger bands that need attention
           </p>
@@ -241,7 +241,7 @@ export function HomeFeed() {
         <div className="token-section__head">
           <h2 className="token-section__title">Verified / Safer Tokens</h2>
           <p className="token-section__lede">
-            Tokens currently classified in the Nexus Safe band
+            Tokens currently classified in the Synexus Safe band
           </p>
         </div>
         <ul className="token-list">
@@ -265,7 +265,7 @@ export function HomeFeed() {
           <h3>Built for faster decisions</h3>
           <p>1) Search coins before you buy.</p>
           <p>2) Read Sentinel risk signals before you chase hype.</p>
-          <p>3) Upgrade to Nexus Pro when you want the full intelligence grid.</p>
+          <p>3) Upgrade to Synexus Pro when you want the full intelligence grid.</p>
         </div>
       </section>
     </div>

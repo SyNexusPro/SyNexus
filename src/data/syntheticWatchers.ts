@@ -42,7 +42,7 @@ const sentinelSeeds = [
     name: "Mother",
     role: "Core AI",
     baseXp: 180,
-    status: "Mother Core: Coordinating Sentinel lanes across The Nexus.",
+    status: "Mother Core: Coordinating Sentinel lanes across The Synexus.",
     lesson: "Mother Core binds Sentinel outputs into one operational picture.",
     accent: "gold" as const,
     isMother: true,
@@ -126,7 +126,7 @@ export function buildMotherBriefing(sentinels: SyntheticSentinel[], signals: Sen
   const watchedTokens = signals.watchlistCount + signals.trackedCount;
   const topLevel = Math.max(...sentinels.map((s) => s.level));
 
-  return `The Nexus · Sentinels overview: ${activeAlerts} alert signal${activeAlerts === 1 ? "" : "s"} reviewed, ${watchedTokens} watched asset${watchedTokens === 1 ? "" : "s"} monitored, top Sentinel rank ${topLevel}. Oversight confidence ${mother?.confidence ?? 70}%.`;
+  return `The Synexus · Sentinels overview: ${activeAlerts} alert signal${activeAlerts === 1 ? "" : "s"} reviewed, ${watchedTokens} watched asset${watchedTokens === 1 ? "" : "s"} monitored, top Sentinel rank ${topLevel}. Oversight confidence ${mother?.confidence ?? 70}%.`;
 }
 
 export function buildMotherDailyReport(
@@ -154,7 +154,7 @@ export function buildMotherDailyReport(
     daySummary:
       watchedAssets > 0
         ? `${watchedAssets} watched asset${watchedAssets === 1 ? "" : "s"} tracked, ${activeAlerts} alert stream${activeAlerts === 1 ? "" : "s"} reviewed, and ${signals.reportCount} hive report${signals.reportCount === 1 ? "" : "s"} folded into memory.`
-        : "No watchlisted assets yet. The Nexus is in standby demo mode, waiting for fresh reports.",
+        : "No watchlisted assets yet. The Synexus is in standby demo mode, waiting for fresh reports.",
     priorities: [
       activeAlerts > 0
         ? "Review active alerts and confirm whether each warning was useful."
@@ -168,9 +168,9 @@ export function buildMotherDailyReport(
     ],
     closingNote:
       mood === "High Guard"
-        ? "The Nexus recommends staying defensive today. Activity is elevated—keep alerts on."
+        ? "The Synexus recommends staying defensive today. Activity is elevated—keep alerts on."
         : mood === "Alert"
           ? "Sentinels see movement worth watching. Verify anything suspicious."
-          : "The Nexus reports a calm grid. Good day to train watchlists and sharpen alerts.",
+          : "The Synexus reports a calm grid. Good day to train watchlists and sharpen alerts.",
   };
 }

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { TokenLogo } from "./TokenLogo";
-import { type GuardianRisk, type Token, nexusRiskBandLabel } from "../data/tokens";
+import { type GuardianRisk, type Token, synexusRiskBandLabel } from "../data/tokens";
 
 const riskStyles: Record<
   GuardianRisk,
@@ -75,7 +75,7 @@ export function TokenCard({ token }: Props) {
             className="token-card__risk-dot"
             style={{ background: risk.dot }}
           />
-          The Nexus · {nexusRiskBandLabel(token.guardianRisk)}
+          The Synexus · {synexusRiskBandLabel(token.guardianRisk)}
         </div>
       </div>
       <div className="token-card__bottom">
