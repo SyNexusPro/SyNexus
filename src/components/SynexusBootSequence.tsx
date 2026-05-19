@@ -4,7 +4,7 @@ import { notifySynexusBootComplete } from "../lib/synexusBootComplete";
 
 const PHASE_COPY: readonly string[] = [
   "SYNEXUS INITIALIZING",
-  "Mother Core: Platform intelligence online",
+  "Mother: operator channel tethered",
   "Sentinels synchronizing...",
   "Market intelligence connected.",
   "ENTER THE SYNEXUS",

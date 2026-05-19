@@ -548,7 +548,7 @@ export function Pulse() {
 
   function handleMotherReport() {
     setMotherReportStamp(Date.now());
-    setStatus("Sentinels refreshed the Synexus overview.");
+    setStatus("Mother refreshed your eyes-only dossier—the Sentinels never see this verbatim.");
   }
 
   const warningCalls = tracked.filter((token) => token.guardian_status === "WARNING");
@@ -613,30 +613,33 @@ export function Pulse() {
         ) : null}
       </div>
 
-      <section className="synexus-core-panel">
+      <section className="synexus-core-panel synexus-core-panel--mother-private" aria-labelledby="mother-private-title">
         <div className="synexus-core-panel__head">
           <img className="synexus-core-panel__logo" src="/hivemind-logo.svg" alt="" aria-hidden />
           <div>
-            <p className="synexus-core-panel__eyebrow">The Synexus</p>
-            <h2 className="synexus-core-panel__title">
-              Mother Core
-              <span className="synexus-core-panel__core-ai">Operator intelligence</span>
+            <p className="synexus-core-panel__eyebrow synexus-core-panel__eyebrow--eyes-only">Eyes only · Pulse</p>
+            <h2 className="synexus-core-panel__title" id="mother-private-title">
+              Mother
+              <span className="synexus-core-panel__core-ai">Secret watcher over every Sentinel · reports only to you</span>
             </h2>
           </div>
         </div>
 
         <div className="synexus-core-panel__status" aria-live="polite">
-          <p className="synexus-core-panel__status-title">SYNEXUS ONLINE</p>
-          <p className="synexus-core-panel__status-line">Mother Core: Platform intelligence online</p>
-          <p className="synexus-core-panel__status-line">4 Sentinels active</p>
+          <p className="synexus-core-panel__status-title synexus-core-panel__status-title--private">
+            MOTHER ONLINE — PRIVATE THREAD
+          </p>
+          <p className="synexus-core-panel__status-line">Secure tether active: she absorbs every Sentinel lane, answers only here.</p>
+          <p className="synexus-core-panel__status-line">Four Sentinels active below—they never receive her full transcript.</p>
         </div>
 
         <p className="synexus-core-panel__briefing">{pulseFormatSentinelNamesInText(motherBriefing)}</p>
-        <p className="synexus-core-panel__copy">
-          The Synexus coordinates Aegis, Pulse, Titan, and Cipher—each Sentinel lane learns from reports, alerts,
-          watchlists, and hive memory over time.
+        <p className="synexus-core-panel__copy synexus-core-panel__copy--mother">
+          You're the lone operator she's wired to feed. Above the public Sentinel grid Mother sits in silence, merges
+          every alert, whale trace, swarm report, and hive memory drift, then distills what's meant for{" "}
+          <em>your</em> briefing—not theirs.
         </p>
-        <div className="mother-report">
+        <div className="mother-report" role="region" aria-label="Mother private report to operator">
           <div className="mother-report__metrics">
             <span>Mood: {motherDailyReport.mood}</span>
             <span>Health: {motherDailyReport.systemHealth}%</span>
@@ -651,7 +654,7 @@ export function Pulse() {
           </ul>
           <p className="mother-report__closing">{motherDailyReport.closingNote}</p>
           <button className="mother-report__button" type="button" onClick={handleMotherReport}>
-            Ask the Sentinels for a fresh brief
+            Ask Mother for a fresh eyes-only brief
           </button>
         </div>
       </section>
@@ -660,7 +663,7 @@ export function Pulse() {
         <div className="token-section__head">
           <h2 className="token-section__title">Sentinels</h2>
           <p className="token-section__lede">
-            Four specialist Sentinels—ranks, XP, confidence, and learning memory
+            Four specialist lanes you see on the roster—Mother is the hidden watcher above them, quietly feeding you.
           </p>
         </div>
         <div className="synthetic-sentinels">

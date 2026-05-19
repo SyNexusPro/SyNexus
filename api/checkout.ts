@@ -6,6 +6,8 @@ type PaidPlan = "PRO";
 type CheckoutEnv = {
   STRIPE_SECRET_KEY?: string;
   STRIPE_PRICE_ID_PRO?: string;
+  /** Free trial in days when starting Synexus Pro (0 = disabled). Mirrors “first month free” in the app. Default 30. */
+  STRIPE_TRIAL_DAYS_PRO?: string;
   VITE_APP_URL?: string;
 };
 
@@ -62,6 +64,13 @@ function getCheckoutErrorMessage(error: unknown) {
   return "Checkout could not be started. Please try again in a moment.";
 }
 
+function trialDaysFromEnv(raw: string | undefined): number {
+  if (raw === undefined || raw.trim() === "") return 30;
+  const n = Number.parseInt(raw, 10);
+  if (!Number.isFinite(n) || n <= 0) return 0;
+  return Math.min(n, 730);
+}
+
 async function createCheckoutResponse(
   payload: CheckoutPayload,
   headers: Record<string, string | string[] | undefined>,
@@ -93,6 +102,7 @@ async function createCheckoutResponse(
       env.VITE_APP_URL ||
       (requestHost ? `https://${requestHost}` : "http://localhost:5173");
     const userId = payload.userId?.trim();
+    const trialDays = trialDaysFromEnv(env.STRIPE_TRIAL_DAYS_PRO);
 
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       mode: "subscription",
@@ -105,6 +115,12 @@ async function createCheckoutResponse(
         userId: userId || "anonymous",
       },
     };
+
+    if (trialDays > 0) {
+      sessionParams.subscription_data = {
+        trial_period_days: trialDays,
+      };
+    }
 
     if (userId) {
       sessionParams.client_reference_id = userId;

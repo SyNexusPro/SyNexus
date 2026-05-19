@@ -4,8 +4,8 @@ import { isSynexusBootComplete, subscribeSynexusBootComplete } from "../lib/syne
 
 const PLAN_STORAGE_KEY = "hivemind_paid_plan";
 const DISMISS_STORAGE_KEY = "hivemind_synexus_pro_upsell_dismissed_at";
-/** Auto pulse runs twice then hides until next tab/session or timed reopen after dismiss. */
-const AUTO_PROMO_SESSION_KEY = "hivemind_synexus_promo_pulse_completed";
+/** Session flag: pulse finished, × dismissed, or user started Synexus Checkout — hides promo until a new browser session. */
+const SESSION_PROMO_HIDE_KEY = "hivemind_synexus_promo_pulse_completed";
 /** CSS animation-name on `.synexus-pro-upsell__panel` (must match index.css). */
 const PROMO_PULSE_ANIMATION = "synexus-pro-upsell-pulse-cycle";
 /** Show again after this many ms if the user closes without upgrading. */
@@ -23,17 +23,17 @@ function isSynexusProPlan(): boolean {
   }
 }
 
-function autoPromoAlreadyPlayedThisSession(): boolean {
+function synexusPromoHiddenThisSession(): boolean {
   try {
-    return sessionStorage.getItem(AUTO_PROMO_SESSION_KEY) === "1";
+    return sessionStorage.getItem(SESSION_PROMO_HIDE_KEY) === "1";
   } catch {
     return false;
   }
 }
 
-function markAutoPromoPlayedThisSession(): void {
+function hideSynexusPromoSession(): void {
   try {
-    sessionStorage.setItem(AUTO_PROMO_SESSION_KEY, "1");
+    sessionStorage.setItem(SESSION_PROMO_HIDE_KEY, "1");
   } catch {
     /* ignore */
   }
@@ -63,12 +63,18 @@ export function SynexusProUpsellModal() {
   const unmountRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const close = useCallback(() => {
+    hideSynexusPromoSession();
     setOpen(false);
     setError(null);
     try {
       localStorage.setItem(DISMISS_STORAGE_KEY, String(Date.now()));
     } catch {
       /* ignore */
+    }
+
+    if (openDelayRef.current) {
+      clearTimeout(openDelayRef.current);
+      openDelayRef.current = null;
     }
 
     if (unmountRef.current) clearTimeout(unmountRef.current);
@@ -115,7 +121,7 @@ export function SynexusProUpsellModal() {
       return;
     }
 
-    if (autoPromoAlreadyPlayedThisSession()) return;
+    if (synexusPromoHiddenThisSession()) return;
 
     if (!bootComplete) return;
 
@@ -177,6 +183,21 @@ export function SynexusProUpsellModal() {
       });
       const data = (await response.json().catch(() => ({}))) as { url?: string };
       if (!response.ok || !data.url) throw new Error(USER_ERROR);
+      hideSynexusPromoSession();
+      setOpen(false);
+      if (openDelayRef.current) {
+        clearTimeout(openDelayRef.current);
+        openDelayRef.current = null;
+      }
+      if (reopenRef.current) {
+        clearTimeout(reopenRef.current);
+        reopenRef.current = null;
+      }
+      if (unmountRef.current) {
+        clearTimeout(unmountRef.current);
+        unmountRef.current = null;
+      }
+      setMounted(false);
       window.location.href = data.url;
     } catch {
       setError(USER_ERROR);
@@ -186,7 +207,7 @@ export function SynexusProUpsellModal() {
   }
 
   function finishAutoPromoSequence() {
-    markAutoPromoPlayedThisSession();
+    hideSynexusPromoSession();
     setOpen(false);
     setError(null);
     if (unmountRef.current) clearTimeout(unmountRef.current);

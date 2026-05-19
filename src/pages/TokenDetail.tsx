@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { TokenLogo } from "../components/TokenLogo";
 import { submitHiveMindReport } from "../lib/reportSubmission";
+import { dexScreenerTokenUrl, jupiterBuyWithSolUrl, jupiterSellForSolUrl } from "../lib/solanaTradeLinks";
 import type { Token } from "../data/tokens";
 import {
   fetchTokenDetailById,
@@ -170,9 +171,9 @@ export function TokenDetail() {
     );
   }
 
-  const dexscreenerUrl = token.mintAddress
-    ? `https://dexscreener.com/solana/${token.mintAddress}`
-    : "https://dexscreener.com";
+  const dexscreenerUrl = dexScreenerTokenUrl(token.mintAddress, token.symbol);
+  const buySwapUrl = jupiterBuyWithSolUrl(token.mintAddress) ?? dexscreenerUrl;
+  const sellSwapUrl = jupiterSellForSolUrl(token.mintAddress) ?? dexscreenerUrl;
   const explorerUrl = token.mintAddress
     ? `https://solscan.io/token/${token.mintAddress}`
     : "https://solscan.io";
@@ -308,18 +309,20 @@ export function TokenDetail() {
       <section className="detail-trade-panel">
         <div>
           <h2>Trade actions</h2>
-          <p>Buy, sell, or prepare staking for {token.symbol}.</p>
+          <p>
+            Jupiter opens with SOL swaps prefilled — connect your wallet and confirm. Charts stay on DexScreener.
+          </p>
         </div>
         <div className="detail-trade-panel__actions">
-          <a href={dexscreenerUrl} target="_blank" rel="noopener noreferrer">
+          <a href={buySwapUrl} target="_blank" rel="noopener noreferrer" className="detail-trade-panel__buy">
             Buy {token.symbol}
           </a>
-          <a href={dexscreenerUrl} target="_blank" rel="noopener noreferrer">
+          <a href={sellSwapUrl} target="_blank" rel="noopener noreferrer">
             Sell {token.symbol}
           </a>
-          <button type="button" className="detail-trade-panel__soon" disabled>
-            Coming soon
-          </button>
+          <a href={dexscreenerUrl} target="_blank" rel="noopener noreferrer" className="detail-trade-panel__charts">
+            Charts
+          </a>
         </div>
       </section>
 

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { dexScreenerTokenUrl, jupiterBuyWithSolUrl, jupiterSellForSolUrl } from "../lib/solanaTradeLinks";
 import { TokenLogo } from "./TokenLogo";
 import { type GuardianRisk, type Token, synexusRiskBandLabel } from "../data/tokens";
 
@@ -53,9 +54,9 @@ type Props = { token: Token };
 export function TokenCard({ token }: Props) {
   const risk = riskStyles[token.guardianRisk];
   const up = token.change24hPct >= 0;
-  const marketUrl = token.mintAddress
-    ? `https://dexscreener.com/solana/${token.mintAddress}`
-    : `https://dexscreener.com/search?q=${encodeURIComponent(token.symbol)}`;
+  const chartUrl = dexScreenerTokenUrl(token.mintAddress, token.symbol);
+  const buyUrl = jupiterBuyWithSolUrl(token.mintAddress) ?? chartUrl;
+  const sellUrl = jupiterSellForSolUrl(token.mintAddress) ?? chartUrl;
 
   return (
     <article className="token-card">
@@ -98,15 +99,20 @@ export function TokenCard({ token }: Props) {
         </p>
       ) : null}
       <div className="token-card__actions">
-        <a href={marketUrl} target="_blank" rel="noopener noreferrer" className="token-card__trade">
+        <a
+          href={buyUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="token-card__trade token-card__trade--primary"
+        >
           Buy
         </a>
-        <a href={marketUrl} target="_blank" rel="noopener noreferrer" className="token-card__trade">
+        <a href={sellUrl} target="_blank" rel="noopener noreferrer" className="token-card__trade">
           Sell
         </a>
-        <button type="button" className="token-card__trade token-card__trade--disabled" disabled>
-          Coming soon
-        </button>
+        <a href={chartUrl} target="_blank" rel="noopener noreferrer" className="token-card__trade token-card__trade--secondary">
+          Charts
+        </a>
         <Link to={`/token/${token.id}`} className="token-card__details">
           View details
         </Link>

@@ -40,10 +40,12 @@ const sentinelSeeds = [
   {
     id: "mother",
     name: "Mother",
-    role: "Core AI",
+    role: "Secret over-watch (your channel only).",
     baseXp: 180,
-    status: "Mother Core: Coordinating Sentinel lanes across The Synexus.",
-    lesson: "Mother Core binds Sentinel outputs into one operational picture.",
+    status:
+      "Above every Sentinel lane: she hears everything, answers only you, and never mirrors this feed downstack.",
+    lesson:
+      "Mother is the hidden tier—Sentinels train in public; she reports the full picture straight to your desk.",
     accent: "gold" as const,
     isMother: true,
   },
@@ -126,7 +128,7 @@ export function buildMotherBriefing(sentinels: SyntheticSentinel[], signals: Sen
   const watchedTokens = signals.watchlistCount + signals.trackedCount;
   const topLevel = Math.max(...sentinels.map((s) => s.level));
 
-  return `The Synexus · Sentinels overview: ${activeAlerts} alert signal${activeAlerts === 1 ? "" : "s"} reviewed, ${watchedTokens} watched asset${watchedTokens === 1 ? "" : "s"} monitored, top Sentinel rank ${topLevel}. Oversight confidence ${mother?.confidence ?? 70}%.`;
+  return `Mother · eyes-only sitrep for you: ${activeAlerts} alert stream${activeAlerts === 1 ? "" : "s"} digested, ${watchedTokens} watched asset${watchedTokens === 1 ? "" : "s"} under her watch, strongest Sentinel lane at rank ${topLevel}. Her consolidated read sits at ~${mother?.confidence ?? 70}% confidence—the Sentinels never receive this dossier verbatim.`;
 }
 
 export function buildMotherDailyReport(
@@ -150,27 +152,27 @@ export function buildMotherDailyReport(
     mood,
     systemHealth,
     oversightGrade,
-    headline: `Mother Core: System stable — Sentinel discipline is ${oversightGrade}-grade.`,
+    headline: `Mother confirms your grid posture — Sentinel lanes graded ${oversightGrade} while she quietly tracks every leak above them.`,
     daySummary:
       watchedAssets > 0
-        ? `${watchedAssets} watched asset${watchedAssets === 1 ? "" : "s"} tracked, ${activeAlerts} alert stream${activeAlerts === 1 ? "" : "s"} reviewed, and ${signals.reportCount} hive report${signals.reportCount === 1 ? "" : "s"} folded into memory.`
-        : "No watchlisted assets yet. The Synexus is in standby demo mode, waiting for fresh reports.",
+        ? `She distilled ${watchedAssets} watched asset${watchedAssets === 1 ? "" : "s"}, ${activeAlerts} alert stream${activeAlerts === 1 ? "" : "s"}, and ${signals.reportCount} hive report${signals.reportCount === 1 ? "" : "s"} into this private brief; nothing copied wholesale to Sentinel UIs—only counsel for you.`
+        : "No watchlisted targets yet—Mother stays staged on your Pulse session, absorbing idle lanes until you feed live assets. Sentinels only see demos below.",
     priorities: [
       activeAlerts > 0
-        ? "Review active alerts and confirm whether each warning was useful."
-        : "Add tokens to your watchlist so Sentinels can start building memory.",
+        ? "Mother urges you—operator only—to validate each live alert; she keeps the raw intel off Sentinel dashboards until you're satisfied."
+        : "Spin up watch targets so Mother can brief you with real lanes; Sentinels below still learn from demos until then.",
       signals.reportCount > 0
-        ? "Keep collecting community reports so Sentinel Cipher can strengthen pattern memory."
-        : "Use report buttons on suspicious tokens to train Aegis and the Sentinels.",
+        ? "Keep feeding hive reports—Mother folds them into her private memory before deciding what the Sentinels rehearse next."
+        : "Use report buttons on suspicious tokens; Mother ingests them first, then selectively signals the Sentinels.",
       topSentinel
-        ? `${topSentinel.name} is leading today at level ${topSentinel.level}. Feed it more signals to push toward ${topSentinel.levelName}.`
-        : "Launch demo mode to wake the Sentinels and generate a training baseline.",
+        ? `${topSentinel.name} leads the public grid at level ${topSentinel.level}, but Mother still outranks them—ping her if you need the hidden read on what they missed.`
+        : "Wake demo mode so Mother can narrate a baseline while Sentinels practice in the open.",
     ],
     closingNote:
       mood === "High Guard"
-        ? "The Synexus recommends staying defensive today. Activity is elevated—keep alerts on."
+        ? "Mother's counsel: stay defensive—she's tracking escalation for you alone; keep alerts loud while she maps who's bluffing."
         : mood === "Alert"
-          ? "Sentinels see movement worth watching. Verify anything suspicious."
-          : "The Synexus reports a calm grid. Good day to train watchlists and sharpen alerts.",
+          ? "Mother flags motion you should personally verify—she won't broadcast this heat to the Sentinels until you say so."
+          : "Mother sees a calm grid—good window to train watchlists; she'll keep whispering if anything twitches off-screen.",
   };
 }
