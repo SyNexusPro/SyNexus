@@ -3825,3 +3825,387 @@ a {
     animation: synexus-boot-title-finale 0.28s ease-out both;
   }
 }
+
+/* ----- SyNexus Marketing Command Center (internal) ----- */
+.marketing-cmd {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 12px;
+}
+
+.marketing-cmd__hero {
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(120, 255, 72, 0.28);
+  background:
+    radial-gradient(circle at 12% -10%, rgba(137, 255, 47, 0.2), transparent 46%),
+    linear-gradient(170deg, rgba(4, 8, 4, 0.98), rgba(1, 2, 1, 0.98));
+  box-shadow:
+    inset 0 1px 0 rgba(137, 255, 47, 0.05),
+    0 0 40px rgba(120, 255, 72, 0.12),
+    var(--shadow);
+}
+
+.marketing-cmd__badge {
+  margin: 0 0 8px;
+  font-size: 0.61rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  color: rgba(190, 255, 118, 0.85);
+}
+
+.marketing-cmd__title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1.25;
+  text-shadow:
+    0 0 20px rgba(137, 255, 47, 0.25),
+    0 0 44px rgba(186, 255, 76, 0.12);
+}
+
+.marketing-cmd__sub {
+  margin: 10px 0 0;
+  font-size: 0.82rem;
+  color: rgba(216, 255, 202, 0.78);
+}
+
+.marketing-cmd__sub strong {
+  color: rgba(254, 255, 246, 0.95);
+  font-weight: 750;
+}
+
+.marketing-cmd__nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  padding: 0 4px;
+}
+
+.marketing-cmd__nav-link {
+  font-size: 0.75rem;
+  font-weight: 650;
+  color: rgba(200, 255, 214, 0.78);
+}
+
+.marketing-cmd__nav-link:hover {
+  color: var(--accent);
+}
+
+.marketing-cmd-card {
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(90, 255, 100, 0.18);
+  background: rgba(3, 5, 3, 0.94);
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.03),
+    0 0 28px rgba(80, 255, 96, 0.08),
+    var(--shadow);
+}
+
+.marketing-cmd-card__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.marketing-cmd-card__title {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(226, 255, 218, 0.94);
+}
+
+.marketing-cmd-card__chip {
+  font-size: 0.64rem;
+  font-weight: 750;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(137, 255, 47, 0.3);
+  color: rgba(200, 255, 206, 0.88);
+}
+
+.marketing-cmd-card__muted {
+  margin: 0 0 12px;
+  font-size: 0.78rem;
+  color: rgba(170, 210, 180, 0.78);
+  line-height: 1.5;
+}
+
+.marketing-cmd-card__muted strong {
+  color: rgba(220, 255, 226, 0.9);
+}
+
+.marketing-cmd-mission {
+  margin: 0;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(130, 255, 115, 0.22);
+  background: rgba(5, 12, 8, 0.78);
+  font-size: 0.86rem;
+  line-height: 1.52;
+  color: rgba(230, 255, 226, 0.93);
+}
+
+.marketing-cmd-example {
+  margin: 10px 0 0;
+  font-size: 0.74rem;
+  color: rgba(180, 220, 188, 0.72);
+  line-height: 1.52;
+}
+
+.marketing-cmd-example strong {
+  color: rgba(210, 255, 218, 0.92);
+}
+
+.marketing-cmd-checklist {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.marketing-cmd-checklist__item {
+  margin: 0;
+}
+
+.marketing-cmd-check {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: rgba(222, 255, 222, 0.9);
+  line-height: 1.42;
+}
+
+.marketing-cmd-check input {
+  accent-color: #89ff2f;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.marketing-cmd-stripe-hint {
+  margin: 14px 0 10px;
+  font-size: 0.74rem;
+  color: rgba(170, 200, 174, 0.74);
+}
+
+.marketing-cmd-inline-link {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.marketing-cmd-linkbox {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(100, 255, 116, 0.2);
+  background: rgba(2, 4, 3, 0.88);
+}
+
+.marketing-cmd-linkbox__label {
+  flex: 1 1 140px;
+  font-size: 0.72rem;
+  color: rgba(170, 200, 170, 0.74);
+}
+
+.marketing-cmd-code {
+  flex: 2 1 180px;
+  font-size: 0.72rem;
+  word-break: break-all;
+  color: rgba(220, 255, 226, 0.88);
+}
+
+.marketing-cmd-mini-copy {
+  border: 1px solid rgba(137, 255, 47, 0.4);
+  background: rgba(8, 20, 10, 0.95);
+  color: rgba(226, 255, 226, 0.95);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.marketing-cmd-mini-copy:hover {
+  filter: brightness(1.08);
+}
+
+.marketing-cmd-split {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(80, 120, 80, 0.25);
+}
+
+.marketing-cmd-mini-title {
+  margin: 0 0 6px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(200, 255, 216, 0.88);
+}
+
+.marketing-cmd-gen {
+  margin-bottom: 14px;
+}
+
+.marketing-cmd-gen:last-child {
+  margin-bottom: 0;
+}
+
+.marketing-cmd-gen__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.marketing-cmd-gen__label {
+  font-size: 0.76rem;
+  font-weight: 750;
+  color: rgba(210, 255, 226, 0.88);
+}
+
+.marketing-cmd-gen__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.marketing-cmd-btn {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition:
+    filter 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.marketing-cmd-btn--ghost {
+  border-color: rgba(120, 255, 100, 0.28);
+  background: rgba(4, 8, 5, 0.88);
+  color: rgba(220, 255, 226, 0.88);
+}
+
+.marketing-cmd-btn--ghost:hover {
+  filter: brightness(1.06);
+}
+
+.marketing-cmd-btn--primary {
+  border-color: rgba(157, 255, 94, 0.55);
+  background: linear-gradient(165deg, rgba(26, 48, 24, 0.98), rgba(5, 10, 6, 0.98));
+  color: #ecffd2;
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.05),
+    0 0 22px rgba(120, 255, 100, 0.15);
+}
+
+.marketing-cmd-btn--primary:hover {
+  filter: brightness(1.08);
+}
+
+.marketing-cmd-textarea {
+  width: 100%;
+  min-height: 120px;
+  resize: vertical;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(100, 255, 118, 0.16);
+  background: rgba(1, 2, 1, 0.92);
+  color: rgba(232, 255, 226, 0.96);
+  font-family:
+    ui-monospace,
+    "Cascadia Code",
+    monospace;
+  font-size: 0.76rem;
+  line-height: 1.52;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.marketing-cmd-calendar {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.marketing-cmd-calendar__row {
+  position: relative;
+  padding-left: 12px;
+  border-left: 2px solid rgba(137, 255, 47, 0.22);
+}
+
+.marketing-cmd-calendar__day {
+  display: block;
+  font-size: 0.61rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: rgba(186, 255, 138, 0.78);
+  margin-bottom: 4px;
+}
+
+.marketing-cmd-calendar__title {
+  display: block;
+  font-size: 0.86rem;
+  font-weight: 750;
+  color: rgba(230, 255, 226, 0.94);
+}
+
+.marketing-cmd-calendar__detail {
+  margin: 6px 0 0;
+  font-size: 0.74rem;
+  color: rgba(170, 200, 175, 0.78);
+  line-height: 1.5;
+}
+
+.marketing-cmd-foot {
+  text-align: center;
+  font-size: 0.68rem;
+  color: rgba(150, 180, 160, 0.55);
+  padding: 18px 8px 4px;
+}
+
+@media (max-width: 380px) {
+  .marketing-cmd-gen__bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .marketing-cmd-gen__actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .marketing-cmd-gen__actions > .marketing-cmd-btn {
+    flex: 1;
+    text-align: center;
+  }
+}

@@ -15,6 +15,12 @@ export function AppShell() {
         <span className="app-footer__sep" aria-hidden>
           ·
         </span>
+        <Link className="app-footer__link" to="/marketing-command">
+          Marketing Command
+        </Link>
+        <span className="app-footer__sep" aria-hidden>
+          ·
+        </span>
         <Link className="app-footer__link" to="/terms">
           Terms of Service
         </Link>

@@ -17,6 +17,9 @@ const Terms = lazy(() =>
 const TokenDetail = lazy(() =>
   import("./pages/TokenDetail").then((m) => ({ default: m.TokenDetail })),
 );
+const MarketingCommand = lazy(() =>
+  import("./pages/MarketingCommand").then((m) => ({ default: m.MarketingCommand })),
+);
 
 function RouteFallback() {
   return (
@@ -36,6 +39,7 @@ export default function App() {
             <Route path="hub" element={<EcosystemHub />} />
             <Route path="pulse" element={<Pulse />} />
             <Route path="terms" element={<Terms />} />
+            <Route path="marketing-command" element={<MarketingCommand />} />
             <Route path="token/:tokenId" element={<TokenDetail />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

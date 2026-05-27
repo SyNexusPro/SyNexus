@@ -1,0 +1,15 @@
+{
+  "name": "synexus-marketing-ai",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "CLI bot for SyNexus marketing copy (templates only — no auto-posting).",
+  "scripts": {
+    "start": "node synexusMarketingBot.js",
+    "pack": "node synexusMarketingBot.js --write",
+    "watch": "node synexusMarketingBot.js --watch"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
