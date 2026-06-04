@@ -1,0 +1,6 @@
+{
+	"appId": "com.hivemind.app",
+	"appName": "HiveMind",
+	"webDir": "dist",
+	"packageClassList": []
+}

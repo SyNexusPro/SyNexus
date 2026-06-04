@@ -1,0 +1,30 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="92" fill="#020702"/>
+  <g opacity="0.45">
+    <path d="M52 244H154M358 244H460M84 176L178 218M334 218L428 176M84 334L178 292M334 292L428 334" stroke="#89ff2f" stroke-width="3"/>
+    <circle cx="52" cy="244" r="7" fill="#d8ff38"/>
+    <circle cx="84" cy="176" r="6" fill="#89ff2f"/>
+    <circle cx="428" cy="176" r="6" fill="#d8ff38"/>
+    <circle cx="460" cy="244" r="7" fill="#89ff2f"/>
+    <circle cx="84" cy="334" r="6" fill="#d8ff38"/>
+    <circle cx="428" cy="334" r="6" fill="#89ff2f"/>
+  </g>
+  <path d="M256 54L426 152V348L256 446L86 348V152L256 54Z" fill="#071107" stroke="#a6ff25" stroke-width="12"/>
+  <path d="M256 82L398 164V336L256 418L114 336V164L256 82Z" stroke="#48ff23" stroke-width="3" opacity="0.72"/>
+  <path d="M148 188H202M310 188H364M146 324H202M310 324H366M136 256H192M320 256H376" stroke="#1edc45" stroke-width="2" opacity="0.45"/>
+  <g filter="url(#glow)">
+    <path d="M246 150C207 129 159 154 159 205C135 218 127 255 146 279C134 317 166 352 205 342C217 365 246 359 246 329V150Z" fill="#7cff28"/>
+    <path d="M266 150C305 129 353 154 353 205C377 218 385 255 366 279C378 317 346 352 307 342C295 365 266 359 266 329V150Z" fill="#89ff2f"/>
+    <path d="M246 164C219 150 185 166 184 202C162 214 158 241 174 260C160 293 190 321 221 310C225 326 238 333 246 321M266 164C293 150 327 166 328 202C350 214 354 241 338 260C352 293 322 321 291 310C287 326 274 333 266 321" stroke="#194f14" stroke-width="7" stroke-linecap="round"/>
+    <path d="M256 146V340" stroke="#0b2408" stroke-width="8" stroke-linecap="round"/>
+    <path d="M204 214C222 211 235 218 244 232M190 270C207 263 225 265 242 279M308 214C290 211 277 218 268 232M322 270C305 263 287 265 270 279" stroke="#dfff54" stroke-width="5" stroke-linecap="round" opacity="0.75"/>
+  </g>
+  <path d="M256 64L426 152V348L256 446L86 348V152L256 64Z" stroke="#d8ff38" stroke-width="2" opacity="0.9"/>
+  <defs>
+    <filter id="glow" x="100" y="104" width="312" height="292" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.45 0 0 0 0 1 0 0 0 0 0.08 0 0 0 1 0"/>
+      <feBlend in="SourceGraphic"/>
+    </filter>
+  </defs>
+</svg>
