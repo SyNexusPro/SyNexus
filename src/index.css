@@ -45,7 +45,7 @@ body {
   background:
     linear-gradient(180deg, rgba(0, 4, 0, 0.18), rgba(0, 5, 0, 0.74)),
     radial-gradient(120% 90% at 50% -18%, rgba(137, 255, 47, 0.18) 0%, rgba(5, 26, 8, 0.72) 38%, transparent 66%),
-    url("/circuit-background.png"),
+    radial-gradient(circle at center , rgba(0 ,210 ,106 ,0.5), transparent 70%),
     var(--bg-deep);
   background-attachment: fixed;
   background-position: center;
@@ -79,8 +79,7 @@ a {
   background:
     linear-gradient(180deg, rgba(1, 8, 2, 0.18), rgba(1, 5, 1, 0.68)),
     radial-gradient(circle at 50% 5%, rgba(137, 255, 47, 0.12), transparent 36%),
-    url("/circuit-background.png");
-  background-attachment: fixed;
+    radial-gradient(circle at center, rgba(0,210,106,0.05), transparent 70%);
   background-position: center;
   background-size: cover;
 }

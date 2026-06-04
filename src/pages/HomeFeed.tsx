@@ -84,8 +84,7 @@ export function HomeFeed() {
           </p>
           <p className="landing-hero__hook">Before the rug. Before the crash.</p>
           <div className="landing-hero__actions">
-            <Link to="/pulse">Try demo on Pulse</Link>
-            <Link to="/pulse#synexus-pro" className="landing-hero__actions--pro">
+          <Link to="/pulse#synexus-pro" className="landing-hero__actions--pro">
               Synexus Pro
             </Link>
           </div>
