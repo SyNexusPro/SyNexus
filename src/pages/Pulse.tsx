@@ -2,8 +2,6 @@ import type { User } from "@supabase/supabase-js";
 import { useEffect, useMemo, useState } from "react";
 import { synexusRiskBandLabel } from "../data/tokens";
 import {
-  addWatchlistToken,
-  createWatchlist,
   fetchGuardianAlerts,
   fetchProfile,
   fetchTrackedTokens,
@@ -12,19 +10,30 @@ import {
   signInWithEmail,
   signOut,
   signUpWithEmail,
-  submitTokenReport,
   updatePaidPlan,
   upsertSignupProfile,
-  upsertTrackedToken,
 } from "../lib/supabaseData";
 import {
-  buildMotherBriefing,
-  buildMotherDailyReport,
+  buildOracleSupremeBriefing,
+  buildOracleSupremeDailyReport,
   buildSyntheticSentinels,
+  oracleSupremeMoodLabel,
 } from "../data/syntheticWatchers";
+import { ProTrialBanner } from "../components/ProTrialBanner";
+import { OracleSupremeVoiceBar } from "../components/OracleSupremeVoiceBar";
+import { OracleSupremeChat } from "../components/OracleSupremeChat";
+import { PulseOperatorLink } from "../components/PulseOperatorLink";
+import { SynexusSymbolMark } from "../components/SynexusSymbolMark";
+import {
+  readDaysSinceLastVisit,
+  resolveOperatorName,
+  type OracleConversationContext,
+} from "../lib/oracleSupremeConversation";
 import { hasSupabaseEnv } from "../lib/supabaseClient";
 import { getSentinelIdleMessage, getSentinelMessage } from "../lib/watcherVoice";
+import type { Token } from "../data/tokens";
 import { fetchMvpTokenFeed } from "../services/marketDataService";
+import { buildSentinelLiveIntel, sentinelLaneIdFromSentinel } from "../lib/sentinelIntel";
 
 type GuardianAlertItem = {
   token_symbol?: string | null;
@@ -103,10 +112,6 @@ function describeAuthError(err: unknown): string {
   return USER_FRIENDLY_ERROR;
 }
 
-function friendlyActionError(): string {
-  return USER_FRIENDLY_ERROR;
-}
-
 /** Pulse: show Aegis, Pulse, Titan, Cipher (no “Sentinel …” prefix). */
 function pulseSentinelDisplayName(fullName: string) {
   return fullName.startsWith("Sentinel ") ? fullName.slice("Sentinel ".length) : fullName;
@@ -125,12 +130,13 @@ export function Pulse() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
-  const [, setUserEmail] = useState<string | null>(null);
-  const [status, setStatus] = useState("Waiting for connection.");
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [operatorName, setOperatorName] = useState("there");
   const [watchlist, setWatchlist] = useState<string[]>([]);
   const [alerts, setAlerts] = useState<GuardianAlertItem[]>([]);
   const [tracked, setTracked] = useState<TrackedTokenItem[]>([]);
   const [sentinelAlerts, setSentinelAlerts] = useState<SentinelAlertItem[]>([]);
+  const [marketTokens, setMarketTokens] = useState<Token[]>([]);
   const [plan, setPlan] = useState<AppPlan>(() =>
     normalizeStoredPlan(localStorage.getItem(PLAN_STORAGE_KEY)),
   );
@@ -141,11 +147,12 @@ export function Pulse() {
   const [authMessage, setAuthMessage] = useState<AuthMessage>({
     tone: "info",
     text: hasSupabaseEnv
-      ? "Supabase auth is ready."
-      : "Add Supabase keys to enable saving watchlists and alerts to your account.",
+      ? "Secure operator channel ready — link below to save your Synexus data."
+      : "Demo mode active — link below for a local session.",
   });
   const [checkoutBusy, setCheckoutBusy] = useState(false);
-  const [motherReportStamp, setMotherReportStamp] = useState(() => Date.now());
+  const [oracleSupremeReportStamp, setOracleSupremeReportStamp] = useState(() => Date.now());
+  const [oracleSpeaking, setOracleSpeaking] = useState(false);
 
   useEffect(() => {
     if (!authBusy) return;
@@ -158,6 +165,7 @@ export function Pulse() {
 
   async function refreshMarketSignals() {
     const marketFeed = await fetchMvpTokenFeed();
+    setMarketTokens(marketFeed.all);
     const nextSentinelAlerts: SentinelAlertItem[] = marketFeed.all
       .filter(
         (token) =>
@@ -212,14 +220,17 @@ export function Pulse() {
       } else if (demoSession) {
         setUserId(demoSession);
         setUserEmail(null);
+        setOperatorName("there");
       } else {
         setUserId(null);
         setUserEmail(null);
+        setOperatorName("there");
       }
 
       if (!user) return;
 
       const profile = await fetchProfile(user.id);
+      setOperatorName(resolveOperatorName(profile, user.email));
       const rawPlan = profile?.paid_plan ?? localStorage.getItem(PLAN_STORAGE_KEY) ?? "FREE";
       const normalizedPlan = normalizeStoredPlan(rawPlan);
       setPlan(normalizedPlan);
@@ -243,11 +254,22 @@ export function Pulse() {
     if (demoSession) {
       setUserId(demoSession);
       setUserEmail(null);
-      setStatus("Demo session active. Sign in to save watchlists and alerts.");
     }
     setSentinelIdle(getSentinelIdleMessage(Date.now()));
+    void refreshMarketSignals().catch(() => {
+      /* keep empty until next poll */
+    });
     if (!hasSupabaseEnv) return;
     void loadData();
+  }, []);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      void refreshMarketSignals().catch(() => {
+        /* keep last good read */
+      });
+    }, 18_000);
+    return () => window.clearInterval(id);
   }, []);
 
   useEffect(() => {
@@ -256,7 +278,7 @@ export function Pulse() {
     const checkoutPlan = normalizeStoredPlan(params.get("plan"));
 
     if (checkoutStatus === "cancel") {
-      setStatus("Checkout canceled. Your plan was not changed.");
+      setAuthMessage({ tone: "info", text: "Checkout canceled. Your plan was not changed." });
       window.history.replaceState(null, "", window.location.pathname);
       return;
     }
@@ -264,17 +286,26 @@ export function Pulse() {
     if (checkoutStatus !== "success" || checkoutPlan !== "PRO") return;
 
     if (!hasSupabaseEnv) {
-      setStatus("Checkout succeeded, but Supabase is not configured to remember the subscription.");
+      setAuthMessage({
+        tone: "info",
+        text: "Checkout succeeded, but Supabase is not configured to remember the subscription.",
+      });
       return;
     }
 
     if (!userId) {
-      setStatus("Checkout succeeded. Sign in so HiveMind can remember your subscription.");
+      setAuthMessage({
+        tone: "success",
+        text: "Checkout succeeded. Sign in so Synexus can remember your subscription.",
+      });
       return;
     }
 
     if (userId.startsWith("demo-")) {
-      setStatus("Checkout succeeded. Sign in with a real account to link Synexus Pro.");
+      setAuthMessage({
+        tone: "success",
+        text: "Checkout succeeded. Sign in with a real account to link Synexus Pro.",
+      });
       return;
     }
 
@@ -282,11 +313,14 @@ export function Pulse() {
       .then(() => {
         setPlan("PRO");
         localStorage.setItem(PLAN_STORAGE_KEY, "PRO");
-        setStatus(`${formatPlanName("PRO")} saved to your HiveMind profile.`);
+        setAuthMessage({
+          tone: "success",
+          text: `${formatPlanName("PRO")} saved to your Synexus profile.`,
+        });
         window.history.replaceState(null, "", window.location.pathname);
       })
       .catch(() => {
-        setStatus(USER_FRIENDLY_ERROR);
+        setAuthMessage({ tone: "error", text: USER_FRIENDLY_ERROR });
       });
   }, [userId]);
 
@@ -294,7 +328,6 @@ export function Pulse() {
     if (authBusy) return;
     if (!email || !password) {
       setAuthMessage({ tone: "error", text: "Enter an email and password before signing up." });
-      setStatus("Enter an email and password first.");
       return;
     }
     try {
@@ -308,7 +341,6 @@ export function Pulse() {
         const message =
           "Demo session started. Add Supabase keys on the server to create a real account.";
         setAuthMessage({ tone: "success", text: message });
-        setStatus(message);
         return;
       }
       const result = await signUpWithEmail(email, password);
@@ -328,7 +360,6 @@ export function Pulse() {
         ? "Welcome to The Synexus. You are signed in."
         : "Check your inbox to confirm your email, then sign in.";
       setAuthMessage({ tone: "success", text: message });
-      setStatus(message);
       if (result.session && signupUser) {
         void loadData(signupUser);
       } else {
@@ -340,7 +371,6 @@ export function Pulse() {
           ? "Too many sign-up attempts. Please wait a minute before trying again."
           : describeAuthError(err);
       setAuthMessage({ tone: "error", text: friendlyMessage });
-      setStatus(friendlyMessage);
     } finally {
       setAuthBusy(false);
     }
@@ -350,7 +380,6 @@ export function Pulse() {
     if (authBusy) return;
     if (!email || !password) {
       setAuthMessage({ tone: "error", text: "Enter an email and password before signing in." });
-      setStatus("Enter an email and password first.");
       return;
     }
     try {
@@ -364,7 +393,6 @@ export function Pulse() {
         const message =
           "Demo session active. Add Supabase keys to sign in with email and password.";
         setAuthMessage({ tone: "success", text: message });
-        setStatus(message);
         return;
       }
       const result = await signInWithEmail(email, password);
@@ -375,7 +403,6 @@ export function Pulse() {
           tone: "error",
           text: "Sign-in did not finish. Confirm your email or reset your password.",
         });
-        setStatus("Sign-in incomplete. Check your email for a confirmation link.");
         return;
       }
       setUserId(signedIn.id);
@@ -384,112 +411,18 @@ export function Pulse() {
         ? `Synchronized as ${signedIn.email}.`
         : "Synchronized with The Synexus.";
       setAuthMessage({ tone: "success", text: message });
-      setStatus(message);
       void loadData(signedIn);
     } catch (err) {
       const message = describeAuthError(err);
       setAuthMessage({ tone: "error", text: message });
-      setStatus(message);
     } finally {
       setAuthBusy(false);
-    }
-  }
-
-  function handleDemoMode() {
-    const demoId = localStorage.getItem(DEMO_SESSION_KEY) ?? `demo-${Date.now()}`;
-    localStorage.setItem(DEMO_SESSION_KEY, demoId);
-    setUserId(demoId);
-    setUserEmail(null);
-    setAuthMessage({ tone: "success", text: "Demo mode is live. Explore freely; sign in to save." });
-    setWatchlist(["Synexus Watchlist: HIVE"]);
-    setTracked([
-      {
-        token_symbol: "HIVE",
-        token_name: "HiveMind",
-        guardian_status: "WARNING",
-        guardian_score: 63,
-      },
-      {
-        token_symbol: "SOL",
-        token_name: "Solana",
-        guardian_status: "SAFE",
-        guardian_score: 82,
-      },
-    ]);
-    setAlerts([
-      {
-        token_symbol: "SCAM",
-        severity: "DANGER",
-        title: "Demo scam report",
-        message: "Suspicious liquidity movement.",
-      },
-    ]);
-    setStatus("Demo mode: sample intelligence loaded. Sign in to persist watchlists and alerts.");
-  }
-
-  async function handleSeedData() {
-    if (!userId) {
-      setStatus("Sign in to save a watchlist, reports, and tracked tokens.");
-      return;
-    }
-    if (!hasSupabaseEnv || userId.startsWith("demo-")) {
-      setWatchlist(["Synexus Watchlist: HIVE"]);
-      setTracked([
-        {
-          token_symbol: "HIVE",
-          token_name: "HiveMind",
-          guardian_status: "WARNING",
-          guardian_score: 63,
-        },
-      ]);
-      setAlerts([
-        {
-          token_symbol: "SCAM",
-          severity: "DANGER",
-          title: "Demo scam report",
-          message: "Suspicious liquidity movement.",
-        },
-      ]);
-      setStatus("Sample watchlist and alerts shown in demo. Sign in with Supabase to save.");
-      return;
-    }
-    try {
-      const watchlistId = await createWatchlist(userId, "Synexus Watchlist");
-      await addWatchlistToken(
-        watchlistId,
-        "HIVE",
-        "HiveMind",
-        "5dAXtHS6xBEwuCQsgpwZDiqaByWdiQSvRYTsLnpf7i9u",
-      );
-      await submitTokenReport(
-        userId,
-        "SCAM",
-        "ScamMoon",
-        "Community report: suspicious liquidity movement.",
-      );
-      await upsertTrackedToken({
-        tokenSymbol: "HIVE",
-        tokenName: "HiveMind",
-        tokenAddress: "5dAXtHS6xBEwuCQsgpwZDiqaByWdiQSvRYTsLnpf7i9u",
-        chain: "solana",
-        price: 0.00432,
-        volume24h: 482364,
-        liquidity: 1285730,
-        marketCap: 43198122,
-        guardianScore: 63,
-        guardianStatus: "WARNING",
-      });
-      setStatus("Watchlist, report, and tracked token records written.");
-      await loadData();
-    } catch {
-      setStatus(friendlyActionError());
     }
   }
 
   async function handleSignOut() {
     if (!userId) {
       setAuthMessage({ tone: "error", text: "No active session to sign out." });
-      setStatus("No active session to sign out.");
       return;
     }
     if (!hasSupabaseEnv || userId.startsWith("demo-")) {
@@ -499,8 +432,7 @@ export function Pulse() {
       setWatchlist([]);
       setAlerts([]);
       setTracked([]);
-      setAuthMessage({ tone: "success", text: "Signed out of demo mode." });
-      setStatus("Signed out of demo mode.");
+      setAuthMessage({ tone: "success", text: "Operator link disconnected." });
       return;
     }
     try {
@@ -511,11 +443,10 @@ export function Pulse() {
       setWatchlist([]);
       setAlerts([]);
       setTracked([]);
-      setAuthMessage({ tone: "success", text: "Signed out." });
-      setStatus("Signed out.");
+      setOperatorName("there");
+      setAuthMessage({ tone: "success", text: "Operator link disconnected." });
     } catch {
       setAuthMessage({ tone: "error", text: USER_FRIENDLY_ERROR });
-      setStatus(friendlyActionError());
     }
   }
 
@@ -524,7 +455,7 @@ export function Pulse() {
     const checkoutError = USER_FRIENDLY_ERROR;
     try {
       setCheckoutBusy(true);
-      setStatus("Opening secure checkout…");
+      setAuthMessage({ tone: "info", text: "Opening secure checkout…" });
       const response = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -540,15 +471,17 @@ export function Pulse() {
       window.location.href = data.url;
     } catch {
       setAuthMessage({ tone: "error", text: checkoutError });
-      setStatus(checkoutError);
     } finally {
       setCheckoutBusy(false);
     }
   }
 
-  function handleMotherReport() {
-    setMotherReportStamp(Date.now());
-    setStatus("Mother refreshed your eyes-only dossier—the Sentinels never see this verbatim.");
+  function handleOracleSupremeReport() {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+    setOracleSpeaking(false);
+    setOracleSupremeReportStamp(Date.now());
   }
 
   const warningCalls = tracked.filter((token) => token.guardian_status === "WARNING");
@@ -581,13 +514,35 @@ export function Pulse() {
     () => buildSyntheticSentinels(sentinelSignals),
     [sentinelSignals],
   );
-  const motherBriefing = useMemo(
-    () => buildMotherBriefing(syntheticSentinels, sentinelSignals),
+
+  const sentinelLiveIntel = useMemo(
+    () =>
+      buildSentinelLiveIntel({
+        sentinels: syntheticSentinels,
+        tokens: marketTokens,
+        sentinelAlerts,
+        plan,
+      }),
+    [marketTokens, plan, sentinelAlerts, syntheticSentinels],
+  );
+  const oracleSupremeBriefing = useMemo(
+    () => buildOracleSupremeBriefing(syntheticSentinels, sentinelSignals),
     [syntheticSentinels, sentinelSignals],
   );
-  const motherDailyReport = useMemo(
-    () => buildMotherDailyReport(syntheticSentinels, sentinelSignals),
-    [motherReportStamp, syntheticSentinels, sentinelSignals],
+  const oracleSupremeDailyReport = useMemo(
+    () => buildOracleSupremeDailyReport(syntheticSentinels, sentinelSignals),
+    [oracleSupremeReportStamp, syntheticSentinels, sentinelSignals],
+  );
+
+  const oracleConversationContext = useMemo<OracleConversationContext>(
+    () => ({
+      operatorName,
+      alertCount: alerts.length + sentinelAlerts.length,
+      watchlistCount: watchlist.length + tracked.length,
+      plan,
+      daysSinceLastVisit: readDaysSinceLastVisit(),
+    }),
+    [operatorName, alerts.length, sentinelAlerts.length, watchlist.length, tracked.length, plan],
   );
 
   const authBusyLabel =
@@ -598,103 +553,165 @@ export function Pulse() {
       <section className="page__intro">
         <h1 className="page__headline">Pulse</h1>
         <p className="page__lede">
-          The Synexus command center: Sentinel warnings, safe calls, and live alerts.
+          Your command center — Oracle Supreme and four Sentinels watching the market for you.
         </p>
       </section>
 
-      <div className="pulse-status-banner">
-        <p className="pulse-status-banner__label">Status</p>
-        <p className="pulse-status-banner__message">{status}</p>
-        {!hasSupabaseEnv ? (
-          <p className="pulse-status-banner__hint">
-            Demo mode works without signup. Add Supabase and Stripe environment variables for live
-            accounts and Synexus Pro.
-          </p>
-        ) : null}
-      </div>
+      <ProTrialBanner />
 
-      <section className="synexus-core-panel synexus-core-panel--mother-private" aria-labelledby="mother-private-title">
+      <section
+        className={`synexus-core-panel synexus-core-panel--oracle-supreme${oracleSpeaking ? " synexus-core-panel--speaking" : ""}`}
+        aria-labelledby="oracle-supreme-title"
+      >
         <div className="synexus-core-panel__head">
-          <img className="synexus-core-panel__logo" src="/hivemind-logo.svg" alt="" aria-hidden />
+          <SynexusSymbolMark className="synexus-core-panel__logo" size="panel" />
           <div>
-            <p className="synexus-core-panel__eyebrow synexus-core-panel__eyebrow--eyes-only">Eyes only · Pulse</p>
-            <h2 className="synexus-core-panel__title" id="mother-private-title">
-              Mother
-              <span className="synexus-core-panel__core-ai">Secret watcher over every Sentinel · reports only to you</span>
+            <p className="synexus-core-panel__eyebrow synexus-core-panel__eyebrow--eyes-only">
+              {plan === "PRO" ? "Synexus Pro · Active" : "Synexus Pro · $19.99/mo after trial"}
+            </p>
+            <h2 className="synexus-core-panel__title" id="oracle-supreme-title">
+              Oracle Supreme
+              <span className="synexus-core-panel__core-ai">Commander of your Sentinels · reports only to you</span>
             </h2>
           </div>
         </div>
 
-        <div className="synexus-core-panel__status" aria-live="polite">
-          <p className="synexus-core-panel__status-title synexus-core-panel__status-title--private">
-            MOTHER ONLINE — PRIVATE THREAD
-          </p>
-          <p className="synexus-core-panel__status-line">Secure tether active: she absorbs every Sentinel lane, answers only here.</p>
-          <p className="synexus-core-panel__status-line">Four Sentinels active below—they never receive her full transcript.</p>
+        <div className="oracle-supreme-traits" aria-label="What Oracle Supreme is">
+          <span>Synthetic AI</span>
+          <span>Learns live</span>
+          <span>Decides in seconds</span>
         </div>
 
-        <p className="synexus-core-panel__briefing">{pulseFormatSentinelNamesInText(motherBriefing)}</p>
-        <p className="synexus-core-panel__copy synexus-core-panel__copy--mother">
-          You're the lone operator she's wired to feed. Above the public Sentinel grid Mother sits in silence, merges
-          every alert, whale trace, swarm report, and hive memory drift, then distills what's meant for{" "}
-          <em>your</em> briefing—not theirs.
+        <OracleSupremeChat
+          context={oracleConversationContext}
+          variant="inline"
+          onSpeakingChange={setOracleSpeaking}
+        />
+
+        <p className="synexus-core-panel__copy synexus-core-panel__copy--oracle-supreme oracle-supreme-intro">
+          Oracle Supreme is the reason Synexus Pro exists. Oracle is a synthetic commander — Oracle grows smarter
+          every time you track a token, get an alert, or file a report. Oracle runs Aegis, Pulse, Titan, and Cipher,
+          then writes you a private briefing in plain English. Nobody else on the platform gets Oracle&apos;s read.
         </p>
-        <div className="mother-report" role="region" aria-label="Mother private report to operator">
-          <div className="mother-report__metrics">
-            <span>Mood: {motherDailyReport.mood}</span>
-            <span>Health: {motherDailyReport.systemHealth}%</span>
-            <span>Grade: {motherDailyReport.oversightGrade}</span>
-          </div>
-          <h3>{motherDailyReport.headline}</h3>
-          <p>{motherDailyReport.daySummary}</p>
-          <ul>
-            {motherDailyReport.priorities.map((priority) => (
-              <li key={priority}>{pulseFormatSentinelNamesInText(priority)}</li>
-            ))}
-          </ul>
-          <p className="mother-report__closing">{motherDailyReport.closingNote}</p>
-          <button className="mother-report__button" type="button" onClick={handleMotherReport}>
-            Ask Mother for a fresh eyes-only brief
-          </button>
+
+        <div className="synexus-core-panel__status" aria-live="polite">
+          <p className="synexus-core-panel__status-title synexus-core-panel__status-title--private">
+            {plan === "PRO" ? "ONLINE · REPORTING TO YOU" : "STANDBY · UNLOCK WITH SYNEXUS PRO"}
+          </p>
+          <p className="synexus-core-panel__status-line">
+            Oracle listens to all four Sentinels, filters the noise, and tells you what to do next.
+          </p>
         </div>
+
+        <p className="synexus-core-panel__briefing">{pulseFormatSentinelNamesInText(oracleSupremeBriefing)}</p>
+
+        <OracleSupremeVoiceBar
+          plan={plan}
+          briefing={pulseFormatSentinelNamesInText(oracleSupremeBriefing)}
+          report={plan === "PRO" ? oracleSupremeDailyReport : undefined}
+          onSpeakingChange={setOracleSpeaking}
+        />
+
+        {plan === "PRO" ? (
+          <div className="oracle-supreme-report" role="region" aria-label="Oracle Supreme private briefing">
+            <p className="oracle-supreme-report__label">Your private briefing</p>
+            <div className="oracle-supreme-report__metrics">
+              <span title="How stressed the market looks from Oracle's read">
+                Stress: {oracleSupremeMoodLabel(oracleSupremeDailyReport.mood)}
+              </span>
+              <span title="How well your Sentinel team is performing">
+                Team: {oracleSupremeDailyReport.systemHealth}%
+              </span>
+              <span title="Overall Sentinel performance grade">
+                Grade: {oracleSupremeDailyReport.oversightGrade}
+              </span>
+            </div>
+            <h3>{oracleSupremeDailyReport.headline}</h3>
+            <p>{oracleSupremeDailyReport.daySummary}</p>
+            <p className="oracle-supreme-report__priorities-label">What Oracle wants you to focus on</p>
+            <ul>
+              {oracleSupremeDailyReport.priorities.map((priority) => (
+                <li key={priority}>{pulseFormatSentinelNamesInText(priority)}</li>
+              ))}
+            </ul>
+            <p className="oracle-supreme-report__closing">{oracleSupremeDailyReport.closingNote}</p>
+            <button className="oracle-supreme-report__button" type="button" onClick={handleOracleSupremeReport}>
+              Refresh my briefing
+            </button>
+          </div>
+        ) : (
+          <div className="oracle-supreme-unlock" role="region" aria-label="Unlock Oracle Supreme with Synexus Pro">
+            <p className="oracle-supreme-unlock__title">This is what $19.99/mo unlocks</p>
+            <ul className="oracle-supreme-unlock__list">
+              <li>Private commander briefings written for you — not a generic alert feed</li>
+              <li>Oracle Supreme directing Aegis, Pulse, Titan, and Cipher on your watchlist</li>
+              <li>A synthetic mind that learns from your reports and gets sharper over time</li>
+              <li>Instant reads on market stress, team health, and what to do next</li>
+              <li>Oracle Supreme speaks your briefings aloud — tap Listen anytime</li>
+            </ul>
+            <button
+              className="oracle-supreme-unlock__cta"
+              type="button"
+              disabled={checkoutBusy}
+              onClick={() => void handleUpgradeTrigger()}
+            >
+              {checkoutBusy ? "Opening checkout…" : "Start free trial · unlock Oracle Supreme"}
+            </button>
+          </div>
+        )}
       </section>
 
       <section className="sentinel-grid-panel">
         <div className="token-section__head">
           <h2 className="token-section__title">Sentinels</h2>
           <p className="token-section__lede">
-            Four specialist lanes you see on the roster—Mother is the hidden watcher above them, quietly feeding you.
+            Four specialists commanded by Oracle Supreme — live scans every 18s, faster on Synexus Pro.
           </p>
         </div>
         <div className="synthetic-sentinels">
           {syntheticSentinels
-            .filter((s) => !s.isMother)
+            .filter((s) => !s.isOracleSupreme)
             .map((sentinel) => {
+              const laneId = sentinelLaneIdFromSentinel(sentinel.id);
+              const intel = laneId ? sentinelLiveIntel[laneId] : null;
               const progress =
                 sentinel.level >= 5
                   ? 100
                   : Math.min(100, Math.round((sentinel.xp / sentinel.nextLevelXp) * 100));
               return (
                 <article
-                  className={`synthetic-sentinel synthetic-sentinel--${sentinel.accent}`}
+                  className={`synthetic-sentinel synthetic-sentinel--${sentinel.accent}${intel?.hits ? " synthetic-sentinel--active" : ""}`}
                   key={sentinel.id}
                 >
                   <div className="synthetic-sentinel__top">
                     <div>
-                      <p className="synthetic-sentinel__name">{pulseSentinelDisplayName(sentinel.name)}</p>
+                      <p className="synthetic-sentinel__name">
+                        <span className="synthetic-sentinel__live-dot" aria-hidden />
+                        {pulseSentinelDisplayName(sentinel.name)}
+                      </p>
                       <p className="synthetic-sentinel__desc">{sentinel.role}</p>
                     </div>
                     <span className="synthetic-sentinel__level">
                       Lv {sentinel.level} {sentinel.levelName}
                     </span>
                   </div>
+                  {intel ? (
+                    <div className="synthetic-sentinel__stats" aria-label="Sentinel performance">
+                      <span>{intel.responseMs}ms response</span>
+                      <span>{intel.precision}% precise</span>
+                      <span>{intel.scansPerMin}/min scans</span>
+                    </div>
+                  ) : null}
                   <div className="synthetic-sentinel__meter">
                     <span style={{ width: `${progress}%` }} />
                   </div>
-                  <p className="synthetic-sentinel__status">{sentinel.status}</p>
+                  <p className="synthetic-sentinel__status">{intel?.liveStatus ?? sentinel.status}</p>
+                  {intel?.focusSymbol ? (
+                    <p className="synthetic-sentinel__focus">Focus: {intel.focusSymbol}</p>
+                  ) : null}
                   <p className="synthetic-sentinel__lesson">{sentinel.lesson}</p>
                   <p className="synthetic-sentinel__confidence">
-                    Confidence: {sentinel.confidence}% · XP: {sentinel.xp}
+                    {intel?.hits ?? 0} live hit{intel?.hits === 1 ? "" : "s"} · Level {progress}%
                   </p>
                 </article>
               );
@@ -702,53 +719,23 @@ export function Pulse() {
         </div>
       </section>
 
-      <div className="pulse-card">
-        <p className="pulse-card__title">Enter the Synexus</p>
-        <p className="pulse-card__subtitle pulse-card__subtitle--premium">
-          Sentinels online. Market intelligence ready.
-        </p>
-        <div className="pulse-form">
-          <button className="pulse-demo-button pulse-demo-button--first" onClick={handleDemoMode} type="button">
-            Enter the Synexus
-          </button>
-          <p className={`pulse-auth-message pulse-auth-message--${authMessage.tone}`} role="status">
-            {authMessage.text}
-          </p>
-          {authBusy ? (
-            <p className="pulse-synexus-loading" role="status">
-              {authBusyLabel}
-            </p>
-          ) : null}
-          <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
-          />
-          <div className="pulse-actions">
-            <button onClick={handleSignUp} type="button" disabled={authBusy}>
-              {authBusy ? "Working..." : "Sign up"}
-            </button>
-            <button onClick={handleSignIn} type="button" disabled={authBusy}>
-              {authBusy ? "Working..." : "Sign in"}
-            </button>
-            <button onClick={handleSignOut} type="button" disabled={authBusy}>
-              Sign out
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="pulse-card">
-        <p className="pulse-card__title">Saved data</p>
-        <p className="pulse-card__body pulse-card__body--muted">
-          Sign in with Supabase to persist watchlists, community reports, and tracked tokens.
-        </p>
-        <button onClick={handleSeedData} type="button">
-          Seed watchlist / report / tracked token
-        </button>
-      </div>
+      <PulseOperatorLink
+        userId={userId}
+        operatorName={operatorName}
+        userEmail={userEmail}
+        plan={plan}
+        email={email}
+        password={password}
+        authBusy={authBusy}
+        authBusyLabel={authBusyLabel}
+        authMessage={authMessage}
+        hasSupabaseEnv={hasSupabaseEnv}
+        onEmailChange={setEmail}
+        onPasswordChange={setPassword}
+        onSignUp={() => void handleSignUp()}
+        onSignIn={() => void handleSignIn()}
+        onSignOut={() => void handleSignOut()}
+      />
 
       <div className="pulse-card">
         <p className="pulse-card__title">Saved watchlist tokens</p>
@@ -861,7 +848,7 @@ export function Pulse() {
                 disabled={checkoutBusy}
                 onClick={() => void handleUpgradeTrigger()}
               >
-                {checkoutBusy ? "Opening…" : "Upgrade to Synexus Pro — $19.99/month"}
+                {checkoutBusy ? "Opening…" : "Start free trial — then $19.99/month"}
               </button>
             ) : (
               <p className="pulse-synexus-pro-promo__active">Synexus Pro is active on your account.</p>

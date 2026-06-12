@@ -1,6 +1,6 @@
 {
-	"appId": "com.hivemind.app",
-	"appName": "HiveMind",
+	"appId": "com.synexus.app",
+	"appName": "Synexus",
 	"webDir": "dist",
 	"packageClassList": []
 }

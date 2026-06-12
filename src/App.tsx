@@ -14,6 +14,9 @@ const Pulse = lazy(() =>
 const Terms = lazy(() =>
   import("./pages/Terms").then((m) => ({ default: m.Terms })),
 );
+const Privacy = lazy(() =>
+  import("./pages/Privacy").then((m) => ({ default: m.Privacy })),
+);
 const TokenDetail = lazy(() =>
   import("./pages/TokenDetail").then((m) => ({ default: m.TokenDetail })),
 );
@@ -39,6 +42,7 @@ export default function App() {
             <Route path="hub" element={<EcosystemHub />} />
             <Route path="pulse" element={<Pulse />} />
             <Route path="terms" element={<Terms />} />
+            <Route path="privacy" element={<Privacy />} />
             <Route path="marketing-command" element={<MarketingCommand />} />
             <Route path="token/:tokenId" element={<TokenDetail />} />
           </Route>

@@ -7,15 +7,15 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.hivemind.app"
+    namespace = "com.synexus.app"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.hivemind.app"
+        applicationId "com.synexus.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        // Bump versionCode for every Play upload (must increase). Keep versionName in sync with package.json when practical.
+        // Bump versionCode for every Play Console upload (must always increase).
         versionCode 1
-        versionName "0.0.1"
+        versionName "1.0.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

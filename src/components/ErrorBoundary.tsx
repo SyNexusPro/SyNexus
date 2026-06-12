@@ -16,7 +16,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error("HiveMind runtime error", error, info);
+    console.error("Synexus runtime error", error, info);
   }
 
   render() {

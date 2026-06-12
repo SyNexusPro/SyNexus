@@ -62,8 +62,8 @@ type TokenSeed = Omit<Token, "guardianRisk" | "guardianMessage" | "riskScore" | 
 const tokenSeeds: TokenSeed[] = [
   {
     id: "hivemind-sol",
-    symbol: "HIVE",
-    name: "HiveMind",
+    symbol: "SYN",
+    name: "Synexus",
     priceUsd: 0.00432,
     change24hPct: 5.92,
     mintAddress: "5dAXtHS6xBEwuCQsgpwZDiqaByWdiQSvRYTsLnpf7i9u",

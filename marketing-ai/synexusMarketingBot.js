@@ -20,7 +20,7 @@ const TAGS = "#SyNexus #Solana #DeFi";
 const TRIAL_LINE = "First month free · $19.99/mo after trial on Nexus Pro.";
 
 const THEMES = [
-  "Risk surfaces fast — SyNexus Sentinels and Mother Core distill it into signal, not hype.",
+  "Risk surfaces fast — SyNexus Sentinels and Oracle Supreme distill it into signal, not hype.",
   "The Nexus aligns momentum scans, whale context, patterns, and risk — before the crowd piles in.",
   "AI market intelligence with discipline: Sentinel-grade analysis built for sober execution.",
 ];
@@ -53,12 +53,12 @@ export function generateTikTokScript(now = Date.now()) {
       ? "Hook: Freeze on a chart caption — VO: Moved already? SyNexus Sentinels scout before clicks."
       : s < 0.66
         ? "Hook: Pan your watchlist. VO: Loud feed, silent risks unless you Nexus-scan first."
-        : "Hook: About to ape. Freeze. VO: Mother Core + Sentinels pass first — then you choose.";
+        : "Hook: About to ape. Freeze. VO: Oracle Supreme + Sentinels pass first — then you choose.";
 
   return [
     `SyNexus — ${hook}`,
     "",
-    `[0–3s] Mention lanes: Sentinel Aegis (risk), Sentinel Pulse (momentum), Sentinel Titan (whales), Sentinel Cipher (patterns). Mother Core fuses lanes for operator clarity.`,
+    `[0–3s] Mention lanes: Sentinel Aegis (risk), Sentinel Pulse (momentum), Sentinel Titan (whales), Sentinel Cipher (patterns). Oracle Supreme fuses lanes for operator clarity.`,
     `[3–8s] On-screen: Nexus Pro — unlimited Nexus intelligence. ${TRIAL_LINE}`,
     `[8–12s] Brief app/The Nexus visuals. Whale tracking · momentum cues · Sentinel analysis.`,
     `[12–15s] Soft CTA: Try SyNexus — link out. Tags: ${TAGS}`,
@@ -86,7 +86,7 @@ export function generateDiscordPost(now = Date.now()) {
     "**SyNexus daily · The Nexus live**",
     t,
     "",
-    "Mother Core threads Sentinel outputs into one operator-grade read — no spam, structured lanes.",
+    "Oracle Supreme threads Sentinel outputs into one operator-grade read — no spam, structured lanes.",
     `**Nexus Pro** · unlimited Nexus intelligence. ${TRIAL_LINE}`,
     "",
     `**App** · ${origin}`,
@@ -101,7 +101,7 @@ export function generateRedditPost(now = Date.now()) {
       ? "[Showcase / Feedback] SyNexus command center — structuring Sentinel intelligence for SOL traders?"
       : seed % 3 === 1
         ? "Momentum vs noise — consolidated Nexus dashboards (SyNexus) vs scattered TG calls?"
-        : "Anyone building calm risk overlays? SyNexus + Mother Core as a restrained alternative to hype raids.";
+        : "Anyone building calm risk overlays? SyNexus + Oracle Supreme as a restrained alternative to hype raids.";
 
   const body = [
     "Posting as operator — sober feedback welcomed.",
@@ -139,7 +139,7 @@ export function growthMissionLine(date = new Date()) {
     "Carousel: Sentinel Aegis (risk lane) vs Sentinel Titan (whale lane) framed under The Nexus.",
     "Film a TikTok teaser: whale tracking spotted a suspicious flow ahead of chatter.",
     "X mini-thread (3 posts): disciplined momentum cues vs meme hype — stay factual, cite SyNexus.",
-    "Share a Nexused UI clip (blur keys): describe what Mother Core would emphasize for traders.",
+    "Share a Nexused UI clip (blur keys): describe what Oracle Supreme would emphasize for traders.",
     "Telegram changelog tone: Nexus Pro intelligence after trial at $19.99/m — FAQs, disclaimers intact.",
     "Discord micro-post inviting feedback on Sentinel alert hygiene — futuristic, moderation-friendly.",
     "Reddit-ready voice clip contrasting Telegram alpha chaos vs one Nexus recap.",

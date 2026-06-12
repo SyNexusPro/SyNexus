@@ -2,7 +2,7 @@ import { getCurrentUser, submitTokenReport } from "./supabaseData";
 import { hasSupabaseEnv } from "./supabaseClient";
 
 const LOCAL_KEY = "hivemind_pending_reports";
-const DEFAULT_REASON = "User reported from HiveMind";
+const DEFAULT_REASON = "User reported from Synexus";
 
 export type SubmitReportInput = {
   tokenSymbol: string;
@@ -32,7 +32,7 @@ function saveLocalReport(input: SubmitReportInput) {
   }
 }
 
-export async function submitHiveMindReport(input: SubmitReportInput): Promise<SubmitReportResult> {
+export async function submitSynexusReport(input: SubmitReportInput): Promise<SubmitReportResult> {
   const reason = input.reason?.trim() || DEFAULT_REASON;
   const details = input.details?.trim() || undefined;
 

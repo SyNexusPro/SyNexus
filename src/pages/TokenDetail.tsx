@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { TokenLogo } from "../components/TokenLogo";
-import { submitHiveMindReport } from "../lib/reportSubmission";
+import { submitSynexusReport } from "../lib/reportSubmission";
 import { dexScreenerTokenUrl, jupiterBuyWithSolUrl, jupiterSellForSolUrl } from "../lib/solanaTradeLinks";
 import type { Token } from "../data/tokens";
 import {
@@ -127,7 +127,7 @@ export function TokenDetail() {
     if (!token) return;
     setReportBusy(true);
     setReportNote(null);
-    const result = await submitHiveMindReport({
+    const result = await submitSynexusReport({
       tokenSymbol: token.symbol,
       tokenName: token.name,
       tokenAddress: token.mintAddress,
@@ -137,7 +137,7 @@ export function TokenDetail() {
       if (result.ok) {
         setReportNote(
           result.channel === "supabase"
-            ? "Report submitted to HiveMind."
+            ? "Report submitted to Synexus."
             : "Report saved on this device.",
         );
       setReportDetails("");

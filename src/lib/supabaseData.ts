@@ -125,7 +125,7 @@ export function normalizeSignupUsername(raw: string): string {
 
 function displayNameFromUsernameSlug(slug: string): string {
   const words = slug.split("_").filter(Boolean);
-  if (!words.length) return "HiveMind member";
+  if (!words.length) return "Synexus member";
   return words
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
     .join(" ");
@@ -156,7 +156,7 @@ export function buildFallbackProfileFields(
   slug = slug.slice(0, 24);
   const username = `${slug}_${shortId}`;
   const displayName =
-    local.replace(/\./g, " ").replace(/_/g, " ").trim() || "HiveMind member";
+    local.replace(/\./g, " ").replace(/_/g, " ").trim() || "Synexus member";
   return { username, displayName };
 }
 

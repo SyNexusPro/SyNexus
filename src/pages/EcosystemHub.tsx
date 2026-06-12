@@ -40,7 +40,7 @@ export function EcosystemHub() {
   return (
     <div className="page ecosystem-hub">
       <section className="ecosystem-hub__hero marketing-panel">
-        <p className="ecosystem-hub__eyebrow">HiveMind ecosystem</p>
+        <p className="ecosystem-hub__eyebrow">Synexus ecosystem</p>
         <h1 className="ecosystem-hub__title">Content hub · Affiliates · Token utility · Staking</h1>
         <p className="ecosystem-hub__lede">
           One home for market discovery, partner growth, and planned on-chain staking with transparent protocol
@@ -80,7 +80,7 @@ export function EcosystemHub() {
       <section id="hub-affiliate" className="ecosystem-hub__section marketing-panel">
         <h2>Affiliate ecosystem</h2>
         <p>
-          Share HiveMind with your audience. Final commission rules, cookie windows, and payout rails ship with the
+          Share Synexus with your audience. Final commission rules, cookie windows, and payout rails ship with the
           affiliate program launch. Example tiers below are illustrative only.
         </p>
         <div className="ecosystem-hub__tiers">
@@ -144,7 +144,7 @@ export function EcosystemHub() {
       <section id="hub-utility" className="ecosystem-hub__section marketing-panel">
         <h2>Token utility platform</h2>
         <p>
-          HiveMind token utility is designed around access, incentives, and alignment: unlock deeper feeds from
+          Synexus token utility is designed around access, incentives, and alignment: unlock deeper feeds from
           The Synexus Sentinels,
           fee discounts, partner campaigns, and (when live) staking participation. Exact tokenomics are published
           separately and may change before launch.
@@ -159,7 +159,7 @@ export function EcosystemHub() {
       <section id="hub-staking" className="ecosystem-hub__section marketing-panel ecosystem-hub__section--stakes">
         <h2>Staking &amp; protocol fees</h2>
         <p>
-          Planned staking pools let users lock eligible assets to support HiveMind liquidity or emissions programs while
+          Planned staking pools let users lock eligible assets to support Synexus liquidity or emissions programs while
           the protocol collects transparent fees—not financial advice; smart-contract risk applies.
         </p>
         <p className="ecosystem-hub__status">

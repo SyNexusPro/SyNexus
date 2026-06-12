@@ -1,8 +1,8 @@
 import { useMemo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { TokenCard } from "../components/TokenCard";
+import { SynexusLiveScanner } from "../components/SynexusLiveScanner";
 import { sampleTokens, type Token } from "../data/tokens";
-import { getSentinelIdleMessage, getSentinelMessage } from "../lib/watcherVoice";
 import { fetchMvpTokenFeed } from "../services/marketDataService";
 
 export function HomeFeed() {
@@ -23,12 +23,10 @@ export function HomeFeed() {
   const [dexLiveCount, setDexLiveCount] = useState(0);
   const [feedLoading, setFeedLoading] = useState(true);
   const [feedError, setFeedError] = useState<string | null>(null);
-  const [sentinelIdle, setSentinelIdle] = useState(getSentinelIdleMessage(Date.now()));
   const [coinSearch, setCoinSearch] = useState("");
 
   useEffect(() => {
     setFeedError(null);
-    setSentinelIdle(getSentinelIdleMessage(Date.now()));
     fetchMvpTokenFeed()
       .then((data) => {
         setAllTokens(data.all);
@@ -66,10 +64,14 @@ export function HomeFeed() {
               <div className="neural-hero-art__frame">
                 <img
                   className="neural-brain-logo neural-brain-logo--art"
-                  src="/hivemind-logo-art.png"
-                  alt="HiveMind"
+                  src="/hivemind-brain.png"
+                  alt="Synexus"
                 />
-                <p className="landing-hero__eyebrow landing-hero__eyebrow--logo-frame">The Synexus</p>
+                <img
+                  className="landing-hero__wordmark"
+                  src="/synexus-wordmark.png"
+                  alt="Synexus"
+                />
               </div>
               <span className="neural-node neural-node--mid-right" aria-hidden />
               <span className="neural-node neural-node--right" aria-hidden />
@@ -79,10 +81,9 @@ export function HomeFeed() {
             Detect risky tokens before you buy.
           </h1>
           <p className="landing-hero__subtext">
-            The Synexus Sentinels scan tokens, detect risk, track whales, flag scams, and help you move before
-            the crowd sees the danger.
+            The Sentinels of Synexus scan every token — flagging scams, tracking whales, and surfacing
+            danger before the crowd sees it.
           </p>
-          <p className="landing-hero__hook">Before the rug. Before the crash.</p>
           <div className="landing-hero__actions">
           <Link to="/pulse#synexus-pro" className="landing-hero__actions--pro">
               Synexus Pro
@@ -102,32 +103,26 @@ export function HomeFeed() {
         <article className="landing-info-card">
           <h2>Detect risks. Track whales. Flag scams.</h2>
           <p>
-            The Synexus routes signals through four Sentinels—Sentinel Aegis, Sentinel Pulse, Sentinel Titan, and Sentinel
-            Cipher—so you get one coherent read instead of noise.
+            The Synexus routes signals through four Sentinels—Aegis, Pulse, Titan, and Cipher—so you get one
+            coherent read instead of noise.
           </p>
         </article>
         <article className="landing-info-card landing-info-card--warning">
           <h2>Bad tokens move fast.</h2>
           <p>
             Scam launches, rug pulls, sudden dumps, and whale exits can hit before most traders see
-            the warning. HiveMind is built to surface those signals early.
+            the warning. Synexus is built to surface those signals early.
           </p>
         </article>
       </section>
 
-      <section className="guardian-banner">
-        <p className="guardian-banner__message">
-          {sentinelIdle} The Synexus · Sentinels active.
-        </p>
-        <p className="guardian-banner__source">
-          Data source: {feedSource === "live" ? "DexScreener live feed" : "Mock fallback feed"}
-        </p>
-        <p className="guardian-banner__source">Live pairs synced: {dexLiveCount}</p>
-        {feedLoading ? (
-          <p className="feed-status feed-status--loading">{getSentinelMessage("idle")}</p>
-        ) : null}
-        {feedError ? <p className="feed-status feed-status--error">{feedError}</p> : null}
-      </section>
+      <SynexusLiveScanner
+        tokens={allTokens}
+        feedSource={feedSource}
+        dexLiveCount={dexLiveCount}
+        loading={feedLoading}
+        error={feedError}
+      />
 
       <section className="coin-search-panel">
         <h2 className="token-section__title coin-search-panel__title">Token search</h2>
@@ -150,32 +145,36 @@ export function HomeFeed() {
             </ul>
           ) : (
             <p className="coin-search-panel__empty">
-              No matching tokens in the Hive feed. Try SOL, HIVE, BONK, or PEPE.
+              No matching tokens in the Synexus feed. Try SOL, SYN, BONK, or PEPE.
             </p>
           )
         ) : null}
       </section>
 
-      <section className="phantom-promo">
-        <div className="phantom-promo__logo-wrap">
-          <img className="phantom-promo__logo" src="/phantom-wallet.svg" alt="Phantom Wallet" />
-        </div>
-        <div className="phantom-promo__content">
-          <p className="phantom-promo__eyebrow">Solana wallet ready</p>
-          <h2>Trade with Phantom Wallet.</h2>
-          <p>
-            Connect your Solana flow with Phantom for buying, selling, swapping, and managing tokens
-            from one trusted wallet.
+      <section className="synexus-trade-panel">
+        <div className="synexus-trade-panel__body">
+          <p className="synexus-trade-panel__eyebrow">Trade on Synexus</p>
+          <h2 className="synexus-trade-panel__title">Scan first. Execute when you&apos;re ready.</h2>
+          <p className="synexus-trade-panel__copy">
+            Sentinel-checked tokens from your feed — open any coin, review the risk read, then buy or sell
+            from Synexus. Your wallet only signs; Synexus runs the flow.
           </p>
-          <a href="https://phantom.app/" target="_blank" rel="noopener noreferrer">
-            Get Phantom Wallet
-          </a>
         </div>
+        <p className="synexus-trade-panel__wallet">
+          <img className="synexus-trade-panel__wallet-icon" src="/phantom-wallet.svg" alt="" aria-hidden />
+          <span>
+            Works with Phantom{" "}
+            <a href="https://phantom.app/" target="_blank" rel="noopener noreferrer">
+              (get wallet)
+            </a>
+            {" "}and other Solana wallets.
+          </span>
+        </p>
       </section>
 
       <section className="hive-vision">
         <div className="hive-vision__head">
-          <p className="hive-vision__eyebrow">Hivemind Security Grid</p>
+          <p className="hive-vision__eyebrow">Synexus Security Grid</p>
           <h2 className="hive-vision__title">Built to be the safest Solana trading command center.</h2>
           <p className="hive-vision__copy">
             AI risk modeling, crowd intelligence, and real-time signals from The Synexus work as one system.
@@ -209,7 +208,7 @@ export function HomeFeed() {
       <section className="token-section">
         <div className="token-section__head">
           <h2 className="token-section__title">Trending Tokens</h2>
-          <p className="token-section__lede">Fast movers across the Hive feed</p>
+          <p className="token-section__lede">Fast movers across the Synexus feed</p>
         </div>
         <ul className="token-list">
           {trendingTokens.map((token) => (
@@ -254,7 +253,7 @@ export function HomeFeed() {
 
       <section className="monetization-panel">
         <div className="token-section__head">
-          <h2 className="token-section__title">Why HiveMind matters</h2>
+          <h2 className="token-section__title">Why Synexus matters</h2>
           <p className="token-section__lede">
             Crypto traders need warnings before momentum turns into damage.
           </p>
