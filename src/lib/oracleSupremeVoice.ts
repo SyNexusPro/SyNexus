@@ -12,10 +12,13 @@ const VOICE_PATTERNS = [
   /victoria/i,
   /moira/i,
   /fiona/i,
+  /jenny/i,
+  /aria/i,
   /google uk english female/i,
   /en-gb.*female/i,
   /en-us.*female/i,
   /english.*female/i,
+  /female/i,
 ];
 
 export function isOracleSupremeVoiceSupported(): boolean {
@@ -123,8 +126,8 @@ export function createOracleSupremeSpeaker(handlers: {
     synth.cancel();
 
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.93;
-    utterance.pitch = 0.96;
+    utterance.rate = 0.9;
+    utterance.pitch = 1.06;
     utterance.volume = 1;
 
     utterance.onstart = () => handlers.onStart?.();

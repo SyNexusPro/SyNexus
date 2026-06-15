@@ -4,18 +4,42 @@
  */
 export const JUPITER_SOL_MINT = "So11111111111111111111111111111111111111112";
 
+export type JupiterSwapOptions = {
+  /** Platform fee in basis points (Synexus tier). Applied when VITE_JUPITER_FEE_ACCOUNT is configured. */
+  feeBps?: number;
+};
+
+function jupiterSwapUrl(inputMint: string, outputMint: string, opts?: JupiterSwapOptions): string {
+  const base = `https://jup.ag/swap/${inputMint}-${outputMint}`;
+  const feeAccount = (import.meta.env.VITE_JUPITER_FEE_ACCOUNT ?? "").trim();
+  const feeBps = opts?.feeBps;
+  if (!feeAccount && (feeBps == null || feeBps <= 0)) return base;
+
+  const params = new URLSearchParams();
+  if (feeBps != null && feeBps > 0) params.set("feeBps", String(feeBps));
+  if (feeAccount) params.set("feeAccount", feeAccount);
+  const qs = params.toString();
+  return qs ? `${base}?${qs}` : base;
+}
+
 /** Jupiter preset: swap SOL → token (buy with SOL). */
-export function jupiterBuyWithSolUrl(tokenMint: string | undefined | null): string | null {
+export function jupiterBuyWithSolUrl(
+  tokenMint: string | undefined | null,
+  opts?: JupiterSwapOptions,
+): string | null {
   const m = tokenMint?.trim();
   if (!m) return null;
-  return `https://jup.ag/swap/${JUPITER_SOL_MINT}-${m}`;
+  return jupiterSwapUrl(JUPITER_SOL_MINT, m, opts);
 }
 
 /** Jupiter preset: swap token → SOL (sell for SOL). */
-export function jupiterSellForSolUrl(tokenMint: string | undefined | null): string | null {
+export function jupiterSellForSolUrl(
+  tokenMint: string | undefined | null,
+  opts?: JupiterSwapOptions,
+): string | null {
   const m = tokenMint?.trim();
   if (!m) return null;
-  return `https://jup.ag/swap/${m}-${JUPITER_SOL_MINT}`;
+  return jupiterSwapUrl(m, JUPITER_SOL_MINT, opts);
 }
 
 /** Charts & pair discovery — slower path; use when mint unknown. */

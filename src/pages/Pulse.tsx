@@ -20,6 +20,7 @@ import {
   oracleSupremeMoodLabel,
 } from "../data/syntheticWatchers";
 import { ProTrialBanner } from "../components/ProTrialBanner";
+import { notifySynexusPlanChanged } from "../hooks/useSynexusPlan";
 import { OracleSupremeVoiceBar } from "../components/OracleSupremeVoiceBar";
 import { OracleSupremeChat } from "../components/OracleSupremeChat";
 import { PulseOperatorLink } from "../components/PulseOperatorLink";
@@ -137,6 +138,7 @@ export function Pulse() {
   const [tracked, setTracked] = useState<TrackedTokenItem[]>([]);
   const [sentinelAlerts, setSentinelAlerts] = useState<SentinelAlertItem[]>([]);
   const [marketTokens, setMarketTokens] = useState<Token[]>([]);
+  const [marketFeedSource, setMarketFeedSource] = useState<"live" | "mock">("mock");
   const [plan, setPlan] = useState<AppPlan>(() =>
     normalizeStoredPlan(localStorage.getItem(PLAN_STORAGE_KEY)),
   );
@@ -166,6 +168,7 @@ export function Pulse() {
   async function refreshMarketSignals() {
     const marketFeed = await fetchMvpTokenFeed();
     setMarketTokens(marketFeed.all);
+    setMarketFeedSource(marketFeed.source);
     const nextSentinelAlerts: SentinelAlertItem[] = marketFeed.all
       .filter(
         (token) =>
@@ -235,6 +238,7 @@ export function Pulse() {
       const normalizedPlan = normalizeStoredPlan(rawPlan);
       setPlan(normalizedPlan);
       localStorage.setItem(PLAN_STORAGE_KEY, normalizedPlan);
+      notifySynexusPlanChanged();
 
       const watchlistRows = await fetchWatchlistTokens(user.id);
       setWatchlist(watchlistRows.map((r) => `${r.name}: ${r.token_symbol}`));
@@ -264,13 +268,14 @@ export function Pulse() {
   }, []);
 
   useEffect(() => {
+    const pollMs = plan === "PRO" ? 8_000 : 12_000;
     const id = window.setInterval(() => {
       void refreshMarketSignals().catch(() => {
         /* keep last good read */
       });
-    }, 18_000);
+    }, pollMs);
     return () => window.clearInterval(id);
-  }, []);
+  }, [plan]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -313,6 +318,7 @@ export function Pulse() {
       .then(() => {
         setPlan("PRO");
         localStorage.setItem(PLAN_STORAGE_KEY, "PRO");
+        notifySynexusPlanChanged();
         setAuthMessage({
           tone: "success",
           text: `${formatPlanName("PRO")} saved to your Synexus profile.`,
@@ -541,8 +547,19 @@ export function Pulse() {
       watchlistCount: watchlist.length + tracked.length,
       plan,
       daysSinceLastVisit: readDaysSinceLastVisit(),
+      tokens: marketTokens,
+      feedSource: marketFeedSource,
     }),
-    [operatorName, alerts.length, sentinelAlerts.length, watchlist.length, tracked.length, plan],
+    [
+      operatorName,
+      alerts.length,
+      sentinelAlerts.length,
+      watchlist.length,
+      tracked.length,
+      plan,
+      marketTokens,
+      marketFeedSource,
+    ],
   );
 
   const authBusyLabel =
@@ -665,7 +682,8 @@ export function Pulse() {
         <div className="token-section__head">
           <h2 className="token-section__title">Sentinels</h2>
           <p className="token-section__lede">
-            Four specialists commanded by Oracle Supreme — live scans every 18s, faster on Synexus Pro.
+            Oracle Supreme commands each lane — live orders and reports every {plan === "PRO" ? "8" : "12"}s across{" "}
+            {marketTokens.length || "all"} tracked pairs.
           </p>
         </div>
         <div className="synthetic-sentinels">
@@ -706,6 +724,17 @@ export function Pulse() {
                     <span style={{ width: `${progress}%` }} />
                   </div>
                   <p className="synthetic-sentinel__status">{intel?.liveStatus ?? sentinel.status}</p>
+                  {intel?.oracleDirective ? (
+                    <p className="synthetic-sentinel__directive">
+                      <span>Oracle order</span> {intel.oracleDirective}
+                    </p>
+                  ) : null}
+                  {intel?.sentinelReport ? (
+                    <p className="synthetic-sentinel__report">
+                      <span>Report to Oracle</span> {intel.sentinelReport}
+                      {intel.reportMs ? ` · ${intel.reportMs}ms` : ""}
+                    </p>
+                  ) : null}
                   {intel?.focusSymbol ? (
                     <p className="synthetic-sentinel__focus">Focus: {intel.focusSymbol}</p>
                   ) : null}

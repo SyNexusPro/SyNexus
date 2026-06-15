@@ -144,6 +144,21 @@ export function Terms() {
       </section>
 
       <section className="legal-section marketing-panel">
+        <h2>Trading fees</h2>
+        <p>
+          When you initiate a swap through Synexus shortcuts (for example, links to Jupiter with Synexus platform
+          fees enabled), a <strong>platform trading fee</strong> may apply based on your plan:{" "}
+          <strong>0.10%</strong> for free accounts and <strong>0.05%</strong> for Synexus Pro subscribers, calculated
+          on the notional value of the swap. This fee is in addition to third-party costs such as blockchain network
+          fees, DEX spreads, slippage, and any fees charged by Jupiter or other aggregators. Fee rates, eligibility
+          for discounts, and revenue allocation policies are described in the app (including the Ecosystem hub) and may
+          change with notice where required. You authorize applicable platform fees when you confirm a qualifying swap
+          in your connected wallet. We do not guarantee that every trade path will collect fees until on-chain
+          integration is fully live.
+        </p>
+      </section>
+
+      <section className="legal-section marketing-panel">
         <h2>Third parties</h2>
         <p>
           The Service may link to or rely on wallets, explorers, charts, DEX aggregators, RPC providers,

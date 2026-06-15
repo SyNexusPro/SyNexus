@@ -451,6 +451,199 @@ a {
   color: rgba(255, 201, 184, 0.75);
 }
 
+.ecosystem-hub__fee-grid--two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ecosystem-hub__fee-note {
+  margin: 6px 0 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.ecosystem-hub__subhead {
+  margin: 18px 0 8px;
+  font-size: 0.95rem;
+}
+
+.ecosystem-hub__allocation {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.ecosystem-hub__allocation li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 4px 12px;
+  align-items: center;
+}
+
+.ecosystem-hub__allocation-label {
+  grid-column: 1;
+  grid-row: 1;
+  font-size: 0.84rem;
+  color: #d4f5cc;
+}
+
+.ecosystem-hub__allocation-pct {
+  grid-column: 2;
+  grid-row: 1;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+}
+
+.ecosystem-hub__allocation-bar {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.ecosystem-hub__allocation-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(120, 255, 90, 0.55), rgba(94, 231, 255, 0.65));
+}
+
+.trading-fee-disclosure {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(130, 255, 120, 0.22);
+  border-radius: 10px;
+  background: rgba(8, 16, 10, 0.72);
+}
+
+.trading-fee-disclosure--compact {
+  margin-top: 10px;
+  padding: 8px 10px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.trading-fee-disclosure--compact strong {
+  color: #dcffbe;
+}
+
+.trading-fee-disclosure--compact a {
+  color: var(--accent-cyan);
+}
+
+.trading-fee-disclosure__eyebrow {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.trading-fee-disclosure__rate {
+  margin: 4px 0 0;
+  font-size: 0.92rem;
+  color: #e3ffd8;
+}
+
+.trading-fee-disclosure__rate strong {
+  color: var(--accent-cyan);
+  font-size: 1.05rem;
+}
+
+.trading-fee-disclosure__example {
+  margin: 8px 0 0;
+  font-size: 0.84rem;
+  color: #cce7c6;
+}
+
+.trading-fee-disclosure__example a {
+  color: var(--accent-cyan);
+}
+
+.trading-fee-disclosure__allocation {
+  margin-top: 12px;
+}
+
+.trading-fee-disclosure__allocation-title {
+  margin: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.trading-fee-disclosure__allocation-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.trading-fee-disclosure__allocation-list li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  grid-template-rows: auto auto;
+  gap: 2px 10px;
+  align-items: center;
+  font-size: 0.78rem;
+}
+
+.trading-fee-disclosure__allocation-label {
+  grid-column: 1;
+  grid-row: 1;
+  color: #d4f5cc;
+}
+
+.trading-fee-disclosure__allocation-pct {
+  grid-column: 2;
+  grid-row: 1;
+  font-weight: 700;
+  color: var(--accent-cyan);
+}
+
+.trading-fee-disclosure__allocation-amt {
+  grid-column: 3;
+  grid-row: 1;
+  color: #a8c9a0;
+  font-variant-numeric: tabular-nums;
+}
+
+.trading-fee-disclosure__allocation-bar {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.trading-fee-disclosure__allocation-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(120, 255, 90, 0.5), rgba(94, 231, 255, 0.55));
+}
+
+.trading-fee-disclosure__fineprint {
+  margin: 10px 0 0;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.trading-fee-disclosure__fineprint a {
+  color: var(--accent-cyan);
+}
+
+.synexus-trade-panel__fees {
+  margin-top: 14px;
+}
+
 .ecosystem-hub__fee-value {
   margin: 8px 0 0;
   font-size: 1.2rem;
@@ -549,13 +742,14 @@ a {
   font-size: 1.35rem;
   line-height: 1.25;
   letter-spacing: -0.03em;
+  max-width: 22ch;
 }
 
 .landing-hero__subtext {
   margin: 10px auto 0;
   font-size: 0.88rem;
   color: #d0eccd;
-  max-width: 40ch;
+  max-width: 42ch;
 }
 
 .landing-hero__inner {
@@ -3367,6 +3561,24 @@ a {
   max-height: 84%;
 }
 
+.synexus-symbol-box--fab {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  padding: 0;
+  box-sizing: border-box;
+  box-shadow:
+    0 0 12px rgba(255, 200, 100, 0.2),
+    inset 0 0 0 1px rgba(255, 210, 130, 0.16);
+}
+
+.synexus-symbol-box--fab .synexus-symbol-box__img {
+  width: 84%;
+  height: 84%;
+  max-width: 84%;
+  max-height: 84%;
+}
+
 .synexus-core-panel__logo {
   /* hook for panel placement — sizing via synexus-symbol-box--panel */
 }
@@ -3644,6 +3856,28 @@ a {
   }
 }
 
+.oracle-presence-panel {
+  position: fixed;
+  right: 12px;
+  bottom: calc(var(--nav-height) + var(--safe-bottom) + 64px);
+  z-index: 9000;
+  width: min(300px, calc(100vw - 24px));
+  max-height: min(44vh, 360px);
+  pointer-events: auto;
+  animation: oracle-panel-in 0.22s ease-out;
+}
+
+@keyframes oracle-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .oracle-presence-overlay {
   position: fixed;
   left: 50%;
@@ -3656,24 +3890,103 @@ a {
 
 .oracle-presence-fab {
   position: fixed;
-  right: 14px;
-  bottom: calc(var(--nav-height) + var(--safe-bottom) + 12px);
-  z-index: 8999;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border: 1px solid rgba(255, 210, 130, 0.45);
-  border-radius: 999px;
-  padding: 10px 14px;
-  background: rgba(12, 10, 6, 0.94);
+  right: 12px;
+  bottom: calc(var(--nav-height) + var(--safe-bottom) + 10px);
+  z-index: 9001;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 1px solid rgba(255, 210, 130, 0.38);
+  border-radius: 50%;
+  background: rgba(8, 8, 6, 0.92);
   color: rgba(255, 235, 200, 0.98);
   font: inherit;
-  font-size: 0.72rem;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.42), 0 0 16px rgba(255, 200, 100, 0.12);
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.25s ease;
+}
+
+.oracle-presence-fab:hover {
+  border-color: rgba(255, 220, 150, 0.55);
+  transform: translateY(-1px);
+}
+
+.oracle-presence-fab--open {
+  border-color: rgba(137, 255, 47, 0.42);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.42), 0 0 18px rgba(137, 255, 47, 0.14);
+}
+
+.oracle-presence-fab--speaking {
+  border-color: rgba(255, 220, 150, 0.68);
+  box-shadow:
+    0 4px 18px rgba(0, 0, 0, 0.42),
+    0 0 22px rgba(255, 200, 100, 0.32);
+}
+
+.oracle-presence-fab--speaking .oracle-presence-fab__ring {
+  animation: oracle-fab-ring 1.4s ease-in-out infinite;
+}
+
+@keyframes oracle-fab-ring {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.12);
+  }
+}
+
+@keyframes oracle-fab-speak {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+.oracle-presence-fab__ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 210, 130, 0.45);
+  pointer-events: none;
+}
+
+.oracle-presence-fab__avatar {
+  position: relative;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+}
+
+.oracle-presence-fab__copy {
+  display: none;
+}
+
+.oracle-presence-fab__label {
+  font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  cursor: pointer;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45), 0 0 24px rgba(255, 200, 100, 0.14);
+  line-height: 1.2;
+}
+
+.oracle-presence-fab__hint {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: rgba(255, 220, 160, 0.78);
+  letter-spacing: 0.02em;
+  line-height: 1.2;
 }
 
 .oracle-presence-fab__dot {
@@ -3696,6 +4009,12 @@ a {
 
 .oracle-chat--overlay {
   max-height: min(62vh, 520px);
+  display: flex;
+  flex-direction: column;
+}
+
+.oracle-chat--widget {
+  max-height: min(48vh, 400px);
   display: flex;
   flex-direction: column;
 }
@@ -3791,6 +4110,12 @@ a {
   min-height: 120px;
 }
 
+.oracle-chat--widget .oracle-chat__thread {
+  flex: 1;
+  max-height: 180px;
+  min-height: 88px;
+}
+
 .oracle-chat__empty-wrap {
   display: grid;
   gap: 10px;
@@ -3809,6 +4134,7 @@ a {
   padding: 10px 12px;
   font-size: 0.84rem;
   line-height: 1.45;
+  white-space: pre-line;
 }
 
 .oracle-chat__bubble--oracle {
@@ -3858,6 +4184,15 @@ a {
 
 .oracle-chat__chip:hover {
   filter: brightness(1.08);
+}
+
+.oracle-chat__coin-row {
+  margin-top: 10px;
+}
+
+.oracle-chat__chip--coin {
+  border-color: rgba(137, 255, 47, 0.35);
+  color: #d8ffb8;
 }
 
 .oracle-chat__composer {
@@ -4159,6 +4494,32 @@ a {
   font-weight: 700;
   color: #ecffd2;
   letter-spacing: 0.02em;
+}
+
+.synthetic-sentinel__directive,
+.synthetic-sentinel__report {
+  margin: 8px 0 0;
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.synthetic-sentinel__directive span,
+.synthetic-sentinel__report span {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.synthetic-sentinel__directive span {
+  color: rgba(255, 220, 150, 0.92);
+}
+
+.synthetic-sentinel__report span {
+  color: rgba(137, 255, 47, 0.88);
 }
 
 .synthetic-sentinel__top {

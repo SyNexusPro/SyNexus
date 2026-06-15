@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { TokenLogo } from "../components/TokenLogo";
+import { TradingFeeDisclosure } from "../components/TradingFeeDisclosure";
 import { submitSynexusReport } from "../lib/reportSubmission";
 import { dexScreenerTokenUrl, jupiterBuyWithSolUrl, jupiterSellForSolUrl } from "../lib/solanaTradeLinks";
+import { getTradingFeeBps } from "../lib/tradingFees";
+import { useSynexusPlan } from "../hooks/useSynexusPlan";
 import type { Token } from "../data/tokens";
 import {
   fetchTokenDetailById,
@@ -63,6 +66,9 @@ const chartRanges: PriceHistoryRange[] = ["1D", "1W", "1Y"];
 
 export function TokenDetail() {
   const { tokenId } = useParams();
+  const plan = useSynexusPlan();
+  const feeBps = getTradingFeeBps(plan);
+  const swapOpts = { feeBps };
   const [token, setToken] = useState<Token | null>(null);
   const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
   const [reportDetails, setReportDetails] = useState("");
@@ -172,8 +178,8 @@ export function TokenDetail() {
   }
 
   const dexscreenerUrl = dexScreenerTokenUrl(token.mintAddress, token.symbol);
-  const buySwapUrl = jupiterBuyWithSolUrl(token.mintAddress) ?? dexscreenerUrl;
-  const sellSwapUrl = jupiterSellForSolUrl(token.mintAddress) ?? dexscreenerUrl;
+  const buySwapUrl = jupiterBuyWithSolUrl(token.mintAddress, swapOpts) ?? dexscreenerUrl;
+  const sellSwapUrl = jupiterSellForSolUrl(token.mintAddress, swapOpts) ?? dexscreenerUrl;
   const explorerUrl = token.mintAddress
     ? `https://solscan.io/token/${token.mintAddress}`
     : "https://solscan.io";
@@ -313,6 +319,7 @@ export function TokenDetail() {
             Jupiter opens with SOL swaps prefilled — connect your wallet and confirm. Charts stay on DexScreener.
           </p>
         </div>
+        <TradingFeeDisclosure plan={plan} notionalUsd={100} showAllocation />
         <div className="detail-trade-panel__actions">
           <a href={buySwapUrl} target="_blank" rel="noopener noreferrer" className="detail-trade-panel__buy">
             Buy {token.symbol}

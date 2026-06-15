@@ -1,5 +1,10 @@
 import type { Token } from "../data/tokens";
 import type { SyntheticSentinel } from "../data/syntheticWatchers";
+import {
+  buildOracleSentinelDirective,
+  buildSentinelReportToOracle,
+  type OracleSentinelDirective,
+} from "./oracleCryptoBrain";
 
 export type SentinelLaneId = "aegis" | "pulse" | "titan" | "cipher";
 
@@ -10,6 +15,9 @@ export type SentinelLiveIntel = {
   scansPerMin: number;
   focusSymbol: string | null;
   hits: number;
+  oracleDirective: string;
+  sentinelReport: string;
+  reportMs: number;
 };
 
 type AlertItem = {
@@ -76,7 +84,7 @@ export function buildSentinelLiveIntel({
   const titanHits = whales.length;
   const cipherHits = fused.length;
 
-  function stats(sentinel: SyntheticSentinel | undefined, hits: number, scansBoost: number) {
+  function computeStats(sentinel: SyntheticSentinel | undefined, hits: number, scansBoost: number) {
     const level = sentinel?.level ?? 1;
     const confidence = sentinel?.confidence ?? 70;
     return {
@@ -87,10 +95,10 @@ export function buildSentinelLiveIntel({
     };
   }
 
-  const aegisStats = stats(aegisSentinel, aegisHits, 20);
-  const pulseStats = stats(pulseSentinel, pulseHits, 28);
-  const titanStats = stats(titanSentinel, titanHits, 16);
-  const cipherStats = stats(cipherSentinel, cipherHits, 22);
+  const aegisStats = computeStats(aegisSentinel, aegisHits, 20);
+  const pulseStats = computeStats(pulseSentinel, pulseHits, 28);
+  const titanStats = computeStats(titanSentinel, titanHits, 16);
+  const cipherStats = computeStats(cipherSentinel, cipherHits, 22);
 
   const aegisStatus =
     pool.length === 0
@@ -120,27 +128,40 @@ export function buildSentinelLiveIntel({
         ? `${cipherHits} multi-lane match${cipherHits === 1 ? "" : "es"} · ${cipherFocus.symbol} flagged across risk + flow`
         : `Patterns quiet — cross-checking ${pool.length} pair${pool.length === 1 ? "" : "s"} for stacked signals.`;
 
+  function laneIntel(
+    lane: SentinelLaneId,
+    focus: Token | null,
+    laneStats: ReturnType<typeof computeStats>,
+    status: string,
+    hits: number,
+    sentinel: SyntheticSentinel | undefined,
+  ) {
+    const directive: OracleSentinelDirective = buildOracleSentinelDirective(lane, focus, pool.length);
+    const report = buildSentinelReportToOracle(
+      lane,
+      focus,
+      directive.order,
+      sentinel?.level ?? 1,
+      pro,
+    );
+    return {
+      ...laneStats,
+      hits,
+      liveStatus: status,
+      focusSymbol: focus?.symbol ?? null,
+      oracleDirective: directive.order,
+      sentinelReport: report.report,
+      reportMs: report.latencyMs,
+      precision: Math.max(laneStats.precision, report.precision),
+      responseMs: Math.min(laneStats.responseMs, report.latencyMs),
+    };
+  }
+
   return {
-    aegis: {
-      ...aegisStats,
-      liveStatus: aegisStatus,
-      focusSymbol: aegisFocus?.symbol ?? null,
-    },
-    pulse: {
-      ...pulseStats,
-      liveStatus: pulseStatus,
-      focusSymbol: pulseFocus?.symbol ?? null,
-    },
-    titan: {
-      ...titanStats,
-      liveStatus: titanStatus,
-      focusSymbol: titanFocus?.symbol ?? null,
-    },
-    cipher: {
-      ...cipherStats,
-      liveStatus: cipherStatus,
-      focusSymbol: cipherFocus?.symbol ?? null,
-    },
+    aegis: laneIntel("aegis", aegisFocus, aegisStats, aegisStatus, aegisHits, aegisSentinel),
+    pulse: laneIntel("pulse", pulseFocus, pulseStats, pulseStatus, pulseHits, pulseSentinel),
+    titan: laneIntel("titan", titanFocus, titanStats, titanStatus, titanHits, titanSentinel),
+    cipher: laneIntel("cipher", cipherFocus, cipherStats, cipherStatus, cipherHits, cipherSentinel),
   };
 }
 

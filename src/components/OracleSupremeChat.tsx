@@ -10,6 +10,7 @@ import {
   reactToFreeText,
   saveConversationHistory,
   wasIntroWelcomeSpoken,
+  ORACLE_INTRO_VOICE_LINE,
   DAY_MOOD_QUICK_REPLIES,
 } from "../lib/oracleSupremeConversation";
 import { createOracleSupremeSpeaker, isOracleSupremeVoiceSupported } from "../lib/oracleSupremeVoice";
@@ -17,7 +18,7 @@ import { SynexusSymbolMark } from "./SynexusSymbolMark";
 
 type OracleSupremeChatProps = {
   context: OracleConversationContext;
-  variant?: "overlay" | "inline";
+  variant?: "overlay" | "inline" | "widget";
   autoSpeak?: boolean;
   showOpeningPrompt?: boolean;
   onDismiss?: () => void;
@@ -41,6 +42,22 @@ export function OracleSupremeChat({
   const voiceSupported = isOracleSupremeVoiceSupported();
 
   const openingLine = useMemo(() => buildOpeningGreeting(context), [context]);
+
+  const coinQuickPicks = useMemo(() => {
+    const trending = [...context.tokens]
+      .sort((a, b) => Math.abs(b.change24hPct) - Math.abs(a.change24hPct))
+      .slice(0, 4);
+    return trending.map((t) => t.symbol);
+  }, [context.tokens]);
+
+  function submitQuery(text: string) {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    setDraft("");
+    setAwaitingDayReply(false);
+    appendUser(trimmed);
+    appendOracle(reactToFreeText(trimmed, context), { speak: false });
+  }
 
   useEffect(() => {
     speakerRef.current = createOracleSupremeSpeaker({
@@ -112,12 +129,11 @@ export function OracleSupremeChat({
   }
 
   function handleSend() {
-    const text = draft.trim();
-    if (!text) return;
-    setDraft("");
-    setAwaitingDayReply(false);
-    appendUser(text);
-    appendOracle(reactToFreeText(text, context), { speak: false });
+    submitQuery(draft);
+  }
+
+  function handleCoinSearch(symbol: string) {
+    submitQuery(`scan ${symbol}`);
   }
 
   function handleCheckIn() {
@@ -147,13 +163,19 @@ export function OracleSupremeChat({
         <div>
           <p className="oracle-chat__name">Oracle Supreme</p>
           <p className="oracle-chat__status">
-            {speaking ? "Speaking…" : awaitingDayReply ? "Waiting for you…" : "Online · thinking with you"}
+            {speaking
+              ? "Speaking…"
+              : context.tokens.length
+                ? `${context.tokens.length} coins · ${context.feedSource} feed`
+                : "Syncing market feed…"}
           </p>
         </div>
-        {variant === "overlay" && onDismiss ? (
+        {variant === "widget" || variant === "overlay" ? (
+          onDismiss ? (
           <button type="button" className="oracle-chat__close" onClick={onDismiss} aria-label="Minimize">
             ×
           </button>
+          ) : null
         ) : null}
       </div>
 
@@ -174,6 +196,31 @@ export function OracleSupremeChat({
           </div>
         ))}
       </div>
+
+      {coinQuickPicks.length ? (
+        <div className="oracle-chat__coin-row">
+          <p className="oracle-chat__quick-label">Search coins</p>
+          <div className="oracle-chat__chips">
+            {coinQuickPicks.map((symbol) => (
+              <button
+                key={symbol}
+                type="button"
+                className="oracle-chat__chip oracle-chat__chip--coin"
+                onClick={() => handleCoinSearch(symbol)}
+              >
+                {symbol}
+              </button>
+            ))}
+            <button
+              type="button"
+              className="oracle-chat__chip oracle-chat__chip--coin"
+              onClick={() => submitQuery("sentinel status")}
+            >
+              Sentinel status
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       {awaitingDayReply ? (
         <div className="oracle-chat__quick">
@@ -203,7 +250,7 @@ export function OracleSupremeChat({
         <input
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
-          placeholder={`Talk to Oracle Supreme, ${context.operatorName}…`}
+          placeholder={`Search a coin or ask Oracle…`}
           aria-label="Message to Oracle Supreme"
         />
         <button type="submit" disabled={!draft.trim()}>
@@ -213,6 +260,9 @@ export function OracleSupremeChat({
 
       {voiceSupported ? (
         <div className="oracle-chat__voice-row">
+          <button type="button" className="oracle-chat__voice-btn" onClick={() => speak(ORACLE_INTRO_VOICE_LINE)}>
+            Replay welcome
+          </button>
           <button type="button" className="oracle-chat__voice-btn" onClick={() => speak(openingLine)}>
             Replay greeting
           </button>

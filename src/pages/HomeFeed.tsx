@@ -1,11 +1,14 @@
 import { useMemo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { TokenCard } from "../components/TokenCard";
+import { TradingFeeDisclosure } from "../components/TradingFeeDisclosure";
 import { SynexusLiveScanner } from "../components/SynexusLiveScanner";
+import { useSynexusPlan } from "../hooks/useSynexusPlan";
 import { sampleTokens, type Token } from "../data/tokens";
 import { fetchMvpTokenFeed } from "../services/marketDataService";
 
 export function HomeFeed() {
+  const plan = useSynexusPlan();
   const [allTokens, setAllTokens] = useState<Token[]>(sampleTokens);
   const [trendingTokens, setTrendingTokens] = useState<Token[]>(
     sampleTokens
@@ -78,11 +81,10 @@ export function HomeFeed() {
             </div>
           </div>
           <h1 className="landing-hero__headline">
-            Detect risky tokens before you buy.
+            AI-powered Solana trading intelligence
           </h1>
           <p className="landing-hero__subtext">
-            The Sentinels of Synexus scan every token — flagging scams, tracking whales, and surfacing
-            danger before the crowd sees it.
+            Detect scams, track whales, monitor momentum, and trade smarter.
           </p>
           <div className="landing-hero__actions">
           <Link to="/pulse#synexus-pro" className="landing-hero__actions--pro">
@@ -159,6 +161,7 @@ export function HomeFeed() {
             Sentinel-checked tokens from your feed — open any coin, review the risk read, then buy or sell
             from Synexus. Your wallet only signs; Synexus runs the flow.
           </p>
+          <TradingFeeDisclosure plan={plan} notionalUsd={250} className="synexus-trade-panel__fees" />
         </div>
         <p className="synexus-trade-panel__wallet">
           <img className="synexus-trade-panel__wallet-icon" src="/phantom-wallet.svg" alt="" aria-hidden />

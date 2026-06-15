@@ -1,3 +1,6 @@
+import { oracleRespondToMessage } from "./oracleCryptoBrain";
+import type { Token } from "../data/tokens";
+
 export type TimeBand = "morning" | "afternoon" | "evening" | "night";
 
 export type DayMoodReply = "good" | "long" | "trading" | "rough";
@@ -8,6 +11,8 @@ export type OracleConversationContext = {
   watchlistCount: number;
   plan: "FREE" | "PRO";
   daysSinceLastVisit: number;
+  tokens: Token[];
+  feedSource: "live" | "mock";
 };
 
 export type ConversationTurn = {
@@ -21,6 +26,9 @@ export const ORACLE_CONVO_HISTORY_KEY = "oracle_supreme_convo_history";
 export const ORACLE_LAST_VISIT_KEY = "oracle_supreme_last_visit";
 export const ORACLE_SESSION_GREET_KEY = "oracle_supreme_greeted_session";
 export const SYNEXUS_INTRO_WELCOME_SPOKEN_KEY = "synexus_intro_welcome_spoken";
+
+/** Spoken by Oracle on app open (boot intro + voice). */
+export const ORACLE_INTRO_VOICE_LINE = "Welcome to the SyNexus.";
 
 type ProfileLike = {
   display_name?: string | null;
@@ -138,7 +146,7 @@ export function wasIntroWelcomeSpoken(): boolean {
 
 export function buildOpeningGreeting(ctx: OracleConversationContext): string {
   const name = ctx.operatorName;
-  const welcome = `Welcome to the Synexus, ${name}.`;
+  const welcome = `Welcome to the SyNexus, ${name}. The future of trading.`;
 
   if (ctx.daysSinceLastVisit >= 3) {
     return `${welcome} It's been a few days — I kept your Sentinels on post. How was your day?`;
@@ -150,6 +158,10 @@ export function buildOpeningGreeting(ctx: OracleConversationContext): string {
 
   if (ctx.watchlistCount > 0) {
     return `${welcome} I'm watching ${ctx.watchlistCount} token${ctx.watchlistCount === 1 ? "" : "s"} for you. How was your day?`;
+  }
+
+  if (ctx.tokens.length > 0) {
+    return `${welcome} I'm tracking ${ctx.tokens.length} live pairs — search any coin or ask me to command the Sentinels. How was your day?`;
   }
 
   return `${welcome} How was your day?`;
@@ -182,6 +194,9 @@ export function buildFollowUpAfterMood(mood: DayMoodReply, ctx: OracleConversati
 }
 
 export function reactToFreeText(text: string, ctx: OracleConversationContext): string {
+  const brain = oracleRespondToMessage(text, ctx);
+  if (brain) return brain;
+
   const lower = text.toLowerCase().trim();
   if (!lower) return `I'm listening, ${ctx.operatorName}. What's on your mind?`;
 

@@ -1,5 +1,8 @@
 import { Link } from "react-router-dom";
 import { dexScreenerTokenUrl, jupiterBuyWithSolUrl, jupiterSellForSolUrl } from "../lib/solanaTradeLinks";
+import { getTradingFeeBps } from "../lib/tradingFees";
+import { useSynexusPlan } from "../hooks/useSynexusPlan";
+import { TradingFeeDisclosure } from "./TradingFeeDisclosure";
 import { TokenLogo } from "./TokenLogo";
 import { type GuardianRisk, type Token, synexusRiskBandLabel } from "../data/tokens";
 
@@ -52,11 +55,14 @@ function formatUsd(n: number): string {
 type Props = { token: Token };
 
 export function TokenCard({ token }: Props) {
+  const plan = useSynexusPlan();
+  const feeBps = getTradingFeeBps(plan);
+  const swapOpts = { feeBps };
   const risk = riskStyles[token.guardianRisk];
   const up = token.change24hPct >= 0;
   const chartUrl = dexScreenerTokenUrl(token.mintAddress, token.symbol);
-  const buyUrl = jupiterBuyWithSolUrl(token.mintAddress) ?? chartUrl;
-  const sellUrl = jupiterSellForSolUrl(token.mintAddress) ?? chartUrl;
+  const buyUrl = jupiterBuyWithSolUrl(token.mintAddress, swapOpts) ?? chartUrl;
+  const sellUrl = jupiterSellForSolUrl(token.mintAddress, swapOpts) ?? chartUrl;
 
   return (
     <article className="token-card">
@@ -117,6 +123,7 @@ export function TokenCard({ token }: Props) {
           View details
         </Link>
       </div>
+      <TradingFeeDisclosure plan={plan} compact />
     </article>
   );
 }

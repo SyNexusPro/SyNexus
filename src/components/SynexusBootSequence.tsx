@@ -1,11 +1,11 @@
 import type { CSSProperties, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { createOracleSupremeSpeaker, isOracleSupremeVoiceSupported } from "../lib/oracleSupremeVoice";
-import { markIntroWelcomeSpoken, wasIntroWelcomeSpoken } from "../lib/oracleSupremeConversation";
+import { markIntroWelcomeSpoken, ORACLE_INTRO_VOICE_LINE, wasIntroWelcomeSpoken } from "../lib/oracleSupremeConversation";
 import { notifySynexusBootComplete } from "../lib/synexusBootComplete";
 const PHASE_COPY: readonly string[] = [
   "SYNEXUS INITIALIZING",
-  "WELCOME TO THE SYNEXUS",
+  "WELCOME TO THE SYNEXUS · THE FUTURE OF TRADING",
   "DEPLOYING SENTINELS",
   "MARKET FEED LIVE — NOTHING MOVES UNSEEN",
   "ENTER THE SYNEXUS",
@@ -128,7 +128,7 @@ export function SynexusBootSequence({ children }: Props) {
     }
     speakerRef.current = createOracleSupremeSpeaker({});
     markIntroWelcomeSpoken();
-    speakerRef.current.speak("Welcome to the Synexus.");
+    speakerRef.current.speak(ORACLE_INTRO_VOICE_LINE);
     return () => speakerRef.current?.stop();
   }, [phase, removed, exiting]);
 

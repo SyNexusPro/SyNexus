@@ -1,6 +1,6 @@
 type SynexusSymbolMarkProps = {
   className?: string;
-  size?: "panel" | "chat";
+  size?: "panel" | "chat" | "fab";
 };
 
 /** Synexus emblem only — cropped from the full logo asset, scaled to fit the box. */

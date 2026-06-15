@@ -1,17 +1,22 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchGuardianAlerts, fetchProfile, fetchWatchlistTokens, getCurrentUser } from "../lib/supabaseData";
 import { hasSupabaseEnv } from "../lib/supabaseClient";
 import {
   hasGreetedThisSession,
-  loadConversationHistory,
   markGreetedThisSession,
+  markIntroWelcomeSpoken,
+  ORACLE_INTRO_VOICE_LINE,
   readDaysSinceLastVisit,
   resolveOperatorName,
   touchLastVisit,
+  wasIntroWelcomeSpoken,
   type OracleConversationContext,
 } from "../lib/oracleSupremeConversation";
+import { createOracleSupremeSpeaker, isOracleSupremeVoiceSupported } from "../lib/oracleSupremeVoice";
+import { useOracleMarketFeed } from "../lib/useOracleMarketFeed";
 import { isSynexusBootComplete, subscribeSynexusBootComplete } from "../lib/synexusBootComplete";
 import { OracleSupremeChat } from "./OracleSupremeChat";
+import { SynexusSymbolMark } from "./SynexusSymbolMark";
 
 const PLAN_STORAGE_KEY = "hivemind_paid_plan";
 
@@ -21,14 +26,16 @@ function normalizePlan(raw: string | null | undefined): "FREE" | "PRO" {
 
 export function OracleSupremePresence() {
   const [bootReady, setBootReady] = useState(isSynexusBootComplete());
-  const [open, setOpen] = useState(false);
-  const [minimized, setMinimized] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
   const [operatorName, setOperatorName] = useState("there");
   const [alertCount, setAlertCount] = useState(0);
   const [watchlistCount, setWatchlistCount] = useState(0);
   const [plan, setPlan] = useState<"FREE" | "PRO">(() =>
     normalizePlan(localStorage.getItem(PLAN_STORAGE_KEY)),
   );
+  const speakerRef = useRef<ReturnType<typeof createOracleSupremeSpeaker> | null>(null);
+  const { tokens, feedSource } = useOracleMarketFeed(plan === "PRO" ? 8_000 : 10_000);
 
   useEffect(() => subscribeSynexusBootComplete(() => setBootReady(true)), []);
 
@@ -67,25 +74,26 @@ export function OracleSupremePresence() {
 
       if (cancelled) return;
 
+      if (!wasIntroWelcomeSpoken()) {
+        markIntroWelcomeSpoken();
+        if (isOracleSupremeVoiceSupported()) {
+          speakerRef.current = createOracleSupremeSpeaker({
+            onStart: () => setSpeaking(true),
+            onEnd: () => setSpeaking(false),
+            onError: () => setSpeaking(false),
+          });
+          speakerRef.current.speak(ORACLE_INTRO_VOICE_LINE);
+        }
+      }
+
       touchLastVisit();
       markGreetedThisSession();
-
-      const history = loadConversationHistory();
-      const last = history.at(-1);
-      const recentChat = last && Date.now() - last.at < 4 * 60 * 60 * 1000;
-      if (recentChat) return;
-
-      window.setTimeout(() => {
-        if (!cancelled) {
-          setOpen(true);
-          setMinimized(false);
-        }
-      }, 900);
     }
 
     void prepareGreeting();
     return () => {
       cancelled = true;
+      speakerRef.current?.stop();
     };
   }, [bootReady]);
 
@@ -96,35 +104,45 @@ export function OracleSupremePresence() {
       watchlistCount,
       plan,
       daysSinceLastVisit: readDaysSinceLastVisit(),
+      tokens,
+      feedSource,
     }),
-    [alertCount, operatorName, plan, watchlistCount],
+    [alertCount, feedSource, operatorName, plan, tokens, watchlistCount],
   );
 
-  if (!open) return null;
+  return (
+    <>
+      {expanded ? (
+        <div className="oracle-presence-panel" role="dialog" aria-label="Talk to Oracle Supreme">
+          <OracleSupremeChat
+            context={context}
+            variant="widget"
+            showOpeningPrompt
+            onDismiss={() => setExpanded(false)}
+            onSpeakingChange={setSpeaking}
+          />
+        </div>
+      ) : null}
 
-  if (minimized) {
-    return (
       <button
         type="button"
-        className="oracle-presence-fab"
-        onClick={() => setMinimized(false)}
-        aria-label="Open conversation with Oracle Supreme"
+        className={`oracle-presence-fab${expanded ? " oracle-presence-fab--open" : ""}${speaking ? " oracle-presence-fab--speaking" : ""}`}
+        onClick={() => setExpanded((open) => !open)}
+        aria-expanded={expanded}
+        aria-label={
+          expanded
+            ? "Minimize Oracle Supreme chat"
+            : speaking
+              ? "Oracle Supreme is speaking"
+              : "Talk to Oracle Supreme"
+        }
+        title="Oracle Supreme"
       >
-        <span className="oracle-presence-fab__dot" aria-hidden />
-        Oracle Supreme
+        <span className="oracle-presence-fab__ring" aria-hidden />
+        <span className="oracle-presence-fab__avatar" aria-hidden>
+          <SynexusSymbolMark size="fab" />
+        </span>
       </button>
-    );
-  }
-
-  return (
-    <div className="oracle-presence-overlay" role="dialog" aria-label="Oracle Supreme greeting">
-      <OracleSupremeChat
-        context={context}
-        variant="overlay"
-        autoSpeak
-        showOpeningPrompt
-        onDismiss={() => setMinimized(true)}
-      />
-    </div>
+    </>
   );
 }
