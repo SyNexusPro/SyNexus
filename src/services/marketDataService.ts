@@ -1,5 +1,6 @@
 import type { DeepPartial, GuardianEngineConfig } from "../data/guardianEngine";
 import { buildSampleTokens, buildTokenFromPartial, type Token } from "../data/tokens";
+import { guardApiFetch, guardTokenScan } from "../lib/securityBot";
 import { loadGuardianConfigOverride } from "./guardianConfigService";
 
 type TokenPatch = {
@@ -364,6 +365,12 @@ function tokenFromDexPair(pair: DexPair, idHint: string): Token {
 export async function lookupTokenByQuery(query: string, pool?: Token[]): Promise<Token | null> {
   const q = query.trim();
   if (!q) return null;
+
+  const scanGuard = guardTokenScan(q);
+  if (!scanGuard.allowed) return null;
+
+  const apiGuard = guardApiFetch("dex-lookup");
+  if (!apiGuard.allowed) return null;
 
   const upper = q.toUpperCase();
   if (pool?.length) {

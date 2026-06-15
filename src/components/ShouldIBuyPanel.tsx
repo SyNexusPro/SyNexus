@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import type { Token } from "../data/tokens";
+import { guardTokenScan } from "../lib/securityBot";
 import { analyzeShouldIBuy, verdictTone } from "../lib/shouldIBuy";
 import { lookupTokenByQuery } from "../services/marketDataService";
 import { TradeIntelligenceScorecard } from "./TradeIntelligenceScorecard";
@@ -31,6 +32,13 @@ export function ShouldIBuyPanel({ poolTokens = [] }: Props) {
   async function handleAnalyze() {
     const q = query.trim();
     if (!q) return;
+
+    const scanGuard = guardTokenScan(q);
+    if (!scanGuard.allowed) {
+      setError(scanGuard.message ?? "Scan blocked — slow down and try again.");
+      return;
+    }
+
     setBusy(true);
     setError(null);
     setResult(null);

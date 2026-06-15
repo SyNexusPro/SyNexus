@@ -1,5 +1,6 @@
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "./supabaseClient";
+import { guardAuthAttempt } from "./securityBot";
 
 function flattenErrorDiagnostics(err: unknown): string {
   const parts: string[] = [];
@@ -73,6 +74,10 @@ export async function signUpWithEmail(
   password: string,
   normalizedUsername?: string,
 ) {
+  const authGuard = guardAuthAttempt("sign_up", email, password);
+  if (!authGuard.allowed) {
+    throw new Error(authGuard.message ?? "Sign-up blocked by Synexus security.");
+  }
   if (!supabase) throw new Error("Supabase env vars are missing.");
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -86,6 +91,10 @@ export async function signUpWithEmail(
 }
 
 export async function signInWithEmail(email: string, password: string) {
+  const authGuard = guardAuthAttempt("sign_in", email, password);
+  if (!authGuard.allowed) {
+    throw new Error(authGuard.message ?? "Sign-in blocked by Synexus security.");
+  }
   if (!supabase) throw new Error("Supabase env vars are missing.");
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throwIfStructuralDbFailure(error);

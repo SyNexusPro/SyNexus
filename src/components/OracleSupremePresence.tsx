@@ -1,18 +1,15 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { fetchGuardianAlerts, fetchProfile, fetchWatchlistTokens, getCurrentUser } from "../lib/supabaseData";
 import { hasSupabaseEnv } from "../lib/supabaseClient";
 import {
   hasGreetedThisSession,
   markGreetedThisSession,
-  markIntroWelcomeSpoken,
-  ORACLE_INTRO_VOICE_LINE,
   readDaysSinceLastVisit,
   resolveOperatorName,
   touchLastVisit,
-  wasIntroWelcomeSpoken,
   type OracleConversationContext,
 } from "../lib/oracleSupremeConversation";
-import { createOracleSupremeSpeaker, isOracleSupremeVoiceSupported } from "../lib/oracleSupremeVoice";
 import { useOracleMarketFeed } from "../lib/useOracleMarketFeed";
 import { isSynexusBootComplete, subscribeSynexusBootComplete } from "../lib/synexusBootComplete";
 import { OracleSupremeChat } from "./OracleSupremeChat";
@@ -27,6 +24,7 @@ function normalizePlan(raw: string | null | undefined): "FREE" | "PRO" {
 }
 
 export function OracleSupremePresence() {
+  const { pathname } = useLocation();
   const { isSimple } = useSynexusUIMode();
   const [bootReady, setBootReady] = useState(isSynexusBootComplete());
   const [expanded, setExpanded] = useState(false);
@@ -37,7 +35,6 @@ export function OracleSupremePresence() {
   const [plan, setPlan] = useState<"FREE" | "PRO">(() =>
     normalizePlan(localStorage.getItem(PLAN_STORAGE_KEY)),
   );
-  const speakerRef = useRef<ReturnType<typeof createOracleSupremeSpeaker> | null>(null);
   const { tokens, feedSource } = useOracleMarketFeed(plan === "PRO" ? 8_000 : 10_000);
 
   useEffect(() => subscribeSynexusBootComplete(() => setBootReady(true)), []);
@@ -77,18 +74,6 @@ export function OracleSupremePresence() {
 
       if (cancelled) return;
 
-      if (!wasIntroWelcomeSpoken()) {
-        markIntroWelcomeSpoken();
-        if (isOracleSupremeVoiceSupported()) {
-          speakerRef.current = createOracleSupremeSpeaker({
-            onStart: () => setSpeaking(true),
-            onEnd: () => setSpeaking(false),
-            onError: () => setSpeaking(false),
-          });
-          speakerRef.current.speak(ORACLE_INTRO_VOICE_LINE);
-        }
-      }
-
       touchLastVisit();
       markGreetedThisSession();
     }
@@ -96,7 +81,6 @@ export function OracleSupremePresence() {
     void prepareGreeting();
     return () => {
       cancelled = true;
-      speakerRef.current?.stop();
     };
   }, [bootReady]);
 
@@ -113,7 +97,7 @@ export function OracleSupremePresence() {
     [alertCount, feedSource, operatorName, plan, tokens, watchlistCount],
   );
 
-  if (isSimple) return null;
+  if (isSimple || pathname === "/pulse") return null;
 
   return (
     <>

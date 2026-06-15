@@ -18,6 +18,7 @@ import {
   buildOracleSupremeDailyReport,
   buildSyntheticSentinels,
 } from "../data/syntheticWatchers";
+import { recordTrustedPlanGrant, enforceStoredPlan } from "../lib/securityBot";
 import { ProTrialBanner } from "../components/ProTrialBanner";
 import { ShouldIBuyPanel } from "../components/ShouldIBuyPanel";
 import { SentinelAlertsHub } from "../components/SentinelAlertsHub";
@@ -228,9 +229,8 @@ export function Pulse() {
       const profile = await fetchProfile(user.id);
       setOperatorName(resolveOperatorName(profile, user.email));
       const rawPlan = profile?.paid_plan ?? localStorage.getItem(PLAN_STORAGE_KEY) ?? "FREE";
-      const normalizedPlan = normalizeStoredPlan(rawPlan);
+      const normalizedPlan = enforceStoredPlan(rawPlan, profile?.paid_plan === "PRO");
       setPlan(normalizedPlan);
-      localStorage.setItem(PLAN_STORAGE_KEY, normalizedPlan);
       notifySynexusPlanChanged();
 
       const watchlistRows = await fetchWatchlistTokens(user.id);
@@ -310,6 +310,7 @@ export function Pulse() {
     updatePaidPlan(userId, "PRO")
       .then(() => {
         setPlan("PRO");
+        recordTrustedPlanGrant("PRO", "stripe_checkout");
         localStorage.setItem(PLAN_STORAGE_KEY, "PRO");
         notifySynexusPlanChanged();
         setAuthMessage({

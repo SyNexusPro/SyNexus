@@ -18,6 +18,7 @@
     "campaign:daily": "node dailyCampaign.js",
     "campaign:watch": "node dailyCampaign.js --watch",
     "platform:check": "node platformCheck.js",
+    "aegis:check": "node ../scripts/aegis-check.mjs",
     "reddit:auth": "node redditAuth.js",
     "tiktok:auth": "node tiktokAuth.js",
     "tiktok:post": "node tiktokScheduler.js",

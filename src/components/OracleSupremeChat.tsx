@@ -7,6 +7,7 @@ import {
   type DayMoodReply,
   type OracleConversationContext,
   loadConversationHistory,
+  markIntroWelcomeSpoken,
   reactToFreeText,
   saveConversationHistory,
   wasIntroWelcomeSpoken,
@@ -14,6 +15,7 @@ import {
   DAY_MOOD_QUICK_REPLIES,
 } from "../lib/oracleSupremeConversation";
 import { createOracleSupremeSpeaker, isOracleSupremeVoiceSupported } from "../lib/oracleSupremeVoice";
+import { guardOracleChat } from "../lib/securityBot";
 import { SynexusSymbolMark } from "./SynexusSymbolMark";
 
 type OracleSupremeChatProps = {
@@ -41,7 +43,10 @@ export function OracleSupremeChat({
   const autoSpokeRef = useRef(false);
   const voiceSupported = isOracleSupremeVoiceSupported();
 
-  const openingLine = useMemo(() => buildOpeningGreeting(context), [context]);
+  const openingLine = useMemo(
+    () => buildOpeningGreeting(context, { skipWelcomeLine: wasIntroWelcomeSpoken() }),
+    [context],
+  );
 
   const coinQuickPicks = useMemo(() => {
     const trending = [...context.tokens]
@@ -53,6 +58,13 @@ export function OracleSupremeChat({
   function submitQuery(text: string) {
     const trimmed = text.trim();
     if (!trimmed) return;
+
+    const security = guardOracleChat(trimmed);
+    if (!security.allowed) {
+      appendOracle(security.message ?? "Message blocked by Synexus security.", { speak: false });
+      return;
+    }
+
     setDraft("");
     setAwaitingDayReply(false);
     appendUser(trimmed);
@@ -138,6 +150,7 @@ export function OracleSupremeChat({
 
   function handleCheckIn() {
     setAwaitingDayReply(true);
+    if (!wasIntroWelcomeSpoken()) markIntroWelcomeSpoken();
     appendOracle(openingLine, { speak: true });
   }
 

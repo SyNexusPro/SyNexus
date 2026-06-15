@@ -1,3 +1,5 @@
+import { guardBugReport } from "./securityBot";
+
 const LOCAL_BUG_REPORTS_KEY = "hivemind_bug_reports";
 
 export type BugReportInput = {
@@ -34,6 +36,11 @@ export async function submitBugReport(
   const details = input.details.trim();
   if (!subject || !details) {
     return { ok: false, message: "Subject and details are required." };
+  }
+
+  const security = guardBugReport({ subject, details, email: input.email });
+  if (!security.allowed) {
+    return { ok: false, message: security.message ?? "Report blocked by Synexus security." };
   }
 
   saveLocalBugReport({

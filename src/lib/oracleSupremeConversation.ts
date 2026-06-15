@@ -144,27 +144,32 @@ export function wasIntroWelcomeSpoken(): boolean {
   }
 }
 
-export function buildOpeningGreeting(ctx: OracleConversationContext): string {
+export function buildOpeningGreeting(
+  ctx: OracleConversationContext,
+  options?: { skipWelcomeLine?: boolean },
+): string {
   const name = ctx.operatorName;
-  const welcome = `Welcome to the SyNexus, ${name}. The future of trading.`;
+  const lead = options?.skipWelcomeLine
+    ? `Hey ${name}.`
+    : `Welcome to the SyNexus, ${name}. The future of trading.`;
 
   if (ctx.daysSinceLastVisit >= 3) {
-    return `${welcome} It's been a few days — I kept your Sentinels on post. How was your day?`;
+    return `${lead} It's been a few days — I kept your Sentinels on post. How was your day?`;
   }
 
   if (ctx.alertCount > 0) {
-    return `${welcome} I already see ${ctx.alertCount} alert${ctx.alertCount === 1 ? "" : "s"} on your desk — how was your day?`;
+    return `${lead} I already see ${ctx.alertCount} alert${ctx.alertCount === 1 ? "" : "s"} on your desk — how was your day?`;
   }
 
   if (ctx.watchlistCount > 0) {
-    return `${welcome} I'm watching ${ctx.watchlistCount} token${ctx.watchlistCount === 1 ? "" : "s"} for you. How was your day?`;
+    return `${lead} I'm watching ${ctx.watchlistCount} token${ctx.watchlistCount === 1 ? "" : "s"} for you. How was your day?`;
   }
 
   if (ctx.tokens.length > 0) {
-    return `${welcome} I'm tracking ${ctx.tokens.length} live pairs — search any coin or ask me to command the Sentinels. How was your day?`;
+    return `${lead} I'm tracking ${ctx.tokens.length} live pairs — search any coin or ask me to command the Sentinels. How was your day?`;
   }
 
-  return `${welcome} How was your day?`;
+  return `${lead} How was your day?`;
 }
 
 export function buildFollowUpAfterMood(mood: DayMoodReply, ctx: OracleConversationContext): string {

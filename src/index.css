@@ -7377,10 +7377,74 @@ a {
 /* Oracle Admin Control Center */
 .oracle-admin {
   margin: 24px 0;
-  padding: 20px 16px;
   border-radius: 16px;
   border: 1px solid rgba(167, 139, 250, 0.28);
   background: linear-gradient(155deg, rgba(14, 10, 24, 0.9), rgba(8, 10, 16, 0.88));
+  overflow: hidden;
+}
+
+.oracle-admin--collapsed {
+  padding: 0;
+}
+
+.oracle-admin--open {
+  padding: 0 0 16px;
+}
+
+.oracle-admin__dock {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px 10px 14px;
+}
+
+.oracle-admin__dock-logo {
+  flex-shrink: 0;
+}
+
+.oracle-admin__dock-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.oracle-admin__dock-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.oracle-admin__dock-meta {
+  margin: 2px 0 0;
+  font-size: 0.75rem;
+  opacity: 0.78;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.oracle-admin__toggle {
+  flex-shrink: 0;
+  margin-left: auto;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(167, 139, 250, 0.45);
+  background: rgba(167, 139, 250, 0.12);
+  color: #e9d5ff;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.oracle-admin__toggle:hover {
+  border-color: rgba(167, 139, 250, 0.65);
+  background: rgba(167, 139, 250, 0.2);
+}
+
+.oracle-admin__panel {
+  padding: 0 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  animation: oracle-panel-in 0.2s ease-out;
 }
 
 .oracle-admin--speaking {
@@ -7391,7 +7455,7 @@ a {
   display: flex;
   gap: 14px;
   align-items: flex-start;
-  margin-bottom: 14px;
+  margin: 14px 0;
 }
 
 .oracle-admin__logo {
@@ -7476,10 +7540,7 @@ a {
 }
 
 .oracle-admin__briefing {
-  margin: 12px 0;
-  font-size: 0.9rem;
-  line-height: 1.45;
-  opacity: 0.9;
+  display: none;
 }
 
 .oracle-admin__report {

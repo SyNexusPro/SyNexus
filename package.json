@@ -17,7 +17,8 @@
     "youtube:watch": "npm run youtube:watch --prefix marketing-ai",
     "campaign:daily": "npm run campaign:daily --prefix marketing-ai",
     "campaign:watch": "npm run campaign:watch --prefix marketing-ai",
-    "platform:check": "npm run platform:check --prefix marketing-ai"
+    "platform:check": "npm run platform:check --prefix marketing-ai",
+    "aegis:check": "node scripts/aegis-check.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.4",
