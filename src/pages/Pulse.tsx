@@ -17,14 +17,20 @@ import {
   buildOracleSupremeBriefing,
   buildOracleSupremeDailyReport,
   buildSyntheticSentinels,
-  oracleSupremeMoodLabel,
 } from "../data/syntheticWatchers";
 import { ProTrialBanner } from "../components/ProTrialBanner";
+import { ShouldIBuyPanel } from "../components/ShouldIBuyPanel";
+import { SentinelAlertsHub } from "../components/SentinelAlertsHub";
+import { WalletPerformanceDashboard } from "../components/WalletPerformanceDashboard";
+import { OracleAdminControlCenter } from "../components/OracleAdminControlCenter";
+import { UIModeToggle } from "../components/UIModeToggle";
 import { notifySynexusPlanChanged } from "../hooks/useSynexusPlan";
-import { OracleSupremeVoiceBar } from "../components/OracleSupremeVoiceBar";
-import { OracleSupremeChat } from "../components/OracleSupremeChat";
+import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
 import { PulseOperatorLink } from "../components/PulseOperatorLink";
-import { SynexusSymbolMark } from "../components/SynexusSymbolMark";
+import {
+  pulseFormatSentinelNamesInText,
+  pulseSentinelDisplayName,
+} from "../lib/pulseFormatting";
 import {
   readDaysSinceLastVisit,
   resolveOperatorName,
@@ -113,20 +119,6 @@ function describeAuthError(err: unknown): string {
   return USER_FRIENDLY_ERROR;
 }
 
-/** Pulse: show Aegis, Pulse, Titan, Cipher (no “Sentinel …” prefix). */
-function pulseSentinelDisplayName(fullName: string) {
-  return fullName.startsWith("Sentinel ") ? fullName.slice("Sentinel ".length) : fullName;
-}
-
-/** Shorten agent names (Sentinel Aegis → Aegis) inside generated brief strings. */
-function pulseFormatSentinelNamesInText(text: string) {
-  return text
-    .replace(/Sentinel Aegis/g, "Aegis")
-    .replace(/Sentinel Pulse/g, "Pulse")
-    .replace(/Sentinel Titan/g, "Titan")
-    .replace(/Sentinel Cipher/g, "Cipher");
-}
-
 export function Pulse() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -155,6 +147,7 @@ export function Pulse() {
   const [checkoutBusy, setCheckoutBusy] = useState(false);
   const [oracleSupremeReportStamp, setOracleSupremeReportStamp] = useState(() => Date.now());
   const [oracleSpeaking, setOracleSpeaking] = useState(false);
+  const { isSimple, isAdvanced } = useSynexusUIMode();
 
   useEffect(() => {
     if (!authBusy) return;
@@ -568,116 +561,58 @@ export function Pulse() {
   return (
     <div className="page">
       <section className="page__intro">
-        <h1 className="page__headline">Pulse</h1>
+        <h1 className="page__headline">Sentinels</h1>
         <p className="page__lede">
-          Your command center — Oracle Supreme and four Sentinels watching the market for you.
+          {isSimple
+            ? "Three tools for launch: scan any token, track wallet performance, command Oracle."
+            : "Full command center — alerts, Sentinel grid, operator tools, and Oracle Supreme."}
         </p>
       </section>
 
       <ProTrialBanner />
 
-      <section
-        className={`synexus-core-panel synexus-core-panel--oracle-supreme${oracleSpeaking ? " synexus-core-panel--speaking" : ""}`}
-        aria-labelledby="oracle-supreme-title"
-      >
-        <div className="synexus-core-panel__head">
-          <SynexusSymbolMark className="synexus-core-panel__logo" size="panel" />
-          <div>
-            <p className="synexus-core-panel__eyebrow synexus-core-panel__eyebrow--eyes-only">
-              {plan === "PRO" ? "Synexus Pro · Active" : "Synexus Pro · $19.99/mo after trial"}
-            </p>
-            <h2 className="synexus-core-panel__title" id="oracle-supreme-title">
-              Oracle Supreme
-              <span className="synexus-core-panel__core-ai">Commander of your Sentinels · reports only to you</span>
-            </h2>
-          </div>
-        </div>
-
-        <div className="oracle-supreme-traits" aria-label="What Oracle Supreme is">
-          <span>Synthetic AI</span>
-          <span>Learns live</span>
-          <span>Decides in seconds</span>
-        </div>
-
-        <OracleSupremeChat
-          context={oracleConversationContext}
-          variant="inline"
-          onSpeakingChange={setOracleSpeaking}
+      {isAdvanced ? (
+        <SentinelAlertsHub
+          tokens={marketTokens}
+          extraAlerts={sentinelAlerts.map((alert) => ({
+            symbol: alert.tokenSymbol,
+            severity: alert.severity,
+            note: alert.note,
+          }))}
         />
+      ) : null}
 
-        <p className="synexus-core-panel__copy synexus-core-panel__copy--oracle-supreme oracle-supreme-intro">
-          Oracle Supreme is the reason Synexus Pro exists. Oracle is a synthetic commander — Oracle grows smarter
-          every time you track a token, get an alert, or file a report. Oracle runs Aegis, Pulse, Titan, and Cipher,
-          then writes you a private briefing in plain English. Nobody else on the platform gets Oracle&apos;s read.
-        </p>
+      <ShouldIBuyPanel poolTokens={marketTokens} />
+      <WalletPerformanceDashboard />
+      <OracleAdminControlCenter
+        plan={plan}
+        briefing={pulseFormatSentinelNamesInText(oracleSupremeBriefing)}
+        dailyReport={oracleSupremeDailyReport}
+        conversationContext={oracleConversationContext}
+        syntheticSentinels={syntheticSentinels}
+        sentinelLiveIntel={sentinelLiveIntel}
+        marketTokenCount={marketTokens.length}
+        alertCount={alerts.length + sentinelAlerts.length}
+        checkoutBusy={checkoutBusy}
+        onRefreshReport={handleOracleSupremeReport}
+        onUpgrade={() => void handleUpgradeTrigger()}
+        onSpeakingChange={setOracleSpeaking}
+        speaking={oracleSpeaking}
+        compact={isSimple}
+      />
 
-        <div className="synexus-core-panel__status" aria-live="polite">
-          <p className="synexus-core-panel__status-title synexus-core-panel__status-title--private">
-            {plan === "PRO" ? "ONLINE · REPORTING TO YOU" : "STANDBY · UNLOCK WITH SYNEXUS PRO"}
+      {isSimple ? (
+        <div className="ui-mode-hint">
+          <p>
+            Simple mode shows your launch essentials. Switch to <strong>Advanced</strong> for the full Sentinel
+            alert feed, operator account linking, and live watchlists.
           </p>
-          <p className="synexus-core-panel__status-line">
-            Oracle listens to all four Sentinels, filters the noise, and tells you what to do next.
-          </p>
+          <UIModeToggle compact />
         </div>
+      ) : null}
 
-        <p className="synexus-core-panel__briefing">{pulseFormatSentinelNamesInText(oracleSupremeBriefing)}</p>
-
-        <OracleSupremeVoiceBar
-          plan={plan}
-          briefing={pulseFormatSentinelNamesInText(oracleSupremeBriefing)}
-          report={plan === "PRO" ? oracleSupremeDailyReport : undefined}
-          onSpeakingChange={setOracleSpeaking}
-        />
-
-        {plan === "PRO" ? (
-          <div className="oracle-supreme-report" role="region" aria-label="Oracle Supreme private briefing">
-            <p className="oracle-supreme-report__label">Your private briefing</p>
-            <div className="oracle-supreme-report__metrics">
-              <span title="How stressed the market looks from Oracle's read">
-                Stress: {oracleSupremeMoodLabel(oracleSupremeDailyReport.mood)}
-              </span>
-              <span title="How well your Sentinel team is performing">
-                Team: {oracleSupremeDailyReport.systemHealth}%
-              </span>
-              <span title="Overall Sentinel performance grade">
-                Grade: {oracleSupremeDailyReport.oversightGrade}
-              </span>
-            </div>
-            <h3>{oracleSupremeDailyReport.headline}</h3>
-            <p>{oracleSupremeDailyReport.daySummary}</p>
-            <p className="oracle-supreme-report__priorities-label">What Oracle wants you to focus on</p>
-            <ul>
-              {oracleSupremeDailyReport.priorities.map((priority) => (
-                <li key={priority}>{pulseFormatSentinelNamesInText(priority)}</li>
-              ))}
-            </ul>
-            <p className="oracle-supreme-report__closing">{oracleSupremeDailyReport.closingNote}</p>
-            <button className="oracle-supreme-report__button" type="button" onClick={handleOracleSupremeReport}>
-              Refresh my briefing
-            </button>
-          </div>
-        ) : (
-          <div className="oracle-supreme-unlock" role="region" aria-label="Unlock Oracle Supreme with Synexus Pro">
-            <p className="oracle-supreme-unlock__title">This is what $19.99/mo unlocks</p>
-            <ul className="oracle-supreme-unlock__list">
-              <li>Private commander briefings written for you — not a generic alert feed</li>
-              <li>Oracle Supreme directing Aegis, Pulse, Titan, and Cipher on your watchlist</li>
-              <li>A synthetic mind that learns from your reports and gets sharper over time</li>
-              <li>Instant reads on market stress, team health, and what to do next</li>
-              <li>Oracle Supreme speaks your briefings aloud — tap Listen anytime</li>
-            </ul>
-            <button
-              className="oracle-supreme-unlock__cta"
-              type="button"
-              disabled={checkoutBusy}
-              onClick={() => void handleUpgradeTrigger()}
-            >
-              {checkoutBusy ? "Opening checkout…" : "Start free trial · unlock Oracle Supreme"}
-            </button>
-          </div>
-        )}
-      </section>
-
+      {isAdvanced ? (
+        <>
       <section className="sentinel-grid-panel">
         <div className="token-section__head">
           <h2 className="token-section__title">Sentinels</h2>
@@ -877,7 +812,7 @@ export function Pulse() {
                 disabled={checkoutBusy}
                 onClick={() => void handleUpgradeTrigger()}
               >
-                {checkoutBusy ? "Opening…" : "Start free trial — then $19.99/month"}
+                {checkoutBusy ? "Opening…" : "Subscribe — $19.99/month"}
               </button>
             ) : (
               <p className="pulse-synexus-pro-promo__active">Synexus Pro is active on your account.</p>
@@ -907,6 +842,8 @@ export function Pulse() {
           <p className="pulse-card__body">Sentinels are scanning for Synexus Pro signal candidates.</p>
         )}
       </div>
+        </>
+      ) : null}
     </div>
   );
 }

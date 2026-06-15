@@ -4,6 +4,8 @@ import { getTradingFeeBps } from "../lib/tradingFees";
 import { useSynexusPlan } from "../hooks/useSynexusPlan";
 import { TradingFeeDisclosure } from "./TradingFeeDisclosure";
 import { TokenLogo } from "./TokenLogo";
+import { TradeIntelligenceScorecard } from "./TradeIntelligenceScorecard";
+import { TradeIntelBuyLink } from "./TradeIntelBuyLink";
 import { type GuardianRisk, type Token, synexusRiskBandLabel } from "../data/tokens";
 
 const riskStyles: Record<
@@ -99,23 +101,24 @@ export function TokenCard({ token }: Props) {
         </div>
       </div>
       <p className="token-card__message">{token.guardianMessage}</p>
+      <TradeIntelligenceScorecard token={token} compact />
       {token.mintAddress ? (
         <p className="token-card__mint">
           Mint: <span>{token.mintAddress}</span>
         </p>
       ) : null}
       <div className="token-card__actions">
-        <a
+        <TradeIntelBuyLink
+          token={token}
           href={buyUrl}
-          target="_blank"
-          rel="noopener noreferrer"
           className="token-card__trade token-card__trade--primary"
+          side="buy"
         >
           Buy
-        </a>
-        <a href={sellUrl} target="_blank" rel="noopener noreferrer" className="token-card__trade">
+        </TradeIntelBuyLink>
+        <TradeIntelBuyLink token={token} href={sellUrl} className="token-card__trade" side="sell">
           Sell
-        </a>
+        </TradeIntelBuyLink>
         <a href={chartUrl} target="_blank" rel="noopener noreferrer" className="token-card__trade token-card__trade--secondary">
           Charts
         </a>

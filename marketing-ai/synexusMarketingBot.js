@@ -17,7 +17,7 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const TAGS = "#SyNexus #Solana #DeFi";
-const TRIAL_LINE = "First month free · $19.99/mo after trial on Nexus Pro.";
+const PRO_PRICE_LINE = "Synexus Pro · $19.99/month · cancel anytime.";
 
 const THEMES = [
   "Risk surfaces fast — SyNexus Sentinels and Oracle Supreme distill it into signal, not hype.",
@@ -26,7 +26,7 @@ const THEMES = [
 ];
 
 function appOrigin() {
-  return process.env.APP_ORIGIN?.trim() || "https://your-live-app-url.com";
+  return process.env.APP_ORIGIN?.trim() || "https://synexus.pro";
 }
 
 function pickThemes(n, offset) {
@@ -43,7 +43,7 @@ function salt(seed) {
 
 export function generateXPost(now = Date.now()) {
   const [t0, t1] = pickThemes(2, Math.floor(now / 60_000) % THEMES.length);
-  return `${t0}\n${t1}\n${TRIAL_LINE}\n${TAGS}`;
+  return `${t0}\n${t1}\n${PRO_PRICE_LINE}\n${TAGS}`;
 }
 
 export function generateTikTokScript(now = Date.now()) {
@@ -59,7 +59,7 @@ export function generateTikTokScript(now = Date.now()) {
     `SyNexus — ${hook}`,
     "",
     `[0–3s] Mention lanes: Sentinel Aegis (risk), Sentinel Pulse (momentum), Sentinel Titan (whales), Sentinel Cipher (patterns). Oracle Supreme fuses lanes for operator clarity.`,
-    `[3–8s] On-screen: Nexus Pro — unlimited Nexus intelligence. ${TRIAL_LINE}`,
+    `[3–8s] On-screen: Nexus Pro — unlimited Nexus intelligence. ${PRO_PRICE_LINE}`,
     `[8–12s] Brief app/The Nexus visuals. Whale tracking · momentum cues · Sentinel analysis.`,
     `[12–15s] Soft CTA: Try SyNexus — link out. Tags: ${TAGS}`,
   ].join("\n");
@@ -73,7 +73,7 @@ export function generateTelegramUpdate(now = Date.now()) {
     pickThemes(1, Math.floor(now / 86_400_000))[0],
     "",
     "**Stack** · Sentinel analysis · risk scanning · whale + momentum overlays",
-    `**Offer** · ${TRIAL_LINE}`,
+    `**Offer** · ${PRO_PRICE_LINE}`,
     "",
     `**Live app** (paste when ready):\n${origin}`,
   ].join("\n");
@@ -87,7 +87,7 @@ export function generateDiscordPost(now = Date.now()) {
     t,
     "",
     "Oracle Supreme threads Sentinel outputs into one operator-grade read — no spam, structured lanes.",
-    `**Nexus Pro** · unlimited Nexus intelligence. ${TRIAL_LINE}`,
+    `**Nexus Pro** · unlimited Nexus intelligence. ${PRO_PRICE_LINE}`,
     "",
     `**App** · ${origin}`,
   ].join("\n");
@@ -110,7 +110,7 @@ export function generateRedditPost(now = Date.now()) {
     "",
     "**What SyNexus highlights** · Sentinel analysis across risk scanning, whale tracking, momentum detection, pattern reads — marketed as Nexus intelligence layered under The Nexus. Not financial advice, not guaranteed outcomes.",
     "",
-    TRIAL_LINE,
+    PRO_PRICE_LINE,
     "",
     `Live demo / app · ${origin} (remove per subreddit rules if needed.)`,
   ].join("\n");
@@ -127,7 +127,7 @@ export function generateReferralBlurb(now = Date.now()) {
     "",
     "They're not handing out entries — they're surfacing Sentinel analysis, whales, momentum, and risk overlays so convictions stay deliberate.",
     "",
-    TRIAL_LINE,
+    PRO_PRICE_LINE,
     "",
     origin,
   ].join("\n");
@@ -140,7 +140,7 @@ export function growthMissionLine(date = new Date()) {
     "Film a TikTok teaser: whale tracking spotted a suspicious flow ahead of chatter.",
     "X mini-thread (3 posts): disciplined momentum cues vs meme hype — stay factual, cite SyNexus.",
     "Share a Nexused UI clip (blur keys): describe what Oracle Supreme would emphasize for traders.",
-    "Telegram changelog tone: Nexus Pro intelligence after trial at $19.99/m — FAQs, disclaimers intact.",
+    "Telegram changelog tone: Nexus Pro at $19.99/m — full Sentinel intelligence, FAQs and disclaimers intact.",
     "Discord micro-post inviting feedback on Sentinel alert hygiene — futuristic, moderation-friendly.",
     "Reddit-ready voice clip contrasting Telegram alpha chaos vs one Nexus recap.",
     "Drop the SyNexus app link alongside a single sober reason Sentinel scanning matters.",
@@ -163,6 +163,34 @@ export function buildDailyPack(now = Date.now()) {
     discord: generateDiscordPost(now),
     reddit: generateRedditPost(now),
     referral: generateReferralBlurb(now),
+  };
+}
+
+export function generateTikTokCaption(now = Date.now()) {
+  const s = salt(Math.floor(now / 1000));
+  const hook =
+    s < 0.33
+      ? "Scan before you ape. SyNexus Sentinels read the risk first."
+      : s < 0.66
+        ? "Whale moves. Risk scores. Oracle Supreme AI. One Solana command center."
+        : "The future of Solana trading intelligence — Synexus.";
+  return [
+    hook,
+    "",
+    "Token scanner · Whale tracker · Risk score · Pulse alerts",
+    PRO_PRICE_LINE,
+    appOrigin(),
+    "",
+    "#Synexus #Solana #Crypto #Trading #DeFi #SolanaTrading #AI",
+  ].join("\n");
+}
+
+export function parseRedditPost(text) {
+  const titleMatch = String(text).match(/TITLE:\n([\s\S]*?)\n\nBODY:/);
+  const bodyMatch = String(text).match(/BODY:\n([\s\S]*)/);
+  return {
+    title: titleMatch?.[1]?.trim() ?? "SyNexus — AI Solana trading intelligence",
+    body: bodyMatch?.[1]?.trim() ?? String(text),
   };
 }
 
@@ -190,13 +218,15 @@ function printPack(pack) {
   console.log(`\n${"─".repeat(60)}\nAPP_ORIGIN: ${appOrigin()}\n`);
 }
 
-async function writePack(pack) {
+async function writePack(pack, { quiet = false } = {}) {
   const dir = join(__dirname, "output", todayDirName());
   await mkdir(dir, { recursive: true });
+  const tiktokCaption = generateTikTokCaption();
   const files = {
     "mission.txt": pack.mission,
     "x-post.txt": pack.x,
     "tiktok-script.txt": pack.tiktok,
+    "tiktok-caption.txt": tiktokCaption,
     "telegram-update.txt": pack.telegram,
     "discord-post.txt": pack.discord,
     "reddit-post.txt": pack.reddit,
@@ -205,8 +235,11 @@ async function writePack(pack) {
   for (const [name, text] of Object.entries(files)) {
     await writeFile(join(dir, name), `${text}\n`, "utf8");
   }
-  console.log(`Wrote pack → ${dir}`);
+  if (!quiet) console.log(`Wrote pack → ${dir}`);
+  return dir;
 }
+
+export { todayDirName, writePack };
 
 function parseArgs(argv) {
   const flags = new Set(argv.filter((a) => a.startsWith("--")));

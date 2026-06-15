@@ -35,7 +35,7 @@ export function ProTrialBanner() {
     }
   }
 
-  async function startTrial() {
+  async function startCheckout() {
     if (busy) return;
     setError(false);
     try {
@@ -55,20 +55,20 @@ export function ProTrialBanner() {
   }
 
   return (
-    <div className="pro-trial-banner" role="region" aria-label="Synexus Pro trial offer">
+    <div className="pro-trial-banner" role="region" aria-label="Synexus Pro subscription">
       <div className="pro-trial-banner__text">
-        <span className="pro-trial-banner__headline">First month free</span>
+        <span className="pro-trial-banner__headline">Synexus Pro</span>
         <span className="pro-trial-banner__detail">
-          {error ? "Checkout couldn't open. Tap to retry." : "Synexus Pro · $19.99/mo after trial · cancel anytime"}
+          {error ? "Checkout couldn't open. Tap to retry." : "$19.99/month · full Sentinel intelligence · cancel anytime"}
         </span>
       </div>
       <button
         type="button"
         className="pro-trial-banner__cta"
         disabled={busy}
-        onClick={() => void startTrial()}
+        onClick={() => void startCheckout()}
       >
-        {busy ? "Opening…" : "Start trial"}
+        {busy ? "Opening…" : "Subscribe"}
       </button>
       <button type="button" className="pro-trial-banner__close" onClick={dismiss} aria-label="Dismiss offer">
         ×

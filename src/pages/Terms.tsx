@@ -14,7 +14,7 @@ export function Terms() {
         These Terms of Service (&quot;Terms&quot;) are a binding agreement between you and {OPERATOR_LABEL}{" "}
         (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) governing access to the Synexus mobile and web
         application, dashboards, AI features, subscriptions, and related services (collectively, the
-        &quot;Service&quot;). By accessing or using the Service, creating an account, starting a trial, or
+        &quot;Service&quot;). By accessing or using the Service, creating an account, or
         completing a purchase, you agree to these Terms and our{" "}
         <Link to="/privacy">Privacy Policy</Link>. If you do not agree, do not use the Service.
       </p>
@@ -95,16 +95,17 @@ export function Terms() {
       </section>
 
       <section className="legal-section marketing-panel">
-        <h2>Subscriptions, trials, and billing</h2>
+        <h2>Subscriptions and billing</h2>
         <p>
-          Paid plans (including Synexus Pro) may be offered with a promotional free trial and recurring fees
-          (for example, monthly billing after trial). Payment is processed by third-party payment processors
-          (such as Stripe). By subscribing, you authorize us and our processors to charge your payment method
-          on a recurring basis until you cancel according to checkout and processor flows. Prices, taxes, and
+          Paid plans (including Synexus Pro at the price shown at checkout, currently $19.99/month where
+          applicable) bill on a recurring basis starting when you subscribe — there is no free trial unless
+          explicitly stated at checkout. Payment is processed by third-party payment processors (such as
+          Stripe). By subscribing, you authorize us and our processors to charge your payment method on a
+          recurring basis until you cancel according to checkout and processor flows. Prices, taxes, and
           features may change with notice where required by law. Unless mandatory law provides otherwise,{" "}
           <strong>fees are non-refundable</strong> once a billing period begins, including partial periods.
           Failed payments, disputed charges, or chargebacks may suspend paid features. Cancel before renewal to
-          avoid future charges. Trial eligibility and conversion terms are shown at checkout and may change.
+          avoid future charges.
         </p>
       </section>
 

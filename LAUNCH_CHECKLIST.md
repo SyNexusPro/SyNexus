@@ -27,8 +27,10 @@ Use this before production traffic and Google Play submission.
 ## Legal and trust
 
 - [ ] Replace placeholder operator entity in Terms/Privacy with your registered legal name and support email (after counsel review).
-- [ ] Terms (`/terms`) and Privacy (`/privacy`) linked from app footer — required for Google Play.
+- [ ] Set `VITE_SUPPORT_EMAIL` for Contact page and bug-report mailto handoff.
+- [ ] Terms (`/terms`), Privacy (`/privacy`), About (`/about`), Trust (`/trust`), and Contact (`/contact`) linked from app footer — required for Google Play.
 - [ ] Clear risk disclaimer: not financial advice; AI/Sentinel outputs are informational only.
+- [ ] Export **phone screenshots** from `/about` or `/trust` preview frames, or capture on a physical device (≥ 2 required for Play listing).
 
 ## Google Play — one-time setup
 

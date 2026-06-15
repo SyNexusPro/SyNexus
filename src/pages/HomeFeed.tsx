@@ -2,13 +2,21 @@ import { useMemo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { TokenCard } from "../components/TokenCard";
 import { TradingFeeDisclosure } from "../components/TradingFeeDisclosure";
+import { TrustIndicators } from "../components/TrustIndicators";
+import { NonCustodialDisclaimer } from "../components/NonCustodialDisclaimer";
+import { AppScreenshotGallery } from "../components/AppScreenshotGallery";
+import { SupportedWallets } from "../components/SupportedWallets";
 import { SynexusLiveScanner } from "../components/SynexusLiveScanner";
+import { ShouldIBuyPanel } from "../components/ShouldIBuyPanel";
+import { SentinelAlertsHub } from "../components/SentinelAlertsHub";
 import { useSynexusPlan } from "../hooks/useSynexusPlan";
+import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
 import { sampleTokens, type Token } from "../data/tokens";
 import { fetchMvpTokenFeed } from "../services/marketDataService";
 
 export function HomeFeed() {
   const plan = useSynexusPlan();
+  const { isSimple } = useSynexusUIMode();
   const [allTokens, setAllTokens] = useState<Token[]>(sampleTokens);
   const [trendingTokens, setTrendingTokens] = useState<Token[]>(
     sampleTokens
@@ -81,18 +89,71 @@ export function HomeFeed() {
             </div>
           </div>
           <h1 className="landing-hero__headline">
-            AI-powered Solana trading intelligence
+            {isSimple ? "Should I buy this?" : "AI-powered Solana trading intelligence"}
           </h1>
           <p className="landing-hero__subtext">
-            Detect scams, track whales, monitor momentum, and trade smarter.
+            {isSimple
+              ? "Paste any token — Synexus scans risk and answers in plain English."
+              : "Detect scams, track whales, monitor momentum, and trade smarter."}
           </p>
           <div className="landing-hero__actions">
-          <Link to="/pulse#synexus-pro" className="landing-hero__actions--pro">
+            <Link to="/pulse" className="landing-hero__actions--secondary">
+              {isSimple ? "Wallet & Oracle" : "Sentinel alerts"}
+            </Link>
+            <Link to="/pulse#synexus-pro" className="landing-hero__actions--pro">
               Synexus Pro
             </Link>
           </div>
         </div>
       </section>
+
+      <section className="home-trust-strip marketing-panel">
+        <TrustIndicators compact />
+        <p className="home-trust-strip__links">
+          <Link to="/trust">Security &amp; privacy</Link>
+          {" · "}
+          <Link to="/about">About</Link>
+          {" · "}
+          <Link to="/contact">Support</Link>
+        </p>
+      </section>
+
+      <NonCustodialDisclaimer className="home-non-custodial" />
+
+      <ShouldIBuyPanel poolTokens={allTokens} />
+
+      {isSimple ? (
+        <>
+          <section className="simple-launch-links">
+            <Link to="/pulse#wallet-performance" className="simple-launch-links__card">
+              <p className="simple-launch-links__eyebrow">Performance</p>
+              <h2>Wallet dashboard</h2>
+              <p>Wins, losses, journal, and habits — stats about your trading.</p>
+            </Link>
+            <Link to="/pulse#oracle-admin" className="simple-launch-links__card">
+              <p className="simple-launch-links__eyebrow">Command</p>
+              <h2>Oracle Admin</h2>
+              <p>Run Aegis, Pulse, Titan, and Cipher from one control center.</p>
+            </Link>
+          </section>
+
+          <section className="token-section">
+            <div className="token-section__head">
+              <h2 className="token-section__title">Trending now</h2>
+              <p className="token-section__lede">Top movers — tap any token for the full scorecard</p>
+            </div>
+            <ul className="token-list">
+              {trendingTokens.map((token) => (
+                <li key={`trend-${token.id}`}>
+                  <TokenCard token={token} />
+                </li>
+              ))}
+            </ul>
+          </section>
+        </>
+      ) : (
+        <>
+      <SentinelAlertsHub tokens={allTokens} />
 
       <section className="landing-info-grid">
         <article className="landing-info-card landing-info-card--spotlight">
@@ -254,6 +315,26 @@ export function HomeFeed() {
         </ul>
       </section>
 
+      <section className="home-screenshots marketing-panel">
+        <div className="home-screenshots__head">
+          <p className="home-screenshots__eyebrow">Inside Synexus</p>
+          <h2 className="home-screenshots__title">Token scanner · Whale tracker · Risk score · Alerts · AI</h2>
+          <p className="home-screenshots__copy">
+            Preview the core surfaces — export device captures for Google Play when you ship Android.
+          </p>
+        </div>
+        <AppScreenshotGallery />
+        <p className="home-screenshots__more">
+          <Link to="/about">Full About page →</Link>
+        </p>
+      </section>
+
+      <section className="home-wallets marketing-panel">
+        <h2 className="home-wallets__title">Supported wallets</h2>
+        <p className="home-wallets__copy">Connect Phantom, Solflare, Backpack, and other Solana wallets — you sign every swap.</p>
+        <SupportedWallets />
+      </section>
+
       <section className="monetization-panel">
         <div className="token-section__head">
           <h2 className="token-section__title">Why Synexus matters</h2>
@@ -269,6 +350,8 @@ export function HomeFeed() {
           <p>3) Upgrade to Synexus Pro when you want the full intelligence grid.</p>
         </div>
       </section>
+        </>
+      )}
     </div>
   );
 }

@@ -2,7 +2,11 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { TokenLogo } from "../components/TokenLogo";
 import { TradingFeeDisclosure } from "../components/TradingFeeDisclosure";
+import { TradeIntelligenceScorecard } from "../components/TradeIntelligenceScorecard";
+import { ShouldIBuyVerdict } from "../components/ShouldIBuyPanel";
+import { TradeIntelBuyLink } from "../components/TradeIntelBuyLink";
 import { submitSynexusReport } from "../lib/reportSubmission";
+import { recordTokenView } from "../lib/walletHealth";
 import { dexScreenerTokenUrl, jupiterBuyWithSolUrl, jupiterSellForSolUrl } from "../lib/solanaTradeLinks";
 import { getTradingFeeBps } from "../lib/tradingFees";
 import { useSynexusPlan } from "../hooks/useSynexusPlan";
@@ -128,6 +132,10 @@ export function TokenDetail() {
     const intervalId = window.setInterval(() => setChartTick(Date.now()), 1000);
     return () => window.clearInterval(intervalId);
   }, []);
+
+  useEffect(() => {
+    if (token) recordTokenView(token);
+  }, [token]);
 
   async function handleReport() {
     if (!token) return;
@@ -312,6 +320,9 @@ export function TokenDetail() {
         </article>
       </section>
 
+      <TradeIntelligenceScorecard token={token} />
+      <ShouldIBuyVerdict token={token} />
+
       <section className="detail-trade-panel">
         <div>
           <h2>Trade actions</h2>
@@ -321,12 +332,17 @@ export function TokenDetail() {
         </div>
         <TradingFeeDisclosure plan={plan} notionalUsd={100} showAllocation />
         <div className="detail-trade-panel__actions">
-          <a href={buySwapUrl} target="_blank" rel="noopener noreferrer" className="detail-trade-panel__buy">
+          <TradeIntelBuyLink
+            token={token}
+            href={buySwapUrl}
+            className="detail-trade-panel__buy"
+            side="buy"
+          >
             Buy {token.symbol}
-          </a>
-          <a href={sellSwapUrl} target="_blank" rel="noopener noreferrer">
+          </TradeIntelBuyLink>
+          <TradeIntelBuyLink token={token} href={sellSwapUrl} side="sell">
             Sell {token.symbol}
-          </a>
+          </TradeIntelBuyLink>
           <a href={dexscreenerUrl} target="_blank" rel="noopener noreferrer" className="detail-trade-panel__charts">
             Charts
           </a>

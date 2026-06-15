@@ -59,6 +59,50 @@ export type Token = {
 
 type TokenSeed = Omit<Token, "guardianRisk" | "guardianMessage" | "riskScore" | "riskReasons">;
 
+export function buildTokenFromPartial(
+  partial: Partial<TokenSeed> &
+    Pick<TokenSeed, "id" | "symbol" | "name" | "priceUsd" | "change24hPct">,
+  configOverride?: DeepPartial<GuardianEngineConfig>,
+): Token {
+  const seed: TokenSeed = {
+    topWalletPct: 18,
+    top5WalletsPct: 40,
+    top10WalletsPct: 58,
+    tokenAgeHours: 48,
+    priceMove1hPct: partial.change24hPct * 0.12,
+    sharpPumpThenDump: false,
+    highVolumeLowLiquidity: false,
+    suspiciousVolumeWithFewHolders: false,
+    similarToMajorTokenName: false,
+    similarTickerToKnownToken: false,
+    fakeBrandingImpersonation: false,
+    reports24h: 0,
+    repeatedScamCategoryReports: false,
+    missingSocialsOrWebsite: false,
+    brokenWebsiteOrDeadSocials: false,
+    riskyMintOrFreezeAuthorityActive: false,
+    ...partial,
+  };
+
+  const liq = seed.liquidityUsd ?? 0;
+  const vol = seed.volume24hUsd ?? 0;
+  if (liq < 30_000 && vol > 80_000) seed.highVolumeLowLiquidity = true;
+  if (Math.abs(seed.change24hPct) > 35 && liq < 60_000) seed.sharpPumpThenDump = true;
+  if (liq < 15_000) seed.missingSocialsOrWebsite = true;
+
+  const config = mergeGuardianConfig(configOverride);
+  const guardian = evaluateGuardianRisk(toGuardianInput(seed), config);
+
+  return {
+    ...seed,
+    guardianRisk: guardian.status,
+    guardianMessage: guardian.guardianMessage,
+    riskScore: guardian.riskScore,
+    riskReasons: guardian.reasons,
+    confidence: guardian.confidence,
+  };
+}
+
 const tokenSeeds: TokenSeed[] = [
   {
     id: "hivemind-sol",

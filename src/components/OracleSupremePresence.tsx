@@ -18,6 +18,8 @@ import { isSynexusBootComplete, subscribeSynexusBootComplete } from "../lib/syne
 import { OracleSupremeChat } from "./OracleSupremeChat";
 import { SynexusSymbolMark } from "./SynexusSymbolMark";
 
+import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
+
 const PLAN_STORAGE_KEY = "hivemind_paid_plan";
 
 function normalizePlan(raw: string | null | undefined): "FREE" | "PRO" {
@@ -25,6 +27,7 @@ function normalizePlan(raw: string | null | undefined): "FREE" | "PRO" {
 }
 
 export function OracleSupremePresence() {
+  const { isSimple } = useSynexusUIMode();
   const [bootReady, setBootReady] = useState(isSynexusBootComplete());
   const [expanded, setExpanded] = useState(false);
   const [speaking, setSpeaking] = useState(false);
@@ -109,6 +112,8 @@ export function OracleSupremePresence() {
     }),
     [alertCount, feedSource, operatorName, plan, tokens, watchlistCount],
   );
+
+  if (isSimple) return null;
 
   return (
     <>

@@ -12,8 +12,8 @@ export function marketingAppOrigin(): string {
   return "";
 }
 
-/** Short pricing / trial line (marketing phrasing — verify with your billing copy). */
-const TRIAL_LINE = "First month free · $19.99/mo after trial on Synexus Pro.";
+/** Short Synexus Pro pricing line for social and video copy. */
+const PRO_PRICE_LINE = "Synexus Pro · $19.99/month · cancel anytime.";
 
 const THEMES = [
   "Risk surfaces fast — Synexus Sentinels and Oracle Supreme distill it into signal, not hype.",
@@ -35,7 +35,7 @@ function salt(seed: number) {
 
 export function generateXPost(now: number): string {
   const [t0, t1] = pickThemes(2, Math.floor(now / 60_000) % THEMES.length);
-  return `${t0}\n${t1}\n${TRIAL_LINE}\n${TAGS}`;
+  return `${t0}\n${t1}\n${PRO_PRICE_LINE}\n${TAGS}`;
 }
 
 export function generateTikTokScript(now: number): string {
@@ -51,7 +51,7 @@ export function generateTikTokScript(now: number): string {
     `Synexus — ${hook}`,
     "",
     `[0–3s] Mention lanes: Sentinel Aegis (risk), Sentinel Pulse (momentum), Sentinel Titan (whales), Sentinel Cipher (patterns). Oracle Supreme fuses lanes for operator clarity.`,
-    `[3–8s] On-screen: Synexus Pro — unlimited Synexus intelligence. ${TRIAL_LINE}`,
+    `[3–8s] On-screen: Synexus Pro — unlimited Synexus intelligence. ${PRO_PRICE_LINE}`,
     `[8–12s] Brief app/The Synexus visuals. Whale tracking · momentum cues · Sentinel analysis.`,
     `[12–15s] Soft CTA: Try Synexus — link out. Tags: ${TAGS}`,
   ].join("\n");
@@ -65,7 +65,7 @@ export function generateTelegramUpdate(now: number): string {
     pickThemes(1, Math.floor(now / 86_400_000))[0]!,
     "",
     "**Stack** · Sentinel analysis · risk scanning · whale + momentum overlays",
-    `**Offer** · ${TRIAL_LINE}`,
+    `**Offer** · ${PRO_PRICE_LINE}`,
     "",
     `**Live app** (paste when ready):\n${origin}`,
   ].join("\n");
@@ -79,7 +79,7 @@ export function generateDiscordPost(now: number): string {
     t,
     "",
     "Oracle Supreme threads Sentinel outputs into one operator-grade read — no spam, structured lanes.",
-    `**Synexus Pro** · unlimited Synexus intelligence. ${TRIAL_LINE}`,
+    `**Synexus Pro** · unlimited Synexus intelligence. ${PRO_PRICE_LINE}`,
     "",
     `**App** · ${origin}`,
   ].join("\n");
@@ -102,7 +102,7 @@ export function generateRedditPost(now: number): string {
     "",
     "**What Synexus highlights** · Sentinel analysis across risk scanning, whale tracking, momentum detection, pattern reads — marketed as Synexus intelligence layered under The Synexus. Not financial advice, not guaranteed outcomes.",
     "",
-    TRIAL_LINE,
+    PRO_PRICE_LINE,
     "",
     `Live demo / app · ${origin} (remove per subreddit rules if needed.)`,
   ].join("\n");
@@ -119,7 +119,7 @@ export function generateReferralBlurb(now: number): string {
     "",
     "They're not handing out entries — they're surfacing Sentinel analysis, whales, momentum, and risk overlays so convictions stay deliberate.",
     "",
-    TRIAL_LINE,
+    PRO_PRICE_LINE,
     "",
     origin,
   ].join("\n");
@@ -133,7 +133,7 @@ export function growthMissionLine(date: Date): string {
     "Film a TikTok teaser: whale tracking spotted a suspicious flow ahead of chatter.",
     "X mini-thread (3 posts): disciplined momentum cues vs meme hype — stay factual, cite Synexus.",
     "Share a Nexused UI clip (blur keys): describe what Oracle Supreme would emphasize for traders.",
-    "Telegram changelog tone: Synexus Pro intelligence after trial at $19.99/m — FAQs, disclaimers intact.",
+    "Telegram changelog tone: Nexus Pro at $19.99/m — full Sentinel intelligence, FAQs and disclaimers intact.",
     "Discord micro-post inviting feedback on Sentinel alert hygiene — futuristic, moderation-friendly.",
     "Reddit-ready voice clip contrasting Telegram alpha chaos vs one Nexus recap.",
     "Drop the Synexus app link alongside a single sober reason Sentinel scanning matters.",

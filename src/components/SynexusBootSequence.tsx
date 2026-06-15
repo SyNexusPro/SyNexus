@@ -1,8 +1,20 @@
 import type { CSSProperties, ReactNode } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createOracleSupremeSpeaker, isOracleSupremeVoiceSupported } from "../lib/oracleSupremeVoice";
 import { markIntroWelcomeSpoken, ORACLE_INTRO_VOICE_LINE, wasIntroWelcomeSpoken } from "../lib/oracleSupremeConversation";
+import {
+  getBootDurations,
+  getBootExitMs,
+  markBootIntroSeen,
+  readPrefersReducedMotion,
+  resolveBootProfile,
+  shouldBootTypewriter,
+  shouldBootVoice,
+  shouldShowBootSentinels,
+  type BootProfile,
+} from "../lib/bootExperience";
 import { notifySynexusBootComplete } from "../lib/synexusBootComplete";
+
 const PHASE_COPY: readonly string[] = [
   "SYNEXUS INITIALIZING",
   "WELCOME TO THE SYNEXUS · THE FUTURE OF TRADING",
@@ -18,33 +30,47 @@ const SENTINELS = [
   { name: "Sentinel Cipher", role: "Decodes patterns with AI." },
 ] as const;
 
-/**
- * Phase gaps (ms): 0→1, 1→2, 2→3, 3→4, hold on finale, exit animation before unmount.
- * Totals ≈ 6.4s active + 0.7s fade (reduced motion: ~1.2s).
- */
-function getBootDurations(reduced: boolean): readonly number[] {
-  return reduced
-    ? ([140, 140, 140, 140, 200, 320] as const)
-    : ([600, 950, 2500, 950, 1350, 700] as const);
-}
-
 type Props = {
   children: ReactNode;
 };
 
+function finishBoot(
+  setRemoved: (v: boolean) => void,
+  timersRef: React.MutableRefObject<ReturnType<typeof setTimeout>[]>,
+  exitMs: number,
+) {
+  markBootIntroSeen();
+  timersRef.current.push(
+    setTimeout(() => {
+      setRemoved(true);
+      notifySynexusBootComplete();
+    }, exitMs),
+  );
+}
+
 export function SynexusBootSequence({ children }: Props) {
+  const bootProfileRef = useRef<BootProfile>(
+    typeof window !== "undefined" ? resolveBootProfile(readPrefersReducedMotion()) : "full",
+  );
+  const profile = bootProfileRef.current;
+  const skipEntirely = profile === "skip";
+
   const [phase, setPhase] = useState(0);
   const [exiting, setExiting] = useState(false);
-  const [removed, setRemoved] = useState(false);
-  const [reducedMotion] = useState(
-    () =>
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-  );
+  const [removed, setRemoved] = useState(skipEntirely);
+  const [reducedMotion] = useState(readPrefersReducedMotion);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const [typedCount, setTypedCount] = useState(0);
   const spokeWelcomeRef = useRef(false);
   const speakerRef = useRef<ReturnType<typeof createOracleSupremeSpeaker> | null>(null);
+  const exitMs = getBootExitMs(profile);
+
+  useLayoutEffect(() => {
+    if (skipEntirely) {
+      markBootIntroSeen();
+      notifySynexusBootComplete();
+    }
+  }, [skipEntirely]);
 
   const skip = () => {
     if (exiting || removed) return;
@@ -52,18 +78,13 @@ export function SynexusBootSequence({ children }: Props) {
     timersRef.current.forEach(clearTimeout);
     timersRef.current = [];
     setExiting(true);
-    timersRef.current.push(
-      setTimeout(() => {
-        setRemoved(true);
-        notifySynexusBootComplete();
-      }, 450),
-    );
+    finishBoot(setRemoved, timersRef, exitMs);
   };
 
   useEffect(() => {
-    if (removed) return;
+    if (removed || skipEntirely) return;
 
-    const steps = [...getBootDurations(reducedMotion)];
+    const steps = [...getBootDurations(profile)];
 
     const clearAll = () => {
       timersRef.current.forEach(clearTimeout);
@@ -89,6 +110,7 @@ export function SynexusBootSequence({ children }: Props) {
     acc += steps[5]!;
     timersRef.current.push(
       setTimeout(() => {
+        markBootIntroSeen();
         setRemoved(true);
         notifySynexusBootComplete();
         clearAll();
@@ -96,13 +118,12 @@ export function SynexusBootSequence({ children }: Props) {
     );
 
     return clearAll;
-  }, [removed, reducedMotion]);
+  }, [removed, profile, skipEntirely]);
 
-  // Typewriter reveal for the status lines (phases 0-3); the finale slams in whole.
   useEffect(() => {
-    if (removed || exiting) return;
+    if (removed || exiting || skipEntirely) return;
     const text = PHASE_COPY[phase] ?? "";
-    if (reducedMotion || phase === 4) {
+    if (!shouldBootTypewriter(profile) || phase === 4) {
       setTypedCount(text.length);
       return;
     }
@@ -117,10 +138,20 @@ export function SynexusBootSequence({ children }: Props) {
       });
     }, 22);
     return () => clearInterval(interval);
-  }, [phase, reducedMotion, removed, exiting]);
+  }, [phase, profile, removed, exiting, skipEntirely]);
 
   useEffect(() => {
-    if (removed || exiting || phase !== 1 || spokeWelcomeRef.current || wasIntroWelcomeSpoken()) return;
+    if (
+      removed ||
+      exiting ||
+      skipEntirely ||
+      phase !== 1 ||
+      spokeWelcomeRef.current ||
+      wasIntroWelcomeSpoken() ||
+      !shouldBootVoice(profile)
+    ) {
+      return;
+    }
     spokeWelcomeRef.current = true;
     if (!isOracleSupremeVoiceSupported()) {
       markIntroWelcomeSpoken();
@@ -130,7 +161,7 @@ export function SynexusBootSequence({ children }: Props) {
     markIntroWelcomeSpoken();
     speakerRef.current.speak(ORACLE_INTRO_VOICE_LINE);
     return () => speakerRef.current?.stop();
-  }, [phase, removed, exiting]);
+  }, [phase, profile, removed, exiting, skipEntirely]);
 
   useEffect(() => {
     if (!removed) {
@@ -145,17 +176,18 @@ export function SynexusBootSequence({ children }: Props) {
   }, [removed]);
 
   const title = PHASE_COPY[phase] ?? PHASE_COPY[0];
-  const typing = phase < 4 && !reducedMotion;
+  const typing = shouldBootTypewriter(profile) && phase < 4 && !reducedMotion;
   const visibleTitle = typing ? title.slice(0, typedCount) : title;
-  const showSentinels = phase === 2 && !exiting;
+  const showSentinels = shouldShowBootSentinels(profile, phase) && !exiting;
 
   return (
     <>
       {children}
       {!removed ? (
         <div
-          className={`synexus-boot${exiting ? " synexus-boot--exit" : ""}`}
+          className={`synexus-boot${exiting ? " synexus-boot--exit" : ""}${profile === "fast" ? " synexus-boot--fast" : ""}`}
           data-phase={phase}
+          data-boot-profile={profile}
           aria-busy={!removed}
           onClick={skip}
         >
@@ -223,5 +255,5 @@ const PARTICLE_SEEDS: { i: number; style: CSSProperties }[] = [
   { i: 4, style: { left: "45%", top: "8%", ["--synexus-d" as string]: "2.9s" } },
   { i: 5, style: { left: "62%", top: "82%", ["--synexus-d" as string]: "3.1s" } },
   { i: 6, style: { left: "15%", top: "44%", ["--synexus-d" as string]: "3.4s" } },
-  { i: 7, style: { left: "92%", top: "28%", ["--synexus-d" as string]: "2.7s" } },
+  { i: 7, style: { opacity: 0.92, left: "92%", top: "28%", ["--synexus-d" as string]: "2.7s" } },
 ];

@@ -1,5 +1,5 @@
 import type { DeepPartial, GuardianEngineConfig } from "../data/guardianEngine";
-import { buildSampleTokens, type Token } from "../data/tokens";
+import { buildSampleTokens, buildTokenFromPartial, type Token } from "../data/tokens";
 import { loadGuardianConfigOverride } from "./guardianConfigService";
 
 type TokenPatch = {
@@ -341,9 +341,68 @@ export async function fetchMvpTokenFeed() {
   };
 }
 
+function tokenFromDexPair(pair: DexPair, idHint: string): Token {
+  const patch = patchFromDexPair(pair);
+  const symbol = pair.baseToken?.symbol ?? "???";
+  const name = pair.baseToken?.name ?? symbol;
+  const mint = patch.mintAddress ?? idHint;
+
+  return buildTokenFromPartial({
+    id: mint.length > 20 ? mint : `${symbol.toLowerCase()}-dex`,
+    symbol,
+    name,
+    priceUsd: patch.priceUsd ?? 0,
+    change24hPct: patch.change24hPct ?? 0,
+    volume24hUsd: patch.volume24hUsd,
+    liquidityUsd: patch.liquidityUsd,
+    marketCapUsd: patch.marketCapUsd,
+    mintAddress: patch.mintAddress,
+    logoUrl: patch.logoUrl,
+  });
+}
+
+export async function lookupTokenByQuery(query: string, pool?: Token[]): Promise<Token | null> {
+  const q = query.trim();
+  if (!q) return null;
+
+  const upper = q.toUpperCase();
+  if (pool?.length) {
+    const inPool = pool.find(
+      (t) =>
+        t.id === q ||
+        t.symbol.toUpperCase() === upper ||
+        t.mintAddress?.toLowerCase() === q.toLowerCase(),
+    );
+    if (inPool) return inPool;
+  }
+
+  const looksLikeMint = q.length >= 32 && /^[1-9A-HJ-NP-Za-km-z]+$/.test(q);
+  if (looksLikeMint) {
+    const pair = await fetchDexPairByAddress(q);
+    if (pair) return tokenFromDexPair(pair, q);
+  }
+
+  const pair = await fetchDexPairBySearch(upper, q);
+  if (pair) {
+    const mint = pair.baseToken?.address ?? q;
+    return tokenFromDexPair(pair, mint);
+  }
+
+  if (!pool) {
+    const feed = await fetchMvpTokenFeed();
+    return lookupTokenByQuery(q, feed.all);
+  }
+
+  return null;
+}
+
 export async function fetchTokenDetailById(tokenId: string) {
   const feed = await fetchMvpTokenFeed();
-  return feed.all.find((token) => token.id === tokenId) ?? null;
+  const hit =
+    feed.all.find((token) => token.id === tokenId) ??
+    feed.all.find((token) => token.mintAddress === tokenId);
+  if (hit) return hit;
+  return lookupTokenByQuery(tokenId, feed.all);
 }
 
 export async function previewTokensWithGuardianConfig(

@@ -11,7 +11,12 @@
     "android:icons": "node scripts/generate-android-icons.mjs",
     "android:bundle": "npm run build && npx cap sync android && node scripts/android-release.mjs bundle",
     "android:apk": "npm run build && npx cap sync android && node scripts/android-release.mjs apk",
-    "android:release": "npm run android:icons && npm run android:bundle"
+    "android:release": "npm run android:icons && npm run android:bundle",
+    "youtube:auth": "npm run youtube:auth --prefix marketing-ai",
+    "youtube:daily": "npm run youtube:daily --prefix marketing-ai",
+    "youtube:watch": "npm run youtube:watch --prefix marketing-ai",
+    "campaign:daily": "npm run campaign:daily --prefix marketing-ai",
+    "campaign:watch": "npm run campaign:watch --prefix marketing-ai"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.4",

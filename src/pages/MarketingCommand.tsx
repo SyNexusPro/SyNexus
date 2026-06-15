@@ -29,7 +29,7 @@ const CONTENT_CALENDAR = [
   { day: "Day 2", title: "Don’t get rugged", detail: "Sentinel Aegis framing on risk scans + pattern anomalies." },
   { day: "Day 3", title: "Sentinel Aegis risk scan", detail: "Walk through how risk overlays stay structured." },
   { day: "Day 4", title: "Whale tracking", detail: "Sentinel Titan cues + reading flow without guaranteeing moves." },
-  { day: "Day 5", title: "First month free", detail: "Trial clarity + Synexus Pro uplift after billing." },
+  { day: "Day 5", title: "Synexus Pro value", detail: "$19.99/mo pricing clarity + Sentinel intelligence uplift." },
   { day: "Day 6", title: "Synexus Pro benefits", detail: "Unlimited Synexus intelligence + Oracle Supreme operator brief idea." },
   { day: "Day 7", title: "User feedback post", detail: "Amplify sober wins + roadmap tone." },
 ] as const;
@@ -204,8 +204,8 @@ export function MarketingCommand() {
           </h2>
         </div>
         <p className="marketing-cmd-card__muted">
-          Brand pillars: Synexus · The Synexus · Oracle Supreme · Sentinels · Synexus Pro · first month free · $19.99/mo after
-          trial · AI intelligence · Sentinel analysis · whales · momentum · risk scanning.
+          Brand pillars: Synexus · The Synexus · Oracle Supreme · Sentinels · Synexus Pro · $19.99/month ·
+          AI intelligence · Sentinel analysis · whales · momentum · risk scanning.
         </p>
 
         <GeneratorBlock

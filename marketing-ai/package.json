@@ -3,13 +3,31 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
-  "description": "CLI bot for SyNexus marketing copy (templates only — no auto-posting).",
+  "description": "Synexus daily marketing — copy, video, and multi-platform publish.",
   "scripts": {
     "start": "node synexusMarketingBot.js",
     "pack": "node synexusMarketingBot.js --write",
-    "watch": "node synexusMarketingBot.js --watch"
+    "watch": "node synexusMarketingBot.js --watch",
+    "video": "node makeVideo.js",
+    "video:force": "node makeVideo.js --force",
+    "video:upload": "node makeVideo.js --upload",
+    "youtube:daily": "node dailyYouTube.js",
+    "youtube:watch": "node dailyYouTube.js --watch",
+    "youtube:auth": "node youtubeAuth.js",
+    "campaign:daily": "node dailyCampaign.js",
+    "campaign:watch": "node dailyCampaign.js --watch",
+    "reddit:auth": "node redditAuth.js",
+    "discord:channels": "node discordSetup.js",
+    "telegram:chats": "node telegramSetup.js"
   },
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "dotenv": "^17.4.2",
+    "ffmpeg-static": "^5.3.0",
+    "googleapis": "^173.0.0",
+    "msedge-tts": "^2.0.5"
   }
 }

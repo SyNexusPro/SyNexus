@@ -22,7 +22,7 @@ export function BottomNav() {
         <span className="bottom-nav__icon" aria-hidden>
           ∿
         </span>
-        Pulse
+        Sentinels
       </NavLink>
     </nav>
   );

@@ -23,6 +23,9 @@ const TokenDetail = lazy(() =>
 const MarketingCommand = lazy(() =>
   import("./pages/MarketingCommand").then((m) => ({ default: m.MarketingCommand })),
 );
+const About = lazy(() => import("./pages/About").then((m) => ({ default: m.About })));
+const Trust = lazy(() => import("./pages/Trust").then((m) => ({ default: m.Trust })));
+const Contact = lazy(() => import("./pages/Contact").then((m) => ({ default: m.Contact })));
 
 function RouteFallback() {
   return (
@@ -40,6 +43,9 @@ export default function App() {
           <Route element={<AppShell />}>
             <Route index element={<HomeFeed />} />
             <Route path="hub" element={<EcosystemHub />} />
+            <Route path="about" element={<About />} />
+            <Route path="trust" element={<Trust />} />
+            <Route path="contact" element={<Contact />} />
             <Route path="pulse" element={<Pulse />} />
             <Route path="terms" element={<Terms />} />
             <Route path="privacy" element={<Privacy />} />

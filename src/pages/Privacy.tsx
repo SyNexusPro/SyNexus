@@ -120,6 +120,10 @@ export function Privacy() {
       <p className="legal-page__back">
         <Link to="/">← Back to feed</Link>
         {" · "}
+        <Link to="/trust">Trust &amp; privacy summary</Link>
+        {" · "}
+        <Link to="/contact">Contact</Link>
+        {" · "}
         <Link to="/terms">Terms of Service</Link>
       </p>
     </div>
