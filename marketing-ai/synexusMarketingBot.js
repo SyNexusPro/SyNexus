@@ -214,8 +214,7 @@ export function buildDailyPack(now = Date.now()) {
   };
 }
 
-export function generateTikTokCaption(now = Date.now()) {
-  const hook = pick(HOOKS, dayOffset(now));
+function buildTikTokCaption(hook, now = Date.now()) {
   return [
     hook,
     "",
@@ -228,6 +227,17 @@ export function generateTikTokCaption(now = Date.now()) {
     "🐰 Syn the bunny · paste before you ape",
     "#Synexus #Solana #Crypto #Trading #Memecoin #ShouldIBuyThis #DeFi",
   ].join("\n");
+}
+
+export function generateTikTokCaption(now = Date.now()) {
+  return buildTikTokCaption(pick(HOOKS, dayOffset(now)), now);
+}
+
+/** Distinct captions for 2–3 daily TikTok posts (rotating hooks). */
+export function generateTikTokCaptions(now = Date.now(), count = 3) {
+  const base = dayOffset(now);
+  const n = Math.min(3, Math.max(1, count));
+  return Array.from({ length: n }, (_, i) => buildTikTokCaption(pick(HOOKS, base + i), now));
 }
 
 export function parseRedditPost(text) {

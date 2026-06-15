@@ -19,6 +19,9 @@
     "campaign:watch": "node dailyCampaign.js --watch",
     "platform:check": "node platformCheck.js",
     "reddit:auth": "node redditAuth.js",
+    "tiktok:auth": "node tiktokAuth.js",
+    "tiktok:post": "node tiktokScheduler.js",
+    "tiktok:watch": "node tiktokScheduler.js --watch",
     "discord:channels": "node discordSetup.js",
     "telegram:chats": "node telegramSetup.js"
   },

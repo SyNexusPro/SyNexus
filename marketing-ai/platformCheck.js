@@ -13,7 +13,7 @@ import { loadMarketingEnv } from "./loadEnv.js";
 import { hasYouTubeCredentials, readUploadRecord } from "./youtubeUpload.js";
 import { hasTelegramConfig, postTelegram } from "./platforms/telegram.js";
 import { hasRedditConfig } from "./platforms/reddit.js";
-import { hasTikTokApiConfig } from "./platforms/tiktok.js";
+import { checkTikTokApi, hasTikTokApiConfig, tiktokPostsPerDay } from "./platforms/tiktok.js";
 import { fileExists } from "./videoPipeline.js";
 import { todayDirName } from "./videoBlueprint.js";
 import { parseArgs } from "./videoUtils.js";
@@ -210,22 +210,30 @@ async function checkTikTok() {
   const dayDir = join(__dirname, "output", todayDirName());
   const videoPath = join(dayDir, "synexus-daily.mp4");
   const tiktokPath = join(dayDir, "synexus-tiktok.mp4");
-  const captionPath = join(dayDir, "tiktok-caption.txt");
   const hasVideo = await fileExists(videoPath);
   const hasTikTokCopy = await fileExists(tiktokPath);
-  const hasCaption = await fileExists(captionPath);
   const api = hasTikTokApiConfig();
+  const postsPerDay = tiktokPostsPerDay();
+  const hours = process.env.TIKTOK_POST_HOURS?.trim() || "9,14,20";
+
+  if (api) {
+    const result = await checkTikTokApi();
+    return {
+      ...result,
+      mode: `API · ${postsPerDay} posts/day at ${hours}`,
+      exportReady: hasVideo,
+      tiktokCopy: hasTikTokCopy,
+      fix: result.ok ? undefined : result.fix,
+    };
+  }
 
   return {
-    ok: api ? null : hasVideo,
-    configured: api,
-    mode: api ? "API (TIKTOK_ACCESS_TOKEN set)" : "Export bundle (manual upload in TikTok app)",
+    ok: hasVideo,
+    configured: false,
+    mode: `Export bundle · ${postsPerDay} captions/day (manual upload)`,
     exportReady: hasVideo,
     tiktokCopy: hasTikTokCopy,
-    captionFile: hasCaption,
-    fix: api
-      ? "TikTok API requires approved developer app — verify token in TikTok developer portal"
-      : "Run npm run campaign:daily — uploads synexus-tiktok.mp4 + tiktok-caption.txt to output/YYYY-MM-DD/",
+    fix: "Run npm run tiktok:auth — then npm run tiktok:watch for 2–3 auto-posts daily",
   };
 }
 
@@ -238,7 +246,8 @@ function printReport(report) {
   console.log(`  TELEGRAM_BOT     ${mask(process.env.TELEGRAM_BOT_TOKEN)}`);
   console.log(`  TELEGRAM_CHAT_ID ${process.env.TELEGRAM_CHAT_ID?.trim() || "(default @thesynexusofficial)"}`);
   console.log(`  REDDIT_*         ${hasRedditConfig() ? "complete" : "incomplete"}`);
-  console.log(`  TIKTOK_TOKEN     ${mask(process.env.TIKTOK_ACCESS_TOKEN)}`);
+  console.log(`  TIKTOK_*           ${hasTikTokApiConfig() ? "complete" : "incomplete"}`);
+  console.log(`  TIKTOK_POSTS/DAY ${tiktokPostsPerDay()} at ${process.env.TIKTOK_POST_HOURS?.trim() || "9,14,20"}`);
 
   for (const [name, result] of Object.entries(report)) {
     console.log(`\n${icon(result.ok)} ${name.toUpperCase()}`);
@@ -246,6 +255,8 @@ function printReport(report) {
     if (result.bot) console.log(`    Bot: ${result.bot}`);
     if (result.chat) console.log(`    Chat: ${result.chat}${result.chatType ? ` (${result.chatType})` : ""}`);
     if (result.subreddit) console.log(`    Subreddit: r/${result.subreddit.replace(/^r\//i, "")}`);
+    if (result.creator) console.log(`    Creator: @${result.creator}`);
+    if (result.privacyOptions) console.log(`    Privacy options: ${result.privacyOptions.join(", ")}`);
     if (result.note) console.log(`    ${result.note}`);
     if (result.todayUpload) console.log(`    Today: ${result.todayUpload}`);
     if (result.exportReady != null) {

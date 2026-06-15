@@ -1,9 +1,7 @@
 import { Link } from "react-router-dom";
+import { LEGAL_EFFECTIVE_DATE, OPERATOR_LABEL, SUPPORT_EMAIL } from "../config/site";
 
-/** Update with your registered legal entity name, state/country, and support email after counsel review. */
-const OPERATOR_LABEL = "Synexus and its operator(s)";
-const EFFECTIVE_LABEL = "Effective date: June 12, 2026";
-const CONTACT_PATH = "/pulse";
+const EFFECTIVE_LABEL = `Effective date: ${LEGAL_EFFECTIVE_DATE}`;
 
 export function Terms() {
   return (
@@ -17,6 +15,14 @@ export function Terms() {
         &quot;Service&quot;). By accessing or using the Service, creating an account, or
         completing a purchase, you agree to these Terms and our{" "}
         <Link to="/privacy">Privacy Policy</Link>. If you do not agree, do not use the Service.
+      </p>
+
+      <p className="legal-page__summary legal-page__summary--compact">
+        See also: <Link to="/disclaimer">Disclaimer</Link>
+        {" · "}
+        <Link to="/faq">FAQ</Link>
+        {" · "}
+        <Link to="/contact">Contact</Link>
       </p>
 
       <section className="legal-section marketing-panel">
@@ -268,14 +274,20 @@ export function Terms() {
       <p className="legal-page__note">
         This document summarizes key legal terms for users of Synexus. It is not legal advice. Have qualified
         counsel review these Terms for your entity, jurisdiction, and product before relying on them for
-        compliance. Questions: use contact options in the Service (for example,{" "}
-        <Link to={CONTACT_PATH}>Pulse</Link> account area) or channels published at checkout.
+        compliance. Questions:{" "}
+        <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>
+        {" · "}
+        <Link to="/contact">Contact</Link>
       </p>
 
       <p className="legal-page__back">
         <Link to="/">← Back to feed</Link>
         {" · "}
         <Link to="/privacy">Privacy Policy</Link>
+        {" · "}
+        <Link to="/disclaimer">Disclaimer</Link>
+        {" · "}
+        <Link to="/faq">FAQ</Link>
       </p>
     </div>
   );

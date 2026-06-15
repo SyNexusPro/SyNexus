@@ -26,6 +26,8 @@ const MarketingCommand = lazy(() =>
 const About = lazy(() => import("./pages/About").then((m) => ({ default: m.About })));
 const Trust = lazy(() => import("./pages/Trust").then((m) => ({ default: m.Trust })));
 const Contact = lazy(() => import("./pages/Contact").then((m) => ({ default: m.Contact })));
+const Disclaimer = lazy(() => import("./pages/Disclaimer").then((m) => ({ default: m.Disclaimer })));
+const Faq = lazy(() => import("./pages/Faq").then((m) => ({ default: m.Faq })));
 
 function RouteFallback() {
   return (
@@ -46,6 +48,8 @@ export default function App() {
             <Route path="about" element={<About />} />
             <Route path="trust" element={<Trust />} />
             <Route path="contact" element={<Contact />} />
+            <Route path="faq" element={<Faq />} />
+            <Route path="disclaimer" element={<Disclaimer />} />
             <Route path="pulse" element={<Pulse />} />
             <Route path="terms" element={<Terms />} />
             <Route path="privacy" element={<Privacy />} />

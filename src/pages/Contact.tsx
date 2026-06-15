@@ -127,6 +127,14 @@ export function Contact() {
       </section>
 
       <p className="contact-page__back">
+        <Link to="/faq">Full FAQ</Link>
+        {" · "}
+        <Link to="/terms">Terms</Link>
+        {" · "}
+        <Link to="/privacy">Privacy</Link>
+        {" · "}
+        <Link to="/disclaimer">Disclaimer</Link>
+        {" · "}
         <Link to="/about">About Synexus</Link>
         {" · "}
         <Link to="/trust">Trust &amp; safety</Link>

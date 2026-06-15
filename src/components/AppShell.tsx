@@ -38,6 +38,18 @@ export function AppShell() {
         <span className="app-footer__sep" aria-hidden>
           ·
         </span>
+        <Link className="app-footer__link" to="/faq">
+          FAQ
+        </Link>
+        <span className="app-footer__sep" aria-hidden>
+          ·
+        </span>
+        <Link className="app-footer__link" to="/disclaimer">
+          Disclaimer
+        </Link>
+        <span className="app-footer__sep" aria-hidden>
+          ·
+        </span>
         <Link className="app-footer__link" to="/terms">
           Terms
         </Link>

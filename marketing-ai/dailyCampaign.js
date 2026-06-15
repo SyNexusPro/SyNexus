@@ -11,13 +11,15 @@
  *   Telegram — auto post (TELEGRAM_BOT_TOKEN)
  *   Discord  — auto post (DISCORD_BOT_TOKEN + channel)
  *   Reddit   — auto post (REDDIT_* + subreddit)
- *   TikTok   — exports video + caption; API if TIKTOK_ACCESS_TOKEN set
+ *   TikTok   — auto-post 2–3× daily if API connected (npm run tiktok:auth + tiktok:watch)
  */
 
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadMarketingEnv } from "./loadEnv.js";
-import { buildDailyPack, writePack, todayDirName, generateTikTokCaption } from "./synexusMarketingBot.js";
+import { buildDailyPack, writePack, todayDirName, generateTikTokCaptions } from "./synexusMarketingBot.js";
+import { postTikTokSlot, tiktokPostsPerDay } from "./tiktokScheduler.js";
+import { hasTikTokApiConfig } from "./platforms/tiktok.js";
 import { renderDailyVideo } from "./makeVideo.js";
 import { hasYouTubeCredentials, uploadVideoToYouTube } from "./youtubeUpload.js";
 import { readCampaignState, writeCampaignState, wasPosted } from "./campaignState.js";
@@ -72,7 +74,7 @@ export async function runDailyCampaign({ force = false, quiet = false } = {}) {
 
   const videoPath = join(dayDir, "synexus-daily.mp4");
   const metadataPath = join(dayDir, "youtube-upload.txt");
-  const tiktokCaption = generateTikTokCaption();
+  const tiktokCaptions = generateTikTokCaptions(Date.now(), tiktokPostsPerDay());
 
   if (!quiet) console.log("\n2/5 Publishing…");
 
@@ -120,12 +122,20 @@ export async function runDailyCampaign({ force = false, quiet = false } = {}) {
     console.log("  ↷ reddit: set REDDIT_CLIENT_ID, REDDIT_REFRESH_TOKEN, REDDIT_SUBREDDIT");
   }
 
-  if (!quiet) console.log("\n3/5 TikTok bundle…");
-  await runPlatform(
-    "tiktok",
-    () => publishTikTok({ dayDir, videoPath, caption: tiktokCaption, quiet: true }),
-    { force, state, quiet },
-  );
+  if (!quiet) console.log("\n3/5 TikTok…");
+  if (hasTikTokApiConfig()) {
+    await runPlatform("tiktok", () => postTikTokSlot({ slot: 0, force, quiet: true }), {
+      force,
+      state,
+      quiet,
+    });
+  } else {
+    await runPlatform(
+      "tiktok",
+      () => publishTikTok({ dayDir, videoPath, caption: tiktokCaptions[0], slot: 0, quiet: true }),
+      { force, state, quiet },
+    );
+  }
 
   state.date = date;
   state.dayDir = dayDir;
@@ -167,7 +177,9 @@ Configure marketing-ai/.env:
   DISCORD_BOT_TOKEN   → Discord #marketing (npm run discord:channels)
   DISCORD_CHANNEL_ID  → or auto-find by DISCORD_MARKETING_CHANNEL name
   REDDIT_*            → Reddit posts (npm run reddit:auth)
-  TIKTOK_ACCESS_TOKEN → optional API; otherwise exports video+caption
+  TIKTOK_*            → auto-post (npm run tiktok:auth, npm run tiktok:watch)
+  TIKTOK_POSTS_PER_DAY=3
+  TIKTOK_POST_HOURS=9,14,20
 
 Windows Task Scheduler (daily 7 AM):
   node dailyCampaign.js

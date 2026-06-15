@@ -1,7 +1,14 @@
 /** Public site copy and contact defaults (override via env where noted). */
 
+export const PUBLIC_SITE_URL =
+  (import.meta.env.VITE_APP_ORIGIN as string | undefined)?.trim() || "https://synexus.pro";
+
+export const OPERATOR_LABEL = "Synexus and its operator(s)";
+
+export const LEGAL_EFFECTIVE_DATE = "June 12, 2026";
+
 export const SUPPORT_EMAIL =
-  (import.meta.env.VITE_SUPPORT_EMAIL as string | undefined)?.trim() || "support@synexus.app";
+  (import.meta.env.VITE_SUPPORT_EMAIL as string | undefined)?.trim() || "support@synexus.pro";
 
 export const TRUST_INDICATORS = [
   {
@@ -105,6 +112,10 @@ export const PRIVACY_HIGHLIGHTS = [
 
 export const FAQ_ITEMS = [
   {
+    q: "What is “Should I buy this?”",
+    a: "Paste any Solana mint or symbol and Synexus returns Avoid, Watch, or OK in plain English — plus risk score, whale activity, liquidity, and rug-pull flags. It is a research shortcut, not a buy order.",
+  },
+  {
     q: "Does Synexus hold my crypto?",
     a: "No. Synexus is non-custodial. Your tokens stay in wallets you control. We provide scanning, alerts, and trade shortcuts — you sign every on-chain action.",
   },
@@ -113,16 +124,28 @@ export const FAQ_ITEMS = [
     a: "Any Solana wallet that works with Jupiter — including Phantom, Solflare, and Backpack. Synexus opens swap flows; your wallet app handles signing.",
   },
   {
-    q: "What are Synexus Pro benefits?",
-    a: "Faster Sentinel refresh, deeper Oracle Supreme intel, reduced trading fees (0.05% vs 0.10% free tier), and priority surfaces on Pulse. See Pulse for current pricing.",
+    q: "What is Synexus Pro?",
+    a: "Synexus Pro ($19.99/month, cancel anytime) unlocks Oracle briefings, the full Sentinel grid, faster refresh, reduced trading fees (0.05% vs 0.10% free tier), and priority surfaces on Pulse.",
   },
   {
-    q: "Is Sentinel or Oracle Supreme financial advice?",
-    a: "No. Automated risk bands, scores, and AI chat are informational tools only. Always verify contracts and do your own research.",
+    q: "How do I cancel Synexus Pro?",
+    a: "Cancel through the same checkout or payment portal you used to subscribe (for example Stripe customer portal linked from Pulse). Access continues until the end of the paid billing period.",
+  },
+  {
+    q: "Is Sentinel, Oracle Supreme, or “Avoid / Watch / OK” financial advice?",
+    a: "No. Automated risk bands, scores, verdicts, and AI chat are informational tools only. They can be wrong or delayed. Always verify contracts and do your own research before trading.",
+  },
+  {
+    q: "Is Synexus on Android / Google Play?",
+    a: "Synexus is available as a web app and Android app (Capacitor). Check Google Play for the latest listing under Synexus. iOS may follow.",
   },
   {
     q: "How do I report a bug or scam token?",
     a: "Use the bug form on Contact, or report a token from its detail page when signed in on Pulse. Include mint address and steps to reproduce when possible.",
+  },
+  {
+    q: "Who do I contact for support?",
+    a: `Email ${SUPPORT_EMAIL} or use the Contact page. We cannot recover lost seed phrases or reverse blockchain transactions.`,
   },
   {
     q: "Where is the SYN token roadmap?",

@@ -97,6 +97,10 @@ export function Trust() {
           summaries that may be wrong. Digital assets can lose all value. You are solely responsible for wallet
           security and every transaction you sign.
         </p>
+        <Link className="trust-page__cta" to="/disclaimer">
+          Read full Disclaimer
+        </Link>
+        {" · "}
         <Link className="trust-page__cta" to="/terms">
           Terms of Service
         </Link>

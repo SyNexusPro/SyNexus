@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
+import { LEGAL_EFFECTIVE_DATE, OPERATOR_LABEL, SUPPORT_EMAIL } from "../config/site";
 
-const OPERATOR_LABEL = "Synexus and its operator(s)";
-const EFFECTIVE_LABEL = "Effective date: June 12, 2026";
+const EFFECTIVE_LABEL = `Effective date: ${LEGAL_EFFECTIVE_DATE}`;
 
 export function Privacy() {
   return (
@@ -105,6 +105,16 @@ export function Privacy() {
       </section>
 
       <section className="legal-section marketing-panel">
+        <h2>Contact us</h2>
+        <p>
+          Privacy questions or data requests:{" "}
+          <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>
+          {" · "}
+          <Link to="/contact">Contact page</Link>
+        </p>
+      </section>
+
+      <section className="legal-section marketing-panel">
         <h2>Changes</h2>
         <p>
           We may update this Privacy Policy from time to time. We will post the revised policy with an updated
@@ -123,6 +133,10 @@ export function Privacy() {
         <Link to="/trust">Trust &amp; privacy summary</Link>
         {" · "}
         <Link to="/contact">Contact</Link>
+        {" · "}
+        <Link to="/disclaimer">Disclaimer</Link>
+        {" · "}
+        <Link to="/faq">FAQ</Link>
         {" · "}
         <Link to="/terms">Terms of Service</Link>
       </p>
