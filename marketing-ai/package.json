@@ -11,11 +11,13 @@
     "video": "node makeVideo.js",
     "video:force": "node makeVideo.js --force",
     "video:upload": "node makeVideo.js --upload",
+    "bunny:export": "node exportSynBunny.js",
     "youtube:daily": "node dailyYouTube.js",
     "youtube:watch": "node dailyYouTube.js --watch",
     "youtube:auth": "node youtubeAuth.js",
     "campaign:daily": "node dailyCampaign.js",
     "campaign:watch": "node dailyCampaign.js --watch",
+    "platform:check": "node platformCheck.js",
     "reddit:auth": "node redditAuth.js",
     "discord:channels": "node discordSetup.js",
     "telegram:chats": "node telegramSetup.js"

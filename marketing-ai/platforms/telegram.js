@@ -1,3 +1,7 @@
+import { readFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { getSynBunnyPngPath } from "../synBunny.js";
+
 const API = "https://api.telegram.org";
 
 export function hasTelegramConfig() {
@@ -13,25 +17,38 @@ export function toTelegramHtml(text) {
     .replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
 }
 
-export async function postTelegram(message, { quiet = false } = {}) {
-  const token = process.env.TELEGRAM_BOT_TOKEN?.trim();
-  const chatId = process.env.TELEGRAM_CHAT_ID?.trim() || "@thesynexusofficial";
-  if (!token) {
-    throw new Error("TELEGRAM_BOT_TOKEN not set in marketing-ai/.env");
+async function sendTelegramPhoto(token, chatId, photoPath, caption, quiet) {
+  const buf = await readFile(photoPath);
+  const form = new FormData();
+  form.append("chat_id", chatId);
+  form.append("caption", toTelegramHtml(caption));
+  form.append("parse_mode", "HTML");
+  form.append("photo", new Blob([buf], { type: "image/png" }), "syn-bunny.png");
+
+  const res = await fetch(`${API}/bot${token}/sendPhoto`, {
+    method: "POST",
+    body: form,
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.ok) {
+    throw new Error(data.description || `Telegram sendPhoto failed (${res.status})`);
   }
 
-  const url = `${API}/bot${token}/sendMessage`;
-  const body = {
-    chat_id: chatId,
-    text: toTelegramHtml(message),
-    parse_mode: "HTML",
-    disable_web_page_preview: false,
-  };
+  if (!quiet) console.log("✓ Posted to Telegram (with Syn bunny)");
+  return { messageId: data.result?.message_id, chatId, withPhoto: true };
+}
 
-  const res = await fetch(url, {
+async function sendTelegramMessage(token, chatId, message, quiet) {
+  const res = await fetch(`${API}/bot${token}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      chat_id: chatId,
+      text: toTelegramHtml(message),
+      parse_mode: "HTML",
+      disable_web_page_preview: false,
+    }),
   });
 
   const data = await res.json().catch(() => ({}));
@@ -40,5 +57,29 @@ export async function postTelegram(message, { quiet = false } = {}) {
   }
 
   if (!quiet) console.log("✓ Posted to Telegram");
-  return { messageId: data.result?.message_id, chatId };
+  return { messageId: data.result?.message_id, chatId, withPhoto: false };
+}
+
+export async function postTelegram(message, { quiet = false, photoPath } = {}) {
+  const token = process.env.TELEGRAM_BOT_TOKEN?.trim();
+  const chatId = process.env.TELEGRAM_CHAT_ID?.trim() || "@thesynexusofficial";
+  if (!token) {
+    throw new Error("TELEGRAM_BOT_TOKEN not set in marketing-ai/.env");
+  }
+
+  const bunnyPath =
+    photoPath ||
+    (process.env.TELEGRAM_BUNNY_PHOTO !== "0" ? getSynBunnyPngPath() : null);
+
+  if (bunnyPath && existsSync(bunnyPath)) {
+    try {
+      return await sendTelegramPhoto(token, chatId, bunnyPath, message, quiet);
+    } catch (err) {
+      if (!quiet) {
+        console.warn(`Telegram photo failed (${err.message}) — falling back to text`);
+      }
+    }
+  }
+
+  return sendTelegramMessage(token, chatId, message, quiet);
 }

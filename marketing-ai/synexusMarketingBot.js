@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /**
- * SyNexus Marketing Bot — template copy generator (CLI).
- * Mirrors hivemind-app Marketing Command generators; does not post anywhere.
+ * Synexus Marketing Bot — template copy generator (CLI).
+ * Voice: simple, grabby, plain English. Lead with "Should I buy this?"
  *
  * Usage:
  *   node synexusMarketingBot.js              # print full daily pack
  *   node synexusMarketingBot.js --write      # save pack to output/YYYY-MM-DD/
- *   node synexusMarketingBot.js --channel x  # one channel: x|tiktok|telegram|discord|reddit|referral|mission
+ *   node synexusMarketingBot.js --channel x  # one channel
  *   node synexusMarketingBot.js --watch      # refresh pack every hour
  */
 
@@ -14,105 +14,152 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { mascotSignOff, mascotTelegramLine } from "./synBunny.js";
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const TAGS = "#SyNexus #Solana #DeFi";
+const TAGS = "#Synexus #Solana #Crypto #ShouldIBuyThis";
 const PRO_PRICE_LINE = "Synexus Pro · $19.99/month · cancel anytime.";
 
-const THEMES = [
-  "Risk surfaces fast — SyNexus Sentinels and Oracle Supreme distill it into signal, not hype.",
-  "The Nexus aligns momentum scans, whale context, patterns, and risk — before the crowd piles in.",
-  "AI market intelligence with discipline: Sentinel-grade analysis built for sober execution.",
+/** One-line hooks — rotate daily. Always lead with simplicity. */
+const HOOKS = [
+  "Should I buy this? Paste any Solana token. Synexus answers in seconds.",
+  "About to ape? Paste the mint first. Avoid · Watch · OK — in plain English.",
+  "One paste. One verdict. Risk, whales, and rug flags before you sign.",
+  "Stop guessing. Paste a token — Synexus tells you if it's worth the click.",
+  "Memecoin moving? Freeze. Paste it. Read Avoid or Watch before you buy.",
+  "Trading Solana? Paste any coin. Get a simple scorecard + plain-English read.",
+];
+
+/** Supporting lines — still simple, no operator jargon. */
+const SUPPORT = [
+  "Free scan on every token. Pro unlocks Oracle briefings + full Sentinel grid.",
+  "Your wallet signs every trade — Synexus just shows you the risk first.",
+  "Trade journal tracks entries, exits, and P/L so you see your habits.",
+  "Live alerts when whales move or risk spikes — before the timeline screams.",
+  "Built for people who want one clear answer, not a wall of charts.",
 ];
 
 function appOrigin() {
   return process.env.APP_ORIGIN?.trim() || "https://synexus.pro";
 }
 
-function pickThemes(n, offset) {
-  const out = [];
-  for (let i = 0; i < n; i += 1) {
-    out.push(THEMES[(offset + i) % THEMES.length]);
-  }
-  return out;
+function pick(list, offset) {
+  return list[offset % list.length];
 }
 
 function salt(seed) {
   return ((seed * 9301 + 49297) % 233280) / 233280;
 }
 
+function dayOffset(now) {
+  return Math.floor(now / 86_400_000);
+}
+
 export function generateXPost(now = Date.now()) {
-  const [t0, t1] = pickThemes(2, Math.floor(now / 60_000) % THEMES.length);
-  return `${t0}\n${t1}\n${PRO_PRICE_LINE}\n${TAGS}`;
+  const hook = pick(HOOKS, dayOffset(now));
+  const support = pick(SUPPORT, dayOffset(now) + 1);
+  return [
+    hook,
+    "",
+    support,
+    "",
+    `Try free → ${appOrigin()}`,
+    PRO_PRICE_LINE,
+    TAGS,
+  ].join("\n");
 }
 
 export function generateTikTokScript(now = Date.now()) {
+  const hook = pick(HOOKS, dayOffset(now));
   const s = salt(Math.floor(now / 1000));
-  const hook =
+  const onScreen =
     s < 0.33
-      ? "Hook: Freeze on a chart caption — VO: Moved already? SyNexus Sentinels scout before clicks."
+      ? "SHOULD I BUY THIS?"
       : s < 0.66
-        ? "Hook: Pan your watchlist. VO: Loud feed, silent risks unless you Nexus-scan first."
-        : "Hook: About to ape. Freeze. VO: Oracle Supreme + Sentinels pass first — then you choose.";
+        ? "PASTE TOKEN → GET VERDICT"
+        : "AVOID · WATCH · OK";
 
   return [
-    `SyNexus — ${hook}`,
+    `Synexus — Hook: Big text "${onScreen}" — VO: ${hook}`,
     "",
-    `[0–3s] Mention lanes: Sentinel Aegis (risk), Sentinel Pulse (momentum), Sentinel Titan (whales), Sentinel Cipher (patterns). Oracle Supreme fuses lanes for operator clarity.`,
-    `[3–8s] On-screen: Nexus Pro — unlimited Nexus intelligence. ${PRO_PRICE_LINE}`,
-    `[8–12s] Brief app/The Nexus visuals. Whale tracking · momentum cues · Sentinel analysis.`,
-    `[12–15s] Soft CTA: Try SyNexus — link out. Tags: ${TAGS}`,
+    `[0–3s] Show paste box + instant verdict card (Avoid / Watch / OK).`,
+    `[3–7s] Flash scorecard: risk · whales · momentum · liquidity · rug warning.`,
+    `[7–11s] One line: "Not financial advice — you still sign in your wallet."`,
+    `[11–15s] Syn the bunny floats in corner. CTA: Try free · ${appOrigin()} · ${PRO_PRICE_LINE}`,
+    "",
+    `Tags: ${TAGS}`,
   ].join("\n");
 }
 
 export function generateTelegramUpdate(now = Date.now()) {
   const origin = appOrigin();
+  const hook = pick(HOOKS, dayOffset(now));
   return [
-    "**SyNexus pulse · The Nexus**",
+    "**Should I buy this?**",
     "",
-    pickThemes(1, Math.floor(now / 86_400_000))[0],
+    hook,
     "",
-    "**Stack** · Sentinel analysis · risk scanning · whale + momentum overlays",
-    `**Offer** · ${PRO_PRICE_LINE}`,
+    "**How it works**",
+    "1️⃣ Paste a Solana mint or symbol",
+    "2️⃣ Get **Avoid**, **Watch**, or **OK** + plain English",
+    "3️⃣ See risk score, whales, rug flags — then you decide",
     "",
-    `**Live app** (paste when ready):\n${origin}`,
+    "**Also inside** · trade journal · wallet stats · live alerts",
+    "",
+    `**Try free** → ${origin}`,
+    PRO_PRICE_LINE,
+    "",
+    mascotTelegramLine(),
   ].join("\n");
 }
 
 export function generateDiscordPost(now = Date.now()) {
   const origin = appOrigin();
-  const t = pickThemes(1, Math.floor(now / 45_000))[0];
+  const hook = pick(HOOKS, dayOffset(now));
   return [
-    "**SyNexus daily · The Nexus live**",
-    t,
+    "**Should I buy this? — Synexus**",
     "",
-    "Oracle Supreme threads Sentinel outputs into one operator-grade read — no spam, structured lanes.",
-    `**Nexus Pro** · unlimited Nexus intelligence. ${PRO_PRICE_LINE}`,
+    hook,
     "",
-    `**App** · ${origin}`,
+    "Paste any Solana token → **Avoid · Watch · OK** in plain English.",
+    "Plus: risk scorecard, whale read, trade journal, and Sentinel alerts.",
+    "",
+    `**Try free** · ${origin}`,
+    PRO_PRICE_LINE,
+    "",
+    mascotSignOff().replace(/\*\*/g, "**"),
   ].join("\n");
 }
 
 export function generateRedditPost(now = Date.now()) {
   const origin = appOrigin();
-  const seed = Math.floor(now / 120_000);
-  const title =
-    seed % 3 === 0
-      ? "[Showcase / Feedback] SyNexus command center — structuring Sentinel intelligence for SOL traders?"
-      : seed % 3 === 1
-        ? "Momentum vs noise — consolidated Nexus dashboards (SyNexus) vs scattered TG calls?"
-        : "Anyone building calm risk overlays? SyNexus + Oracle Supreme as a restrained alternative to hype raids.";
+  const seed = dayOffset(now);
+  const titles = [
+    "I built a free \"Should I buy this?\" scanner for Solana — paste a mint, get Avoid/Watch/OK in plain English",
+    "Before you ape: paste any SOL token and get a risk score + plain-English read (Synexus)",
+    "Anyone else tired of TG hype? Made a simple Solana token scanner — paste → verdict → you decide",
+  ];
+  const title = pick(titles, seed);
 
   const body = [
-    "Posting as operator — sober feedback welcomed.",
+    "Not shilling a coin — sharing a tool I use before every buy.",
     "",
-    pickThemes(2, seed)[0],
+    pick(HOOKS, seed),
     "",
-    "**What SyNexus highlights** · Sentinel analysis across risk scanning, whale tracking, momentum detection, pattern reads — marketed as Nexus intelligence layered under The Nexus. Not financial advice, not guaranteed outcomes.",
+    "**What it does (simple):**",
+    "- Paste mint or symbol",
+    "- Get Avoid, Watch, or OK + why in plain English",
+    "- Risk score, whale activity, liquidity, rug-pull flags",
+    "- Optional trade journal so you track wins/losses over time",
+    "",
+    "Non-custodial — your wallet signs every swap. Not financial advice.",
     "",
     PRO_PRICE_LINE,
     "",
-    `Live demo / app · ${origin} (remove per subreddit rules if needed.)`,
+    `Try it: ${origin}`,
+    "",
+    mascotSignOff().replace(/\*\*(.+?)\*\*/g, "$1"),
   ].join("\n");
 
   return `TITLE:\n${title}\n\nBODY:\n${body}`;
@@ -120,12 +167,13 @@ export function generateRedditPost(now = Date.now()) {
 
 export function generateReferralBlurb(now = Date.now()) {
   const origin = appOrigin();
-  const line = pickThemes(1, Math.floor(now / 90_000))[0];
+  const hook = pick(HOOKS, dayOffset(now));
   return [
-    "Invite disciplined traders into SyNexus — The Nexus is your mission console for Sentinel-scale intelligence.",
-    line,
+    "Know someone who apes without checking risk?",
     "",
-    "They're not handing out entries — they're surfacing Sentinel analysis, whales, momentum, and risk overlays so convictions stay deliberate.",
+    hook,
+    "",
+    "Send them Synexus — paste a token, get a clear answer, trade on their own terms.",
     "",
     PRO_PRICE_LINE,
     "",
@@ -135,18 +183,18 @@ export function generateReferralBlurb(now = Date.now()) {
 
 export function growthMissionLine(date = new Date()) {
   const missions = [
-    "Post one short video showing Sentinels surfacing elevated risk **before** a sketchy ape.",
-    "Carousel: Sentinel Aegis (risk lane) vs Sentinel Titan (whale lane) framed under The Nexus.",
-    "Film a TikTok teaser: whale tracking spotted a suspicious flow ahead of chatter.",
-    "X mini-thread (3 posts): disciplined momentum cues vs meme hype — stay factual, cite SyNexus.",
-    "Share a Nexused UI clip (blur keys): describe what Oracle Supreme would emphasize for traders.",
-    "Telegram changelog tone: Nexus Pro at $19.99/m — full Sentinel intelligence, FAQs and disclaimers intact.",
-    "Discord micro-post inviting feedback on Sentinel alert hygiene — futuristic, moderation-friendly.",
-    "Reddit-ready voice clip contrasting Telegram alpha chaos vs one Nexus recap.",
-    "Drop the SyNexus app link alongside a single sober reason Sentinel scanning matters.",
-    'Stitch headline about a rug headline with “Sentinels would have waved earlier” framing — no sensationalism.',
-    "Celebrate user feedback calmly — futuristic SyNexus social proof minus flex.",
-    "Record a TikTok reacting to overstated influencer calls versus structured Sentinel reads.",
+    'Post a 15s clip: paste a trending ticker → show the "Avoid" or "Watch" verdict on screen.',
+    "Screen record: type BONK in Should I buy? — let the plain-English answer be the hook.",
+    "TikTok text overlay: \"I paste every coin before I buy now.\" Show the scorecard.",
+    "X thread (3 tweets): the problem (aping blind) → the fix (paste → verdict) → link.",
+    "Telegram: ask \"What token should I scan live tomorrow?\" — engagement + demo.",
+    "Discord: share one real Avoid verdict (blur ticker if needed) — educational not hype.",
+    "Reddit comment helpfully: \"I use a paste-and-scan tool for risk — happy to show.\"",
+    "Film wallet journal stats — people love seeing their own win rate.",
+    "Compare: influencer \"100x gem\" vs Synexus Danger band on the same token.",
+    "Short: \"3 seconds to paste. 5 seconds to know if you should touch it.\"",
+    "Carousel: Avoid vs Watch vs OK — what each means in one sentence each.",
+    "Story/Reel: Oracle one-liner + Should I buy? demo — keep it under 20 seconds.",
   ];
   const start = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
   const idx = Math.floor(start / 86_400_000) % missions.length;
@@ -167,21 +215,18 @@ export function buildDailyPack(now = Date.now()) {
 }
 
 export function generateTikTokCaption(now = Date.now()) {
-  const s = salt(Math.floor(now / 1000));
-  const hook =
-    s < 0.33
-      ? "Scan before you ape. SyNexus Sentinels read the risk first."
-      : s < 0.66
-        ? "Whale moves. Risk scores. Oracle Supreme AI. One Solana command center."
-        : "The future of Solana trading intelligence — Synexus.";
+  const hook = pick(HOOKS, dayOffset(now));
   return [
     hook,
     "",
-    "Token scanner · Whale tracker · Risk score · Pulse alerts",
-    PRO_PRICE_LINE,
-    appOrigin(),
+    "Paste mint or symbol → Avoid · Watch · OK",
+    "Risk · whales · rug flags · trade journal",
     "",
-    "#Synexus #Solana #Crypto #Trading #DeFi #SolanaTrading #AI",
+    `Free scan → ${appOrigin()}`,
+    PRO_PRICE_LINE,
+    "",
+    "🐰 Syn the bunny · paste before you ape",
+    "#Synexus #Solana #Crypto #Trading #Memecoin #ShouldIBuyThis #DeFi",
   ].join("\n");
 }
 
@@ -189,7 +234,7 @@ export function parseRedditPost(text) {
   const titleMatch = String(text).match(/TITLE:\n([\s\S]*?)\n\nBODY:/);
   const bodyMatch = String(text).match(/BODY:\n([\s\S]*)/);
   return {
-    title: titleMatch?.[1]?.trim() ?? "SyNexus — AI Solana trading intelligence",
+    title: titleMatch?.[1]?.trim() ?? "Should I buy this? — Synexus Solana scanner",
     body: bodyMatch?.[1]?.trim() ?? String(text),
   };
 }
@@ -239,7 +284,7 @@ async function writePack(pack, { quiet = false } = {}) {
   return dir;
 }
 
-export { todayDirName, writePack };
+export { todayDirName, writePack, HOOKS, SUPPORT };
 
 function parseArgs(argv) {
   const flags = new Set(argv.filter((a) => a.startsWith("--")));
@@ -253,18 +298,18 @@ function parseArgs(argv) {
 }
 
 function printHelp() {
-  console.log(`SyNexus Marketing Bot — copy templates only (no posting).
+  console.log(`Synexus Marketing Bot — copy templates only (no posting).
 
 Commands:
   node synexusMarketingBot.js
   node synexusMarketingBot.js --write
-  node synexusMarketingBot.js --channel x
+  node synexusMarketingBot.js --channel telegram
   node synexusMarketingBot.js --watch
 
 Channels: mission, x, tiktok, telegram, discord, reddit, referral
 
 Env:
-  APP_ORIGIN   Public app URL in social copy (see .env.example)
+  APP_ORIGIN   Public app URL in social copy
 `);
 }
 

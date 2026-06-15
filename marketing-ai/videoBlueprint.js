@@ -1,11 +1,9 @@
-import { buildDailyPack, growthMissionLine } from "./synexusMarketingBot.js";
+import { buildDailyPack, growthMissionLine, HOOKS } from "./synexusMarketingBot.js";
 
-const FEATURES = [
-  { label: "Token scanner", sub: "Live Sentinel lanes" },
-  { label: "Whale tracker", sub: "Titan concentration" },
-  { label: "Risk score", sub: "0–100 + Safe / Warning / Danger" },
-  { label: "Pulse alerts", sub: "Watchlist hits" },
-  { label: "Oracle Supreme", sub: "AI trading briefings" },
+const FLOW_STEPS = [
+  { label: "PASTE TOKEN", sub: "Mint or symbol — 3 seconds" },
+  { label: "GET VERDICT", sub: "Avoid · Watch · OK" },
+  { label: "YOU DECIDE", sub: "Risk · whales · rug flags" },
 ];
 
 function appOrigin() {
@@ -23,9 +21,10 @@ function stripStageDirections(text) {
   return String(text)
     .replace(/\*\*/g, "")
     .replace(/\[.+?\]/g, "")
-    .replace(/SyNexus — /g, "")
+    .replace(/Synexus — /g, "")
     .replace(/Hook:\s*/gi, "")
     .replace(/VO:\s*/gi, "")
+    .replace(/Big text "[^"]+" — /gi, "")
     .replace(/#\S+/g, "")
     .replace(/\s+/g, " ")
     .trim();
@@ -35,132 +34,96 @@ function extractHook(tiktok) {
   const first = String(tiktok).split("\n")[0] || "";
   const vo = first.split(" VO: ")[1];
   if (vo) return stripStageDirections(vo);
-  return "Scan first. Execute when you are ready.";
+  const day = Math.floor(Date.now() / 86_400_000);
+  return HOOKS[day % HOOKS.length];
 }
 
-function extractBodyLines(pack) {
-  const raw = pack.x || pack.mission || "";
-  const lines = String(raw)
-    .split("\n")
-    .map((l) => stripStageDirections(l))
-    .filter(Boolean)
-    .slice(0, 3);
-  if (lines.length) return lines;
-  return [
-    "AI-powered Solana intelligence — Sentinels surface risk before the crowd reacts.",
-    "Non-custodial. You sign every trade in your wallet.",
-  ];
-}
-
-/** Spoken narration for TTS (no hashtags, no stage marks). */
+/** Spoken narration — short, direct, grabby. */
 export function buildVoiceover(pack, now = Date.now()) {
   const hook = extractHook(pack.tiktok);
-  const body = extractBodyLines(pack)[0];
-  const mission = stripStageDirections(growthMissionLine(new Date(now))).replace(/\./g, ".");
+  const shortHook = hook.split(".")[0]?.trim() || hook;
 
   return [
-    "Welcome to Synexus.",
-    "The future of Solana trading intelligence.",
-    hook.endsWith(".") ? hook : `${hook}.`,
-    body.endsWith(".") ? body : `${body}.`,
-    "Token scanner. Whale tracker. Risk scores. Pulse alerts. Oracle Supreme AI.",
-    "Subscribe to Synexus Pro for nineteen ninety-nine per month.",
-    "Non-custodial. You control your funds.",
-    "Visit synexus dot pro.",
-    "Not financial advice. Trade at your own risk.",
-    mission ? `${mission.split(".")[0]}.` : "",
+    "Should I buy this?",
+    shortHook.endsWith(".") ? shortHook : `${shortHook}.`,
+    "Paste any Solana token.",
+    "Synexus answers in seconds — Avoid, Watch, or OK.",
+    "Risk score. Whales. Rug flags. Before you sign.",
+    "Try free at synexus dot pro.",
+    "Not financial advice.",
   ]
     .filter(Boolean)
     .join(" ")
     .replace(/\s+/g, " ")
-    .slice(0, 2800);
+    .slice(0, 1200);
 }
 
 export function buildYouTubeMetadata(pack, now = Date.now()) {
   const date = new Date(now);
   const hook = extractHook(pack.tiktok);
   const titleVariants = [
-    `Synexus Daily · ${hook.slice(0, 52)}`,
-    `Solana AI Intel · Synexus Sentinels · ${todayDirName(date)}`,
-    `Scan Before You Ape · Synexus Pro · Daily Brief`,
+    `Should I Buy This? · Synexus · ${todayDirName(date)}`,
+    `Paste → Avoid or Watch · Synexus`,
+    `Stop Aping Blind · Synexus · ${todayDirName(date)}`,
   ];
   const title = titleVariants[date.getUTCDate() % titleVariants.length].slice(0, 95);
 
   const description = [
-    "Synexus — AI-powered Solana trading intelligence.",
+    "Should I buy this? Paste any Solana token — get Avoid, Watch, or OK in plain English.",
     "",
     hook,
     "",
-    "◆ Token scanner · Sentinel lanes",
-    "◆ Whale tracker · concentration alerts",
-    "◆ Risk score · Safe / Warning / Danger",
-    "◆ Pulse alerts · watchlist hits",
-    "◆ Oracle Supreme · AI briefings",
+    "Paste · Scan · Decide",
     "",
-    `Synexus Pro — $19.99/month: ${appOrigin()}/pulse`,
+    `Try free: ${appOrigin()}`,
     "",
-    "Non-custodial — you sign every trade in Phantom, Solflare, or your wallet.",
-    "Not financial advice. Digital assets are high risk.",
+    "Not financial advice. You control your funds.",
     "",
-    "#Synexus #Solana #Crypto #Trading #AI #DeFi #Shorts",
+    "#Synexus #Solana #ShouldIBuyThis #Crypto #Shorts",
   ].join("\n");
 
   const tags = [
     "Synexus",
+    "Should I buy this",
     "Solana",
     "crypto trading",
-    "AI trading",
     "token scanner",
-    "whale tracker",
-    "risk score",
-    "DeFi",
-    "Phantom wallet",
-    "crypto alerts",
+    "memecoin",
   ].join(", ");
 
   return { title, description, tags, hook, date: todayDirName(date) };
 }
 
-/** Visual scenes for the short (durationRatio sums to ~1). */
+/** Four tight scenes — hook fast, no clutter. */
 export function buildScenes(pack) {
-  const hook = extractHook(pack.tiktok);
-  const bodyLines = extractBodyLines(pack);
-
   return [
     {
       id: "intro",
       kicker: "Synexus",
-      headline: "THE FUTURE OF TRADING",
-      sub: "AI Solana command center",
-      durationRatio: 0.14,
-    },
-    {
-      id: "hook",
-      kicker: "Daily intel",
-      headline: hook.length > 72 ? `${hook.slice(0, 69)}…` : hook,
-      sub: "Sentinels · Oracle Supreme · Pulse",
-      durationRatio: 0.18,
-    },
-    {
-      id: "features",
-      kicker: "Platform stack",
-      headline: "Built for serious operators",
-      features: FEATURES,
+      headline: "SHOULD I BUY THIS?",
+      sub: "Paste · Scan · Decide",
       durationRatio: 0.22,
     },
     {
-      id: "body",
-      kicker: "The read",
-      headline: bodyLines[0] || "Scan first. Trade on your terms.",
-      sub: bodyLines[1] || "Non-custodial · You sign every swap",
+      id: "hook",
+      kicker: "3 seconds",
+      headline: "PASTE ANY TOKEN",
+      sub: "Plain English verdict",
+      durationRatio: 0.28,
+    },
+    {
+      id: "flow",
+      kicker: "How it works",
+      headline: "3 STEPS",
+      steps: FLOW_STEPS,
       durationRatio: 0.28,
     },
     {
       id: "cta",
-      kicker: "Synexus Pro",
-      headline: "$19.99/month",
-      sub: "Full Sentinel intelligence · synexus.pro",
-      durationRatio: 0.18,
+      kicker: "Free scan",
+      headline: "synexus.pro",
+      sub: "Pro $19.99/mo · cancel anytime",
+      durationRatio: 0.22,
     },
   ];
 }
@@ -176,4 +139,4 @@ export function buildVideoJob(now = Date.now()) {
   };
 }
 
-export { todayDirName, FEATURES };
+export { todayDirName, FLOW_STEPS as FEATURES };

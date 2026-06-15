@@ -9,8 +9,8 @@ import { renderSceneSvg } from "./videoArt.js";
 import { formatDuration } from "./videoUtils.js";
 
 const FPS = 30;
-const XFADE_SEC = 0.55;
-const MIN_TOTAL_SEC = 28;
+const XFADE_SEC = 0.95;
+const MIN_TOTAL_SEC = 18;
 
 export async function renderSvgToPng(svg, outPath) {
   const resvg = new Resvg(svg, {
@@ -74,7 +74,7 @@ function sceneDurationSec(totalSec, ratio) {
 }
 
 function buildZoomFilter(inputLabel, outLabel, frames) {
-  return `[${inputLabel}:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,zoompan=z='min(zoom+0.00045,1.07)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=${frames}:s=1080x1920:fps=${FPS},format=yuv420p[${outLabel}]`;
+  return `[${inputLabel}:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,zoompan=z='min(zoom+0.00022,1.045)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=${frames}:s=1080x1920:fps=${FPS},format=yuv420p[${outLabel}]`;
 }
 
 export async function composeVideo({ scenes, scenePngPaths, audioPath, videoPath, quiet }) {
@@ -111,7 +111,7 @@ export async function composeVideo({ scenes, scenePngPaths, audioPath, videoPath
     for (let i = 1; i < zoomLabels.length; i += 1) {
       const out = i === zoomLabels.length - 1 ? "vout" : `x${i}`;
       filterParts.push(
-        `[${last}][${zoomLabels[i]}]xfade=transition=fadeblack:duration=${XFADE_SEC}:offset=${offset.toFixed(3)}[${out}]`,
+        `[${last}][${zoomLabels[i]}]xfade=transition=fade:duration=${XFADE_SEC}:offset=${offset.toFixed(3)}[${out}]`,
       );
       last = out;
       offset += scaled[i] - XFADE_SEC;

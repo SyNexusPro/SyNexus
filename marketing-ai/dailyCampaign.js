@@ -87,11 +87,15 @@ export async function runDailyCampaign({ force = false, quiet = false } = {}) {
   }
 
   if (hasTelegramConfig()) {
-    await runPlatform("telegram", () => postTelegram(pack.telegram, { quiet: true }), {
-      force,
-      state,
-      quiet,
-    });
+    await runPlatform(
+      "telegram",
+      () =>
+        postTelegram(pack.telegram, {
+          quiet: true,
+          photoPath: join(dayDir, "syn-bunny.png"),
+        }),
+      { force, state, quiet },
+    );
   } else if (!quiet) {
     console.log("  ↷ telegram: TELEGRAM_BOT_TOKEN not set");
   }
