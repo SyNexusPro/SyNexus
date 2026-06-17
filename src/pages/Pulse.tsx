@@ -19,13 +19,19 @@ import {
   buildSyntheticSentinels,
 } from "../data/syntheticWatchers";
 import { recordTrustedPlanGrant, enforceStoredPlan } from "../lib/securityBot";
+import {
+  hasStoredOwnerGrant,
+  refreshOwnerAccess,
+  unlockOwnerAccess,
+} from "../lib/ownerAccess";
 import { ProTrialBanner } from "../components/ProTrialBanner";
+import { ProDemoButton } from "../components/ProDemoButton";
 import { ShouldIBuyPanel } from "../components/ShouldIBuyPanel";
 import { SentinelAlertsHub } from "../components/SentinelAlertsHub";
 import { WalletPerformanceDashboard } from "../components/WalletPerformanceDashboard";
 import { OracleAdminControlCenter } from "../components/OracleAdminControlCenter";
 import { UIModeToggle } from "../components/UIModeToggle";
-import { notifySynexusPlanChanged } from "../hooks/useSynexusPlan";
+import { notifySynexusPlanChanged, SYNEXUS_PLAN_CHANGED } from "../hooks/useSynexusPlan";
 import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
 import { PulseOperatorLink } from "../components/PulseOperatorLink";
 import {
@@ -38,6 +44,7 @@ import {
   type OracleConversationContext,
 } from "../lib/oracleSupremeConversation";
 import { hasSupabaseEnv } from "../lib/supabaseClient";
+import { isProDemoActive, clearExpiredProDemo } from "../lib/proDemo";
 import { getSentinelIdleMessage, getSentinelMessage } from "../lib/watcherVoice";
 import type { Token } from "../data/tokens";
 import { fetchMvpTokenFeed } from "../services/marketDataService";
@@ -87,6 +94,7 @@ function normalizeStoredPlan(plan: string | null | undefined): AppPlan {
 }
 
 function formatPlanName(plan: AppPlan) {
+  if (plan === "PRO" && isProDemoActive()) return "Pro demo (5 min)";
   if (plan === "PRO") return "Synexus Pro";
   return "Free";
 }
@@ -149,6 +157,25 @@ export function Pulse() {
   const [oracleSupremeReportStamp, setOracleSupremeReportStamp] = useState(() => Date.now());
   const [oracleSpeaking, setOracleSpeaking] = useState(false);
   const { isSimple, isAdvanced } = useSynexusUIMode();
+
+  useEffect(() => {
+    void refreshOwnerAccess().then((active) => {
+      if (active) setPlan("PRO");
+    });
+  }, []);
+
+  useEffect(() => {
+    const syncPlan = () => {
+      clearExpiredProDemo();
+      setPlan(normalizeStoredPlan(localStorage.getItem(PLAN_STORAGE_KEY)));
+    };
+    window.addEventListener(SYNEXUS_PLAN_CHANGED, syncPlan);
+    window.addEventListener("synexus-pro-demo-changed", syncPlan);
+    return () => {
+      window.removeEventListener(SYNEXUS_PLAN_CHANGED, syncPlan);
+      window.removeEventListener("synexus-pro-demo-changed", syncPlan);
+    };
+  }, []);
 
   useEffect(() => {
     if (!authBusy) return;
@@ -229,8 +256,12 @@ export function Pulse() {
       const profile = await fetchProfile(user.id);
       setOperatorName(resolveOperatorName(profile, user.email));
       const rawPlan = profile?.paid_plan ?? localStorage.getItem(PLAN_STORAGE_KEY) ?? "FREE";
-      const normalizedPlan = enforceStoredPlan(rawPlan, profile?.paid_plan === "PRO");
-      setPlan(normalizedPlan);
+      if (hasStoredOwnerGrant()) {
+        setPlan("PRO");
+      } else {
+        const normalizedPlan = enforceStoredPlan(rawPlan, profile?.paid_plan === "PRO");
+        setPlan(normalizedPlan);
+      }
       notifySynexusPlanChanged();
 
       const watchlistRows = await fetchWatchlistTokens(user.id);
@@ -323,6 +354,27 @@ export function Pulse() {
         setAuthMessage({ tone: "error", text: USER_FRIENDLY_ERROR });
       });
   }, [userId]);
+
+  async function handleOwnerUnlock() {
+    if (authBusy) return;
+    if (!email || !password) {
+      setAuthMessage({ tone: "error", text: "Enter your command ID and key." });
+      return;
+    }
+    try {
+      setAuthBusy(true);
+      setAuthMessage({ tone: "info", text: "Verifying command code…" });
+      const result = await unlockOwnerAccess(email, password);
+      if (!result.ok) {
+        setAuthMessage({ tone: "error", text: result.message });
+        return;
+      }
+      setPlan("PRO");
+      setAuthMessage({ tone: "success", text: result.message });
+    } finally {
+      setAuthBusy(false);
+    }
+  }
 
   async function handleSignUp() {
     if (authBusy) return;
@@ -700,6 +752,8 @@ export function Pulse() {
         onSignUp={() => void handleSignUp()}
         onSignIn={() => void handleSignIn()}
         onSignOut={() => void handleSignOut()}
+        onOwnerUnlock={() => void handleOwnerUnlock()}
+        ownerUnlocked={hasStoredOwnerGrant()}
       />
 
       <div className="pulse-card">
@@ -807,14 +861,32 @@ export function Pulse() {
           </ul>
           <div className="pulse-synexus-pro-promo__cta-wrap">
             {plan !== "PRO" ? (
-              <button
-                type="button"
-                className="pulse-button--pro pulse-synexus-pro-promo__cta"
-                disabled={checkoutBusy}
-                onClick={() => void handleUpgradeTrigger()}
-              >
-                {checkoutBusy ? "Opening…" : "Subscribe — $19.99/month"}
-              </button>
+              <>
+                <ProDemoButton
+                  className="pulse-demo-button pulse-demo-button--first pulse-synexus-pro-promo__demo"
+                  label="Try 5-minute Pro demo — see everything"
+                />
+                <button
+                  type="button"
+                  className="pulse-button--pro pulse-synexus-pro-promo__cta"
+                  disabled={checkoutBusy}
+                  onClick={() => void handleUpgradeTrigger()}
+                >
+                  {checkoutBusy ? "Opening…" : "Subscribe — $19.99/month"}
+                </button>
+              </>
+            ) : isProDemoActive() ? (
+              <>
+                <p className="pulse-synexus-pro-promo__active">Pro demo running — full access unlocked.</p>
+                <button
+                  type="button"
+                  className="pulse-button--pro pulse-synexus-pro-promo__cta"
+                  disabled={checkoutBusy}
+                  onClick={() => void handleUpgradeTrigger()}
+                >
+                  {checkoutBusy ? "Opening…" : "Keep Pro — Subscribe"}
+                </button>
+              </>
             ) : (
               <p className="pulse-synexus-pro-promo__active">Synexus Pro is active on your account.</p>
             )}

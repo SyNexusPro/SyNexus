@@ -14,6 +14,9 @@ import { hasYouTubeCredentials, readUploadRecord } from "./youtubeUpload.js";
 import { hasTelegramConfig, postTelegram } from "./platforms/telegram.js";
 import { hasRedditConfig } from "./platforms/reddit.js";
 import { checkTikTokApi, hasTikTokApiConfig, tiktokPostsPerDay } from "./platforms/tiktok.js";
+import { checkMetaApi, hasMetaConfig, hasInstagramConfig } from "./platforms/meta.js";
+import { hasDiscordConfig } from "./platforms/discord.js";
+import { checkX } from "./platforms/xTwitter.js";
 import { fileExists } from "./videoPipeline.js";
 import { todayDirName } from "./videoBlueprint.js";
 import { parseArgs } from "./videoUtils.js";
@@ -206,6 +209,73 @@ async function checkReddit() {
   }
 }
 
+async function checkDiscord() {
+  if (!hasDiscordConfig()) {
+    return { ok: false, configured: false, fix: "Set DISCORD_BOT_TOKEN — npm run discord:channels" };
+  }
+  return { ok: true, configured: true, note: "Bot token set — posts to marketing channel" };
+}
+
+async function checkFacebook() {
+  const dayDir = join(__dirname, "output", todayDirName());
+  const hasVideo = await fileExists(join(dayDir, "synexus-daily.mp4"));
+  const hasFbExport = await fileExists(join(dayDir, "synexus-facebook.mp4"));
+
+  if (hasMetaConfig()) {
+    const result = await checkMetaApi();
+    return {
+      ok: result.ok,
+      configured: true,
+      page: result.page,
+      note: result.note,
+      exportReady: hasVideo,
+      fix: result.fix,
+      error: result.error,
+    };
+  }
+
+  return {
+    ok: hasFbExport || hasVideo,
+    configured: false,
+    mode: "Export · synexus-facebook.mp4 + facebook-caption.txt",
+    exportReady: hasFbExport || hasVideo,
+    fix: "npm run meta:auth",
+  };
+}
+
+async function checkInstagram() {
+  const dayDir = join(__dirname, "output", todayDirName());
+  const hasIgExport = await fileExists(join(dayDir, "synexus-instagram-reel.mp4"));
+
+  if (hasInstagramConfig()) {
+    const result = await checkMetaApi();
+    return {
+      ok: result.ok,
+      configured: true,
+      instagram: result.instagram,
+      note: "Reels auto-post via Graph API",
+      exportReady: hasIgExport,
+      fix: result.fix,
+      error: result.error,
+    };
+  }
+
+  return {
+    ok: hasIgExport,
+    configured: false,
+    mode: "Export · synexus-instagram-reel.mp4 + instagram-caption.txt",
+    exportReady: hasIgExport,
+    fix: "Link IG Business to Page → npm run meta:auth",
+  };
+}
+
+async function checkXPlatform() {
+  const dayDir = join(__dirname, "output", todayDirName());
+  const hasExport = await fileExists(join(dayDir, "synexus-x.mp4"));
+  const result = await checkX();
+  return { ...result, exportReady: hasExport };
+}
+
 async function checkTikTok() {
   const dayDir = join(__dirname, "output", todayDirName());
   const videoPath = join(dayDir, "synexus-daily.mp4");
@@ -247,7 +317,9 @@ function printReport(report) {
   console.log(`  TELEGRAM_CHAT_ID ${process.env.TELEGRAM_CHAT_ID?.trim() || "(default @thesynexusofficial)"}`);
   console.log(`  REDDIT_*         ${hasRedditConfig() ? "complete" : "incomplete"}`);
   console.log(`  TIKTOK_*           ${hasTikTokApiConfig() ? "complete" : "incomplete"}`);
-  console.log(`  TIKTOK_POSTS/DAY ${tiktokPostsPerDay()} at ${process.env.TIKTOK_POST_HOURS?.trim() || "9,14,20"}`);
+  console.log(`  META_*             ${hasMetaConfig() ? "complete" : "incomplete"}`);
+  console.log(`  DISCORD_*          ${hasDiscordConfig() ? "complete" : "incomplete"}`);
+  console.log(`  POSTS/DAY          ${process.env.POSTS_PER_DAY?.trim() || "3"} at ${process.env.POST_HOURS?.trim() || "9,14,20"}`);
 
   for (const [name, result] of Object.entries(report)) {
     console.log(`\n${icon(result.ok)} ${name.toUpperCase()}`);
@@ -255,7 +327,8 @@ function printReport(report) {
     if (result.bot) console.log(`    Bot: ${result.bot}`);
     if (result.chat) console.log(`    Chat: ${result.chat}${result.chatType ? ` (${result.chatType})` : ""}`);
     if (result.subreddit) console.log(`    Subreddit: r/${result.subreddit.replace(/^r\//i, "")}`);
-    if (result.creator) console.log(`    Creator: @${result.creator}`);
+    if (result.page) console.log(`    Page: ${result.page}`);
+    if (result.instagram) console.log(`    Instagram: ${result.instagram}`);
     if (result.privacyOptions) console.log(`    Privacy options: ${result.privacyOptions.join(", ")}`);
     if (result.note) console.log(`    ${result.note}`);
     if (result.todayUpload) console.log(`    Today: ${result.todayUpload}`);
@@ -270,14 +343,15 @@ function printReport(report) {
   const allOk =
     report.youtube.ok &&
     report.telegram.ok &&
-    report.reddit.ok &&
+    (report.facebook.ok || report.facebook.exportReady) &&
+    (report.instagram.ok || report.instagram.exportReady) &&
     (report.tiktok.ok === true || report.tiktok.exportReady);
 
   console.log("\n" + "─".repeat(48));
   if (allOk) {
-    console.log("All requested platforms are connected.");
+    console.log("Core video platforms ready. Run: npm run blast:watch");
   } else {
-    console.log("Some platforms need attention — see Fix lines above.");
+    console.log("Some platforms need setup — run npm run blast:now after fixing.");
   }
   console.log("");
 }
@@ -286,8 +360,12 @@ export async function runPlatformCheck({ testPost = false } = {}) {
   const report = {
     youtube: await checkYouTube(),
     telegram: await checkTelegram({ testPost }),
-    reddit: await checkReddit(),
+    facebook: await checkFacebook(),
+    instagram: await checkInstagram(),
     tiktok: await checkTikTok(),
+    discord: await checkDiscord(),
+    reddit: await checkReddit(),
+    x: await checkXPlatform(),
   };
   printReport(report);
   return report;

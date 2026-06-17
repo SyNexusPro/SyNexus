@@ -76,8 +76,8 @@ function shortsTitle(title) {
   return withTag.length <= 100 ? withTag : `${base.slice(0, 91)} #Shorts`;
 }
 
-export async function readUploadRecord(dayDir) {
-  const path = join(dayDir, "youtube.json");
+export async function readUploadRecord(dayDir, slot = 0) {
+  const path = join(dayDir, slot === 0 ? "youtube.json" : `youtube-slot-${slot}.json`);
   if (!(await fileExists(path))) return null;
   try {
     return JSON.parse(await readFile(path, "utf8"));
@@ -86,8 +86,8 @@ export async function readUploadRecord(dayDir) {
   }
 }
 
-export async function writeUploadRecord(dayDir, record) {
-  const path = join(dayDir, "youtube.json");
+export async function writeUploadRecord(dayDir, record, slot = 0) {
+  const path = join(dayDir, slot === 0 ? "youtube.json" : `youtube-slot-${slot}.json`);
   await writeFile(path, `${JSON.stringify(record, null, 2)}\n`, "utf8");
   return path;
 }
@@ -98,6 +98,8 @@ export async function uploadVideoToYouTube({
   dayDir,
   force = false,
   quiet = false,
+  slot = 0,
+  titleSuffix = "",
 }) {
   if (!(await fileExists(videoPath))) {
     throw new Error(`Video not found: ${videoPath}`);
@@ -106,19 +108,23 @@ export async function uploadVideoToYouTube({
     throw new Error(`Metadata not found: ${metadataPath}`);
   }
 
-  const existing = await readUploadRecord(dayDir);
+  const existing = await readUploadRecord(dayDir, slot);
   if (existing?.videoId && !force) {
     if (!quiet) {
-      console.log(`Already on YouTube (${existing.videoId}): ${existing.url}`);
+      console.log(`Already on YouTube slot ${slot + 1} (${existing.videoId}): ${existing.url}`);
     }
-    return { skipped: true, ...existing };
+    return { skipped: true, slot, ...existing };
   }
 
   const metadata = await readYouTubeMetadata(metadataPath);
   const cfg = getYouTubeConfig();
   const youtube = await getYouTubeClient();
 
-  const title = shortsTitle(metadata.title);
+  let title = shortsTitle(metadata.title);
+  if (titleSuffix) {
+    const tagged = `${metadata.title} · ${titleSuffix}`.slice(0, 90);
+    title = shortsTitle(tagged);
+  }
   const description = metadata.description;
   const tags = metadata.tags.length ? metadata.tags : ["Synexus", "Solana", "Shorts"];
 
@@ -167,9 +173,10 @@ export async function uploadVideoToYouTube({
     title,
     privacy: cfg.privacy,
     uploadedAt: new Date().toISOString(),
+    slot,
   };
 
-  await writeUploadRecord(dayDir, record);
+  await writeUploadRecord(dayDir, record, slot);
 
   if (!quiet) {
     console.log("\n✓ Published to YouTube");

@@ -18,6 +18,8 @@ type PulseOperatorLinkProps = {
   onSignUp: () => void;
   onSignIn: () => void;
   onSignOut: () => void;
+  onOwnerUnlock: () => void;
+  ownerUnlocked?: boolean;
 };
 
 function maskEmail(email: string): string {
@@ -55,8 +57,10 @@ export function PulseOperatorLink({
   onSignUp,
   onSignIn,
   onSignOut,
+  onOwnerUnlock,
+  ownerUnlocked = false,
 }: PulseOperatorLinkProps) {
-  const [mode, setMode] = useState<"return" | "link">("return");
+  const [mode, setMode] = useState<"return" | "link" | "command">("return");
   const linked = Boolean(userId);
   const isDemo = userId?.startsWith("demo-") ?? false;
 
@@ -84,7 +88,7 @@ export function PulseOperatorLink({
               <p className="operator-link__email">{displayEmail}</p>
             </div>
             <span className={`operator-link__plan operator-link__plan--${plan.toLowerCase()}`}>
-              {plan === "PRO" ? "Synexus Pro" : "Free tier"}
+              {ownerUnlocked ? "Owner · full access" : plan === "PRO" ? "Synexus Pro" : "Free tier"}
             </span>
           </div>
         </header>
@@ -141,6 +145,15 @@ export function PulseOperatorLink({
         >
           New link
         </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mode === "command"}
+          className={`operator-link__tab${mode === "command" ? " operator-link__tab--active" : ""}`}
+          onClick={() => setMode("command")}
+        >
+          Command code
+        </button>
       </div>
 
       <p className={`operator-link__message operator-link__message--${authMessage.tone}`} role="status">
@@ -155,21 +168,21 @@ export function PulseOperatorLink({
 
       <div className="operator-link__fields">
         <label className="operator-link__field">
-          <span>Operator email</span>
+          <span>{mode === "command" ? "Command ID" : "Operator email"}</span>
           <input
-            type="email"
-            autoComplete="email"
+            type={mode === "command" ? "text" : "email"}
+            autoComplete={mode === "command" ? "username" : "email"}
             value={email}
             disabled={authBusy}
-            placeholder="you@email.com"
+            placeholder={mode === "command" ? "your-secret-id" : "you@email.com"}
             onChange={(event) => onEmailChange(event.target.value)}
           />
         </label>
         <label className="operator-link__field">
-          <span>Access key</span>
+          <span>{mode === "command" ? "Command key" : "Access key"}</span>
           <input
             type="password"
-            autoComplete={mode === "link" ? "new-password" : "current-password"}
+            autoComplete={mode === "command" ? "current-password" : mode === "link" ? "new-password" : "current-password"}
             value={password}
             disabled={authBusy}
             placeholder="••••••••"
@@ -182,12 +195,24 @@ export function PulseOperatorLink({
         type="button"
         className="operator-link__submit"
         disabled={authBusy}
-        onClick={mode === "link" ? onSignUp : onSignIn}
+        onClick={
+          mode === "command" ? onOwnerUnlock : mode === "link" ? onSignUp : onSignIn
+        }
       >
-        {authBusy ? "Linking…" : mode === "link" ? "Establish operator link" : "Reconnect to Synexus"}
+        {authBusy
+          ? "Linking…"
+          : mode === "command"
+            ? "Unlock full access"
+            : mode === "link"
+              ? "Establish operator link"
+              : "Reconnect to Synexus"}
       </button>
 
-      {!hasSupabaseEnv ? (
+      {mode === "command" ? (
+        <p className="operator-link__footnote">
+          Your private command code unlocks everything — no subscription required on this device.
+        </p>
+      ) : !hasSupabaseEnv ? (
         <p className="operator-link__footnote">Demo mode — server keys unlock permanent operator links.</p>
       ) : null}
     </section>

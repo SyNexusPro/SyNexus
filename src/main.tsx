@@ -4,9 +4,13 @@ import App from "./App";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { SynexusBootSequence } from "./components/SynexusBootSequence";
 import { initSecurityBot } from "./lib/securityBot";
+import { refreshOwnerAccess } from "./lib/ownerAccess";
+import { clearExpiredProDemo } from "./lib/proDemo";
 import "./index.css";
 
 initSecurityBot();
+clearExpiredProDemo();
+void refreshOwnerAccess();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

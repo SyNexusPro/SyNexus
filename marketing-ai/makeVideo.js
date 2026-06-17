@@ -30,7 +30,7 @@ import { msUntilNextLocalMidnight, parseArgs } from "./videoUtils.js";
 loadMarketingEnv();
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const VOICE = process.env.VIDEO_TTS_VOICE?.trim() || "en-US-GuyNeural";
+import { DEFAULT_TTS_VOICE } from "./ttsVoice.js";
 
 function outputRoot() {
   return process.env.VIDEO_OUTPUT_DIR?.trim() || join(__dirname, "output");
@@ -81,7 +81,7 @@ async function renderDailyVideo({ force = false, quiet = false, upload = false }
     }
 
     if (!quiet) console.log("2/4 Synthesizing voiceover…");
-    const audioPath = await synthesizeVoiceover(job.voiceover, dayDir, VOICE);
+    const audioPath = await synthesizeVoiceover(job.voiceover, dayDir, DEFAULT_TTS_VOICE);
     await writeFile(join(dayDir, "voiceover.txt"), `${job.voiceover}\n`, "utf8");
 
     if (!quiet) console.log("3/4 Composing HD video (slow preset, CRF 17)…");

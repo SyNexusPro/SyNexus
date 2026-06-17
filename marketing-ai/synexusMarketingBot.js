@@ -240,6 +240,83 @@ export function generateTikTokCaptions(now = Date.now(), count = 3) {
   return Array.from({ length: n }, (_, i) => buildTikTokCaption(pick(HOOKS, base + i), now));
 }
 
+/** Distinct Telegram posts for 3× daily video + caption drops. */
+export function generateTelegramCaptions(now = Date.now(), count = 3) {
+  const base = dayOffset(now);
+  const n = Math.min(3, Math.max(1, count));
+  const origin = appOrigin();
+
+  return Array.from({ length: n }, (_, i) => {
+    const hook = pick(HOOKS, base + i);
+    const slotTag = ["🌅", "☀️", "🌙"][i] || "🐰";
+    return [
+      `${slotTag} **Should I buy this?**`,
+      "",
+      hook,
+      "",
+      "Paste a Solana mint → **Avoid · Watch · OK** + risk read.",
+      "",
+      `**Try free** → ${origin}`,
+      PRO_PRICE_LINE,
+      "",
+      mascotTelegramLine(),
+    ].join("\n");
+  });
+}
+
+function buildSocialCaption(hook, now, platform) {
+  const origin = appOrigin();
+  const tags =
+    platform === "instagram"
+      ? "#Synexus #Solana #Crypto #Trading #ShouldIBuyThis #Reels #DeFi"
+      : "#Synexus #Solana #Crypto #ShouldIBuyThis #Trading";
+
+  return [
+    hook,
+    "",
+    "Should I buy this? Paste any Solana token → Avoid · Watch · OK in plain English.",
+    "Risk score · whales · rug flags · before you sign.",
+    "",
+    `Try free → ${origin}`,
+    PRO_PRICE_LINE,
+    "",
+    "🐰 Syn the bunny · paste before you ape",
+    tags,
+  ].join("\n");
+}
+
+export function generateFacebookCaptions(now = Date.now(), count = 3) {
+  const base = dayOffset(now);
+  const n = Math.min(3, Math.max(1, count));
+  return Array.from({ length: n }, (_, i) =>
+    buildSocialCaption(pick(HOOKS, base + i), now, "facebook"),
+  );
+}
+
+export function generateInstagramCaptions(now = Date.now(), count = 3) {
+  const base = dayOffset(now);
+  const n = Math.min(3, Math.max(1, count));
+  return Array.from({ length: n }, (_, i) =>
+    buildSocialCaption(pick(HOOKS, base + i + 1), now, "instagram"),
+  );
+}
+
+export function generateXCaptions(now = Date.now(), count = 3) {
+  const base = dayOffset(now);
+  const n = Math.min(3, Math.max(1, count));
+  const origin = appOrigin();
+  return Array.from({ length: n }, (_, i) => {
+    const hook = pick(HOOKS, base + i);
+    return [
+      hook,
+      "",
+      "Paste any Solana token → Avoid · Watch · OK",
+      `Try free: ${origin}`,
+      "#Synexus #Solana #Crypto",
+    ].join("\n");
+  });
+}
+
 export function parseRedditPost(text) {
   const titleMatch = String(text).match(/TITLE:\n([\s\S]*?)\n\nBODY:/);
   const bodyMatch = String(text).match(/BODY:\n([\s\S]*)/);

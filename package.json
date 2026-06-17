@@ -18,7 +18,13 @@
     "campaign:daily": "npm run campaign:daily --prefix marketing-ai",
     "campaign:watch": "npm run campaign:watch --prefix marketing-ai",
     "platform:check": "npm run platform:check --prefix marketing-ai",
-    "aegis:check": "node scripts/aegis-check.mjs"
+    "posts:watch": "npm run blast:watch --prefix marketing-ai",
+    "posts:now": "npm run blast:now --prefix marketing-ai",
+    "blast:watch": "npm run blast:watch --prefix marketing-ai",
+    "blast:now": "npm run blast:now --prefix marketing-ai",
+    "meta:auth": "npm run meta:auth --prefix marketing-ai",
+    "aegis:check": "node scripts/aegis-check.mjs",
+    "owner:generate": "node scripts/generate-owner-code.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.4",

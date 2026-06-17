@@ -91,14 +91,18 @@ function scanLines() {
 function baseDefs() {
   return `
   <defs>
-    <radialGradient id="orbTop" cx="50%" cy="22%" r="60%">
-      <stop offset="0%" stop-color="#89ff2f" stop-opacity="0.55"/>
-      <stop offset="35%" stop-color="#00ff88" stop-opacity="0.28"/>
-      <stop offset="70%" stop-color="#5ee7ff" stop-opacity="0.08"/>
+    <radialGradient id="orbTop" cx="50%" cy="22%" r="65%">
+      <stop offset="0%" stop-color="#89ff2f" stop-opacity="0.72"/>
+      <stop offset="30%" stop-color="#00ff88" stop-opacity="0.45"/>
+      <stop offset="55%" stop-color="#00ffaa" stop-opacity="0.22"/>
       <stop offset="100%" stop-color="#010302" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="orbBottom" cx="50%" cy="88%" r="45%">
-      <stop offset="0%" stop-color="#00ff88" stop-opacity="0.22"/>
+    <radialGradient id="orbMid" cx="50%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#00ff88" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="orbBottom" cx="50%" cy="88%" r="50%">
+      <stop offset="0%" stop-color="#00ff88" stop-opacity="0.35"/>
       <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
     </radialGradient>
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
@@ -117,21 +121,21 @@ function baseDefs() {
       <stop offset="100%" stop-color="#5ee7ff"/>
     </linearGradient>
     <filter id="traceGlow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feGaussianBlur stdDeviation="4.5" result="blur"/>
       <feMerge>
         <feMergeNode in="blur"/>
         <feMergeNode in="SourceGraphic"/>
       </feMerge>
     </filter>
     <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feGaussianBlur stdDeviation="14" result="blur"/>
       <feMerge>
         <feMergeNode in="blur"/>
         <feMergeNode in="SourceGraphic"/>
       </feMerge>
     </filter>
     <filter id="megaGlow" x="-60%" y="-60%" width="220%" height="220%">
-      <feGaussianBlur stdDeviation="18" result="blur"/>
+      <feGaussianBlur stdDeviation="22" result="blur"/>
       <feMerge>
         <feMergeNode in="blur"/>
         <feMergeNode in="SourceGraphic"/>
@@ -144,6 +148,7 @@ function baseBackground() {
   return `
   <rect width="100%" height="100%" fill="url(#bg)"/>
   <rect width="100%" height="100%" fill="url(#orbTop)"/>
+  <rect width="100%" height="100%" fill="url(#orbMid)"/>
   <rect width="100%" height="100%" fill="url(#orbBottom)"/>
   ${circuitBoard()}
   ${hexGrid()}

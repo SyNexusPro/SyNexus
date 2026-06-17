@@ -2,10 +2,12 @@ import { Link, Outlet } from "react-router-dom";
 import { BottomNav } from "./BottomNav";
 import { UIModeToggle } from "./UIModeToggle";
 import { OracleSupremePresence } from "./OracleSupremePresence";
+import { ProDemoBanner } from "./ProDemoBanner";
 
 export function AppShell() {
   return (
     <div className="app-shell">
+      <ProDemoBanner />
       <main className="app-main">
         <div className="app-mode-bar">
           <UIModeToggle />

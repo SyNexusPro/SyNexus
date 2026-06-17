@@ -7,6 +7,7 @@ import { Resvg } from "@resvg/resvg-js";
 import { MsEdgeTTS, OUTPUT_FORMAT } from "msedge-tts";
 import { renderSceneSvg } from "./videoArt.js";
 import { formatDuration } from "./videoUtils.js";
+import { resolveTtsVoice, naturalProsody } from "./ttsVoice.js";
 
 const FPS = 30;
 const XFADE_SEC = 0.95;
@@ -22,9 +23,11 @@ export async function renderSvgToPng(svg, outPath) {
 
 export async function synthesizeVoiceover(text, outDir, voice) {
   await mkdir(outDir, { recursive: true });
+  const resolved = resolveTtsVoice(voice);
   const tts = new MsEdgeTTS();
-  await tts.setMetadata(voice, OUTPUT_FORMAT.AUDIO_24KHZ_96KBITRATE_MONO_MP3);
-  const { audioFilePath } = await tts.toFile(outDir, text);
+  await tts.setMetadata(resolved, OUTPUT_FORMAT.AUDIO_24KHZ_96KBITRATE_MONO_MP3);
+  const clean = String(text).replace(/\s+/g, " ").trim();
+  const { audioFilePath } = await tts.toFile(outDir, clean, naturalProsody());
   return audioFilePath;
 }
 

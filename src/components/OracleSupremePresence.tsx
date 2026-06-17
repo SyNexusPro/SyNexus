@@ -16,6 +16,7 @@ import { OracleSupremeChat } from "./OracleSupremeChat";
 import { SynexusSymbolMark } from "./SynexusSymbolMark";
 
 import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
+import { SYNEXUS_PLAN_CHANGED } from "../hooks/useSynexusPlan";
 
 const PLAN_STORAGE_KEY = "hivemind_paid_plan";
 
@@ -38,6 +39,17 @@ export function OracleSupremePresence() {
   const { tokens, feedSource } = useOracleMarketFeed(plan === "PRO" ? 8_000 : 10_000);
 
   useEffect(() => subscribeSynexusBootComplete(() => setBootReady(true)), []);
+
+  useEffect(() => {
+    const sync = () =>
+      setPlan(normalizePlan(localStorage.getItem(PLAN_STORAGE_KEY)));
+    window.addEventListener(SYNEXUS_PLAN_CHANGED, sync);
+    window.addEventListener("synexus-pro-demo-changed", sync);
+    return () => {
+      window.removeEventListener(SYNEXUS_PLAN_CHANGED, sync);
+      window.removeEventListener("synexus-pro-demo-changed", sync);
+    };
+  }, []);
 
   useEffect(() => {
     if (!bootReady || hasGreetedThisSession()) return;

@@ -11,6 +11,7 @@ import {
 import { oracleSupremeMoodLabel } from "../data/syntheticWatchers";
 import { OracleSupremeChat } from "./OracleSupremeChat";
 import { OracleSupremeVoiceBar } from "./OracleSupremeVoiceBar";
+import { ProDemoButton } from "./ProDemoButton";
 import { SynexusSymbolMark } from "./SynexusSymbolMark";
 
 type Props = {
@@ -156,6 +157,7 @@ export function OracleAdminControlCenter({
           ) : (
             <div className="oracle-admin__unlock">
               <p>Unlock Oracle Admin briefings with Synexus Pro — $19.99/month.</p>
+              <ProDemoButton className="oracle-admin__demo pulse-demo-button" label="Try 5-min Pro demo first" />
               <button type="button" disabled={checkoutBusy} onClick={onUpgrade}>
                 {checkoutBusy ? "Opening checkout…" : "Subscribe · unlock Oracle"}
               </button>

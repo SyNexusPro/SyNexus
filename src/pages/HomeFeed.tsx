@@ -8,6 +8,7 @@ import { AppScreenshotGallery } from "../components/AppScreenshotGallery";
 import { SupportedWallets } from "../components/SupportedWallets";
 import { SynexusLiveScanner } from "../components/SynexusLiveScanner";
 import { ShouldIBuyPanel } from "../components/ShouldIBuyPanel";
+import { ProDemoButton } from "../components/ProDemoButton";
 import { SentinelAlertsHub } from "../components/SentinelAlertsHub";
 import { useSynexusPlan } from "../hooks/useSynexusPlan";
 import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
@@ -97,6 +98,11 @@ export function HomeFeed() {
               : "Detect scams, track whales, monitor momentum, and trade smarter."}
           </p>
           <div className="landing-hero__actions">
+            <ProDemoButton
+              className="landing-hero__actions--demo"
+              goToPulse
+              pulseHash="#synexus-pro"
+            />
             <Link to="/pulse" className="landing-hero__actions--secondary">
               {isSimple ? "Wallet & Oracle" : "Sentinel alerts"}
             </Link>

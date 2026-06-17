@@ -1,11 +1,13 @@
 import { useState } from "react";
+import { hasStoredOwnerGrant } from "../lib/ownerAccess";
+import { ProDemoButton } from "./ProDemoButton";
 
 const PLAN_STORAGE_KEY = "hivemind_paid_plan";
 const BANNER_DISMISS_KEY = "hivemind_pro_banner_dismissed";
 
 function isSynexusProPlan(): boolean {
   try {
-    return localStorage.getItem(PLAN_STORAGE_KEY) === "PRO";
+    return localStorage.getItem(PLAN_STORAGE_KEY) === "PRO" || hasStoredOwnerGrant();
   } catch {
     return false;
   }
@@ -62,6 +64,7 @@ export function ProTrialBanner() {
           {error ? "Checkout couldn't open. Tap to retry." : "$19.99/month · full Sentinel intelligence · cancel anytime"}
         </span>
       </div>
+      <ProDemoButton className="pro-trial-banner__demo" label="Try 5-min demo" />
       <button
         type="button"
         className="pro-trial-banner__cta"
