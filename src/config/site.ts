@@ -149,7 +149,7 @@ export const FAQ_ITEMS = [
   },
   {
     q: "Where is the SYN token?",
-    a: "SYN is live on pump.fun — use the banner on the home feed or About page for the link. Always verify the mint address in-app before trading. Utility roadmap is on the About page.",
+    a: "SYN is live on pump.fun — join the $SyN community from the home feed banner or About page. Always verify the mint address in-app before trading. Utility roadmap is on the About page.",
   },
   {
     q: "Where is the SYN token roadmap?",

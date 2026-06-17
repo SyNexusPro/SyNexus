@@ -90,9 +90,9 @@ export function About() {
 
       <section className="about-page__section marketing-panel about-page__section--syn-live">
         <p className="about-page__eyebrow">Community token</p>
-        <h2>{SYN_SYMBOL} is live on pump.fun</h2>
+        <h2>$SyN community is live on pump.fun</h2>
         <p>
-          The Synexus community token ({SYN_SYMBOL}) is trading on pump.fun. Paste the mint in{" "}
+          The Synexus community token ({SYN_SYMBOL}) has a home on pump.fun. Paste the mint in{" "}
           <strong>Should I buy this?</strong> for a Sentinel read before you ape — then buy only through your
           own wallet.
         </p>
@@ -106,7 +106,7 @@ export function About() {
             target="_blank"
             rel="noopener noreferrer"
           >
-            Open on pump.fun
+            Open $SyN community
           </a>
           <Link className="about-page__link" to="/token/hivemind-sol">
             Scan {SYN_SYMBOL} in Synexus →

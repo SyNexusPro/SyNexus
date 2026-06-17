@@ -2,15 +2,19 @@
 
 export const SYN_MINT =
   (import.meta.env.VITE_SYN_MINT as string | undefined)?.trim() ||
-  "5dAXtHS6xBEwuCQsgpwZDiqaByWdiQSvRYTsLnpf7i9u";
+  "9naVtLAGKWYuEcGehe1BZ3DpiSLHjSNsaeFr2JPHpump";
 
 export const SYN_SYMBOL = "SYN";
 
 export const SYN_TOKEN_ID = "hivemind-sol";
 
+/** Official pump.fun community hub (posts, members, coin link). */
 export const SYN_PUMPFUN_URL =
   (import.meta.env.VITE_SYN_PUMPFUN_URL as string | undefined)?.trim() ||
-  `https://pump.fun/coin/${SYN_MINT}`;
+  `https://pump.fun/communities/${SYN_MINT}`;
+
+/** Direct coin trade page on pump.fun. */
+export const SYN_PUMPFUN_COIN_URL = `https://pump.fun/coin/${SYN_MINT}`;
 
 export const SYN_DEXSCREENER_URL = `https://dexscreener.com/solana/${SYN_MINT}`;
 

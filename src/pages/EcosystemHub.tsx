@@ -156,8 +156,8 @@ export function EcosystemHub() {
         <h2>Token utility platform</h2>
         {SYN_IS_LIVE ? (
           <p className="ecosystem-hub__syn-live">
-            <strong>{SYN_SYMBOL}</strong> is live on pump.fun — scan it in Synexus before you buy, then trade in your
-            own wallet.
+            <strong>${SYN_SYMBOL}</strong> community is live on pump.fun — scan it in Synexus before you buy, then trade in
+            your own wallet.
           </p>
         ) : null}
         <p>
@@ -179,7 +179,7 @@ export function EcosystemHub() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              Buy {SYN_SYMBOL} on pump.fun
+              Open $SyN community
             </a>
             <Link className="ecosystem-hub__link" to={`/token/${SYN_TOKEN_ID}`}>
               Scan {SYN_SYMBOL} →

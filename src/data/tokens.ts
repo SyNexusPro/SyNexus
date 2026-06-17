@@ -6,6 +6,7 @@ import {
   type GuardianEngineInput,
   type GuardianStatus,
 } from "./guardianEngine";
+import { SYN_MINT } from "../config/synToken";
 
 export type GuardianRisk = GuardianStatus;
 
@@ -110,7 +111,7 @@ const tokenSeeds: TokenSeed[] = [
     name: "Synexus",
     priceUsd: 0.00432,
     change24hPct: 5.92,
-    mintAddress: "5dAXtHS6xBEwuCQsgpwZDiqaByWdiQSvRYTsLnpf7i9u",
+    mintAddress: SYN_MINT,
     volume24hUsd: 482364,
     liquidityUsd: 1285730,
     marketCapUsd: 43198122,

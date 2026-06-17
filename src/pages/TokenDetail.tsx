@@ -10,7 +10,7 @@ import { recordTokenView } from "../lib/walletHealth";
 import { dexScreenerTokenUrl, jupiterBuyWithSolUrl, jupiterSellForSolUrl } from "../lib/solanaTradeLinks";
 import { getTradingFeeBps } from "../lib/tradingFees";
 import { useSynexusPlan } from "../hooks/useSynexusPlan";
-import { SYN_IS_LIVE, SYN_MINT, SYN_PUMPFUN_URL } from "../config/synToken";
+import { SYN_IS_LIVE, SYN_MINT, SYN_PUMPFUN_COIN_URL } from "../config/synToken";
 import type { Token } from "../data/tokens";
 import {
   fetchTokenDetailById,
@@ -337,7 +337,7 @@ export function TokenDetail() {
         <div className="detail-trade-panel__actions">
           {showPumpFun ? (
             <a
-              href={SYN_PUMPFUN_URL}
+              href={SYN_PUMPFUN_COIN_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="detail-trade-panel__buy detail-trade-panel__pumpfun"

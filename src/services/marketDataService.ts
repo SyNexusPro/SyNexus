@@ -1,5 +1,6 @@
 import type { DeepPartial, GuardianEngineConfig } from "../data/guardianEngine";
 import { buildSampleTokens, buildTokenFromPartial, type Token } from "../data/tokens";
+import { SYN_MINT } from "../config/synToken";
 import { guardApiFetch, guardTokenScan } from "../lib/securityBot";
 import { loadGuardianConfigOverride } from "./guardianConfigService";
 
@@ -167,7 +168,7 @@ async function fetchDexScreenerPatches(baseTokens: Token[]): Promise<{
           volume24hUsd: 482364,
           liquidityUsd: 1285730,
           marketCapUsd: 43198122,
-          mintAddress: "5dAXtHS6xBEwuCQsgpwZDiqaByWdiQSvRYTsLnpf7i9u",
+          mintAddress: SYN_MINT,
         },
         BONK: { priceUsd: 0.00003412, change24hPct: -6.42, volume24hUsd: 61000000 },
         PEPE: { priceUsd: 0.00001078, change24hPct: 8.33, volume24hUsd: 138000000 },
@@ -187,7 +188,7 @@ async function fetchBirdeyePatches(): Promise<Record<string, TokenPatch>> {
 
   try {
     const response = await fetch(
-      "https://public-api.birdeye.so/defi/token_overview?address=5dAXtHS6xBEwuCQsgpwZDiqaByWdiQSvRYTsLnpf7i9u",
+      `https://public-api.birdeye.so/defi/token_overview?address=${SYN_MINT}`,
       { headers: { "X-API-KEY": apiKey } },
     );
     if (!response.ok) throw new Error("Birdeye request failed");
@@ -212,7 +213,7 @@ async function fetchSolanaRpcPatch(): Promise<TokenPatch> {
   const endpoint = import.meta.env.VITE_SOLANA_RPC_URL;
   if (!endpoint) {
     return {
-      mintAddress: "5dAXtHS6xBEwuCQsgpwZDiqaByWdiQSvRYTsLnpf7i9u",
+      mintAddress: SYN_MINT,
     };
   }
 
@@ -224,7 +225,7 @@ async function fetchSolanaRpcPatch(): Promise<TokenPatch> {
         jsonrpc: "2.0",
         id: 1,
         method: "getAccountInfo",
-        params: ["5dAXtHS6xBEwuCQsgpwZDiqaByWdiQSvRYTsLnpf7i9u", { encoding: "jsonParsed" }],
+        params: [SYN_MINT, { encoding: "jsonParsed" }],
       }),
     });
     if (!response?.ok) throw new Error("RPC request failed");
@@ -236,7 +237,7 @@ async function fetchSolanaRpcPatch(): Promise<TokenPatch> {
     return {};
   } catch {
     return {
-      mintAddress: "5dAXtHS6xBEwuCQsgpwZDiqaByWdiQSvRYTsLnpf7i9u",
+      mintAddress: SYN_MINT,
     };
   }
 }
