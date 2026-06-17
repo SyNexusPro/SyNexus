@@ -27,7 +27,7 @@ export function writeSynexusUIMode(mode: SynexusUIMode): void {
   notifySynexusUIModeChanged();
 }
 
-/** Simple = launch focus (scanner, wallet, Oracle). Advanced = full Sentinel grid & feeds. */
+/** Easy = paste & scan focus. Advanced = full Sentinel grid & feeds. */
 export function useSynexusUIMode() {
   const [mode, setModeState] = useState<SynexusUIMode>(() => readSynexusUIMode());
 

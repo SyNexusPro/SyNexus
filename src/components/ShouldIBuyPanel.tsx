@@ -1,18 +1,38 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import type { Token } from "../data/tokens";
+import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
 import { guardTokenScan } from "../lib/securityBot";
-import { analyzeShouldIBuy, verdictTone } from "../lib/shouldIBuy";
+import { analyzeShouldIBuy, verdictBeginnerMeta, verdictTone } from "../lib/shouldIBuy";
 import { lookupTokenByQuery } from "../services/marketDataService";
 import { TradeIntelligenceScorecard } from "./TradeIntelligenceScorecard";
+
+const EASY_EXAMPLES = ["BONK", "SYN", "SOL"] as const;
 
 type Props = {
   poolTokens?: Token[];
 };
 
 export function ShouldIBuyVerdict({ token }: { token: Token }) {
+  const { isSimple } = useSynexusUIMode();
   const result = analyzeShouldIBuy(token);
   const tone = verdictTone(result.verdict);
+  const beginner = verdictBeginnerMeta(result.verdict);
+
+  if (isSimple) {
+    return (
+      <div className={`should-i-buy__verdict should-i-buy__verdict--${tone} should-i-buy__verdict--easy`}>
+        <span className="should-i-buy__verdict-orb" aria-hidden>
+          {beginner.icon}
+        </span>
+        <div>
+          <p className="should-i-buy__verdict-label">Should I buy {token.symbol}?</p>
+          <p className="should-i-buy__verdict-headline">{beginner.label}</p>
+          <p className="should-i-buy__verdict-copy">{beginner.hint}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`should-i-buy__verdict should-i-buy__verdict--${tone}`}>
@@ -24,13 +44,14 @@ export function ShouldIBuyVerdict({ token }: { token: Token }) {
 }
 
 export function ShouldIBuyPanel({ poolTokens = [] }: Props) {
+  const { isSimple } = useSynexusUIMode();
   const [query, setQuery] = useState("");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<ReturnType<typeof analyzeShouldIBuy> | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleAnalyze() {
-    const q = query.trim();
+  async function handleAnalyze(nextQuery?: string) {
+    const q = (nextQuery ?? query).trim();
     if (!q) return;
 
     const scanGuard = guardTokenScan(q);
@@ -56,52 +77,100 @@ export function ShouldIBuyPanel({ poolTokens = [] }: Props) {
     }
   }
 
+  function tryExample(symbol: string) {
+    setQuery(symbol);
+    void handleAnalyze(symbol);
+  }
+
   const tone = result ? verdictTone(result.verdict) : null;
+  const beginner = result ? verdictBeginnerMeta(result.verdict) : null;
 
   return (
-    <section className="should-i-buy" aria-labelledby="should-i-buy-title">
+    <section
+      className={`should-i-buy${isSimple ? " should-i-buy--easy" : ""}`}
+      aria-labelledby="should-i-buy-title"
+    >
+      <div className="should-i-buy__scan-ring" aria-hidden />
       <div className="should-i-buy__head">
-        <p className="should-i-buy__eyebrow">Instant read</p>
+        <p className="should-i-buy__eyebrow">{isSimple ? "Step 1 · Scan" : "Instant read"}</p>
         <h2 className="should-i-buy__title" id="should-i-buy-title">
           Should I buy this?
         </h2>
         <p className="should-i-buy__lede">
-          Paste a token mint or symbol. Synexus answers in plain English — watch, high risk, or avoid.
+          {isSimple
+            ? "Paste any Solana token below. Synexus answers in plain English — no charts required."
+            : "Paste a token mint or symbol. Synexus answers in plain English — watch, high risk, or avoid."}
         </p>
       </div>
+      {isSimple ? (
+        <div className="should-i-buy__examples" role="group" aria-label="Try an example token">
+          <span className="should-i-buy__examples-label">Try an example</span>
+          {EASY_EXAMPLES.map((symbol) => (
+            <button
+              key={symbol}
+              type="button"
+              className="should-i-buy__chip"
+              disabled={busy}
+              onClick={() => tryExample(symbol)}
+            >
+              {symbol}
+            </button>
+          ))}
+        </div>
+      ) : null}
       <div className="should-i-buy__form">
         <input
           className="should-i-buy__input"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Mint address or symbol (e.g. BONK)"
+          placeholder={isSimple ? "Paste token name or mint address…" : "Mint address or symbol (e.g. BONK)"}
           aria-label="Token to analyze"
           onKeyDown={(e) => {
             if (e.key === "Enter") void handleAnalyze();
           }}
         />
         <button type="button" className="should-i-buy__button" disabled={busy} onClick={() => void handleAnalyze()}>
-          {busy ? "Scanning…" : "Analyze"}
+          {busy ? "Scanning…" : isSimple ? "Scan now" : "Analyze"}
         </button>
       </div>
       {error ? <p className="should-i-buy__error">{error}</p> : null}
-      {result ? (
-        <div className={`should-i-buy__result should-i-buy__result--${tone}`}>
-          <div className="should-i-buy__result-top">
-            <div>
-              <p className="should-i-buy__token">
-                {result.token.name} ({result.token.symbol})
-              </p>
-              <p className={`should-i-buy__headline should-i-buy__headline--${tone}`}>{result.headline}</p>
+      {result && beginner ? (
+        <div className={`should-i-buy__result should-i-buy__result--${tone}${isSimple ? " should-i-buy__result--easy" : ""}`}>
+          {isSimple ? (
+            <div className="should-i-buy__result-easy-top">
+              <span className="should-i-buy__verdict-orb should-i-buy__verdict-orb--large" aria-hidden>
+                {beginner.icon}
+              </span>
+              <div>
+                <p className="should-i-buy__token">
+                  {result.token.name} ({result.token.symbol})
+                </p>
+                <p className={`should-i-buy__headline should-i-buy__headline--${tone}`}>{beginner.label}</p>
+                <p className="should-i-buy__beginner-hint">{beginner.hint}</p>
+              </div>
             </div>
-            {result.token.id ? (
-              <Link to={`/token/${result.token.id}`} className="should-i-buy__link">
-                Open token →
-              </Link>
-            ) : null}
-          </div>
+          ) : (
+            <div className="should-i-buy__result-top">
+              <div>
+                <p className="should-i-buy__token">
+                  {result.token.name} ({result.token.symbol})
+                </p>
+                <p className={`should-i-buy__headline should-i-buy__headline--${tone}`}>{result.headline}</p>
+              </div>
+              {result.token.id ? (
+                <Link to={`/token/${result.token.id}`} className="should-i-buy__link">
+                  Open token →
+                </Link>
+              ) : null}
+            </div>
+          )}
           <p className="should-i-buy__explanation">{result.explanation}</p>
-          <TradeIntelligenceScorecard token={result.token} compact />
+          {isSimple && result.token.id ? (
+            <Link to={`/token/${result.token.id}`} className="should-i-buy__easy-next">
+              See full token page →
+            </Link>
+          ) : null}
+          {!isSimple ? <TradeIntelligenceScorecard token={result.token} compact /> : null}
         </div>
       ) : null}
     </section>

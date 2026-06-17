@@ -93,3 +93,21 @@ export function verdictTone(verdict: BuyVerdict): "bad" | "mid" | "warn" | "good
       return "good";
   }
 }
+
+/** Plain labels for Easy mode — no jargon. */
+export function verdictBeginnerMeta(verdict: BuyVerdict): {
+  icon: string;
+  label: string;
+  hint: string;
+} {
+  switch (verdict) {
+    case "AVOID":
+      return { icon: "⛔", label: "Don't buy", hint: "Too many red flags right now." };
+    case "HIGH_RISK":
+      return { icon: "⚠️", label: "Very risky", hint: "Only trade if you accept big loss." };
+    case "WATCH":
+      return { icon: "👀", label: "Wait & watch", hint: "Not clear enough to ape yet." };
+    default:
+      return { icon: "✓", label: "Looks okay", hint: "Still verify the mint — start small." };
+  }
+}

@@ -1,17 +1,22 @@
 import { Link, Outlet } from "react-router-dom";
+import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
 import { BottomNav } from "./BottomNav";
 import { UIModeToggle } from "./UIModeToggle";
 import { OracleSupremePresence } from "./OracleSupremePresence";
 import { ProDemoBanner } from "./ProDemoBanner";
+import { BeginnerModeCoach } from "./BeginnerModeCoach";
 
 export function AppShell() {
+  const { isSimple } = useSynexusUIMode();
+
   return (
-    <div className="app-shell">
+    <div className={`app-shell${isSimple ? " app-shell--easy" : " app-shell--advanced"}`}>
       <ProDemoBanner />
       <main className="app-main">
         <div className="app-mode-bar">
           <UIModeToggle />
         </div>
+        <BeginnerModeCoach />
         <Outlet />
       </main>
       <OracleSupremePresence />

@@ -612,12 +612,12 @@ export function Pulse() {
     authLoadPhrase === "synexus" ? "Connecting to Synexus..." : "Synchronizing Sentinels...";
 
   return (
-    <div className="page">
+    <div className={`page${isSimple ? " page--easy" : ""}`}>
       <section className="page__intro">
-        <h1 className="page__headline">Sentinels</h1>
+        <h1 className="page__headline">{isSimple ? "Your tools" : "Sentinels"}</h1>
         <p className="page__lede">
           {isSimple
-            ? "Three tools for launch: scan any token, track wallet performance, command Oracle."
+            ? "Scan tokens, check your wallet, and talk to Oracle — everything you need without the noise."
             : "Full command center — alerts, Sentinel grid, operator tools, and Oracle Supreme."}
         </p>
       </section>
@@ -655,10 +655,10 @@ export function Pulse() {
       />
 
       {isSimple ? (
-        <div className="ui-mode-hint">
+        <div className="ui-mode-hint ui-mode-hint--easy">
           <p>
-            Simple mode shows your launch essentials. Switch to <strong>Advanced</strong> for the full Sentinel
-            alert feed, operator account linking, and live watchlists.
+            You&apos;re in <strong>Easy</strong> mode — we show only what beginners need. Flip to{" "}
+            <strong>Advanced</strong> for live Sentinel alerts, watchlists, and the full operator grid.
           </p>
           <UIModeToggle compact />
         </div>

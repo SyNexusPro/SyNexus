@@ -10,6 +10,7 @@ import { SynexusLiveScanner } from "../components/SynexusLiveScanner";
 import { ShouldIBuyPanel } from "../components/ShouldIBuyPanel";
 import { ProDemoButton } from "../components/ProDemoButton";
 import { SynCoinLaunchBanner } from "../components/SynCoinLaunchBanner";
+import { BeginnerQuickStart } from "../components/BeginnerQuickStart";
 import { SentinelAlertsHub } from "../components/SentinelAlertsHub";
 import { useSynexusPlan } from "../hooks/useSynexusPlan";
 import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
@@ -67,9 +68,9 @@ export function HomeFeed() {
   }, [allTokens, coinSearch]);
 
   return (
-    <div className="page">
+    <div className={`page${isSimple ? " page--easy" : ""}`}>
       <SynCoinLaunchBanner />
-      <section className="landing-hero">
+      <section className={`landing-hero${isSimple ? " landing-hero--easy" : ""}`}>
         <div className="landing-hero__inner">
           <div className="landing-hero__masthead">
             <div className="neural-hero-art neural-hero-art--masthead">
@@ -96,59 +97,80 @@ export function HomeFeed() {
           </h1>
           <p className="landing-hero__subtext">
             {isSimple
-              ? "Paste any token — Synexus scans risk and answers in plain English."
+              ? "Paste any token. Get a simple answer in seconds — no trading jargon."
               : "Detect scams, track whales, monitor momentum, and trade smarter."}
           </p>
           <div className="landing-hero__actions">
-            <ProDemoButton
-              className="landing-hero__actions--demo"
-              goToPulse
-              pulseHash="#synexus-pro"
-            />
+            {isSimple ? null : (
+              <ProDemoButton
+                className="landing-hero__actions--demo"
+                goToPulse
+                pulseHash="#synexus-pro"
+              />
+            )}
             <Link to="/pulse" className="landing-hero__actions--secondary">
-              {isSimple ? "Wallet & Oracle" : "Sentinel alerts"}
+              {isSimple ? "Wallet & tools" : "Sentinel alerts"}
             </Link>
-            <Link to="/pulse#synexus-pro" className="landing-hero__actions--pro">
-              Synexus Pro
-            </Link>
+            {!isSimple ? (
+              <Link to="/pulse#synexus-pro" className="landing-hero__actions--pro">
+                Synexus Pro
+              </Link>
+            ) : (
+              <ProDemoButton
+                className="landing-hero__actions--demo"
+                goToPulse
+                pulseHash="#synexus-pro"
+              />
+            )}
           </div>
         </div>
       </section>
 
-      <section className="home-trust-strip marketing-panel">
-        <TrustIndicators compact />
-        <p className="home-trust-strip__links">
-          <Link to="/trust">Security &amp; privacy</Link>
-          {" · "}
-          <Link to="/about">About</Link>
-          {" · "}
-          <Link to="/contact">Support</Link>
-        </p>
-      </section>
+      {isSimple ? null : (
+        <section className="home-trust-strip marketing-panel">
+          <TrustIndicators compact />
+          <p className="home-trust-strip__links">
+            <Link to="/trust">Security &amp; privacy</Link>
+            {" · "}
+            <Link to="/about">About</Link>
+            {" · "}
+            <Link to="/contact">Support</Link>
+          </p>
+        </section>
+      )}
 
-      <NonCustodialDisclaimer className="home-non-custodial" />
+      {isSimple ? <BeginnerQuickStart /> : null}
 
       <ShouldIBuyPanel poolTokens={allTokens} />
+
+      {isSimple ? (
+        <p className="easy-trust-note">
+          Non-custodial — Synexus never holds your keys.{" "}
+          <Link to="/trust">How we keep you safe →</Link>
+        </p>
+      ) : (
+        <NonCustodialDisclaimer className="home-non-custodial" />
+      )}
 
       {isSimple ? (
         <>
           <section className="simple-launch-links">
             <Link to="/pulse#wallet-performance" className="simple-launch-links__card">
-              <p className="simple-launch-links__eyebrow">Performance</p>
+              <p className="simple-launch-links__eyebrow">Step 3 · Track</p>
               <h2>Wallet dashboard</h2>
-              <p>Wins, losses, journal, and habits — stats about your trading.</p>
+              <p>See wins, losses, and habits — your trading stats in one place.</p>
             </Link>
             <Link to="/pulse#oracle-admin" className="simple-launch-links__card">
-              <p className="simple-launch-links__eyebrow">Command</p>
-              <h2>Oracle Admin</h2>
-              <p>Run Aegis, Pulse, Titan, and Cipher from one control center.</p>
+              <p className="simple-launch-links__eyebrow">Bonus · Command</p>
+              <h2>Oracle tools</h2>
+              <p>Ask questions and run Sentinels when you&apos;re ready to go deeper.</p>
             </Link>
           </section>
 
           <section className="token-section">
             <div className="token-section__head">
-              <h2 className="token-section__title">Trending now</h2>
-              <p className="token-section__lede">Top movers — tap any token for the full scorecard</p>
+              <h2 className="token-section__title">Popular right now</h2>
+              <p className="token-section__lede">Tap any coin to scan it first</p>
             </div>
             <ul className="token-list">
               {trendingTokens.map((token) => (
