@@ -20,6 +20,10 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const TAGS = "#Synexus #Solana #Crypto #ShouldIBuyThis";
 const PRO_PRICE_LINE = "Synexus Pro · $19.99/month · cancel anytime.";
+const SYN_PUMPFUN_URL =
+  process.env.SYN_PUMPFUN_URL?.trim() ||
+  "https://pump.fun/coin/5dAXtHS6xBEwuCQsgpwZDiqaByWdiQSvRYTsLnpf7i9u";
+const SYN_COIN_LINE = `🪙 SYN is live on pump.fun → ${SYN_PUMPFUN_URL}`;
 
 /** One-line hooks — rotate daily. Always lead with simplicity. */
 const HOOKS = [
@@ -259,6 +263,8 @@ export function generateTelegramCaptions(now = Date.now(), count = 3) {
       `**Try free** → ${origin}`,
       PRO_PRICE_LINE,
       "",
+      SYN_COIN_LINE,
+      "",
       mascotTelegramLine(),
     ].join("\n");
   });
@@ -279,6 +285,8 @@ function buildSocialCaption(hook, now, platform) {
     "",
     `Try free → ${origin}`,
     PRO_PRICE_LINE,
+    "",
+    SYN_COIN_LINE,
     "",
     "🐰 Syn the bunny · paste before you ape",
     tags,

@@ -10,6 +10,7 @@ import { recordTokenView } from "../lib/walletHealth";
 import { dexScreenerTokenUrl, jupiterBuyWithSolUrl, jupiterSellForSolUrl } from "../lib/solanaTradeLinks";
 import { getTradingFeeBps } from "../lib/tradingFees";
 import { useSynexusPlan } from "../hooks/useSynexusPlan";
+import { SYN_IS_LIVE, SYN_MINT, SYN_PUMPFUN_URL } from "../config/synToken";
 import type { Token } from "../data/tokens";
 import {
   fetchTokenDetailById,
@@ -188,6 +189,8 @@ export function TokenDetail() {
   const dexscreenerUrl = dexScreenerTokenUrl(token.mintAddress, token.symbol);
   const buySwapUrl = jupiterBuyWithSolUrl(token.mintAddress, swapOpts) ?? dexscreenerUrl;
   const sellSwapUrl = jupiterSellForSolUrl(token.mintAddress, swapOpts) ?? dexscreenerUrl;
+  const isSynToken = token.id === "hivemind-sol" || token.mintAddress === SYN_MINT;
+  const showPumpFun = SYN_IS_LIVE && isSynToken;
   const explorerUrl = token.mintAddress
     ? `https://solscan.io/token/${token.mintAddress}`
     : "https://solscan.io";
@@ -332,6 +335,16 @@ export function TokenDetail() {
         </div>
         <TradingFeeDisclosure plan={plan} notionalUsd={100} showAllocation />
         <div className="detail-trade-panel__actions">
+          {showPumpFun ? (
+            <a
+              href={SYN_PUMPFUN_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="detail-trade-panel__buy detail-trade-panel__pumpfun"
+            >
+              Buy on pump.fun
+            </a>
+          ) : null}
           <TradeIntelBuyLink
             token={token}
             href={buySwapUrl}

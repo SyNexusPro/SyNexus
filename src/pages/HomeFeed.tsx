@@ -9,6 +9,7 @@ import { SupportedWallets } from "../components/SupportedWallets";
 import { SynexusLiveScanner } from "../components/SynexusLiveScanner";
 import { ShouldIBuyPanel } from "../components/ShouldIBuyPanel";
 import { ProDemoButton } from "../components/ProDemoButton";
+import { SynCoinLaunchBanner } from "../components/SynCoinLaunchBanner";
 import { SentinelAlertsHub } from "../components/SentinelAlertsHub";
 import { useSynexusPlan } from "../hooks/useSynexusPlan";
 import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
@@ -67,6 +68,7 @@ export function HomeFeed() {
 
   return (
     <div className="page">
+      <SynCoinLaunchBanner />
       <section className="landing-hero">
         <div className="landing-hero__inner">
           <div className="landing-hero__masthead">

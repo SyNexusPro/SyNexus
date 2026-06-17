@@ -13,6 +13,7 @@ import {
   TRADING_FEE_REVENUE_ALLOCATION,
 } from "../config/tradingFees";
 import { formatTradingFeeRate } from "../lib/tradingFees";
+import { SYN_IS_LIVE, SYN_PUMPFUN_URL, SYN_SYMBOL, SYN_TOKEN_ID } from "../config/synToken";
 
 export function EcosystemHub() {
   const [params] = useSearchParams();
@@ -153,17 +154,38 @@ export function EcosystemHub() {
 
       <section id="hub-utility" className="ecosystem-hub__section marketing-panel">
         <h2>Token utility platform</h2>
+        {SYN_IS_LIVE ? (
+          <p className="ecosystem-hub__syn-live">
+            <strong>{SYN_SYMBOL}</strong> is live on pump.fun — scan it in Synexus before you buy, then trade in your
+            own wallet.
+          </p>
+        ) : null}
         <p>
           Synexus token utility is designed around access, incentives, and alignment: unlock deeper feeds from
           The Synexus Sentinels,
-          fee discounts, partner campaigns, and (when live) staking participation. Exact tokenomics are published
-          separately and may change before launch.
+          fee discounts, partner campaigns, and staking participation. See the About page for the full utility
+          roadmap.
         </p>
         <ul className="ecosystem-hub__bullets">
           <li>Synexus Pro intelligence surfaces in-app</li>
           <li>Partnership tooling via this hub</li>
           <li>Governance placeholders as the community matures</li>
         </ul>
+        {SYN_IS_LIVE ? (
+          <div className="ecosystem-hub__syn-actions">
+            <a
+              className="ecosystem-hub__syn-cta"
+              href={SYN_PUMPFUN_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Buy {SYN_SYMBOL} on pump.fun
+            </a>
+            <Link className="ecosystem-hub__link" to={`/token/${SYN_TOKEN_ID}`}>
+              Scan {SYN_SYMBOL} →
+            </Link>
+          </div>
+        ) : null}
       </section>
 
       <section id="hub-trading-fees" className="ecosystem-hub__section marketing-panel ecosystem-hub__section--trading">

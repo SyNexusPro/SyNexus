@@ -148,6 +148,10 @@ export const FAQ_ITEMS = [
     a: `Email ${SUPPORT_EMAIL} or use the Contact page. We cannot recover lost seed phrases or reverse blockchain transactions.`,
   },
   {
+    q: "Where is the SYN token?",
+    a: "SYN is live on pump.fun — use the banner on the home feed or About page for the link. Always verify the mint address in-app before trading. Utility roadmap is on the About page.",
+  },
+  {
     q: "Where is the SYN token roadmap?",
     a: "On the About page under Syn coin roadmap. Token utility and treasury allocation are documented separately from app features.",
   },
@@ -156,8 +160,9 @@ export const FAQ_ITEMS = [
 export const SYN_COIN_ROADMAP = [
   {
     phase: "Phase 1 · Foundation",
-    status: "In progress",
+    status: "Live on pump.fun",
     items: [
+      "SYN community token launched on pump.fun",
       "Synexus app: feed, Sentinels, Oracle Supreme, Pro subscriptions",
       "Transparent trading fee model and treasury allocation policy",
       "Community reports and Operator Link accounts",
