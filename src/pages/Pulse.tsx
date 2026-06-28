@@ -10,6 +10,7 @@ import {
   signInWithEmail,
   signOut,
   signUpWithEmail,
+  restoreSessionFromRefreshToken,
   updatePaidPlan,
   upsertSignupProfile,
 } from "../lib/supabaseData";
@@ -33,17 +34,25 @@ import { OracleAdminControlCenter } from "../components/OracleAdminControlCenter
 import { UIModeToggle } from "../components/UIModeToggle";
 import { notifySynexusPlanChanged, SYNEXUS_PLAN_CHANGED } from "../hooks/useSynexusPlan";
 import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
+import { useBiometricLogin } from "../hooks/useBiometricLogin";
 import { PulseOperatorLink } from "../components/PulseOperatorLink";
+import {
+  clearBiometricLogin,
+  enableBiometricLogin,
+  enrollBiometricAfterLogin,
+  getBiometricSupport,
+  isBiometricLoginEnabled,
+  loadBiometricRefreshToken,
+  refreshBiometricVaultToken,
+} from "../lib/biometricLogin";
 import {
   pulseFormatSentinelNamesInText,
   pulseSentinelDisplayName,
 } from "../lib/pulseFormatting";
 import {
-  readDaysSinceLastVisit,
   resolveOperatorName,
-  type OracleConversationContext,
 } from "../lib/oracleSupremeConversation";
-import { hasSupabaseEnv } from "../lib/supabaseClient";
+import { hasSupabaseEnv, supabase } from "../lib/supabaseClient";
 import { isProDemoActive, clearExpiredProDemo } from "../lib/proDemo";
 import { getSentinelIdleMessage, getSentinelMessage } from "../lib/watcherVoice";
 import type { Token } from "../data/tokens";
@@ -139,7 +148,6 @@ export function Pulse() {
   const [tracked, setTracked] = useState<TrackedTokenItem[]>([]);
   const [sentinelAlerts, setSentinelAlerts] = useState<SentinelAlertItem[]>([]);
   const [marketTokens, setMarketTokens] = useState<Token[]>([]);
-  const [marketFeedSource, setMarketFeedSource] = useState<"live" | "mock">("mock");
   const [plan, setPlan] = useState<AppPlan>(() =>
     normalizeStoredPlan(localStorage.getItem(PLAN_STORAGE_KEY)),
   );
@@ -157,6 +165,7 @@ export function Pulse() {
   const [oracleSupremeReportStamp, setOracleSupremeReportStamp] = useState(() => Date.now());
   const [oracleSpeaking, setOracleSpeaking] = useState(false);
   const { isSimple, isAdvanced } = useSynexusUIMode();
+  const biometric = useBiometricLogin();
 
   useEffect(() => {
     void refreshOwnerAccess().then((active) => {
@@ -189,7 +198,6 @@ export function Pulse() {
   async function refreshMarketSignals() {
     const marketFeed = await fetchMvpTokenFeed();
     setMarketTokens(marketFeed.all);
-    setMarketFeedSource(marketFeed.source);
     const nextSentinelAlerts: SentinelAlertItem[] = marketFeed.all
       .filter(
         (token) =>
@@ -376,6 +384,56 @@ export function Pulse() {
     }
   }
 
+  async function completeAuthWithBiometricOffer(
+    session: { refresh_token?: string | null } | null | undefined,
+    authEmail: string,
+    baseMessage: string,
+  ) {
+    if (!session?.refresh_token || !authEmail) {
+      setAuthMessage({ tone: "success", text: baseMessage });
+      return;
+    }
+
+    if (await isBiometricLoginEnabled()) {
+      void refreshBiometricVaultToken(authEmail, session.refresh_token);
+      void biometric.refresh();
+      setAuthMessage({ tone: "success", text: baseMessage });
+      return;
+    }
+
+    const support = await getBiometricSupport();
+    if (!support.available) {
+      setAuthMessage({ tone: "success", text: baseMessage });
+      return;
+    }
+
+    setAuthMessage({
+      tone: "info",
+      text: `${baseMessage} Set up ${support.label} for faster sign-in next time…`,
+    });
+
+    const enrollResult = await enrollBiometricAfterLogin(authEmail, session.refresh_token);
+    void biometric.refresh();
+
+    if (enrollResult === "enrolled") {
+      setAuthMessage({
+        tone: "success",
+        text: `${baseMessage} ${support.label} is ready — use it next time you return.`,
+      });
+      return;
+    }
+
+    if (enrollResult === "cancelled") {
+      setAuthMessage({
+        tone: "success",
+        text: `${baseMessage} Enable ${support.label} anytime from Operator link.`,
+      });
+      return;
+    }
+
+    setAuthMessage({ tone: "success", text: baseMessage });
+  }
+
   async function handleSignUp() {
     if (authBusy) return;
     if (!email || !password) {
@@ -411,10 +469,11 @@ export function Pulse() {
       const message = result.session
         ? "Welcome to The Synexus. You are signed in."
         : "Check your inbox to confirm your email, then sign in.";
-      setAuthMessage({ tone: "success", text: message });
       if (result.session && signupUser) {
         void loadData(signupUser);
+        await completeAuthWithBiometricOffer(result.session, signupEmail, message);
       } else {
+        setAuthMessage({ tone: "success", text: message });
         void refreshMarketSignals();
       }
     } catch (err) {
@@ -462,14 +521,101 @@ export function Pulse() {
       const message = signedIn.email
         ? `Synchronized as ${signedIn.email}.`
         : "Synchronized with The Synexus.";
-      setAuthMessage({ tone: "success", text: message });
       void loadData(signedIn);
+      await completeAuthWithBiometricOffer(result.session, signedIn.email ?? email, message);
     } catch (err) {
       const message = describeAuthError(err);
       setAuthMessage({ tone: "error", text: message });
     } finally {
       setAuthBusy(false);
     }
+  }
+
+  async function handleBiometricSignIn() {
+    if (authBusy) return;
+    try {
+      setAuthBusy(true);
+      setAuthMessage({ tone: "info", text: "Verifying biometrics…" });
+      const vault = await loadBiometricRefreshToken();
+      if (!vault?.refreshToken) {
+        setAuthMessage({
+          tone: "error",
+          text: "No saved login found. Sign in with email once, then enable biometric sign-in.",
+        });
+        return;
+      }
+      const { session, user } = await restoreSessionFromRefreshToken(vault.refreshToken);
+      const signedIn = user ?? session?.user ?? null;
+      if (!signedIn) {
+        await clearBiometricLogin();
+        void biometric.refresh();
+        setAuthMessage({
+          tone: "error",
+          text: "Saved login expired. Sign in with email again, then re-enable biometrics.",
+        });
+        return;
+      }
+      localStorage.removeItem(DEMO_SESSION_KEY);
+      setUserId(signedIn.id);
+      setUserEmail(signedIn.email ?? vault.email);
+      setEmail(vault.email);
+      setAuthMessage({
+        tone: "success",
+        text: signedIn.email
+          ? `Welcome back — ${signedIn.email}.`
+          : "Welcome back to The Synexus.",
+      });
+      if (session?.refresh_token) {
+        void refreshBiometricVaultToken(signedIn.email ?? vault.email, session.refresh_token);
+      }
+      void loadData(signedIn);
+      void biometric.refresh();
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Biometric sign-in failed. Try email instead.";
+      setAuthMessage({ tone: "error", text: message });
+    } finally {
+      setAuthBusy(false);
+    }
+  }
+
+  async function handleEnableBiometric() {
+    if (authBusy || !userId || userId.startsWith("demo-")) return;
+    try {
+      setAuthBusy(true);
+      setAuthMessage({ tone: "info", text: "Setting up biometric sign-in…" });
+      const emailForVault = userEmail ?? (await getCurrentUser())?.email ?? email;
+      if (!emailForVault) {
+        setAuthMessage({ tone: "error", text: "Sign in with email before enabling biometrics." });
+        return;
+      }
+      const session = supabase ? (await supabase.auth.getSession()).data.session : null;
+      if (!session?.refresh_token) {
+        setAuthMessage({ tone: "error", text: "Active session missing. Sign in again first." });
+        return;
+      }
+      await enableBiometricLogin(emailForVault, session.refresh_token);
+      void biometric.refresh();
+      setAuthMessage({
+        tone: "success",
+        text: `${biometric.support?.label ?? "Biometric"} sign-in enabled for this device.`,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Could not enable biometric sign-in.";
+      setAuthMessage({ tone: "error", text: message });
+    } finally {
+      setAuthBusy(false);
+    }
+  }
+
+  async function handleDisableBiometric() {
+    if (authBusy) return;
+    await clearBiometricLogin();
+    void biometric.refresh();
+    setAuthMessage({
+      tone: "success",
+      text: `${biometric.support?.label ?? "Biometric"} sign-in removed from this device.`,
+    });
   }
 
   async function handleSignOut() {
@@ -484,11 +630,13 @@ export function Pulse() {
       setWatchlist([]);
       setAlerts([]);
       setTracked([]);
+      void biometric.refresh();
       setAuthMessage({ tone: "success", text: "Operator link disconnected." });
       return;
     }
     try {
       await signOut();
+      void biometric.refresh();
       localStorage.removeItem(DEMO_SESSION_KEY);
       setUserId(null);
       setUserEmail(null);
@@ -586,28 +734,6 @@ export function Pulse() {
     [oracleSupremeReportStamp, syntheticSentinels, sentinelSignals],
   );
 
-  const oracleConversationContext = useMemo<OracleConversationContext>(
-    () => ({
-      operatorName,
-      alertCount: alerts.length + sentinelAlerts.length,
-      watchlistCount: watchlist.length + tracked.length,
-      plan,
-      daysSinceLastVisit: readDaysSinceLastVisit(),
-      tokens: marketTokens,
-      feedSource: marketFeedSource,
-    }),
-    [
-      operatorName,
-      alerts.length,
-      sentinelAlerts.length,
-      watchlist.length,
-      tracked.length,
-      plan,
-      marketTokens,
-      marketFeedSource,
-    ],
-  );
-
   const authBusyLabel =
     authLoadPhrase === "synexus" ? "Connecting to Synexus..." : "Synchronizing Sentinels...";
 
@@ -641,7 +767,6 @@ export function Pulse() {
         plan={plan}
         briefing={pulseFormatSentinelNamesInText(oracleSupremeBriefing)}
         dailyReport={oracleSupremeDailyReport}
-        conversationContext={oracleConversationContext}
         syntheticSentinels={syntheticSentinels}
         sentinelLiveIntel={sentinelLiveIntel}
         marketTokenCount={marketTokens.length}
@@ -747,12 +872,18 @@ export function Pulse() {
         authBusyLabel={authBusyLabel}
         authMessage={authMessage}
         hasSupabaseEnv={hasSupabaseEnv}
+        biometricSupport={biometric.support}
+        biometricEnrolled={biometric.enrolled}
+        biometricEmailHint={biometric.emailHint}
         onEmailChange={setEmail}
         onPasswordChange={setPassword}
         onSignUp={() => void handleSignUp()}
         onSignIn={() => void handleSignIn()}
         onSignOut={() => void handleSignOut()}
         onOwnerUnlock={() => void handleOwnerUnlock()}
+        onBiometricSignIn={() => void handleBiometricSignIn()}
+        onEnableBiometric={() => void handleEnableBiometric()}
+        onDisableBiometric={() => void handleDisableBiometric()}
         ownerUnlocked={hasStoredOwnerGrant()}
       />
 

@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLocation } from "react-router-dom";
 import { fetchGuardianAlerts, fetchProfile, fetchWatchlistTokens, getCurrentUser } from "../lib/supabaseData";
 import { hasSupabaseEnv } from "../lib/supabaseClient";
 import {
@@ -15,7 +14,6 @@ import { isSynexusBootComplete, subscribeSynexusBootComplete } from "../lib/syne
 import { OracleSupremeChat } from "./OracleSupremeChat";
 import { SynexusSymbolMark } from "./SynexusSymbolMark";
 
-import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
 import { SYNEXUS_PLAN_CHANGED } from "../hooks/useSynexusPlan";
 
 const PLAN_STORAGE_KEY = "hivemind_paid_plan";
@@ -25,8 +23,6 @@ function normalizePlan(raw: string | null | undefined): "FREE" | "PRO" {
 }
 
 export function OracleSupremePresence() {
-  const { pathname } = useLocation();
-  const { isSimple } = useSynexusUIMode();
   const [bootReady, setBootReady] = useState(isSynexusBootComplete());
   const [expanded, setExpanded] = useState(false);
   const [speaking, setSpeaking] = useState(false);
@@ -109,8 +105,6 @@ export function OracleSupremePresence() {
     [alertCount, feedSource, operatorName, plan, tokens, watchlistCount],
   );
 
-  if (isSimple || pathname === "/pulse") return null;
-
   return (
     <>
       {expanded ? (
@@ -118,7 +112,6 @@ export function OracleSupremePresence() {
           <OracleSupremeChat
             context={context}
             variant="widget"
-            showOpeningPrompt
             onDismiss={() => setExpanded(false)}
             onSpeakingChange={setSpeaking}
           />
@@ -143,6 +136,11 @@ export function OracleSupremePresence() {
         <span className="oracle-presence-fab__avatar" aria-hidden>
           <SynexusSymbolMark size="fab" />
         </span>
+        {!expanded ? (
+          <span className="oracle-presence-fab__copy">
+            <span className="oracle-presence-fab__label">Oracle</span>
+          </span>
+        ) : null}
       </button>
     </>
   );

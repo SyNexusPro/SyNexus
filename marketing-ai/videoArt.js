@@ -5,6 +5,12 @@ import { renderSynBunnyInline } from "./synBunny.js";
 const W = 1080;
 const H = 1920;
 
+/** Brand palette — matte black substrate + glowing neon green PCB (do not drift). */
+const MATTE_BLACK = "#000000";
+const PCB_GREEN = "#00ff88";
+const NEON_GREEN = "#89ff2f";
+const PCB_SUBSTRATE = "#041008";
+
 /** Procedural PCB traces — bright green on dark substrate. */
 function circuitBoard() {
   const traces = [
@@ -40,16 +46,17 @@ function circuitBoard() {
     [820, 1080],
   ];
 
-  let out = `<g id="pcb" opacity="0.95">`;
+  let out = `<g id="pcb" opacity="0.98">`;
 
   for (const d of traces) {
-    out += `<path d="${d}" fill="none" stroke="#00ff88" stroke-width="3" stroke-opacity="0.08"/>`;
-    out += `<path d="${d}" fill="none" stroke="#89ff2f" stroke-width="1.5" stroke-opacity="0.22" filter="url(#traceGlow)"/>`;
+    out += `<path d="${d}" fill="none" stroke="${PCB_GREEN}" stroke-width="5" stroke-opacity="0.06"/>`;
+    out += `<path d="${d}" fill="none" stroke="${NEON_GREEN}" stroke-width="2.5" stroke-opacity="0.38" filter="url(#circuitBloom)"/>`;
+    out += `<path d="${d}" fill="none" stroke="${NEON_GREEN}" stroke-width="1" stroke-opacity="0.85" filter="url(#traceGlow)"/>`;
   }
 
   for (const { x, y, w, h } of chips) {
-    out += `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="#041008" stroke="#00ff88" stroke-opacity="0.35" stroke-width="1.5"/>`;
-    out += `<rect x="${x + 6}" y="${y + 6}" width="${w - 12}" height="${h - 12}" rx="2" fill="#00ff88" fill-opacity="0.06"/>`;
+    out += `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="${PCB_SUBSTRATE}" stroke="${PCB_GREEN}" stroke-opacity="0.5" stroke-width="1.5" filter="url(#traceGlow)"/>`;
+    out += `<rect x="${x + 6}" y="${y + 6}" width="${w - 12}" height="${h - 12}" rx="2" fill="${PCB_GREEN}" fill-opacity="0.08"/>`;
     for (let i = 0; i < 4; i += 1) {
       out += `<rect x="${x - 5}" y="${y + 10 + i * 12}" width="5" height="4" fill="#00ff88" fill-opacity="0.4"/>`;
       out += `<rect x="${x + w}" y="${y + 10 + i * 12}" width="5" height="4" fill="#00ff88" fill-opacity="0.4"/>`;
@@ -57,8 +64,9 @@ function circuitBoard() {
   }
 
   for (const [cx, cy] of nodes) {
-    out += `<circle cx="${cx}" cy="${cy}" r="10" fill="#00ff88" fill-opacity="0.12"/>`;
-    out += `<circle cx="${cx}" cy="${cy}" r="5" fill="#89ff2f" fill-opacity="0.55" filter="url(#traceGlow)"/>`;
+    out += `<circle cx="${cx}" cy="${cy}" r="18" fill="${PCB_GREEN}" fill-opacity="0.08" filter="url(#circuitBloom)"/>`;
+    out += `<circle cx="${cx}" cy="${cy}" r="10" fill="${PCB_GREEN}" fill-opacity="0.18"/>`;
+    out += `<circle cx="${cx}" cy="${cy}" r="5" fill="${NEON_GREEN}" fill-opacity="0.95" filter="url(#traceGlow)"/>`;
   }
 
   out += "</g>";
@@ -80,10 +88,31 @@ function hexGrid() {
   return lines.join("\n");
 }
 
+function circuitEnergyPulses() {
+  const pulses = [
+    [420, 280],
+    [720, 520],
+    [540, 740],
+    [780, 980],
+    [640, 1380],
+  ];
+  return pulses
+    .map(
+      ([cx, cy], i) =>
+        `<circle cx="${cx}" cy="${cy}" r="${28 + (i % 3) * 8}" fill="none" stroke="${NEON_GREEN}" stroke-width="1.5" stroke-opacity="${0.22 + (i % 2) * 0.08}" filter="url(#circuitBloom)"/>`,
+    )
+    .join("\n");
+}
+
+function matteVignette() {
+  return `
+  <rect width="100%" height="100%" fill="url(#vignette)" opacity="0.92"/>`;
+}
+
 function scanLines() {
   let out = "";
   for (let y = 0; y < H; y += 5) {
-    out += `<rect x="0" y="${y}" width="${W}" height="1" fill="#00ff88" opacity="0.012"/>`;
+    out += `<rect x="0" y="${y}" width="${W}" height="1" fill="${PCB_GREEN}" opacity="0.012"/>`;
   }
   return out;
 }
@@ -91,37 +120,47 @@ function scanLines() {
 function baseDefs() {
   return `
   <defs>
-    <radialGradient id="orbTop" cx="50%" cy="22%" r="65%">
-      <stop offset="0%" stop-color="#89ff2f" stop-opacity="0.72"/>
-      <stop offset="30%" stop-color="#00ff88" stop-opacity="0.45"/>
-      <stop offset="55%" stop-color="#00ffaa" stop-opacity="0.22"/>
-      <stop offset="100%" stop-color="#010302" stop-opacity="0"/>
+    <radialGradient id="orbTop" cx="50%" cy="18%" r="55%">
+      <stop offset="0%" stop-color="${NEON_GREEN}" stop-opacity="0.35"/>
+      <stop offset="40%" stop-color="${PCB_GREEN}" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="${MATTE_BLACK}" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="orbMid" cx="50%" cy="50%" r="55%">
-      <stop offset="0%" stop-color="#00ff88" stop-opacity="0.18"/>
-      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    <radialGradient id="orbMid" cx="50%" cy="50%" r="45%">
+      <stop offset="0%" stop-color="${PCB_GREEN}" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="${MATTE_BLACK}" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="orbBottom" cx="50%" cy="88%" r="50%">
-      <stop offset="0%" stop-color="#00ff88" stop-opacity="0.35"/>
-      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    <radialGradient id="orbBottom" cx="50%" cy="92%" r="42%">
+      <stop offset="0%" stop-color="${PCB_GREEN}" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="${MATTE_BLACK}" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="vignette" cx="50%" cy="50%" r="72%">
+      <stop offset="55%" stop-color="${MATTE_BLACK}" stop-opacity="0"/>
+      <stop offset="100%" stop-color="${MATTE_BLACK}" stop-opacity="0.78"/>
     </radialGradient>
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#0a1a12"/>
-      <stop offset="45%" stop-color="#030a06"/>
-      <stop offset="100%" stop-color="#000000"/>
+      <stop offset="0%" stop-color="#050505"/>
+      <stop offset="50%" stop-color="${MATTE_BLACK}"/>
+      <stop offset="100%" stop-color="${MATTE_BLACK}"/>
     </linearGradient>
     <linearGradient id="neon" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#00ff88" stop-opacity="0"/>
-      <stop offset="50%" stop-color="#89ff2f" stop-opacity="1"/>
-      <stop offset="100%" stop-color="#00ff88" stop-opacity="0"/>
+      <stop offset="0%" stop-color="${PCB_GREEN}" stop-opacity="0"/>
+      <stop offset="50%" stop-color="${NEON_GREEN}" stop-opacity="1"/>
+      <stop offset="100%" stop-color="${PCB_GREEN}" stop-opacity="0"/>
     </linearGradient>
     <linearGradient id="titleGrad" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#89ff2f"/>
-      <stop offset="45%" stop-color="#dcffbe"/>
-      <stop offset="100%" stop-color="#5ee7ff"/>
+      <stop offset="0%" stop-color="${NEON_GREEN}"/>
+      <stop offset="50%" stop-color="#dcffbe"/>
+      <stop offset="100%" stop-color="${NEON_GREEN}"/>
     </linearGradient>
+    <filter id="circuitBloom" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
     <filter id="traceGlow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="4.5" result="blur"/>
+      <feGaussianBlur stdDeviation="6" result="blur"/>
       <feMerge>
         <feMergeNode in="blur"/>
         <feMergeNode in="SourceGraphic"/>
@@ -151,18 +190,20 @@ function baseBackground() {
   <rect width="100%" height="100%" fill="url(#orbMid)"/>
   <rect width="100%" height="100%" fill="url(#orbBottom)"/>
   ${circuitBoard()}
+  ${circuitEnergyPulses()}
   ${hexGrid()}
   ${scanLines()}
-  <rect x="36" y="36" width="1008" height="1848" rx="28" fill="none" stroke="#00ff88" stroke-opacity="0.32" stroke-width="2.5" filter="url(#traceGlow)"/>
-  <rect x="48" y="48" width="984" height="1824" rx="24" fill="none" stroke="#89ff2f" stroke-opacity="0.12" stroke-width="1"/>
-  <rect x="0" y="580" width="${W}" height="4" fill="url(#neon)" opacity="0.95" filter="url(#traceGlow)"/>
-  <rect x="0" y="1340" width="${W}" height="3" fill="url(#neon)" opacity="0.6" filter="url(#traceGlow)"/>`;
+  ${matteVignette()}
+  <rect x="36" y="36" width="1008" height="1848" rx="28" fill="none" stroke="${PCB_GREEN}" stroke-opacity="0.45" stroke-width="2.5" filter="url(#circuitBloom)"/>
+  <rect x="48" y="48" width="984" height="1824" rx="24" fill="none" stroke="${NEON_GREEN}" stroke-opacity="0.18" stroke-width="1"/>
+  <rect x="0" y="580" width="${W}" height="5" fill="url(#neon)" opacity="0.98" filter="url(#circuitBloom)"/>
+  <rect x="0" y="1340" width="${W}" height="4" fill="url(#neon)" opacity="0.75" filter="url(#circuitBloom)"/>`;
 }
 
-function footerBar(sub = "synexus.pro · paste before you buy") {
+function footerBar(sub = "synexus.pro · non-custodial intelligence") {
   return `
   <text x="540" y="1780" font-size="36" fill="#89ff2f" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-weight="800" letter-spacing="0.14em" filter="url(#glow)">
-    PASTE · SCAN · AVOID OR APE
+    PASTE · SCAN · DECIDE
   </text>
   <text x="540" y="1840" font-size="26" fill="#8fb886" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" letter-spacing="0.1em">
     ${escapeXml(sub)}
@@ -198,6 +239,35 @@ function subLine(text, y) {
   return `<text x="540" y="${y}" font-size="34" fill="#ffffff" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-weight="600" letter-spacing="0.12em">${escapeXml(text)}</text>`;
 }
 
+function fakeDashboard() {
+  return `
+  <g opacity="0.92">
+    <rect x="80" y="900" width="920" height="520" rx="20" fill="#020806" stroke="#00ff88" stroke-opacity="0.45" stroke-width="2" filter="url(#traceGlow)"/>
+    <text x="120" y="960" font-size="22" fill="#5ee7ff" font-family="Segoe UI, Arial, sans-serif" font-weight="700" letter-spacing="0.2em">SYNEXUS SENTINEL</text>
+    <text x="120" y="1000" font-size="18" fill="#89ff2f" font-family="monospace">TOKEN ████████...pump</text>
+    <rect x="120" y="1020" width="400" height="12" rx="4" fill="#041008" stroke="#00ff88" stroke-opacity="0.3"/>
+    <rect x="120" y="1020" width="280" height="12" rx="4" fill="#89ff2f" fill-opacity="0.7"/>
+    <text x="540" y="1032" font-size="16" fill="#89ff2f" font-family="monospace">RISK 67/100</text>
+    <text x="120" y="1080" font-size="16" fill="#8fb886" font-family="monospace">LIQ $128K · WHALES 41%</text>
+    <text x="120" y="1120" font-size="28" fill="#ff6b6b" font-family="Segoe UI, Arial, sans-serif" font-weight="800">VERDICT: WATCH</text>
+    <text x="120" y="1180" font-size="14" fill="#5ee7ff" font-family="monospace">Aegis · Pulse · Titan · Cipher</text>
+    ${Array.from({ length: 8 }, (_, i) => `<rect x="${120 + (i % 4) * 210}" y="${1220 + Math.floor(i / 4) * 80}" width="190" height="60" rx="8" fill="#041008" stroke="#00ff88" stroke-opacity="0.25"/>`).join("")}
+  </g>`;
+}
+
+function glitchOverlay(intensity = 1) {
+  if (intensity <= 0) return "";
+  return `
+  <g opacity="${0.15 + intensity * 0.1}">
+    ${Array.from({ length: 6 }, (_, i) => {
+      const y = 400 + i * 220;
+      return `<rect x="0" y="${y}" width="${W}" height="${8 + (i % 3) * 4}" fill="#89ff2f" opacity="0.35"/>`;
+    }).join("")}
+    <text x="542" y="480" font-size="80" fill="#ff0040" opacity="0.25" font-family="Segoe UI, Arial, sans-serif" font-weight="900">▌</text>
+    <text x="538" y="480" font-size="80" fill="#00ffff" opacity="0.2" font-family="Segoe UI, Arial, sans-serif" font-weight="900">▌</text>
+  </g>`;
+}
+
 export function renderSceneSvg(scene) {
   const kicker = escapeXml(scene.kicker || "");
   const headline = scene.headline || "";
@@ -212,11 +282,15 @@ export function renderSceneSvg(scene) {
     ${subLine(sub, 720)}
     ${renderLogoHero({ size: 220, centerY: 1080 })}`;
   } else if (scene.id === "hook") {
+    const showDash = scene.visualStyle === "dashboard" || scene.visualStyle === "authority";
+    const showGlitch = scene.visualStyle === "glitch" || scene.visualStyle === "fear" || scene.visualStyle === "urgent";
     body = `
-    ${bigHeadline(headline, 620, 80)}
-    ${subLine(sub, 820)}
-    <rect x="140" y="920" width="800" height="100" rx="16" fill="#041008" stroke="#00ff88" stroke-opacity="0.6" stroke-width="2" filter="url(#traceGlow)"/>
-    <text x="540" y="985" font-size="38" fill="#89ff2f" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-weight="800" letter-spacing="0.18em" filter="url(#glow)">AVOID · WATCH · OK</text>`;
+    ${bigHeadline(headline, showDash ? 480 : 620, showDash ? 64 : 80)}
+    ${subLine(sub, showDash ? 580 : 820)}
+    ${showDash ? fakeDashboard() : ""}
+    ${!showDash ? `<rect x="140" y="920" width="800" height="100" rx="16" fill="#041008" stroke="#00ff88" stroke-opacity="0.6" stroke-width="2" filter="url(#traceGlow)"/>
+    <text x="540" y="985" font-size="38" fill="#89ff2f" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-weight="800" letter-spacing="0.18em" filter="url(#glow)">AVOID · WATCH · OK</text>` : ""}
+    ${showGlitch ? glitchOverlay(1) : ""}`;
   } else if (scene.id === "flow" && scene.steps) {
     body = `
     ${bigHeadline(headline, 520, 56)}
@@ -227,7 +301,7 @@ export function renderSceneSvg(scene) {
     ${bigHeadline(headline, 720, 96)}
     ${subLine(sub, 880)}
     <rect x="160" y="980" width="760" height="120" rx="22" fill="#041008" stroke="#89ff2f" stroke-opacity="0.7" stroke-width="2.5" filter="url(#megaGlow)"/>
-    <text x="540" y="1055" font-size="36" fill="#89ff2f" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-weight="800" letter-spacing="0.14em">TRY FREE · PASTE A TOKEN</text>`;
+    <text x="540" y="1055" font-size="36" fill="#89ff2f" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-weight="800" letter-spacing="0.14em">FREE SCAN · SYNEXUS.PRO</text>`;
   } else {
     body = `
     ${bigHeadline(headline, 680, 64)}

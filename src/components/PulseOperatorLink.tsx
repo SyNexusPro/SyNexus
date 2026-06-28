@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import type { BiometricSupport } from "../lib/biometricLogin";
 
 type AuthTone = "info" | "success" | "error";
 
@@ -13,12 +14,18 @@ type PulseOperatorLinkProps = {
   authBusyLabel: string;
   authMessage: { tone: AuthTone; text: string };
   hasSupabaseEnv: boolean;
+  biometricSupport: BiometricSupport | null;
+  biometricEnrolled: boolean;
+  biometricEmailHint: string | null;
   onEmailChange: (value: string) => void;
   onPasswordChange: (value: string) => void;
   onSignUp: () => void;
   onSignIn: () => void;
   onSignOut: () => void;
   onOwnerUnlock: () => void;
+  onBiometricSignIn: () => void;
+  onEnableBiometric: () => void;
+  onDisableBiometric: () => void;
   ownerUnlocked?: boolean;
 };
 
@@ -52,17 +59,25 @@ export function PulseOperatorLink({
   authBusyLabel,
   authMessage,
   hasSupabaseEnv,
+  biometricSupport,
+  biometricEnrolled,
+  biometricEmailHint,
   onEmailChange,
   onPasswordChange,
   onSignUp,
   onSignIn,
   onSignOut,
   onOwnerUnlock,
+  onBiometricSignIn,
+  onEnableBiometric,
+  onDisableBiometric,
   ownerUnlocked = false,
 }: PulseOperatorLinkProps) {
   const [mode, setMode] = useState<"return" | "link" | "command">("return");
   const linked = Boolean(userId);
   const isDemo = userId?.startsWith("demo-") ?? false;
+  const biometricLabel = biometricSupport?.label ?? "Biometrics";
+  const canUseBiometric = Boolean(biometricSupport?.available && hasSupabaseEnv && !isDemo);
 
   const displayEmail = useMemo(() => {
     if (userEmail) return maskEmail(userEmail);
@@ -98,6 +113,43 @@ export function PulseOperatorLink({
           Synchronized with The Synexus
         </div>
 
+        {canUseBiometric ? (
+          <div className="operator-link__biometric operator-link__biometric--active">
+            {biometricEnrolled ? (
+              <>
+                <p className="operator-link__biometric-status">
+                  <span className="operator-link__biometric-icon" aria-hidden>
+                    ◉
+                  </span>
+                  {biometricLabel} sign-in enabled
+                </p>
+                <button
+                  type="button"
+                  className="operator-link__biometric-disable"
+                  disabled={authBusy}
+                  onClick={onDisableBiometric}
+                >
+                  Turn off {biometricLabel}
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="operator-link__biometric-lede">
+                  Skip typing your password — use {biometricLabel} next time.
+                </p>
+                <button
+                  type="button"
+                  className="operator-link__biometric-enable"
+                  disabled={authBusy}
+                  onClick={onEnableBiometric}
+                >
+                  Enable {biometricLabel} sign-in
+                </button>
+              </>
+            )}
+          </div>
+        ) : null}
+
         <p className={`operator-link__message operator-link__message--${authMessage.tone}`}>
           {authMessage.text}
         </p>
@@ -122,9 +174,35 @@ export function PulseOperatorLink({
         <p className="operator-link__eyebrow">Operator link</p>
         <h2 className="operator-link__title">Save your Synexus command center</h2>
         <p className="operator-link__lede">
-          Link once to keep watchlists, alerts, and Synexus Pro on every device.
+          Link once to keep watchlists, alerts, and Synexus Pro on every device. After your first
+          sign-in, Synexus can save {biometricLabel} for faster return visits.
         </p>
       </header>
+
+      {canUseBiometric && biometricEnrolled ? (
+        <div className="operator-link__biometric">
+          <button
+            type="button"
+            className="operator-link__biometric-signin"
+            disabled={authBusy}
+            onClick={onBiometricSignIn}
+          >
+            <span className="operator-link__biometric-icon" aria-hidden>
+              ◉
+            </span>
+            Sign in with {biometricLabel}
+          </button>
+          {biometricEmailHint ? (
+            <p className="operator-link__biometric-hint">Saved for {maskEmail(biometricEmailHint)}</p>
+          ) : null}
+        </div>
+      ) : null}
+
+      {canUseBiometric && biometricEnrolled ? (
+        <p className="operator-link__biometric-divider">
+          <span>or use email</span>
+        </p>
+      ) : null}
 
       <div className="operator-link__tabs" role="tablist" aria-label="Link mode">
         <button
@@ -214,6 +292,10 @@ export function PulseOperatorLink({
         </p>
       ) : !hasSupabaseEnv ? (
         <p className="operator-link__footnote">Demo mode — server keys unlock permanent operator links.</p>
+      ) : !canUseBiometric && biometricSupport?.native === false ? (
+        <p className="operator-link__footnote">
+          Face ID and fingerprint sign-in are available in the Synexus Android and iOS app.
+        </p>
       ) : null}
     </section>
   );

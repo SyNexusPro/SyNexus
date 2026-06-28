@@ -89,38 +89,58 @@ async function tryPlatform(name, fn, state, slot, force, quiet) {
   }
 }
 
-export async function runBlastSlot({ slot, force = false, quiet = false } = {}) {
-  const date = todayDirName();
-  const dayDir = join(outputRoot(), date);
-  const videoPath = join(dayDir, "synexus-daily.mp4");
-  const metadataPath = join(dayDir, "youtube-upload.txt");
+export async function runBlastSlot({ slot, force = false, quiet = false, launch = null } = {}) {
+  const date = launch?.dayLabel || todayDirName();
+  const dayDir = launch?.dayDir || join(outputRoot(), todayDirName());
+  const videoPath = launch?.videoPath || join(dayDir, "synexus-daily.mp4");
+  const metadataPath = launch?.metadataPath || join(dayDir, "youtube-upload.txt");
 
   let state = await readCampaignState(dayDir);
   if (!state.platforms) state.platforms = {};
 
   if (!quiet) {
-    console.log(`\nSynexus marketing blast · slot ${slot + 1}/${postsPerDay()} · ${slotLabel(slot)} · ${date}`);
+    const label = launch?.scriptId ? `${launch.scriptId} · ` : "";
+    console.log(`\nSynexus marketing blast · ${label}slot ${slot + 1}/${postsPerDay()} · ${slotLabel(slot)} · ${date}`);
     console.log("─".repeat(52));
   }
 
   if (!(await fileExists(videoPath))) {
+    if (launch) {
+      throw new Error(`Launch video missing: ${videoPath} — run launch:render first`);
+    }
     if (!quiet) console.log("  Rendering video (green glow · female voice · Syn bunny)…");
     await renderDailyVideo({ force: false, quiet: true });
   }
 
   const pack = buildDailyPack();
   const count = postsPerDay();
-  const telegramCaptions = generateTelegramCaptions(Date.now(), count);
-  const tiktokCaptions = generateTikTokCaptions(Date.now(), count);
-  const fbCaptions = generateFacebookCaptions(Date.now(), count);
-  const igCaptions = generateInstagramCaptions(Date.now(), count);
-  const xCaptions = generateXCaptions(Date.now(), count);
+  let tgCap;
+  let ttCap;
+  let fbCap;
+  let igCap;
+  let xCap;
+  let redditPost = pack.reddit;
 
-  const tgCap = telegramCaptions[slot] || pack.telegram;
-  const ttCap = tiktokCaptions[slot] || tiktokCaptions[0];
-  const fbCap = fbCaptions[slot] || fbCaptions[0];
-  const igCap = igCaptions[slot] || igCaptions[0];
-  const xCap = xCaptions[slot] || pack.x;
+  if (launch?.captions) {
+    tgCap = launch.captions.telegram;
+    ttCap = launch.captions.tiktok;
+    fbCap = launch.captions.facebook || launch.captions.tiktok;
+    igCap = launch.captions.instagram || launch.captions.tiktok;
+    xCap = launch.captions.x;
+    redditPost = launch.captions.reddit || redditPost;
+  } else {
+    const telegramCaptions = generateTelegramCaptions(Date.now(), count);
+    const tiktokCaptions = generateTikTokCaptions(Date.now(), count);
+    const fbCaptions = generateFacebookCaptions(Date.now(), count);
+    const igCaptions = generateInstagramCaptions(Date.now(), count);
+    const xCaptions = generateXCaptions(Date.now(), count);
+
+    tgCap = telegramCaptions[slot] || pack.telegram;
+    ttCap = tiktokCaptions[slot] || tiktokCaptions[0];
+    fbCap = fbCaptions[slot] || fbCaptions[0];
+    igCap = igCaptions[slot] || igCaptions[0];
+    xCap = xCaptions[slot] || pack.x;
+  }
 
   await exportAdCreatives({
     dayDir,
@@ -190,7 +210,7 @@ export async function runBlastSlot({ slot, force = false, quiet = false } = {}) 
   if (hasDiscordConfig()) {
     await tryPlatform(
       "discord",
-      () => postDiscord(tgCap.replace(/\*\*/g, "**"), { quiet: true }),
+      () => postDiscord(tgCap.replace(/\*\*/g, "**"), { videoPath, quiet: true }),
       state,
       slot,
       force,
@@ -210,7 +230,7 @@ export async function runBlastSlot({ slot, force = false, quiet = false } = {}) 
   if (slot === 0 && hasRedditConfig()) {
     await tryPlatform(
       "reddit",
-      () => postReddit(pack.reddit, { quiet: true }),
+      () => postReddit(redditPost, { quiet: true }),
       state,
       slot,
       force,

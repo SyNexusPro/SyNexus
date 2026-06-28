@@ -1,7 +1,6 @@
 import { useState } from "react";
 import type { OracleSupremeDailyReport, SyntheticSentinel } from "../data/syntheticWatchers";
 import type { SynexusPlan } from "../lib/tradingFees";
-import type { OracleConversationContext } from "../lib/oracleSupremeConversation";
 import type { SentinelLaneId, SentinelLiveIntel } from "../lib/sentinelIntel";
 import { sentinelLaneIdFromSentinel } from "../lib/sentinelIntel";
 import {
@@ -9,7 +8,6 @@ import {
   pulseSentinelDisplayName,
 } from "../lib/pulseFormatting";
 import { oracleSupremeMoodLabel } from "../data/syntheticWatchers";
-import { OracleSupremeChat } from "./OracleSupremeChat";
 import { OracleSupremeVoiceBar } from "./OracleSupremeVoiceBar";
 import { ProDemoButton } from "./ProDemoButton";
 import { SynexusSymbolMark } from "./SynexusSymbolMark";
@@ -18,7 +16,6 @@ type Props = {
   plan: SynexusPlan;
   briefing: string;
   dailyReport: OracleSupremeDailyReport;
-  conversationContext: OracleConversationContext;
   syntheticSentinels: SyntheticSentinel[];
   sentinelLiveIntel: Record<SentinelLaneId, SentinelLiveIntel>;
   marketTokenCount: number;
@@ -35,7 +32,6 @@ export function OracleAdminControlCenter({
   plan,
   briefing,
   dailyReport,
-  conversationContext,
   syntheticSentinels,
   sentinelLiveIntel,
   marketTokenCount,
@@ -64,8 +60,7 @@ export function OracleAdminControlCenter({
             Oracle Admin
           </p>
           <p className="oracle-admin__dock-meta">
-            {alertCount} alert{alertCount === 1 ? "" : "s"} · {marketTokenCount} pairs ·{" "}
-            {plan === "PRO" ? "Pro" : "Free"}
+            {alertCount} alert{alertCount === 1 ? "" : "s"} · {marketTokenCount} pairs · Tap the Oracle orb to talk
           </p>
         </div>
         <button
@@ -116,12 +111,6 @@ export function OracleAdminControlCenter({
               );
             })}
           </div>
-
-          <OracleSupremeChat
-            context={conversationContext}
-            variant="inline"
-            onSpeakingChange={onSpeakingChange}
-          />
 
           <OracleSupremeVoiceBar
             plan={plan}

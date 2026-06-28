@@ -51,13 +51,48 @@ async function resolveChannelId(token) {
   );
 }
 
-/** Discord uses **bold** natively in messages. */
-export async function postDiscord(message, { quiet = false } = {}) {
+export async function postDiscord(message, { videoPath = null, quiet = false } = {}) {
   const token = process.env.DISCORD_BOT_TOKEN?.trim();
   if (!token) throw new Error("DISCORD_BOT_TOKEN not set");
 
   const channelId = await resolveChannelId(token);
   const content = String(message).slice(0, 1990);
+
+  if (videoPath) {
+    const { readFile } = await import("node:fs/promises");
+    const { basename } = await import("node:path");
+    const { fileExists } = await import("../videoPipeline.js");
+    if (!(await fileExists(videoPath))) {
+      throw new Error(`Discord video missing: ${videoPath}`);
+    }
+    const videoBytes = await readFile(videoPath);
+    const form = new FormData();
+    form.append("payload_json", JSON.stringify({ content }));
+    form.append("files[0]", new Blob([videoBytes], { type: "video/mp4" }), basename(videoPath));
+
+    const res = await fetch(`${API}/channels/${channelId}/messages`, {
+      method: "POST",
+      headers: { Authorization: `Bot ${token}` },
+      body: form,
+    });
+    const text = await res.text();
+    let data;
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch {
+      data = { raw: text };
+    }
+    if (!res.ok) {
+      throw new Error(data.message || `Discord API ${res.status}: ${text.slice(0, 200)}`);
+    }
+    if (!quiet) console.log("✓ Posted video to Discord");
+    return {
+      messageId: data.id,
+      channelId,
+      withVideo: true,
+      url: `https://discord.com/channels/@me/${channelId}/${data.id}`,
+    };
+  }
 
   const data = await discordFetch(`/channels/${channelId}/messages`, token, {
     method: "POST",

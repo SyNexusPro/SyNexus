@@ -18,11 +18,16 @@ export function resolveTtsVoice(requested) {
   return FEMALE_VOICES.has(v) || v.includes("Neural") ? v : DEFAULT_TTS_VOICE;
 }
 
-/** Slightly slower, warmer delivery — less robotic. */
-export function naturalProsody() {
+/** Calm synthetic authority — premium, not hype-bot. */
+export function authorityProsody() {
   return {
-    rate: 0.91,
-    pitch: "+6Hz",
+    rate: 0.94,
+    pitch: "-2Hz",
     volume: 100,
   };
+}
+
+/** Slightly slower, warmer delivery — daily fallback. */
+export function naturalProsody() {
+  return authorityProsody();
 }

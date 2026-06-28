@@ -14,12 +14,20 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { mascotSignOff, mascotTelegramLine } from "./synBunny.js";
+import {
+  TRUST_LINE,
+  PRO_LINE,
+  buildDailyTelegramBrief,
+  buildSocialCaption,
+  buildDiscordPost,
+  buildTikTokCaption as buildPremiumTikTokCaption,
+  appOrigin,
+} from "./marketingCopy.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const TAGS = "#Synexus #Solana #Crypto #ShouldIBuyThis";
-const PRO_PRICE_LINE = "Synexus Pro · $19.99/month · cancel anytime.";
+const PRO_PRICE_LINE = PRO_LINE;
 const SYN_PUMPFUN_URL =
   process.env.SYN_PUMPFUN_URL?.trim() ||
   "https://pump.fun/communities/9naVtLAGKWYuEcGehe1BZ3DpiSLHjSNsaeFr2JPHpump";
@@ -43,10 +51,6 @@ const SUPPORT = [
   "Live alerts when whales move or risk spikes — before the timeline screams.",
   "Built for people who want one clear answer, not a wall of charts.",
 ];
-
-function appOrigin() {
-  return process.env.APP_ORIGIN?.trim() || "https://synexus.pro";
-}
 
 function pick(list, offset) {
   return list[offset % list.length];
@@ -100,40 +104,23 @@ export function generateTelegramUpdate(now = Date.now()) {
   const origin = appOrigin();
   const hook = pick(HOOKS, dayOffset(now));
   return [
-    "**Should I buy this?**",
+    "**Synexus Sentinel** · Daily brief",
     "",
     hook,
     "",
-    "**How it works**",
-    "1️⃣ Paste a Solana mint or symbol",
-    "2️⃣ Get **Avoid**, **Watch**, or **OK** + plain English",
-    "3️⃣ See risk score, whales, rug flags — then you decide",
+    "Paste a Solana mint → **Avoid · Watch · OK** with fused risk, whale, and liquidity signals.",
     "",
-    "**Also inside** · trade journal · wallet stats · live alerts",
-    "",
-    `**Try free** → ${origin}`,
+    `**Scan** → ${origin}`,
     PRO_PRICE_LINE,
     "",
-    mascotTelegramLine(),
+    TRUST_LINE,
   ].join("\n");
 }
 
 export function generateDiscordPost(now = Date.now()) {
-  const origin = appOrigin();
   const hook = pick(HOOKS, dayOffset(now));
-  return [
-    "**Should I buy this? — Synexus**",
-    "",
-    hook,
-    "",
-    "Paste any Solana token → **Avoid · Watch · OK** in plain English.",
-    "Plus: risk scorecard, whale read, trade journal, and Sentinel alerts.",
-    "",
-    `**Try free** · ${origin}`,
-    PRO_PRICE_LINE,
-    "",
-    mascotSignOff().replace(/\*\*/g, "**"),
-  ].join("\n");
+  const support = pick(SUPPORT, dayOffset(now) + 1);
+  return buildDiscordPost({ hook, build: support, payoff: "Sentinel lanes fuse into one Avoid · Watch · OK read." });
 }
 
 export function generateRedditPost(now = Date.now()) {
@@ -219,18 +206,12 @@ export function buildDailyPack(now = Date.now()) {
 }
 
 function buildTikTokCaption(hook, now = Date.now()) {
-  return [
+  return buildPremiumTikTokCaption({
     hook,
-    "",
-    "Paste mint or symbol → Avoid · Watch · OK",
-    "Risk · whales · rug flags · trade journal",
-    "",
-    `Free scan → ${appOrigin()}`,
-    PRO_PRICE_LINE,
-    "",
-    "🐰 Syn the bunny · paste before you ape",
-    "#Synexus #Solana #Crypto #Trading #Memecoin #ShouldIBuyThis #DeFi",
-  ].join("\n");
+    build: "Sentinel fusion: liquidity drift, whale concentration, rug flags.",
+    payoff: "One read. Avoid · Watch · OK. You still sign in your wallet.",
+    id: String(dayOffset(now)),
+  });
 }
 
 export function generateTikTokCaption(now = Date.now()) {
@@ -248,56 +229,21 @@ export function generateTikTokCaptions(now = Date.now(), count = 3) {
 export function generateTelegramCaptions(now = Date.now(), count = 3) {
   const base = dayOffset(now);
   const n = Math.min(3, Math.max(1, count));
-  const origin = appOrigin();
 
-  return Array.from({ length: n }, (_, i) => {
-    const hook = pick(HOOKS, base + i);
-    const slotTag = ["🌅", "☀️", "🌙"][i] || "🐰";
-    return [
-      `${slotTag} **Should I buy this?**`,
-      "",
-      hook,
-      "",
-      "Paste a Solana mint → **Avoid · Watch · OK** + risk read.",
-      "",
-      `**Try free** → ${origin}`,
-      PRO_PRICE_LINE,
-      "",
-      SYN_COIN_LINE,
-      "",
-      mascotTelegramLine(),
-    ].join("\n");
-  });
+  return Array.from({ length: n }, (_, i) =>
+    buildDailyTelegramBrief({ hook: pick(HOOKS, base + i), slot: i }),
+  );
 }
 
-function buildSocialCaption(hook, now, platform) {
-  const origin = appOrigin();
-  const tags =
-    platform === "instagram"
-      ? "#Synexus #Solana #Crypto #Trading #ShouldIBuyThis #Reels #DeFi"
-      : "#Synexus #Solana #Crypto #ShouldIBuyThis #Trading";
-
-  return [
-    hook,
-    "",
-    "Should I buy this? Paste any Solana token → Avoid · Watch · OK in plain English.",
-    "Risk score · whales · rug flags · before you sign.",
-    "",
-    `Try free → ${origin}`,
-    PRO_PRICE_LINE,
-    "",
-    SYN_COIN_LINE,
-    "",
-    "🐰 Syn the bunny · paste before you ape",
-    tags,
-  ].join("\n");
+function buildSocialCaptionLegacy(hook, now, platform) {
+  return buildSocialCaption({ hook, platform });
 }
 
 export function generateFacebookCaptions(now = Date.now(), count = 3) {
   const base = dayOffset(now);
   const n = Math.min(3, Math.max(1, count));
   return Array.from({ length: n }, (_, i) =>
-    buildSocialCaption(pick(HOOKS, base + i), now, "facebook"),
+    buildSocialCaptionLegacy(pick(HOOKS, base + i), now, "facebook"),
   );
 }
 
@@ -305,7 +251,7 @@ export function generateInstagramCaptions(now = Date.now(), count = 3) {
   const base = dayOffset(now);
   const n = Math.min(3, Math.max(1, count));
   return Array.from({ length: n }, (_, i) =>
-    buildSocialCaption(pick(HOOKS, base + i + 1), now, "instagram"),
+    buildSocialCaptionLegacy(pick(HOOKS, base + i + 1), now, "instagram"),
   );
 }
 
@@ -318,9 +264,9 @@ export function generateXCaptions(now = Date.now(), count = 3) {
     return [
       hook,
       "",
-      "Paste any Solana token → Avoid · Watch · OK",
-      `Try free: ${origin}`,
-      "#Synexus #Solana #Crypto",
+      "Sentinel read · Avoid · Watch · OK",
+      `Scan → ${origin}`,
+      "#Synexus #Solana",
     ].join("\n");
   });
 }

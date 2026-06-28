@@ -3137,6 +3137,120 @@ a {
   line-height: 1.4;
 }
 
+.operator-link__biometric {
+  position: relative;
+  z-index: 1;
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(94, 231, 255, 0.28);
+  background: rgba(0, 0, 0, 0.28);
+  box-shadow: inset 0 0 24px rgba(94, 231, 255, 0.06);
+}
+
+.operator-link__biometric--active {
+  border-color: rgba(137, 255, 47, 0.28);
+  box-shadow: inset 0 0 24px rgba(137, 255, 47, 0.06);
+}
+
+.operator-link__biometric-signin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  border: 1px solid rgba(137, 255, 47, 0.45);
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, rgba(137, 255, 47, 0.18), rgba(94, 231, 255, 0.12));
+  color: #ecffd2;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 0 28px rgba(137, 255, 47, 0.14);
+}
+
+.operator-link__biometric-signin:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.operator-link__biometric-signin:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.operator-link__biometric-enable,
+.operator-link__biometric-disable {
+  width: 100%;
+  margin-top: 10px;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.operator-link__biometric-enable {
+  border: 1px solid rgba(137, 255, 47, 0.42);
+  background: rgba(137, 255, 47, 0.1);
+  color: #89ff2f;
+}
+
+.operator-link__biometric-disable {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.operator-link__biometric-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid rgba(137, 255, 47, 0.45);
+  color: #89ff2f;
+  font-size: 0.72rem;
+  box-shadow: 0 0 12px rgba(137, 255, 47, 0.25);
+}
+
+.operator-link__biometric-hint,
+.operator-link__biometric-lede,
+.operator-link__biometric-status {
+  margin: 8px 0 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.operator-link__biometric-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #b8ff9a;
+}
+
+.operator-link__biometric-divider {
+  position: relative;
+  z-index: 1;
+  margin: 14px 0 0;
+  text-align: center;
+  color: rgba(167, 201, 155, 0.55);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.operator-link__biometric-divider span {
+  display: inline-block;
+  padding: 0 10px;
+  background: rgba(4, 8, 10, 0.92);
+}
+
 .operator-link__profile {
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -4126,10 +4240,10 @@ a {
 .oracle-presence-panel {
   position: fixed;
   right: 12px;
-  bottom: calc(var(--nav-height) + var(--safe-bottom) + 64px);
+  bottom: calc(var(--nav-height) + var(--safe-bottom) + 52px);
   z-index: 9000;
-  width: min(300px, calc(100vw - 24px));
-  max-height: min(44vh, 360px);
+  width: min(280px, calc(100vw - 24px));
+  max-height: min(40vh, 320px);
   pointer-events: auto;
   animation: oracle-panel-in 0.22s ease-out;
 }
@@ -4160,13 +4274,15 @@ a {
   right: 12px;
   bottom: calc(var(--nav-height) + var(--safe-bottom) + 10px);
   z-index: 9001;
-  display: grid;
-  place-items: center;
-  width: 48px;
-  height: 48px;
-  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: auto;
+  min-width: 48px;
+  height: 42px;
+  padding: 0 12px 0 6px;
   border: 1px solid rgba(255, 210, 130, 0.38);
-  border-radius: 50%;
+  border-radius: 999px;
   background: rgba(8, 8, 6, 0.92);
   color: rgba(255, 235, 200, 0.98);
   font: inherit;
@@ -4175,7 +4291,17 @@ a {
   transition:
     border-color 0.25s ease,
     box-shadow 0.25s ease,
-    transform 0.25s ease;
+    transform 0.25s ease,
+    padding 0.25s ease;
+}
+
+.oracle-presence-fab--open {
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+  padding: 0;
+  border-radius: 50%;
+  justify-content: center;
 }
 
 .oracle-presence-fab:hover {
@@ -4237,6 +4363,14 @@ a {
 }
 
 .oracle-presence-fab__copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  line-height: 1.15;
+}
+
+.oracle-presence-fab--open .oracle-presence-fab__copy {
   display: none;
 }
 
@@ -4281,7 +4415,7 @@ a {
 }
 
 .oracle-chat--widget {
-  max-height: min(48vh, 400px);
+  max-height: min(38vh, 300px);
   display: flex;
   flex-direction: column;
 }
@@ -8018,6 +8152,11 @@ a {
 
 .oracle-admin--collapsed {
   padding: 0;
+  margin: 16px 0;
+}
+
+.oracle-admin--collapsed .oracle-admin__dock {
+  padding: 8px 12px;
 }
 
 .oracle-admin--open {

@@ -1,1 +1,14 @@
-[]
+[
+	{
+		"pkg": "@aparajita/capacitor-biometric-auth",
+		"classpath": "com.aparajita.capacitor.biometricauth.BiometricAuthNative"
+	},
+	{
+		"pkg": "@capacitor/preferences",
+		"classpath": "com.capacitorjs.plugins.preferences.PreferencesPlugin"
+	},
+	{
+		"pkg": "capacitor-secure-storage-plugin",
+		"classpath": "com.whitestein.securestorage.SecureStoragePluginPlugin"
+	}
+]

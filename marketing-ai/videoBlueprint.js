@@ -1,4 +1,5 @@
 import { buildDailyPack, growthMissionLine, HOOKS } from "./synexusMarketingBot.js";
+import { buildDailyVoiceover } from "./marketingCopy.js";
 
 const FLOW_STEPS = [
   { label: "PASTE TOKEN", sub: "Mint or symbol — 3 seconds" },
@@ -38,46 +39,32 @@ function extractHook(tiktok) {
   return HOOKS[day % HOOKS.length];
 }
 
-/** Spoken narration — short, direct, grabby. */
+/** Spoken narration — Sentinel authority, tight cadence. */
 export function buildVoiceover(pack, now = Date.now()) {
   const hook = extractHook(pack.tiktok);
-  const shortHook = hook.split(".")[0]?.trim() || hook;
-
-  return [
-    "Should I buy this?",
-    shortHook.endsWith(".") ? shortHook : `${shortHook}.`,
-    "Paste any Solana token.",
-    "Synexus answers in seconds — Avoid, Watch, or OK.",
-    "Risk score. Whales. Rug flags. Before you sign.",
-    "Try free at synexus dot pro.",
-    "Not financial advice.",
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .replace(/\s+/g, " ")
-    .slice(0, 1200);
+  return buildDailyVoiceover(hook);
 }
 
 export function buildYouTubeMetadata(pack, now = Date.now()) {
   const date = new Date(now);
   const hook = extractHook(pack.tiktok);
   const titleVariants = [
-    `Should I Buy This? · Synexus · ${todayDirName(date)}`,
-    `Paste → Avoid or Watch · Synexus`,
-    `Stop Aping Blind · Synexus · ${todayDirName(date)}`,
+    `Synexus Sentinel · ${todayDirName(date)}`,
+    `Solana Risk Read · Synexus`,
+    `Avoid · Watch · OK · Synexus`,
   ];
   const title = titleVariants[date.getUTCDate() % titleVariants.length].slice(0, 95);
 
   const description = [
-    "Should I buy this? Paste any Solana token — get Avoid, Watch, or OK in plain English.",
+    "Synexus — Sentinel-grade Solana token intelligence.",
     "",
     hook,
     "",
-    "Paste · Scan · Decide",
+    "Paste · Scan · Decide — non-custodial. You sign every trade.",
     "",
-    `Try free: ${appOrigin()}`,
+    `Free scan: ${appOrigin()}`,
     "",
-    "Not financial advice. You control your funds.",
+    "Not financial advice.",
     "",
     "#Synexus #Solana #ShouldIBuyThis #Crypto #Shorts",
   ].join("\n");
@@ -108,7 +95,7 @@ export function buildScenes(pack) {
       id: "hook",
       kicker: "3 seconds",
       headline: "PASTE ANY TOKEN",
-      sub: "Plain English verdict",
+      sub: "Sentinel-grade risk read",
       durationRatio: 0.28,
     },
     {

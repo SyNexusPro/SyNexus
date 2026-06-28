@@ -17,7 +17,7 @@ import { notifySynexusBootComplete } from "../lib/synexusBootComplete";
 
 const PHASE_COPY: readonly string[] = [
   "SYNEXUS INITIALIZING",
-  "WELCOME TO THE SYNEXUS · THE FUTURE OF TRADING",
+  "WELCOME TO THE SYNEXUS · HOW MAY I BE OF SERVICE",
   "DEPLOYING SENTINELS",
   "MARKET FEED LIVE — NOTHING MOVES UNSEEN",
   "ENTER THE SYNEXUS",

@@ -21,7 +21,6 @@ import { SynexusSymbolMark } from "./SynexusSymbolMark";
 type OracleSupremeChatProps = {
   context: OracleConversationContext;
   variant?: "overlay" | "inline" | "widget";
-  autoSpeak?: boolean;
   showOpeningPrompt?: boolean;
   onDismiss?: () => void;
   onSpeakingChange?: (speaking: boolean) => void;
@@ -30,7 +29,6 @@ type OracleSupremeChatProps = {
 export function OracleSupremeChat({
   context,
   variant = "inline",
-  autoSpeak = false,
   showOpeningPrompt = false,
   onDismiss,
   onSpeakingChange,
@@ -128,11 +126,8 @@ export function OracleSupremeChat({
     if (history.length > 0 && !stale) {
       setTurns(history);
       setAwaitingDayReply(false);
-      return;
     }
-
-    appendOracle(openingLine, { speak: autoSpeak && !wasIntroWelcomeSpoken() });
-  }, [appendOracle, autoSpeak, openingLine, showOpeningPrompt]);
+  }, [showOpeningPrompt]);
 
   function handleMoodReply(mood: DayMoodReply, label: string) {
     appendUser(label);
@@ -149,7 +144,7 @@ export function OracleSupremeChat({
   }
 
   function handleCheckIn() {
-    setAwaitingDayReply(true);
+    setAwaitingDayReply(false);
     if (!wasIntroWelcomeSpoken()) markIntroWelcomeSpoken();
     appendOracle(openingLine, { speak: true });
   }
@@ -193,13 +188,13 @@ export function OracleSupremeChat({
       </div>
 
       <div className="oracle-chat__thread" aria-live="polite">
-        {visibleTurns.length === 0 && !showOpeningPrompt ? (
+        {visibleTurns.length === 0 ? (
           <div className="oracle-chat__empty-wrap">
             <p className="oracle-chat__empty">
-              Say hello — Oracle will greet you by name and check in on your day.
+              Welcome to the SyNexus — tap below when you&apos;re ready to talk.
             </p>
             <button type="button" className="oracle-chat__chip" onClick={handleCheckIn}>
-              Check in with me
+              How may I be of service?
             </button>
           </div>
         ) : null}

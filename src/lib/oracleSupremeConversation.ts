@@ -28,7 +28,7 @@ export const ORACLE_SESSION_GREET_KEY = "oracle_supreme_greeted_session";
 export const SYNEXUS_INTRO_WELCOME_SPOKEN_KEY = "synexus_intro_welcome_spoken";
 
 /** Spoken by Oracle on app open (boot intro + voice). */
-export const ORACLE_INTRO_VOICE_LINE = "Welcome to the SyNexus.";
+export const ORACLE_INTRO_VOICE_LINE = "Welcome to the SyNexus. How may I be of service?";
 
 type ProfileLike = {
   display_name?: string | null;
@@ -144,32 +144,39 @@ export function wasIntroWelcomeSpoken(): boolean {
   }
 }
 
+function oracleWelcomeLead(name: string, skipWelcomeLine?: boolean): string {
+  const named = name && name !== "there";
+  if (skipWelcomeLine) {
+    return named ? `Hey ${name}. How may I be of service?` : "How may I be of service?";
+  }
+  return named
+    ? `Welcome to the SyNexus, ${name}. How may I be of service?`
+    : "Welcome to the SyNexus. How may I be of service?";
+}
+
 export function buildOpeningGreeting(
   ctx: OracleConversationContext,
   options?: { skipWelcomeLine?: boolean },
 ): string {
-  const name = ctx.operatorName;
-  const lead = options?.skipWelcomeLine
-    ? `Hey ${name}.`
-    : `Welcome to the SyNexus, ${name}. The future of trading.`;
+  const lead = oracleWelcomeLead(ctx.operatorName, options?.skipWelcomeLine);
 
   if (ctx.daysSinceLastVisit >= 3) {
-    return `${lead} It's been a few days — I kept your Sentinels on post. How was your day?`;
+    return `${lead} It's been a few days — your Sentinels stayed on post.`;
   }
 
   if (ctx.alertCount > 0) {
-    return `${lead} I already see ${ctx.alertCount} alert${ctx.alertCount === 1 ? "" : "s"} on your desk — how was your day?`;
+    return `${lead} I have ${ctx.alertCount} alert${ctx.alertCount === 1 ? "" : "s"} ready when you are.`;
   }
 
   if (ctx.watchlistCount > 0) {
-    return `${lead} I'm watching ${ctx.watchlistCount} token${ctx.watchlistCount === 1 ? "" : "s"} for you. How was your day?`;
+    return `${lead} I'm watching ${ctx.watchlistCount} token${ctx.watchlistCount === 1 ? "" : "s"} on your list.`;
   }
 
   if (ctx.tokens.length > 0) {
-    return `${lead} I'm tracking ${ctx.tokens.length} live pairs — search any coin or ask me to command the Sentinels. How was your day?`;
+    return `${lead} Ask about any coin, or tell me to command the Sentinels.`;
   }
 
-  return `${lead} How was your day?`;
+  return lead;
 }
 
 export function buildFollowUpAfterMood(mood: DayMoodReply, ctx: OracleConversationContext): string {

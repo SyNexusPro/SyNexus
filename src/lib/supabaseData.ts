@@ -114,6 +114,13 @@ export async function signOut() {
   if (error) throw error;
 }
 
+export async function restoreSessionFromRefreshToken(refreshToken: string) {
+  if (!supabase) throw new Error("Supabase env vars are missing.");
+  const { data, error } = await supabase.auth.refreshSession({ refresh_token: refreshToken });
+  if (error) throwIfStructuralDbFailure(error);
+  return data;
+}
+
 export async function getCurrentUser(): Promise<User | null> {
   if (!supabase) return null;
   const { data, error } = await supabase.auth.getSession();
