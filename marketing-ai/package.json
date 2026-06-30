@@ -21,6 +21,7 @@
     "youtube:auth:callback": "node youtubeAuth.js --callback",
     "youtube:connect-and-test": "node youtubeAuth.js --callback --upload",
     "youtube:test": "node youtubeTestUpload.js",
+    "youtube:banner": "node youtubeChannelBanner.js",
     "campaign:daily": "node dailyCampaign.js",
     "campaign:watch": "node dailyCampaign.js --watch",
     "platform:check": "node platformCheck.js",
@@ -77,6 +78,7 @@
     "dotenv": "^17.4.2",
     "ffmpeg-static": "^5.3.0",
     "googleapis": "^173.0.0",
-    "msedge-tts": "^2.0.5"
+    "msedge-tts": "^2.0.5",
+    "sharp": "^0.35.2"
   }
 }

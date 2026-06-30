@@ -307,10 +307,15 @@ export async function blastHypeAsset(asset, index, { force = false, quiet = fals
   return result;
 }
 
-export async function blastAllHype({ force = false, delayMs = 12000, quiet = false, useCreatives = true } = {}) {
+export async function blastAllHype({ force = false, delayMs = 12000, quiet = false, useCreatives = true, onlyId = null } = {}) {
   const loaded = await prepareAllVideos({ quiet, useCreatives });
-  const ids = useCreatives ? loaded.map((l) => l.id) : HYPE_ASSETS.map((a) => a.id);
+  let ids = useCreatives ? loaded.map((l) => l.id) : HYPE_ASSETS.map((a) => a.id);
+  if (onlyId) ids = ids.filter((id) => id === onlyId);
   const assets = ids.map((id) => HYPE_ASSETS.find((a) => a.id === id)).filter(Boolean);
+
+  if (assets.length === 0) {
+    throw new Error(onlyId ? `No creative for --only=${onlyId}` : "No hype creatives found");
+  }
 
   console.log(`\n🚀 SyNexus Hype Post — ${assets.length} hand-cut assets → all platforms\n`);
 
@@ -341,7 +346,9 @@ async function main() {
   }
 
   if (args.includes("--post")) {
-    await blastAllHype({ force, delayMs: 8000, useCreatives: true });
+    const onlyArg = args.find((a) => a.startsWith("--only="));
+    const onlyId = onlyArg ? onlyArg.split("=")[1] : null;
+    await blastAllHype({ force, delayMs: 8000, useCreatives: true, onlyId });
     return;
   }
 

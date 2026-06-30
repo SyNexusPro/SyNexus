@@ -119,6 +119,17 @@ async function createCheckoutResponse(
     if (trialDays > 0) {
       sessionParams.subscription_data = {
         trial_period_days: trialDays,
+        metadata: {
+          plan: "PRO",
+          userId: userId || "anonymous",
+        },
+      };
+    } else {
+      sessionParams.subscription_data = {
+        metadata: {
+          plan: "PRO",
+          userId: userId || "anonymous",
+        },
       };
     }
 

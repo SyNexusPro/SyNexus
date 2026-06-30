@@ -333,3 +333,26 @@ comment on table public.watchlist_tokens is 'Tokens per watchlist; nested select
 comment on table public.token_reports is 'User-submitted token reports from Pulse / token cards.';
 comment on table public.guardian_alerts is 'Feed of active alerts; populated by admins (service role) or SQL.';
 comment on table public.tracked_tokens is 'Shared registry of tracked markets; upserted by signed-in users.';
+
+-- ---------------------------------------------------------------------------
+-- treasury_revenue — Stripe webhook auto-logs Pro payments (service role only)
+-- Run in Supabase SQL editor if not already applied.
+-- ---------------------------------------------------------------------------
+
+create table if not exists public.treasury_revenue (
+  id uuid primary key default gen_random_uuid(),
+  source text not null,
+  amount_usd numeric(12, 2) not null check (amount_usd > 0),
+  note text default '',
+  allocated jsonb not null default '[]'::jsonb,
+  stripe_event_id text unique,
+  stripe_invoice_id text unique,
+  stripe_customer_id text,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists treasury_revenue_created_at_idx on public.treasury_revenue (created_at desc);
+
+alter table public.treasury_revenue enable row level security;
+
+comment on table public.treasury_revenue is 'Synexus growth-phase revenue ledger. Stripe webhook inserts via service role; 100% reinvest allocation.';

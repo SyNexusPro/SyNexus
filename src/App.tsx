@@ -28,6 +28,8 @@ const Trust = lazy(() => import("./pages/Trust").then((m) => ({ default: m.Trust
 const Contact = lazy(() => import("./pages/Contact").then((m) => ({ default: m.Contact })));
 const Disclaimer = lazy(() => import("./pages/Disclaimer").then((m) => ({ default: m.Disclaimer })));
 const Faq = lazy(() => import("./pages/Faq").then((m) => ({ default: m.Faq })));
+const BlogIndex = lazy(() => import("./pages/Blog").then((m) => ({ default: m.BlogIndex })));
+const BlogPostView = lazy(() => import("./pages/Blog").then((m) => ({ default: m.BlogPostView })));
 
 function RouteFallback() {
   return (
@@ -54,6 +56,8 @@ export default function App() {
             <Route path="terms" element={<Terms />} />
             <Route path="privacy" element={<Privacy />} />
             <Route path="marketing-command" element={<MarketingCommand />} />
+            <Route path="blog" element={<BlogIndex />} />
+            <Route path="blog/:slug" element={<BlogPostView />} />
             <Route path="token/:tokenId" element={<TokenDetail />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

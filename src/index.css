@@ -8395,3 +8395,132 @@ a {
 .oracle-admin--compact .oracle-admin__lede {
   display: none;
 }
+
+/* Synexus Journal (blog) */
+.blog-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding-bottom: 2rem;
+}
+
+.blog-page__eyebrow {
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--syn-green, #5ee7a0);
+  margin: 0 0 0.5rem;
+}
+
+.blog-page__title {
+  margin: 0 0 0.75rem;
+  font-size: 1.75rem;
+}
+
+.blog-page__lede {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.55;
+}
+
+.blog-page__status {
+  padding: 1rem 0;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.blog-page__status--error {
+  color: #f87171;
+}
+
+.blog-page__back {
+  display: inline-block;
+  margin-bottom: 1rem;
+  font-size: 0.88rem;
+  color: var(--syn-green, #5ee7a0);
+  text-decoration: none;
+}
+
+.blog-page__list {
+  list-style: none;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.blog-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.2s;
+}
+
+.blog-card:hover {
+  border-color: rgba(94, 231, 160, 0.45);
+}
+
+.blog-card__date {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.blog-card__title {
+  margin: 0.35rem 0 0.5rem;
+  font-size: 1.15rem;
+}
+
+.blog-card__excerpt {
+  margin: 0;
+  font-size: 0.92rem;
+  color: rgba(255, 255, 255, 0.68);
+  line-height: 1.5;
+}
+
+.blog-card__read {
+  display: inline-block;
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--syn-green, #5ee7a0);
+}
+
+.blog-article__title {
+  margin: 0.5rem 0;
+  font-size: 1.65rem;
+}
+
+.blog-article__byline,
+.blog-article__date {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.blog-article__excerpt {
+  margin: 0.75rem 0 0;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.blog-article__body h2 {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 1.05rem;
+}
+
+.blog-article__body p {
+  margin: 0 0 0.85rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.blog-article__cta a {
+  color: var(--syn-green, #5ee7a0);
+  font-weight: 600;
+}
+
+.blog-article__trust {
+  margin-top: 1.25rem;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.blog-page__disclaimer {
+  margin-top: 2rem;
+}
