@@ -100,9 +100,18 @@ export async function postTelegram(message, { quiet = false, photoPath, videoPat
     }
   }
 
+  if (photoPath && existsSync(photoPath)) {
+    try {
+      return await sendTelegramPhoto(token, chatId, photoPath, message, quiet);
+    } catch (err) {
+      if (!quiet) {
+        console.warn(`Telegram photo failed (${err.message}) — falling back to text`);
+      }
+    }
+  }
+
   const bunnyPath =
-    photoPath ||
-    (process.env.TELEGRAM_BUNNY_PHOTO !== "0" ? getSynBunnyPngPath() : null);
+    process.env.TELEGRAM_BUNNY_PHOTO === "1" ? getSynBunnyPngPath() : null;
 
   if (bunnyPath && existsSync(bunnyPath)) {
     try {
@@ -115,4 +124,80 @@ export async function postTelegram(message, { quiet = false, photoPath, videoPat
   }
 
   return sendTelegramMessage(token, chatId, message, quiet);
+}
+
+export async function deleteTelegramMessage(messageId, chatId = null) {
+  const token = process.env.TELEGRAM_BOT_TOKEN?.trim();
+  const cid = chatId || process.env.TELEGRAM_CHAT_ID?.trim();
+  if (!token || !cid) throw new Error("Telegram not configured");
+  if (!messageId) throw new Error("messageId required");
+
+  const res = await fetch(`${API}/bot${token}/deleteMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: cid, message_id: Number(messageId) }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.ok) {
+    throw new Error(data.description || `Telegram delete failed (${res.status})`);
+  }
+  return { deleted: true, messageId, chatId: cid };
+}
+
+function channelSlugFromEnv() {
+  const explicit = process.env.TELEGRAM_CHANNEL_SLUG?.trim();
+  if (explicit) return explicit.replace(/^@/, "");
+  const url = process.env.TELEGRAM_CHANNEL_URL?.trim() || "";
+  const m = url.match(/t\.me\/(?:s\/)?([^/?#]+)/i);
+  return (m?.[1] || "thesynexusofficial").replace(/^@/, "");
+}
+
+/** Scrape public t.me/s preview for recent message IDs (when IDs weren't saved). */
+export async function discoverTelegramMessageIds(channelSlug = null, limit = 20) {
+  const slug = (channelSlug || channelSlugFromEnv()).replace(/^@/, "");
+  const url = `https://t.me/s/${slug}`;
+  const res = await fetch(url, { headers: { "User-Agent": "SynexusRetract/1.0" } });
+  if (!res.ok) throw new Error(`Could not fetch ${url} (${res.status})`);
+  const html = await res.text();
+  const ids = [];
+  const re = /data-post="[^"]+\/(\d+)"/g;
+  let m;
+  while ((m = re.exec(html)) !== null) {
+    ids.push(Number(m[1]));
+  }
+  const scraped = [...new Set(ids)].sort((a, b) => b - a);
+  if (scraped.length >= limit) return scraped.slice(0, limit);
+
+  const token = process.env.TELEGRAM_BOT_TOKEN?.trim();
+  const chatId = process.env.TELEGRAM_CHAT_ID?.trim();
+  if (token && chatId) {
+    const u = await fetch(`https://api.telegram.org/bot${token}/getUpdates?limit=100`).then((r) => r.json());
+    const fromUpdates = (u.result || [])
+      .flatMap((item) => [item.channel_post, item.message].filter(Boolean))
+      .filter((msg) => String(msg.chat?.id) === String(chatId))
+      .map((msg) => Number(msg.message_id))
+      .sort((a, b) => b - a);
+    return [...new Set([...scraped, ...fromUpdates])].sort((a, b) => b - a).slice(0, limit);
+  }
+
+  return scraped.slice(0, limit);
+}
+
+/** Find hype-blast message IDs on the public channel preview (caption marker match). */
+export async function discoverHypeTelegramIds({ marker = "Download SyNexus", limit = 15 } = {}) {
+  const slug = channelSlugFromEnv();
+  const url = `https://t.me/s/${slug}`;
+  const res = await fetch(url, { headers: { "User-Agent": "SynexusRetract/1.0" } });
+  if (!res.ok) return [];
+  const html = await res.text();
+  const ids = [];
+  for (const block of html.split("tgme_widget_message_wrap")) {
+    const idM = block.match(/data-post="[^"]+\/(\d+)"/);
+    if (!idM) continue;
+    const text = block.replace(/<[^>]+>/g, " ");
+    if (text.includes(marker) || text.includes("WHALE ALERT")) {
+      ids.push(Number(idM[1]));
+    }
+  }
+  return [...new Set(ids)].sort((a, b) => b - a).slice(0, limit);
 }

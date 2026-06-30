@@ -178,6 +178,63 @@ export async function publishInstagram({ dayDir, videoPath, caption, slot = 0, q
   return { ...bundle, mode: "export" };
 }
 
+async function graphDelete(path, token = pageToken()) {
+  const url = `${GRAPH}${path}?access_token=${encodeURIComponent(token)}`;
+  const res = await fetch(url, { method: "DELETE" });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data.error) {
+    throw new Error(data.error?.message || `Meta DELETE ${res.status}`);
+  }
+  return data;
+}
+
+export async function deleteFacebookVideo(videoId) {
+  if (!hasMetaConfig()) throw new Error("Meta not configured");
+  return graphDelete(`/${videoId}`);
+}
+
+export async function deleteInstagramMedia(mediaId) {
+  if (!hasInstagramConfig()) throw new Error("Instagram not configured");
+  return graphDelete(`/${mediaId}`);
+}
+
+/** List recent FB videos + IG reels since timestamp (ISO). */
+export async function listRecentMetaPosts({ sinceIso } = {}) {
+  const since = sinceIso ? Math.floor(new Date(sinceIso).getTime() / 1000) : 0;
+  const out = { facebook: [], instagram: [] };
+
+  if (hasMetaConfig()) {
+    const fb = await graphGet(
+      `/${pageId()}/videos?fields=id,created_time,description&limit=25`,
+    );
+    for (const v of fb.data || []) {
+      const t = Math.floor(new Date(v.created_time).getTime() / 1000);
+      if (!since || t >= since - 120) {
+        out.facebook.push({ id: v.id, created_time: v.created_time, description: v.description });
+      }
+    }
+  }
+
+  if (hasInstagramConfig()) {
+    const ig = await graphGet(
+      `/${igUserId()}/media?fields=id,timestamp,caption,media_type&limit=25`,
+    );
+    for (const m of ig.data || []) {
+      const t = Math.floor(new Date(m.timestamp).getTime() / 1000);
+      if (!since || t >= since - 120) {
+        out.instagram.push({
+          id: m.id,
+          timestamp: m.timestamp,
+          caption: m.caption,
+          media_type: m.media_type,
+        });
+      }
+    }
+  }
+
+  return out;
+}
+
 export async function checkMetaApi() {
   if (!hasMetaConfig()) {
     return {

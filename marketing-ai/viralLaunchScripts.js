@@ -11,10 +11,21 @@ import {
   buildYouTubeMeta,
 } from "./marketingCopy.js";
 
+const BADASS_LOOPS = [
+  "Don't be exit liquidity.",
+  "Scan first. Ape second.",
+  "The chart lies. I don't.",
+  "Paste it. Read it. Then decide.",
+  "They want you blind. Don't give them that.",
+  "One paste. One verdict. Move.",
+  "Your wallet signs. My job is the read.",
+  "Rug season doesn't sleep. Neither do I.",
+];
+
 function script({ id, day, format, hook, build, payoff, loop, visualStyle = "default", headline }) {
   const fields = { hook, build, payoff, loop, id };
   const voiceover = buildLaunchVoiceover(fields);
-  const yt = buildYouTubeMeta({ ...fields, titleBase: `${hook.slice(0, 60)} · Synexus` });
+  const yt = buildYouTubeMeta(fields);
 
   return {
     id,
@@ -38,22 +49,22 @@ function script({ id, day, format, hook, build, payoff, loop, visualStyle = "def
 }
 
 const DAY_1 = [
-  script({ id: "d1-s1", day: 1, format: "exposed_scam", visualStyle: "glitch", headline: "GETTING PLAYED", hook: "Most crypto traders are getting played like this.", build: "They ape the chart. They never scan the mint. Rugs and exit liquidity drain wallets in minutes.", payoff: "Synexus paste any token and get Avoid, Watch, or OK before you sign.", loop: "No one is ready for what comes next." }),
-  script({ id: "d1-s2", day: 1, format: "ai_detection", visualStyle: "dashboard", headline: "AI DETECTS SCAMS", hook: "I built an AI that detects scam coins early.", build: "It reads liquidity, whale wallets, and rug patterns in seconds—not after you're rekt.", payoff: "Synexus is live. Paste a mint. Get a plain English verdict.", loop: "Something important is happening right now." }),
-  script({ id: "d1-s3", day: 1, format: "exposed_scam", visualStyle: "glitch", headline: "HOW RUGS HAPPEN", hook: "This is how rugs actually happen.", build: "Thin liquidity. Whale concentration. Fake hype. Then the chart goes vertical—and your exit is the product.", payoff: "Synexus flags the pattern before you connect a wallet.", loop: "Watch before it happens." }),
-  script({ id: "d1-s4", day: 1, format: "ai_detection", visualStyle: "dashboard", headline: "SYNEXUS IS LIVE", hook: "Synexus is watching the market patterns.", build: "Sentinels scan risk, momentum, and whale moves across Solana tokens.", payoff: "Should I buy this? One paste. One answer.", loop: "The system is already running." }),
-  script({ id: "d1-s5", day: 1, format: "before_it_happens", headline: "SHOULD I BUY THIS?", hook: "Should I buy this? Stop guessing.", build: "Paste any Solana token. Synexus scans it in seconds.", payoff: "Avoid. Watch. Or OK—in plain English.", loop: "Try it before the next pump." }),
-  script({ id: "d1-s6", day: 1, format: "exposed_scam", visualStyle: "urgent", headline: "STOP APING BLIND", hook: "Stop aping blind on Solana.", build: "Every memecoin looks the same until the Sentinel read hits.", payoff: "Synexus is free to scan. Your wallet still signs every trade.", loop: "Paste first. Ape second." }),
-  script({ id: "d1-s7", day: 1, format: "ai_detection", visualStyle: "dashboard", headline: "LAUNCH DAY", hook: "Synexus AI is now live.", build: "Non-custodial. No wallet connect required to scan.", payoff: "Risk score. Whales. Rug flags. Before you sign.", loop: "Link in bio. Telegram for live alerts." }),
+  script({ id: "d1-s1", day: 1, format: "exposed_scam", visualStyle: "glitch", headline: "YOU'RE BEING PLAYED", hook: "You're being played. Every single day.", build: "They show you green candles. They hide the mint, the whales, and the exit.", payoff: "Paste any token. Synexus hits you with Avoid, Watch, or OK — before you sign.", loop: "Don't be exit liquidity." }),
+  script({ id: "d1-s2", day: 1, format: "ai_detection", visualStyle: "dashboard", headline: "I SEE THE SCAM", hook: "I built an AI that sees scams before CT does.", build: "Liquidity. Wallet concentration. Rug patterns — fused in three seconds.", payoff: "Synexus is live. Paste the mint. Get the read.", loop: "Scan first. Ape second." }),
+  script({ id: "d1-s3", day: 1, format: "exposed_scam", visualStyle: "glitch", headline: "THIS IS THE RUG", hook: "This is exactly how rugs work.", build: "Thin pool. Fat wallets. Fake hype. Then your buy becomes their exit.", payoff: "Synexus flags the pattern cold — before Phantom opens.", loop: "The chart lies. I don't." }),
+  script({ id: "d1-s4", day: 1, format: "ai_detection", visualStyle: "dashboard", headline: "I'M WATCHING", hook: "Synexus is already watching.", build: "Four Sentinels. One verdict. Risk, momentum, whales — live on Solana.", payoff: "Should I buy this? One paste. One answer.", loop: "Move with data. Not hope." }),
+  script({ id: "d1-s5", day: 1, format: "before_it_happens", headline: "STOP GUESSING", hook: "Stop guessing. Start scanning.", build: "Paste any Solana mint. Synexus reads it in seconds.", payoff: "Avoid. Watch. OK. Plain English. No cope.", loop: "Paste it. Read it. Then decide." }),
+  script({ id: "d1-s6", day: 1, format: "exposed_scam", visualStyle: "urgent", headline: "NO MORE BLIND APES", hook: "No more blind apes.", build: "Every memecoin looks identical until the Sentinel read drops.", payoff: "Free scan. Your wallet still signs every trade.", loop: "They want you blind. Don't give them that." }),
+  script({ id: "d1-s7", day: 1, format: "ai_detection", visualStyle: "dashboard", headline: "WE'RE LIVE", hook: "Synexus Sentinel is live. Right now.", build: "Non-custodial. No wallet connect to scan. Just paste and read.", payoff: "Risk score. Whales. Rug flags. Before you sign.", loop: "Rug season doesn't sleep. Neither do I." }),
 ];
 
 const DAY_2 = [
-  script({ id: "d2-s1", day: 2, format: "exposed_scam", visualStyle: "fear", headline: "LOSE EVERYTHING", hook: "This is how you lose everything in crypto.", build: "Chase green candles. Ignore wallet concentration. Hold through the dump.", payoff: "Synexus shows you Avoid before the timeline screams.", loop: "Exit liquidity is real." }),
-  script({ id: "d2-s2", day: 2, format: "exposed_scam", visualStyle: "fear", headline: "EXIT LIQUIDITY", hook: "Exit liquidity is real—and here's how it works.", build: "Early wallets load up. Retail floods in. Whales exit into your buy.", payoff: "Paste the mint. Synexus reads top wallets and liquidity health.", loop: "Most coins are designed to drain you." }),
-  script({ id: "d2-s3", day: 2, format: "exposed_scam", visualStyle: "glitch", headline: "DESIGNED TO DRAIN", hook: "Most coins are designed to drain you.", build: "Not every red flag is on the chart. Sentinels see what influencers won't say.", payoff: "Should I buy this? Get the answer in five seconds.", loop: "No one is ready for what comes next." }),
-  script({ id: "d2-s4", day: 2, format: "before_it_happens", visualStyle: "fear", headline: "BEFORE THE DUMP", hook: "The dump always looks obvious after.", build: "Synexus tracks sharp pumps, thin liquidity, and whale exits in real time.", payoff: "Watch or Avoid—before you sign.", loop: "Scan first." }),
-  script({ id: "d2-s5", day: 2, format: "exposed_scam", visualStyle: "fear", headline: "SCAM PATTERN", hook: "I've seen this scam pattern repeat every launch season.", build: "New mint. Fake volume. Paid shillers. Then silence.", payoff: "Synexus pattern scans catch it early.", loop: "Something important is happening." }),
-  script({ id: "d2-s6", day: 2, format: "ai_detection", visualStyle: "dashboard", headline: "RUG FLAGS", hook: "Rug flags don't show up on the chart.", build: "They show up in liquidity, holder concentration, and Sentinel risk scores.", payoff: "Paste any token at synexus dot pro.", loop: "Don't be exit liquidity." }),
+  script({ id: "d2-s1", day: 2, format: "exposed_scam", visualStyle: "fear", headline: "ZERO IN 60 SEC", hook: "This is how you go to zero in sixty seconds.", build: "Chase the pump. Ignore the wallets. Hold while they dump on you.", payoff: "Synexus shows Avoid before the timeline screams.", loop: "Exit liquidity is real." }),
+  script({ id: "d2-s2", day: 2, format: "exposed_scam", visualStyle: "fear", headline: "EXIT LIQUIDITY", hook: "You are exit liquidity. Unless you scan.", build: "Whales load. Retail floods in. They sell into your buy.", payoff: "Paste the mint. Synexus reads top wallets and pool health.", loop: "Most coins are built to drain you." }),
+  script({ id: "d2-s3", day: 2, format: "exposed_scam", visualStyle: "glitch", headline: "DESIGNED TO DRAIN", hook: "Most coins are designed to drain you.", build: "The chart won't show it. Sentinels will.", payoff: "Should I buy this? Five seconds. One verdict.", loop: "One paste. One verdict. Move." }),
+  script({ id: "d2-s4", day: 2, format: "before_it_happens", visualStyle: "fear", headline: "BEFORE THE DUMP", hook: "The dump always looks obvious after.", build: "Synexus tracks thin liquidity, whale exits, and fake momentum live.", payoff: "Watch or Avoid — before you sign.", loop: "Scan first." }),
+  script({ id: "d2-s5", day: 2, format: "exposed_scam", visualStyle: "fear", headline: "SAME SCAM AGAIN", hook: "Same scam. Every launch season.", build: "New mint. Fake volume. Paid shills. Then silence.", payoff: "Synexus pattern scans catch it early.", loop: "Your wallet signs. My job is the read." }),
+  script({ id: "d2-s6", day: 2, format: "ai_detection", visualStyle: "dashboard", headline: "RUG FLAGS HIDDEN", hook: "Rug flags never show on the chart.", build: "They show in liquidity, holder concentration, and Sentinel scores.", payoff: "Paste any token at synexus dot pro.", loop: "Don't be exit liquidity." }),
 ];
 
 const DAY_3 = [
@@ -74,18 +85,25 @@ const DAY_4 = [
 ];
 
 const DAY_5_HOOKS = [
-  "This coin pattern repeats every time.",
-  "Watch this before it happens.",
-  "The next move is already forming.",
-  "They don't want you to scan the mint.",
-  "This is what insiders check first.",
+  "This pattern repeats. Every. Single. Time.",
+  "Watch this before you ape.",
+  "The next rug is already loading.",
+  "They don't want you scanning the mint.",
+  "Insiders check this first. Do you?",
   "The chart lies. The Sentinel read doesn't.",
-  "Aping without this is gambling.",
-  "Three seconds. One verdict.",
-  "Most traders skip this step.",
-  "This is why rugs feel sudden.",
+  "Aping without this is pure gambling.",
+  "Three seconds. One verdict. No excuses.",
+  "Most traders skip this step. Don't.",
+  "Rugs feel sudden. They're not.",
   "Paste the mint or stay blind.",
   "Synexus caught this before CT did.",
+];
+
+const DAY_5_BUILDS = [
+  "Synexus fuses liquidity, whales, and rug flags in one read.",
+  "Four Sentinels. One verdict. Live on Solana.",
+  "Paste the mint. Get Avoid, Watch, or OK — fast.",
+  "I read the pool before you touch the chart.",
 ];
 
 const DAY_5 = DAY_5_HOOKS.map((hook, i) =>
@@ -95,9 +113,9 @@ const DAY_5 = DAY_5_HOOKS.map((hook, i) =>
     format: i % 2 === 0 ? "before_it_happens" : "ai_detection",
     visualStyle: i % 3 === 0 ? "glitch" : "dashboard",
     hook,
-    build: "Synexus scans liquidity, whales, and rug flags across Solana.",
+    build: DAY_5_BUILDS[i % DAY_5_BUILDS.length],
     payoff: "Avoid. Watch. OK. Before you sign.",
-    loop: "No one is ready for what comes next.",
+    loop: BADASS_LOOPS[i % BADASS_LOOPS.length],
   }),
 );
 

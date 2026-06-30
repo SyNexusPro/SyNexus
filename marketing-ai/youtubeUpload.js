@@ -3,22 +3,27 @@ import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { google } from "googleapis";
 import { fileExists } from "./videoPipeline.js";
+import { getYouTubeGoogleCreds } from "./youtubeGoogleCreds.js";
 
 const UPLOAD_SCOPE = "https://www.googleapis.com/auth/youtube.upload";
+const READONLY_SCOPE = "https://www.googleapis.com/auth/youtube.readonly";
+export const YOUTUBE_OAUTH_SCOPES = [UPLOAD_SCOPE, READONLY_SCOPE];
 
 export function hasYouTubeCredentials() {
+  const { clientId, clientSecret } = getYouTubeGoogleCreds();
   return Boolean(
-    process.env.YOUTUBE_CLIENT_ID?.trim() &&
-      process.env.YOUTUBE_CLIENT_SECRET?.trim() &&
+    clientId &&
+      clientSecret &&
       process.env.YOUTUBE_REFRESH_TOKEN?.trim(),
   );
 }
 
 export function getYouTubeConfig() {
+  const { clientId, clientSecret, redirectUri } = getYouTubeGoogleCreds();
   return {
-    clientId: process.env.YOUTUBE_CLIENT_ID?.trim() || "",
-    clientSecret: process.env.YOUTUBE_CLIENT_SECRET?.trim() || "",
-    redirectUri: process.env.YOUTUBE_REDIRECT_URI?.trim() || "http://localhost",
+    clientId,
+    clientSecret,
+    redirectUri,
     refreshToken: process.env.YOUTUBE_REFRESH_TOKEN?.trim() || "",
     privacy: process.env.YOUTUBE_PRIVACY?.trim() || "public",
     categoryId: process.env.YOUTUBE_CATEGORY_ID?.trim() || "28",
@@ -152,13 +157,26 @@ export async function uploadVideoToYouTube({
       body: createReadStream(videoPath),
     },
   }).catch((err) => {
-    const msg = err?.response?.data?.error?.message || err.message || String(err);
-    if (msg.includes("invalid_grant")) {
+    const data = err?.response?.data?.error;
+    const msg = data?.message || err.message || String(err);
+    const reason = data?.errors?.[0]?.reason || "";
+
+    if (reason === "youtubeSignupRequired") {
       throw new Error(
-        "YouTube refresh token expired or revoked. Run: npm run youtube:auth — then npm run youtube:daily",
+        "This Google account has no YouTube channel. Open https://www.youtube.com → create a channel with the same account you used for OAuth, then run: npm run youtube:test",
       );
     }
-    throw new Error(`YouTube upload failed: ${msg}`);
+    if (msg.includes("invalid_grant")) {
+      throw new Error(
+        "YouTube refresh token expired or revoked. Run: npm run youtube:oauth — then npm run youtube:test",
+      );
+    }
+    if (msg.includes("insufficient") || msg.includes("Insufficient")) {
+      throw new Error(
+        "YouTube token missing scopes. Run: npm run youtube:oauth (re-approve), then npm run youtube:test",
+      );
+    }
+    throw new Error(`YouTube upload failed: ${msg}${reason ? ` (${reason})` : ""}`);
   });
 
   const videoId = response.data.id;

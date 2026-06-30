@@ -1,0 +1,20 @@
+[Unit]
+Description=Synexus autonomous growth engine (blog + multi-platform blast)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=synexus
+Group=synexus
+WorkingDirectory=/opt/synexus/app
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/npm run growth:watch
+Restart=always
+RestartSec=30
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=synexus-growth
+
+[Install]
+WantedBy=multi-user.target

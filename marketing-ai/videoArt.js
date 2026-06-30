@@ -1,15 +1,19 @@
 import { escapeXml, wrapLines } from "./videoUtils.js";
 import { renderLogoFooterMark, renderLogoHero, renderLogoWatermark } from "./videoLogo.js";
 import { renderSynBunnyInline } from "./synBunny.js";
+import { MATTE_BLACK, ACCENT, NEON, SUBSTRATE, HIGHLIGHT, MUTED, CYAN, DANGER } from "./brandPalette.js";
 
 const W = 1080;
 const H = 1920;
 
-/** Brand palette — matte black substrate + glowing neon green PCB (do not drift). */
-const MATTE_BLACK = "#000000";
-const PCB_GREEN = "#00ff88";
-const NEON_GREEN = "#89ff2f";
-const PCB_SUBSTRATE = "#041008";
+function showVideoMascot() {
+  return process.env.VIDEO_MASCOT?.trim() === "1" || process.env.SHOW_SYN_BUNNY === "1";
+}
+
+/** Brand palette — matte black + electric purple neon (SyNexus v1.0). */
+const PCB_GREEN = ACCENT;
+const NEON_GREEN = NEON;
+const PCB_SUBSTRATE = SUBSTRATE;
 
 /** Procedural PCB traces — bright green on dark substrate. */
 function circuitBoard() {
@@ -149,7 +153,7 @@ function baseDefs() {
     </linearGradient>
     <linearGradient id="titleGrad" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0%" stop-color="${NEON_GREEN}"/>
-      <stop offset="50%" stop-color="#dcffbe"/>
+      <stop offset="50%" stop-color="${HIGHLIGHT}"/>
       <stop offset="100%" stop-color="${NEON_GREEN}"/>
     </linearGradient>
     <filter id="circuitBloom" x="-80%" y="-80%" width="260%" height="260%">
@@ -202,10 +206,10 @@ function baseBackground() {
 
 function footerBar(sub = "synexus.pro · non-custodial intelligence") {
   return `
-  <text x="540" y="1780" font-size="36" fill="#89ff2f" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-weight="800" letter-spacing="0.14em" filter="url(#glow)">
+  <text x="540" y="1780" font-size="36" fill="${NEON}" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-weight="800" letter-spacing="0.14em" filter="url(#glow)">
     PASTE · SCAN · DECIDE
   </text>
-  <text x="540" y="1840" font-size="26" fill="#8fb886" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" letter-spacing="0.1em">
+  <text x="540" y="1840" font-size="26" fill="${MUTED}" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" letter-spacing="0.1em">
     ${escapeXml(sub)}
   </text>`;
 }
@@ -219,8 +223,8 @@ function renderFlowSteps(steps) {
       return `
       <rect x="120" y="${y}" width="840" height="150" rx="20" fill="#041008" fill-opacity="0.85" stroke="#00ff88" stroke-opacity="0.55" stroke-width="2" filter="url(#traceGlow)"/>
       <text x="160" y="${y + 58}" font-size="28" fill="#5ee7ff" font-family="Segoe UI, Arial, sans-serif" font-weight="700" letter-spacing="0.2em">${String(i + 1).padStart(2, "0")}</text>
-      <text x="220" y="${y + 62}" font-size="44" fill="#dcffbe" font-family="Segoe UI, Arial, sans-serif" font-weight="800" filter="url(#glow)">${escapeXml(step.label)}</text>
-      <text x="220" y="${y + 108}" font-size="28" fill="#8fb886" font-family="Segoe UI, Arial, sans-serif">${escapeXml(step.sub)}</text>`;
+      <text x="220" y="${y + 62}" font-size="44" fill="${HIGHLIGHT}" font-family="Segoe UI, Arial, sans-serif" font-weight="800" filter="url(#glow)">${escapeXml(step.label)}</text>
+      <text x="220" y="${y + 108}" font-size="28" fill="${MUTED}" font-family="Segoe UI, Arial, sans-serif">${escapeXml(step.sub)}</text>`;
     })
     .join("\n");
 }
@@ -243,14 +247,14 @@ function fakeDashboard() {
   return `
   <g opacity="0.92">
     <rect x="80" y="900" width="920" height="520" rx="20" fill="#020806" stroke="#00ff88" stroke-opacity="0.45" stroke-width="2" filter="url(#traceGlow)"/>
-    <text x="120" y="960" font-size="22" fill="#5ee7ff" font-family="Segoe UI, Arial, sans-serif" font-weight="700" letter-spacing="0.2em">SYNEXUS SENTINEL</text>
-    <text x="120" y="1000" font-size="18" fill="#89ff2f" font-family="monospace">TOKEN ████████...pump</text>
+    <text x="120" y="960" font-size="22" fill="${CYAN}" font-family="Segoe UI, Arial, sans-serif" font-weight="700" letter-spacing="0.2em">SYNEXUS AI</text>
+    <text x="120" y="1000" font-size="18" fill="${NEON}" font-family="monospace">TOKEN ████████...pump</text>
     <rect x="120" y="1020" width="400" height="12" rx="4" fill="#041008" stroke="#00ff88" stroke-opacity="0.3"/>
     <rect x="120" y="1020" width="280" height="12" rx="4" fill="#89ff2f" fill-opacity="0.7"/>
-    <text x="540" y="1032" font-size="16" fill="#89ff2f" font-family="monospace">RISK 67/100</text>
-    <text x="120" y="1080" font-size="16" fill="#8fb886" font-family="monospace">LIQ $128K · WHALES 41%</text>
-    <text x="120" y="1120" font-size="28" fill="#ff6b6b" font-family="Segoe UI, Arial, sans-serif" font-weight="800">VERDICT: WATCH</text>
-    <text x="120" y="1180" font-size="14" fill="#5ee7ff" font-family="monospace">Aegis · Pulse · Titan · Cipher</text>
+    <text x="540" y="1032" font-size="16" fill="${NEON}" font-family="monospace">RISK 67/100</text>
+    <text x="120" y="1080" font-size="16" fill="${MUTED}" font-family="monospace">LIQ $128K · WHALES 41%</text>
+    <text x="120" y="1120" font-size="28" fill="${DANGER}" font-family="Segoe UI, Arial, sans-serif" font-weight="800">VERDICT: WATCH</text>
+    <text x="120" y="1180" font-size="14" fill="${CYAN}" font-family="monospace">Aegis · Pulse · Titan · Cipher</text>
     ${Array.from({ length: 8 }, (_, i) => `<rect x="${120 + (i % 4) * 210}" y="${1220 + Math.floor(i / 4) * 80}" width="190" height="60" rx="8" fill="#041008" stroke="#00ff88" stroke-opacity="0.25"/>`).join("")}
   </g>`;
 }
@@ -261,7 +265,7 @@ function glitchOverlay(intensity = 1) {
   <g opacity="${0.15 + intensity * 0.1}">
     ${Array.from({ length: 6 }, (_, i) => {
       const y = 400 + i * 220;
-      return `<rect x="0" y="${y}" width="${W}" height="${8 + (i % 3) * 4}" fill="#89ff2f" opacity="0.35"/>`;
+      return `<rect x="0" y="${y}" width="${W}" height="${8 + (i % 3) * 4}" fill="${NEON}" opacity="0.35"/>`;
     }).join("")}
     <text x="542" y="480" font-size="80" fill="#ff0040" opacity="0.25" font-family="Segoe UI, Arial, sans-serif" font-weight="900">▌</text>
     <text x="538" y="480" font-size="80" fill="#00ffff" opacity="0.2" font-family="Segoe UI, Arial, sans-serif" font-weight="900">▌</text>
@@ -277,20 +281,21 @@ export function renderSceneSvg(scene) {
 
   if (scene.id === "intro") {
     body = `
-    <text x="540" y="200" font-size="30" fill="#5ee7ff" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-weight="700" letter-spacing="0.28em" filter="url(#traceGlow)">SYNEXUS</text>
+    <text x="540" y="200" font-size="30" fill="${CYAN}" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-weight="700" letter-spacing="0.28em" filter="url(#traceGlow)">SYNEXUS</text>
     ${bigHeadline(headline, 480, 88)}
     ${subLine(sub, 720)}
     ${renderLogoHero({ size: 220, centerY: 1080 })}`;
-  } else if (scene.id === "hook") {
-    const showDash = scene.visualStyle === "dashboard" || scene.visualStyle === "authority";
+  } else if (scene.id === "hook" || scene.phase) {
+    const showDash = scene.visualStyle === "dashboard" || scene.visualStyle === "authority" || scene.visualStyle === "chart";
     const showGlitch = scene.visualStyle === "glitch" || scene.visualStyle === "fear" || scene.visualStyle === "urgent";
+    const headlineSize = showDash ? 72 : 88;
     body = `
-    ${bigHeadline(headline, showDash ? 480 : 620, showDash ? 64 : 80)}
-    ${subLine(sub, showDash ? 580 : 820)}
+    ${bigHeadline(headline, showDash ? 440 : 540, headlineSize)}
+    ${subLine(sub, showDash ? 560 : 760)}
     ${showDash ? fakeDashboard() : ""}
-    ${!showDash ? `<rect x="140" y="920" width="800" height="100" rx="16" fill="#041008" stroke="#00ff88" stroke-opacity="0.6" stroke-width="2" filter="url(#traceGlow)"/>
-    <text x="540" y="985" font-size="38" fill="#89ff2f" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-weight="800" letter-spacing="0.18em" filter="url(#glow)">AVOID · WATCH · OK</text>` : ""}
-    ${showGlitch ? glitchOverlay(1) : ""}`;
+    ${!showDash ? `<rect x="120" y="900" width="840" height="120" rx="18" fill="${SUBSTRATE}" stroke="${NEON}" stroke-opacity="0.75" stroke-width="3" filter="url(#megaGlow)"/>
+    <text x="540" y="975" font-size="44" fill="${NEON}" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-weight="900" letter-spacing="0.22em" filter="url(#megaGlow)">AVOID · WATCH · OK</text>` : ""}
+    ${showGlitch ? glitchOverlay(1.4) : ""}`;
   } else if (scene.id === "flow" && scene.steps) {
     body = `
     ${bigHeadline(headline, 520, 56)}
@@ -300,8 +305,8 @@ export function renderSceneSvg(scene) {
     ${renderLogoHero({ size: 140, centerY: 560 })}
     ${bigHeadline(headline, 720, 96)}
     ${subLine(sub, 880)}
-    <rect x="160" y="980" width="760" height="120" rx="22" fill="#041008" stroke="#89ff2f" stroke-opacity="0.7" stroke-width="2.5" filter="url(#megaGlow)"/>
-    <text x="540" y="1055" font-size="36" fill="#89ff2f" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-weight="800" letter-spacing="0.14em">FREE SCAN · SYNEXUS.PRO</text>`;
+    <rect x="160" y="980" width="760" height="120" rx="22" fill="${SUBSTRATE}" stroke="${NEON}" stroke-opacity="0.7" stroke-width="2.5" filter="url(#megaGlow)"/>
+    <text x="540" y="1055" font-size="36" fill="${NEON}" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-weight="800" letter-spacing="0.14em">FREE SCAN · SYNEXUS.PRO</text>`;
   } else {
     body = `
     ${bigHeadline(headline, 680, 64)}
@@ -312,9 +317,9 @@ export function renderSceneSvg(scene) {
 <svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
   ${baseDefs()}
   ${baseBackground()}
-  <text x="540" y="130" font-size="26" fill="#00ff88" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-weight="700" letter-spacing="0.26em" opacity="0.9">${kicker.toUpperCase()}</text>
+  <text x="540" y="130" font-size="26" fill="${ACCENT}" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-weight="700" letter-spacing="0.26em" opacity="0.9">${kicker.toUpperCase()}</text>
   ${body}
-  ${renderSynBunnyInline({ sceneId: scene.id })}
+  ${showVideoMascot() ? renderSynBunnyInline({ sceneId: scene.id }) : ""}
   ${renderLogoWatermark(W, H)}
   ${renderLogoFooterMark()}
   ${footerBar(scene.id === "cta" ? sub : "synexus.pro · you control your funds")}

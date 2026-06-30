@@ -64,11 +64,13 @@ async function renderDailyVideo({ force = false, quiet = false, upload = false }
     const scenesDir = join(dayDir, "scenes");
     await mkdir(scenesDir, { recursive: true });
 
-    const bunnySvg = renderSynBunnyStandaloneSvg(512);
-    const bunnyPng = join(dayDir, "syn-bunny.png");
-    await writeFile(join(dayDir, "syn-bunny.svg"), bunnySvg, "utf8");
-    await renderSvgToPng(bunnySvg, bunnyPng);
-    clearSynBunnyCache();
+    if (process.env.VIDEO_MASCOT?.trim() === "1") {
+      const bunnySvg = renderSynBunnyStandaloneSvg(512);
+      const bunnyPng = join(dayDir, "syn-bunny.png");
+      await writeFile(join(dayDir, "syn-bunny.svg"), bunnySvg, "utf8");
+      await renderSvgToPng(bunnySvg, bunnyPng);
+      clearSynBunnyCache();
+    }
 
     const scenePngPaths = [];
     for (let i = 0; i < job.scenes.length; i += 1) {

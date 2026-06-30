@@ -1,0 +1,24 @@
+{
+  "phase": "growth",
+  "policy": "100% reinvest — no withdrawals for 6 months",
+  "reinvestMonths": 6,
+  "allocation": [
+    { "id": "liquidity", "label": "SyN liquidity / protocol treasury", "pct": 50 },
+    { "id": "development", "label": "Development & hosting", "pct": 20 },
+    { "id": "marketing", "label": "Marketing & content automation", "pct": 15 },
+    { "id": "compliance", "label": "Security, legal & audits", "pct": 10 },
+    { "id": "reserve", "label": "Emergency reserve", "pct": 5 }
+  ],
+  "revenueStreams": [
+    { "id": "pro_subs", "label": "Synexus Pro ($19.99/mo)", "targetMonthlyUsd": 500 },
+    { "id": "trading_fees", "label": "Jupiter swap fees", "targetMonthlyUsd": 200 },
+    { "id": "affiliate", "label": "Affiliate / referrals", "targetMonthlyUsd": 100 }
+  ],
+  "sixMonthTargets": {
+    "proSubscribers": 250,
+    "monthlyRecurringUsd": 5000,
+    "blogPosts": 90,
+    "launchVideos": 200,
+    "telegramMembers": 5000
+  }
+}

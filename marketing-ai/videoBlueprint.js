@@ -1,5 +1,5 @@
 import { buildDailyPack, growthMissionLine, HOOKS } from "./synexusMarketingBot.js";
-import { buildDailyVoiceover } from "./marketingCopy.js";
+import { buildDailyVoiceover, buildYouTubeTitle } from "./marketingCopy.js";
 
 const FLOW_STEPS = [
   { label: "PASTE TOKEN", sub: "Mint or symbol — 3 seconds" },
@@ -48,15 +48,10 @@ export function buildVoiceover(pack, now = Date.now()) {
 export function buildYouTubeMetadata(pack, now = Date.now()) {
   const date = new Date(now);
   const hook = extractHook(pack.tiktok);
-  const titleVariants = [
-    `Synexus Sentinel · ${todayDirName(date)}`,
-    `Solana Risk Read · Synexus`,
-    `Avoid · Watch · OK · Synexus`,
-  ];
-  const title = titleVariants[date.getUTCDate() % titleVariants.length].slice(0, 95);
+  const title = buildYouTubeTitle({ hook, id: todayDirName(date) });
 
   const description = [
-    "Synexus — Sentinel-grade Solana token intelligence.",
+    "Synexus Sentinel — Solana risk reads before you sign.",
     "",
     hook,
     "",
@@ -66,7 +61,7 @@ export function buildYouTubeMetadata(pack, now = Date.now()) {
     "",
     "Not financial advice.",
     "",
-    "#Synexus #Solana #ShouldIBuyThis #Crypto #Shorts",
+    "#Synexus #Solana #ShouldIBuyThis #Crypto #Shorts #Trading",
   ].join("\n");
 
   const tags = [
@@ -76,6 +71,7 @@ export function buildYouTubeMetadata(pack, now = Date.now()) {
     "crypto trading",
     "token scanner",
     "memecoin",
+    "rug pull",
   ].join(", ");
 
   return { title, description, tags, hook, date: todayDirName(date) };

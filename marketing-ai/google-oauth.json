@@ -1,0 +1,9 @@
+{
+  "web": {
+    "client_id": "YOUR_CLIENT_ID.apps.googleusercontent.com",
+    "client_secret": "YOUR_CLIENT_SECRET",
+    "redirect_uris": ["http://localhost:8080/oauth2callback"],
+    "javascript_origins": ["http://localhost:8080"]
+  },
+  "_note": "Optional. Paste your Google Cloud OAuth JSON here, or set YOUTUBE_* in .env. Run: npm run youtube:oauth"
+}

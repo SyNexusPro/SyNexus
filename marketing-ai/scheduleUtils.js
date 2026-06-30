@@ -1,13 +1,18 @@
 import { tiktokPostsPerDay } from "./platforms/tiktok.js";
+import { SCHEDULE } from "./viralContentSystem.js";
 
-/** Shared 3× daily posting schedule (Telegram, YouTube, TikTok). */
+/** Daily posts: 3 Shorts + 1 long-form (v1.0 viral system). */
 export function postsPerDay() {
-  const n = Number(process.env.POSTS_PER_DAY?.trim() || process.env.TIKTOK_POSTS_PER_DAY?.trim() || "3");
-  return Math.min(3, Math.max(1, Number.isFinite(n) ? n : 3));
+  const n = Number(process.env.POSTS_PER_DAY?.trim() || process.env.TIKTOK_POSTS_PER_DAY?.trim() || String(SCHEDULE.shortsPerDay));
+  return Math.min(4, Math.max(1, Number.isFinite(n) ? n : SCHEDULE.shortsPerDay));
+}
+
+export function shortSlotsPerDay() {
+  return Math.min(3, postsPerDay());
 }
 
 export function postHours() {
-  const raw = process.env.POST_HOURS?.trim() || process.env.TIKTOK_POST_HOURS?.trim() || "9,14,20";
+  const raw = process.env.POST_HOURS?.trim() || process.env.TIKTOK_POST_HOURS?.trim() || SCHEDULE.postHours.join(",");
   const hours = raw
     .split(",")
     .map((h) => Number(h.trim()))
@@ -16,11 +21,16 @@ export function postHours() {
   const count = postsPerDay();
   if (hours.length >= count) return hours.slice(0, count);
 
-  return [9, 14, 20].slice(0, count);
+  return SCHEDULE.postHours.slice(0, count);
 }
 
 export function slotLabel(slot) {
-  return ["Morning", "Midday", "Evening"][slot] || `Slot ${slot + 1}`;
+  if (slot === SCHEDULE.longSlot) return "Long-form";
+  return ["Short 1", "Short 2", "Short 3"][slot] || `Slot ${slot + 1}`;
+}
+
+export function isLongFormSlot(slot) {
+  return slot === SCHEDULE.longSlot;
 }
 
 export function msUntilNextSlot(now = new Date()) {
@@ -50,4 +60,4 @@ export function currentSlotIndex(now = new Date()) {
   return -1;
 }
 
-export { tiktokPostsPerDay };
+export { tiktokPostsPerDay, SCHEDULE };

@@ -1,17 +1,18 @@
 import { createWriteStream } from "node:fs";
 import { mkdir, writeFile, access, constants } from "node:fs/promises";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { spawn } from "node:child_process";
 import ffmpegPath from "ffmpeg-static";
 import { Resvg } from "@resvg/resvg-js";
 import { MsEdgeTTS, OUTPUT_FORMAT } from "msedge-tts";
 import { renderSceneSvg } from "./videoArt.js";
 import { formatDuration } from "./videoUtils.js";
-import { resolveTtsVoice, naturalProsody } from "./ttsVoice.js";
+import { resolveTtsVoice, naturalProsody, prosodyForSegment } from "./ttsVoice.js";
+import { EDITING } from "./viralContentSystem.js";
 
 const FPS = 30;
-const XFADE_SEC = 0.95;
-const MIN_TOTAL_SEC = 18;
+const XFADE_SEC = Number(process.env.VIDEO_XFADE_SEC) || EDITING.xfadeSec;
+const MIN_TOTAL_SEC = EDITING.minShortSec;
 
 export async function renderSvgToPng(svg, outPath) {
   const resvg = new Resvg(svg, {
@@ -21,14 +22,70 @@ export async function renderSvgToPng(svg, outPath) {
   await writeFile(outPath, resvg.render().asPng());
 }
 
-export async function synthesizeVoiceover(text, outDir, voice) {
+export async function synthesizeVoiceover(text, outDir, voice, { style = "natural" } = {}) {
   await mkdir(outDir, { recursive: true });
   const resolved = resolveTtsVoice(voice);
-  const tts = new MsEdgeTTS();
-  await tts.setMetadata(resolved, OUTPUT_FORMAT.AUDIO_24KHZ_96KBITRATE_MONO_MP3);
   const clean = String(text).replace(/\s+/g, " ").trim();
-  const { audioFilePath } = await tts.toFile(outDir, clean, naturalProsody());
+  if (!clean) throw new Error("Voiceover text is empty");
+
+  if (style === "flat") {
+    return synthesizeSingleClip(clean, outDir, resolved, naturalProsody());
+  }
+
+  return synthesizePunchyVoiceover(clean, outDir, resolved);
+}
+
+async function synthesizeSingleClip(text, outDir, voice, prosody) {
+  const tts = new MsEdgeTTS();
+  await tts.setMetadata(voice, OUTPUT_FORMAT.AUDIO_24KHZ_96KBITRATE_MONO_MP3);
+  const { audioFilePath } = await tts.toFile(outDir, text, prosody);
   return audioFilePath;
+}
+
+function splitSentences(text) {
+  const parts = text.match(/[^.!?]+[.!?]+/g);
+  if (!parts || parts.length === 0) return [text];
+  return parts.map((p) => p.trim()).filter(Boolean);
+}
+
+function groupPunchSegments(text) {
+  const sentences = splitSentences(text);
+  if (sentences.length <= 2) {
+    return [{ text: sentences.join(" "), prosody: naturalProsody() }];
+  }
+  const groups = [
+    { text: sentences[0], prosody: prosodyForSegment(0, 3) },
+    { text: sentences.slice(1, -1).join(" "), prosody: prosodyForSegment(1, 3) },
+    { text: sentences[sentences.length - 1], prosody: prosodyForSegment(2, 3) },
+  ];
+  return groups.filter((g) => g.text.trim());
+}
+
+async function synthesizePunchyVoiceover(text, outDir, voice) {
+  const segments = groupPunchSegments(text);
+  if (segments.length === 1) {
+    return synthesizeSingleClip(segments[0].text, outDir, voice, segments[0].prosody);
+  }
+
+  const clipPaths = [];
+  for (let i = 0; i < segments.length; i += 1) {
+    const segDir = join(outDir, `seg-${i}`);
+    await mkdir(segDir, { recursive: true });
+    const clip = await synthesizeSingleClip(segments[i].text, segDir, voice, segments[i].prosody);
+    clipPaths.push(resolve(clip));
+  }
+
+  const listPath = join(outDir, "concat-list.txt");
+  const outPath = join(outDir, "voiceover-punchy.mp3");
+  const listBody = clipPaths.map((p) => `file '${p.replace(/\\/g, "/").replace(/'/g, "'\\''")}'`).join("\n");
+  await writeFile(listPath, listBody, "utf8");
+
+  await runFfmpeg(
+    ["-y", "-f", "concat", "-safe", "0", "-i", listPath, "-c:a", "libmp3lame", "-q:a", "2", outPath],
+    { quiet: true },
+  );
+
+  return outPath;
 }
 
 export function runFfmpeg(args, { quiet = false } = {}) {

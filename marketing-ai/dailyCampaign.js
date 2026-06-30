@@ -94,7 +94,7 @@ export async function runDailyCampaign({ force = false, quiet = false } = {}) {
       () =>
         postTelegram(pack.telegram, {
           quiet: true,
-          photoPath: join(dayDir, "syn-bunny.png"),
+          videoPath,
         }),
       { force, state, quiet },
     );

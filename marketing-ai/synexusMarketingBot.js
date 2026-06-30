@@ -23,6 +23,7 @@ import {
   buildTikTokCaption as buildPremiumTikTokCaption,
   appOrigin,
 } from "./marketingCopy.js";
+import { mascotSignOff } from "./synBunny.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -33,14 +34,14 @@ const SYN_PUMPFUN_URL =
   "https://pump.fun/communities/9naVtLAGKWYuEcGehe1BZ3DpiSLHjSNsaeFr2JPHpump";
 const SYN_COIN_LINE = `🪙 $SyN community is live on pump.fun → ${SYN_PUMPFUN_URL}`;
 
-/** One-line hooks — rotate daily. Always lead with simplicity. */
+/** One-line hooks — rotate daily. Punchy, badass, female Sentinel voice. */
 const HOOKS = [
-  "Should I buy this? Paste any Solana token. Synexus answers in seconds.",
-  "About to ape? Paste the mint first. Avoid · Watch · OK — in plain English.",
-  "One paste. One verdict. Risk, whales, and rug flags before you sign.",
-  "Stop guessing. Paste a token — Synexus tells you if it's worth the click.",
-  "Memecoin moving? Freeze. Paste it. Read Avoid or Watch before you buy.",
-  "Trading Solana? Paste any coin. Get a simple scorecard + plain-English read.",
+  "Stop. Paste the mint before you ape. Synexus reads it in seconds.",
+  "You're one blind ape away from exit liquidity. Scan first.",
+  "Should I buy this? I answer that before you touch Phantom.",
+  "The chart is bait. Paste the token — get Avoid, Watch, or OK.",
+  "Memecoin pumping? Freeze. I read liquidity and whales before you sign.",
+  "Three seconds. One verdict. No cope. Synexus Sentinel is live.",
 ];
 
 /** Supporting lines — still simple, no operator jargon. */
