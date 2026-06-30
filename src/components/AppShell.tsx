@@ -72,6 +72,16 @@ export function AppShell() {
         <Link className="app-footer__link" to="/privacy">
           Privacy
         </Link>
+        <span className="app-footer__sep" aria-hidden>
+          ·
+        </span>
+        <Link
+          className="app-footer__link"
+          to="/liquidity-treasury"
+          title="Synexus Coin Liquidity Treasury"
+        >
+          Liquidity Treasury
+        </Link>
       </footer>
       <BottomNav />
     </div>

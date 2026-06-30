@@ -8,11 +8,6 @@ import {
   STORAGE_KEYS,
   bpsToLabel,
 } from "../config/ecosystem";
-import {
-  TRADING_FEE_BPS,
-  TRADING_FEE_REVENUE_ALLOCATION,
-} from "../config/tradingFees";
-import { formatTradingFeeRate } from "../lib/tradingFees";
 import { SYN_IS_LIVE, SYN_PUMPFUN_URL, SYN_SYMBOL, SYN_TOKEN_ID } from "../config/synToken";
 
 export function EcosystemHub() {
@@ -36,10 +31,6 @@ export function EcosystemHub() {
     if (intent === "stake" || symbol) {
       const el = document.getElementById("hub-staking");
       el?.scrollIntoView({ behavior: "smooth", block: "start" });
-      return;
-    }
-    if (typeof window !== "undefined" && window.location.hash === "#hub-trading-fees") {
-      document.getElementById("hub-trading-fees")?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [intent, symbol]);
 
@@ -62,7 +53,7 @@ export function EcosystemHub() {
         <a href="#hub-content">Content hub</a>
         <a href="#hub-affiliate">Affiliates</a>
         <a href="#hub-utility">Token utility</a>
-        <a href="#hub-trading-fees">Trading fees</a>
+        <Link to="/liquidity-treasury">Liquidity treasury</Link>
         <a href="#hub-staking">Staking &amp; fees</a>
       </nav>
 
@@ -186,50 +177,6 @@ export function EcosystemHub() {
             </Link>
           </div>
         ) : null}
-      </section>
-
-      <section id="hub-trading-fees" className="ecosystem-hub__section marketing-panel ecosystem-hub__section--trading">
-        <h2>Trading fees</h2>
-        <p>
-          Synexus charges a transparent platform fee on swaps routed through our Jupiter integration. Free accounts
-          pay the standard rate; Synexus Pro subscribers receive a reduced fee tier. Fees are separate from
-          network gas, DEX spread, and Jupiter&apos;s own routing costs.
-        </p>
-        <div className="ecosystem-hub__fee-grid ecosystem-hub__fee-grid--two">
-          <article>
-            <p className="ecosystem-hub__fee-label">Free tier</p>
-            <p className="ecosystem-hub__fee-value">{formatTradingFeeRate("FREE")}</p>
-            <p className="ecosystem-hub__fee-note">{bpsToLabel(TRADING_FEE_BPS.FREE)} per swap notional</p>
-          </article>
-          <article>
-            <p className="ecosystem-hub__fee-label">Synexus Pro</p>
-            <p className="ecosystem-hub__fee-value">{formatTradingFeeRate("PRO")}</p>
-            <p className="ecosystem-hub__fee-note">{bpsToLabel(TRADING_FEE_BPS.PRO)} per swap notional</p>
-          </article>
-        </div>
-        <h3 className="ecosystem-hub__subhead">Fee revenue allocation</h3>
-        <p>
-          Trading-fee revenue is allocated across treasury, operations, and resilience — not 100% to liquidity.
-        </p>
-        <ul className="ecosystem-hub__allocation">
-          {TRADING_FEE_REVENUE_ALLOCATION.map((row) => (
-            <li key={row.id}>
-              <span className="ecosystem-hub__allocation-label">{row.label}</span>
-              <span className="ecosystem-hub__allocation-bar" aria-hidden>
-                <span style={{ width: `${row.pct}%` }} />
-              </span>
-              <span className="ecosystem-hub__allocation-pct">{row.pct}%</span>
-            </li>
-          ))}
-        </ul>
-        <p className="ecosystem-hub__fineprint">
-          Final on-chain fee collection requires a configured Jupiter fee account (
-          <code>VITE_JUPITER_FEE_ACCOUNT</code>) and audited treasury routing. Rates and allocation may be updated
-          with notice before mainnet collection goes live.
-        </p>
-        <Link className="ecosystem-hub__wallet-terms" to="/pulse">
-          Upgrade to Synexus Pro
-        </Link>
       </section>
 
       <section id="hub-staking" className="ecosystem-hub__section marketing-panel ecosystem-hub__section--stakes">

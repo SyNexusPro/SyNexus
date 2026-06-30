@@ -28,6 +28,7 @@ import {
 import { ProTrialBanner } from "../components/ProTrialBanner";
 import { ProDemoButton } from "../components/ProDemoButton";
 import { ShouldIBuyPanel } from "../components/ShouldIBuyPanel";
+import { TopMoversPanel } from "../components/TopMoversPanel";
 import { SentinelAlertsHub } from "../components/SentinelAlertsHub";
 import { WalletPerformanceDashboard } from "../components/WalletPerformanceDashboard";
 import { OracleAdminControlCenter } from "../components/OracleAdminControlCenter";
@@ -762,6 +763,7 @@ export function Pulse() {
       ) : null}
 
       <ShouldIBuyPanel poolTokens={marketTokens} />
+      <TopMoversPanel />
       <WalletPerformanceDashboard />
       <OracleAdminControlCenter
         plan={plan}

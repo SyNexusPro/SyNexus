@@ -135,8 +135,8 @@ export function About() {
             </article>
           ))}
         </div>
-        <Link className="about-page__link" to="/hub#hub-trading-fees">
-          Trading fees and treasury allocation →
+        <Link className="about-page__link" to="/liquidity-treasury">
+          Synexus Coin Liquidity Treasury →
         </Link>
       </section>
 

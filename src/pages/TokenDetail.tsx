@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { TokenLogo } from "../components/TokenLogo";
-import { TradingFeeDisclosure } from "../components/TradingFeeDisclosure";
 import { TradeIntelligenceScorecard } from "../components/TradeIntelligenceScorecard";
 import { ShouldIBuyVerdict } from "../components/ShouldIBuyPanel";
 import { TradeIntelBuyLink } from "../components/TradeIntelBuyLink";
@@ -333,7 +332,6 @@ export function TokenDetail() {
             Jupiter opens with SOL swaps prefilled — connect your wallet and confirm. Charts stay on DexScreener.
           </p>
         </div>
-        <TradingFeeDisclosure plan={plan} notionalUsd={100} showAllocation />
         <div className="detail-trade-panel__actions">
           {showPumpFun ? (
             <a

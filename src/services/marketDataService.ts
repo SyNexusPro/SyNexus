@@ -18,11 +18,33 @@ type DexPair = {
   baseToken?: { symbol?: string; name?: string; address?: string };
   info?: { imageUrl?: string };
   priceUsd?: string;
-  priceChange?: { h24?: number };
-  volume?: { h24?: number };
+  priceChange?: { m5?: number; h24?: number };
+  volume?: { m5?: number; h24?: number };
   liquidity?: { usd?: number };
   fdv?: number;
 };
+
+export type TokenMover5m = {
+  id: string;
+  symbol: string;
+  name: string;
+  mintAddress: string;
+  priceUsd: number;
+  change5mPct: number;
+  logoUrl?: string;
+  liquidityUsd?: number;
+};
+
+export type Solana5mMoversResult = {
+  gainers: TokenMover5m[];
+  losers: TokenMover5m[];
+  source: FeedSource;
+  updatedAt: number;
+};
+
+const MIN_MOVER_LIQUIDITY_USD = 3_000;
+const MOVER_POOL_SIZE = 30;
+const MOVER_LIST_SIZE = 5;
 
 type FeedSource = "live" | "mock";
 
@@ -417,4 +439,135 @@ export async function previewTokensWithGuardianConfig(
   override?: DeepPartial<GuardianEngineConfig>,
 ) {
   return buildSampleTokens(override);
+}
+
+type DexBoostEntry = {
+  chainId?: string;
+  tokenAddress?: string;
+};
+
+function moverFromDexPair(pair: DexPair): TokenMover5m | null {
+  const mintAddress = pair.baseToken?.address?.trim();
+  const change5mPct = toFiniteNumber(pair.priceChange?.m5);
+  const priceUsd = toFiniteNumber(pair.priceUsd) ?? 0;
+  const liquidityUsd = toFiniteNumber(pair.liquidity?.usd);
+  if (!mintAddress || change5mPct === undefined) return null;
+  if ((liquidityUsd ?? 0) < MIN_MOVER_LIQUIDITY_USD) return null;
+
+  const symbol = pair.baseToken?.symbol?.trim() || "???";
+  const name = pair.baseToken?.name?.trim() || symbol;
+  const imageUrl = pair.info?.imageUrl?.trim();
+
+  return {
+    id: mintAddress,
+    symbol,
+    name,
+    mintAddress,
+    priceUsd,
+    change5mPct,
+    liquidityUsd,
+    logoUrl: imageUrl?.startsWith("http") ? imageUrl : undefined,
+  };
+}
+
+function pickBestMoverPairs(pairs: DexPair[]): TokenMover5m[] {
+  const bestByMint = new Map<string, DexPair>();
+  for (const pair of pairs) {
+    const mint = pair.baseToken?.address?.trim();
+    if (!mint) continue;
+    const existing = bestByMint.get(mint);
+    if (!existing || (pair.liquidity?.usd ?? 0) > (existing.liquidity?.usd ?? 0)) {
+      bestByMint.set(mint, pair);
+    }
+  }
+  return [...bestByMint.values()]
+    .map(moverFromDexPair)
+    .filter((mover): mover is TokenMover5m => Boolean(mover));
+}
+
+function mockSolana5mMovers(): Solana5mMoversResult {
+  const now = Date.now();
+  const gainers: TokenMover5m[] = [
+    { id: "bonk-m5", symbol: "BONK", name: "Bonk", mintAddress: "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263", priceUsd: 0.000034, change5mPct: 4.82 },
+    { id: "wif-m5", symbol: "WIF", name: "dogwifhat", mintAddress: "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm", priceUsd: 2.41, change5mPct: 3.15 },
+    { id: "popcat-m5", symbol: "POPCAT", name: "Popcat", mintAddress: "7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr", priceUsd: 1.12, change5mPct: 2.44 },
+    { id: "mew-m5", symbol: "MEW", name: "cat in a dogs world", mintAddress: "MEW1gQWJ3nEXg2qgERiKu7FAFj79PHvVUB6kiqq9p6p", priceUsd: 0.0089, change5mPct: 1.98 },
+    { id: "syn-m5", symbol: "SYN", name: "Synexus", mintAddress: SYN_MINT, priceUsd: 0.00432, change5mPct: 1.21 },
+  ];
+  const losers: TokenMover5m[] = [
+    { id: "pepe-m5", symbol: "PEPE", name: "Pepe", mintAddress: "pepe-mint", priceUsd: 0.0000107, change5mPct: -3.44 },
+    { id: "myro-m5", symbol: "MYRO", name: "Myro", mintAddress: "myro-mint", priceUsd: 0.21, change5mPct: -2.87 },
+    { id: "slerf-m5", symbol: "SLERF", name: "Slerf", mintAddress: "slerf-mint", priceUsd: 0.38, change5mPct: -2.11 },
+    { id: "bome-m5", symbol: "BOME", name: "BOOK OF MEME", mintAddress: "bome-mint", priceUsd: 0.012, change5mPct: -1.76 },
+    { id: "jup-m5", symbol: "JUP", name: "Jupiter", mintAddress: "jup-mint", priceUsd: 1.02, change5mPct: -0.92 },
+  ];
+  return { gainers, losers, source: "mock", updatedAt: now };
+}
+
+async function fetchDexBoostAddresses(): Promise<string[]> {
+  const [topRes, latestRes] = await Promise.all([
+    fetch("https://api.dexscreener.com/token-boosts/top/v1"),
+    fetch("https://api.dexscreener.com/token-boosts/latest/v1"),
+  ]);
+  const top = topRes.ok ? ((await topRes.json()) as DexBoostEntry[]) : [];
+  const latest = latestRes.ok ? ((await latestRes.json()) as DexBoostEntry[]) : [];
+  const merged = [...(Array.isArray(top) ? top : []), ...(Array.isArray(latest) ? latest : [])];
+  const addresses: string[] = [];
+  const seen = new Set<string>();
+  for (const entry of merged) {
+    if (entry.chainId !== "solana") continue;
+    const address = entry.tokenAddress?.trim();
+    if (!address || seen.has(address)) continue;
+    seen.add(address);
+    addresses.push(address);
+    if (addresses.length >= MOVER_POOL_SIZE) break;
+  }
+  return addresses;
+}
+
+async function fetchDexPairsBatch(addresses: string[]): Promise<DexPair[]> {
+  if (!addresses.length) return [];
+  const response = await fetch(
+    `https://api.dexscreener.com/tokens/v1/solana/${addresses.join(",")}`,
+  );
+  if (!response.ok) return [];
+  const data = (await response.json()) as DexPair[] | { pairs?: DexPair[] };
+  if (Array.isArray(data)) return data;
+  return data.pairs ?? [];
+}
+
+export async function fetchSolana5mMovers(): Promise<Solana5mMoversResult> {
+  const apiGuard = guardApiFetch("dex-5m-movers");
+  if (!apiGuard.allowed) {
+    return mockSolana5mMovers();
+  }
+
+  try {
+    const addresses = await fetchDexBoostAddresses();
+    if (!addresses.length) throw new Error("No boosted Solana tokens");
+
+    const pairs = await fetchDexPairsBatch(addresses);
+    if (!pairs.length) throw new Error("DexScreener returned no pairs");
+
+    const movers = pickBestMoverPairs(pairs);
+    if (!movers.length) throw new Error("No movers passed liquidity filter");
+
+    const gainers = movers
+      .filter((mover) => mover.change5mPct > 0)
+      .sort((a, b) => b.change5mPct - a.change5mPct)
+      .slice(0, MOVER_LIST_SIZE);
+    const losers = movers
+      .filter((mover) => mover.change5mPct < 0)
+      .sort((a, b) => a.change5mPct - b.change5mPct)
+      .slice(0, MOVER_LIST_SIZE);
+
+    return {
+      gainers,
+      losers,
+      source: "live",
+      updatedAt: Date.now(),
+    };
+  } catch {
+    return mockSolana5mMovers();
+  }
 }

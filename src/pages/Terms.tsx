@@ -158,10 +158,11 @@ export function Terms() {
           <strong>0.10%</strong> for free accounts and <strong>0.05%</strong> for Synexus Pro subscribers, calculated
           on the notional value of the swap. This fee is in addition to third-party costs such as blockchain network
           fees, DEX spreads, slippage, and any fees charged by Jupiter or other aggregators. Fee rates, eligibility
-          for discounts, and revenue allocation policies are described in the app (including the Ecosystem hub) and may
-          change with notice where required. You authorize applicable platform fees when you confirm a qualifying swap
-          in your connected wallet. We do not guarantee that every trade path will collect fees until on-chain
-          integration is fully live.
+          for discounts, and revenue allocation policies are described in the{" "}
+          <Link to="/liquidity-treasury">Synexus Coin Liquidity Treasury</Link> and may change with notice where
+          required. You authorize applicable platform fees when you confirm a qualifying swap in your connected
+          wallet. We do not guarantee that every trade path will collect fees until on-chain integration is fully
+          live.
         </p>
       </section>
 
@@ -284,6 +285,8 @@ export function Terms() {
         <Link to="/">← Back to feed</Link>
         {" · "}
         <Link to="/privacy">Privacy Policy</Link>
+        {" · "}
+        <Link to="/liquidity-treasury">Liquidity Treasury</Link>
         {" · "}
         <Link to="/disclaimer">Disclaimer</Link>
         {" · "}

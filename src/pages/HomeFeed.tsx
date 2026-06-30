@@ -1,24 +1,22 @@
 import { useMemo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { TokenCard } from "../components/TokenCard";
-import { TradingFeeDisclosure } from "../components/TradingFeeDisclosure";
 import { TrustIndicators } from "../components/TrustIndicators";
 import { NonCustodialDisclaimer } from "../components/NonCustodialDisclaimer";
 import { AppScreenshotGallery } from "../components/AppScreenshotGallery";
 import { SupportedWallets } from "../components/SupportedWallets";
 import { SynexusLiveScanner } from "../components/SynexusLiveScanner";
 import { ShouldIBuyPanel } from "../components/ShouldIBuyPanel";
+import { TopMoversPanel } from "../components/TopMoversPanel";
 import { ProDemoButton } from "../components/ProDemoButton";
 import { SynCoinLaunchBanner } from "../components/SynCoinLaunchBanner";
 import { BeginnerQuickStart } from "../components/BeginnerQuickStart";
 import { SentinelAlertsHub } from "../components/SentinelAlertsHub";
-import { useSynexusPlan } from "../hooks/useSynexusPlan";
 import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
 import { sampleTokens, type Token } from "../data/tokens";
 import { fetchMvpTokenFeed } from "../services/marketDataService";
 
 export function HomeFeed() {
-  const plan = useSynexusPlan();
   const { isSimple } = useSynexusUIMode();
   const [allTokens, setAllTokens] = useState<Token[]>(sampleTokens);
   const [trendingTokens, setTrendingTokens] = useState<Token[]>(
@@ -142,6 +140,7 @@ export function HomeFeed() {
       {isSimple ? <BeginnerQuickStart /> : null}
 
       <ShouldIBuyPanel poolTokens={allTokens} />
+      <TopMoversPanel />
 
       {isSimple ? (
         <p className="easy-trust-note">
@@ -252,7 +251,6 @@ export function HomeFeed() {
             Sentinel-checked tokens from your feed — open any coin, review the risk read, then buy or sell
             from Synexus. Your wallet only signs; Synexus runs the flow.
           </p>
-          <TradingFeeDisclosure plan={plan} notionalUsd={250} className="synexus-trade-panel__fees" />
         </div>
         <p className="synexus-trade-panel__wallet">
           <img className="synexus-trade-panel__wallet-icon" src="/phantom-wallet.svg" alt="" aria-hidden />

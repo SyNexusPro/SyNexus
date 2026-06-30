@@ -86,7 +86,7 @@ export function TradingFeeDisclosure({
       ) : (
         <p className="trading-fee-disclosure__fineprint">
           Fees support liquidity, product development, and security —{" "}
-          <Link to="/hub#hub-trading-fees">see allocation</Link>.
+          <Link to="/liquidity-treasury">Synexus Coin Liquidity Treasury</Link>.
         </p>
       )}
     </div>

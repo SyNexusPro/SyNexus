@@ -17,6 +17,9 @@ const Terms = lazy(() =>
 const Privacy = lazy(() =>
   import("./pages/Privacy").then((m) => ({ default: m.Privacy })),
 );
+const LiquidityTreasury = lazy(() =>
+  import("./pages/LiquidityTreasury").then((m) => ({ default: m.LiquidityTreasury })),
+);
 const TokenDetail = lazy(() =>
   import("./pages/TokenDetail").then((m) => ({ default: m.TokenDetail })),
 );
@@ -55,6 +58,7 @@ export default function App() {
             <Route path="pulse" element={<Pulse />} />
             <Route path="terms" element={<Terms />} />
             <Route path="privacy" element={<Privacy />} />
+            <Route path="liquidity-treasury" element={<LiquidityTreasury />} />
             <Route path="marketing-command" element={<MarketingCommand />} />
             <Route path="blog" element={<BlogIndex />} />
             <Route path="blog/:slug" element={<BlogPostView />} />

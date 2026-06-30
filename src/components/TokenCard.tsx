@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import { dexScreenerTokenUrl, jupiterBuyWithSolUrl, jupiterSellForSolUrl } from "../lib/solanaTradeLinks";
 import { getTradingFeeBps } from "../lib/tradingFees";
 import { useSynexusPlan } from "../hooks/useSynexusPlan";
-import { TradingFeeDisclosure } from "./TradingFeeDisclosure";
 import { TokenLogo } from "./TokenLogo";
 import { TradeIntelligenceScorecard } from "./TradeIntelligenceScorecard";
 import { TradeIntelBuyLink } from "./TradeIntelBuyLink";
@@ -126,7 +125,6 @@ export function TokenCard({ token }: Props) {
           View details
         </Link>
       </div>
-      <TradingFeeDisclosure plan={plan} compact />
     </article>
   );
 }
