@@ -201,7 +201,8 @@ export async function blastHypeAsset(asset, index, { force = false, quiet = fals
     join(OUT, `${asset.id}.jpg`);
   const mp4 = join(OUT, `${asset.id}.mp4`);
   const caps = buildCaptions(asset, appOrigin());
-  const slot = index % 3;
+  const catalogIndex = HYPE_ASSETS.findIndex((a) => a.id === asset.id);
+  const slot = catalogIndex >= 0 ? catalogIndex : index;
 
   if (!quiet) {
     console.log(`\n── ${asset.headline} (${asset.id}) ──`);
