@@ -137,10 +137,6 @@ export const FAQ_ITEMS = [
     a: "No. Automated risk bands, scores, verdicts, and AI chat are informational tools only. They can be wrong or delayed. Always verify contracts and do your own research before trading.",
   },
   {
-    q: "Is there a launch giveaway?",
-    a: "Yes — the Synexus.pro launch giveaway runs through July 12, 2026 (UTC). Create a free account on Pulse, verify your email, and complete your profile to enter. Win an iPad, AirPods Pro, or $50 Visa gift cards. Bonus entries for invites, social shares, and daily logins. Full rules at synexus.pro/giveaway.",
-  },
-  {
     q: "Is Synexus on Android / Google Play?",
     a: "Synexus is available as a web app and Android app (Capacitor). Check Google Play for the latest listing under Synexus. iOS may follow.",
   },

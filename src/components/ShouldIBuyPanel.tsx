@@ -1,16 +1,19 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import type { Token } from "../data/tokens";
 import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
 import { guardTokenScan } from "../lib/securityBot";
 import { analyzeShouldIBuy, verdictBeginnerMeta, verdictTone } from "../lib/shouldIBuy";
 import { lookupTokenByQuery } from "../services/marketDataService";
+import { ShareScanButton } from "./ShareScanButton";
 import { TradeIntelligenceScorecard } from "./TradeIntelligenceScorecard";
 
 const EASY_EXAMPLES = ["BONK", "SYN", "SOL"] as const;
 
 type Props = {
   poolTokens?: Token[];
+  /** Deep link: /?scan=BONK auto-runs once on load */
+  initialScan?: string;
 };
 
 export function ShouldIBuyVerdict({ token }: { token: Token }) {
@@ -19,36 +22,47 @@ export function ShouldIBuyVerdict({ token }: { token: Token }) {
   const tone = verdictTone(result.verdict);
   const beginner = verdictBeginnerMeta(result.verdict);
 
-  if (isSimple) {
-    return (
-      <div className={`should-i-buy__verdict should-i-buy__verdict--${tone} should-i-buy__verdict--easy`}>
-        <span className="should-i-buy__verdict-orb" aria-hidden>
-          {beginner.icon}
-        </span>
-        <div>
-          <p className="should-i-buy__verdict-label">Should I buy {token.symbol}?</p>
-          <p className="should-i-buy__verdict-headline">{beginner.label}</p>
-          <p className="should-i-buy__verdict-copy">{beginner.hint}</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className={`should-i-buy__verdict should-i-buy__verdict--${tone}`}>
-      <p className="should-i-buy__verdict-label">Should I buy {token.symbol}?</p>
-      <p className="should-i-buy__verdict-headline">{result.headline}</p>
-      <p className="should-i-buy__verdict-copy">{result.explanation}</p>
+    <div className={`should-i-buy__verdict should-i-buy__verdict--${tone}${isSimple ? " should-i-buy__verdict--easy-wrap" : ""}`}>
+      {isSimple ? (
+        <div className="should-i-buy__verdict--easy">
+          <span className="should-i-buy__verdict-orb" aria-hidden>
+            {beginner.icon}
+          </span>
+          <div>
+            <p className="should-i-buy__verdict-label">Should I buy {token.symbol}?</p>
+            <p className="should-i-buy__verdict-headline">{beginner.label}</p>
+            <p className="should-i-buy__verdict-copy">{beginner.hint}</p>
+          </div>
+        </div>
+      ) : (
+        <>
+          <p className="should-i-buy__verdict-label">Should I buy {token.symbol}?</p>
+          <p className="should-i-buy__verdict-headline">{result.headline}</p>
+          <p className="should-i-buy__verdict-copy">{result.explanation}</p>
+        </>
+      )}
+      <ShareScanButton result={result} className="should-i-buy__share" />
     </div>
   );
 }
 
-export function ShouldIBuyPanel({ poolTokens = [] }: Props) {
+export function ShouldIBuyPanel({ poolTokens = [], initialScan = "" }: Props) {
   const { isSimple } = useSynexusUIMode();
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialScan);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<ReturnType<typeof analyzeShouldIBuy> | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const ranInitialScan = useRef(false);
+  const clearScanFromUrl = useRef(Boolean(initialScan.trim()));
+
+  useEffect(() => {
+    const q = initialScan.trim();
+    if (!q || ranInitialScan.current) return;
+    ranInitialScan.current = true;
+    setQuery(q);
+    void handleAnalyze(q);
+  }, [initialScan]);
 
   async function handleAnalyze(nextQuery?: string) {
     const q = (nextQuery ?? query).trim();
@@ -70,6 +84,10 @@ export function ShouldIBuyPanel({ poolTokens = [] }: Props) {
         return;
       }
       setResult(analyzeShouldIBuy(token));
+      if (clearScanFromUrl.current && typeof window !== "undefined") {
+        clearScanFromUrl.current = false;
+        window.history.replaceState(null, "", window.location.pathname);
+      }
     } catch {
       setError("Lookup failed. Check your connection and try again.");
     } finally {
@@ -171,6 +189,7 @@ export function ShouldIBuyPanel({ poolTokens = [] }: Props) {
             </Link>
           ) : null}
           {!isSimple ? <TradeIntelligenceScorecard token={result.token} compact /> : null}
+          <ShareScanButton result={result} className="should-i-buy__share" />
         </div>
       ) : null}
     </section>

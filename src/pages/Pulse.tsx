@@ -39,7 +39,6 @@ import {
   unlockOwnerAccess,
 } from "../lib/ownerAccess";
 import { ProTrialBanner } from "../components/ProTrialBanner";
-import { GiveawayBanner } from "../components/GiveawayBanner";
 import { ProDemoButton } from "../components/ProDemoButton";
 import { ShouldIBuyPanel } from "../components/ShouldIBuyPanel";
 import { TopMoversPanel } from "../components/TopMoversPanel";
@@ -74,7 +73,6 @@ import type { Token } from "../data/tokens";
 import { fetchMvpTokenFeed } from "../services/marketDataService";
 import { buildSentinelLiveIntel, sentinelLaneIdFromSentinel } from "../lib/sentinelIntel";
 import { trackSiteEvent } from "../lib/siteAnalytics";
-import { syncGiveawayEntries } from "../lib/giveaway";
 
 type GuardianAlertItem = {
   token_symbol?: string | null;
@@ -434,7 +432,6 @@ export function Pulse() {
             void biometric.refresh();
           });
         }
-        void syncGiveawayEntries();
       }
 
       void loadData(signedInUser);
@@ -700,7 +697,6 @@ export function Pulse() {
         ? `Synchronized as ${signedIn.email}.`
         : "Synchronized with The Synexus.";
       void loadData(signedIn);
-      void syncGiveawayEntries();
       await completeAuthWithBiometricOffer(result.session, signedIn.email ?? email, message);
     } catch (err) {
       pendingAuthMethod.current = null;
@@ -760,7 +756,6 @@ export function Pulse() {
         void refreshBiometricVaultToken(signedIn.email ?? vault.email, session.refresh_token);
       }
       void loadData(signedIn);
-      void syncGiveawayEntries();
       void biometric.refresh();
     } catch (err) {
       pendingAuthMethod.current = null;
@@ -1057,7 +1052,6 @@ export function Pulse() {
       </section>
 
       <ProTrialBanner />
-      <GiveawayBanner />
 
       {isAdvanced ? (
         <SentinelAlertsHub

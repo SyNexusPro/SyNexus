@@ -6,6 +6,7 @@ import { ShouldIBuyVerdict } from "../components/ShouldIBuyPanel";
 import { TradeIntelBuyLink } from "../components/TradeIntelBuyLink";
 import { submitSynexusReport } from "../lib/reportSubmission";
 import { recordTokenView } from "../lib/walletHealth";
+import { trackSiteEvent } from "../lib/siteAnalytics";
 import { dexScreenerTokenUrl, jupiterBuyWithSolUrl, jupiterSellForSolUrl } from "../lib/solanaTradeLinks";
 import { getTradingFeeBps } from "../lib/tradingFees";
 import { useSynexusPlan } from "../hooks/useSynexusPlan";
@@ -93,6 +94,12 @@ export function TokenDetail() {
       .then((detail) => {
         setToken(detail);
         setLoadState("ready");
+        if (detail) {
+          trackSiteEvent("token_view", {
+            path: `/token/${detail.id}`,
+            meta: { symbol: detail.symbol },
+          });
+        }
       })
       .catch(() => {
         setToken(null);

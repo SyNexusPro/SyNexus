@@ -18,7 +18,13 @@ export const supabase = hasSupabaseEnv
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
+        flowType: "pkce",
         storageKey: "hivemind-supabase-auth",
       },
     })
   : null;
+
+export function authRedirectUrl(path = "/pulse"): string {
+  if (typeof window === "undefined") return path;
+  return `${window.location.origin}${path.startsWith("/") ? path : `/${path}`}`;
+}

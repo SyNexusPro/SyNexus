@@ -68,6 +68,7 @@
     "hype:blast": "node hypeBlast.js --post",
     "hype:post": "node hypeBlast.js --post",
     "hype:retract": "node hypeRetract.js",
+    "hype:queue": "node hypeQueue.js",
     "hype:all": "node hypeBlast.js --all"
   },
   "engines": {

@@ -2,7 +2,6 @@ import { lazy, Suspense } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "./components/AppShell";
 import { SiteAnalyticsListener } from "./components/SiteAnalyticsListener";
-import { GiveawayReferralCapture } from "./components/GiveawayReferralCapture";
 
 const HomeFeed = lazy(() =>
   import("./pages/HomeFeed").then((m) => ({ default: m.HomeFeed })),
@@ -35,7 +34,6 @@ const Disclaimer = lazy(() => import("./pages/Disclaimer").then((m) => ({ defaul
 const Faq = lazy(() => import("./pages/Faq").then((m) => ({ default: m.Faq })));
 const BlogIndex = lazy(() => import("./pages/Blog").then((m) => ({ default: m.BlogIndex })));
 const BlogPostView = lazy(() => import("./pages/Blog").then((m) => ({ default: m.BlogPostView })));
-const Giveaway = lazy(() => import("./pages/Giveaway").then((m) => ({ default: m.Giveaway })));
 const SiteAnalytics = lazy(() =>
   import("./pages/SiteAnalytics").then((m) => ({ default: m.SiteAnalytics })),
 );
@@ -52,7 +50,6 @@ export default function App() {
   return (
     <BrowserRouter>
       <SiteAnalyticsListener />
-      <GiveawayReferralCapture />
       <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route element={<AppShell />}>
@@ -64,7 +61,6 @@ export default function App() {
             <Route path="faq" element={<Faq />} />
             <Route path="disclaimer" element={<Disclaimer />} />
             <Route path="pulse" element={<Pulse />} />
-            <Route path="giveaway" element={<Giveaway />} />
             <Route path="terms" element={<Terms />} />
             <Route path="privacy" element={<Privacy />} />
             <Route path="liquidity-treasury" element={<LiquidityTreasury />} />

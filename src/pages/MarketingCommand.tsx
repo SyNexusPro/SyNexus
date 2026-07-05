@@ -132,6 +132,9 @@ export function MarketingCommand() {
         <Link className="marketing-cmd__nav-link" to="/pulse">
           Pulse
         </Link>
+        <Link className="marketing-cmd__nav-link" to="/analytics">
+          Site analytics
+        </Link>
       </nav>
 
       <section className="marketing-cmd-card" aria-labelledby="growth-mission">

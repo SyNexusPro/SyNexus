@@ -27,8 +27,7 @@ In **Supabase → SQL Editor**, run in order:
 
 1. `supabase/schema.sql`
 2. `supabase/site_analytics.sql`
-3. `supabase/giveaway.sql`
-4. `supabase/security_events.sql` (optional)
+3. `supabase/security_events.sql` (optional)
 
 **Auth redirects:** Authentication → URL configuration → add:
 
