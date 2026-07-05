@@ -1,5 +1,6 @@
 import type { User } from "@supabase/supabase-js";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { synexusRiskBandLabel } from "../data/tokens";
 import {
   fetchGuardianAlerts,
@@ -7,13 +8,25 @@ import {
   fetchTrackedTokens,
   fetchWatchlistTokens,
   getCurrentUser,
+  requestPasswordReset,
   signInWithEmail,
+  signInWithMagicLink,
   signOut,
   signUpWithEmail,
+  resendSignupVerificationEmail,
   restoreSessionFromRefreshToken,
   updatePaidPlan,
+  updatePassword,
   upsertSignupProfile,
+  validateSignupPassword,
 } from "../lib/supabaseData";
+import { passwordStrengthLabel } from "../lib/authCredentials";
+import {
+  isEmailVerified,
+  loadPendingVerificationEmail,
+  savePendingVerificationEmail,
+} from "../lib/emailVerification";
+import { loadRememberedEmail, saveRememberedEmail } from "../lib/authRemember";
 import {
   buildOracleSupremeBriefing,
   buildOracleSupremeDailyReport,
@@ -26,6 +39,7 @@ import {
   unlockOwnerAccess,
 } from "../lib/ownerAccess";
 import { ProTrialBanner } from "../components/ProTrialBanner";
+import { GiveawayBanner } from "../components/GiveawayBanner";
 import { ProDemoButton } from "../components/ProDemoButton";
 import { ShouldIBuyPanel } from "../components/ShouldIBuyPanel";
 import { TopMoversPanel } from "../components/TopMoversPanel";
@@ -59,6 +73,8 @@ import { getSentinelIdleMessage, getSentinelMessage } from "../lib/watcherVoice"
 import type { Token } from "../data/tokens";
 import { fetchMvpTokenFeed } from "../services/marketDataService";
 import { buildSentinelLiveIntel, sentinelLaneIdFromSentinel } from "../lib/sentinelIntel";
+import { trackSiteEvent } from "../lib/siteAnalytics";
+import { syncGiveawayEntries } from "../lib/giveaway";
 
 type GuardianAlertItem = {
   token_symbol?: string | null;
@@ -139,8 +155,16 @@ function describeAuthError(err: unknown): string {
 }
 
 export function Pulse() {
-  const [email, setEmail] = useState("");
+  const [searchParams] = useSearchParams();
+  const scanQuery = searchParams.get("scan")?.trim() ?? "";
+  const [email, setEmail] = useState(() => loadRememberedEmail());
   const [password, setPassword] = useState("");
+  const [recoveryMode, setRecoveryMode] = useState(
+    () => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("auth") === "recovery",
+  );
+  const [pendingVerificationEmail, setPendingVerificationEmail] = useState<string | null>(() =>
+    loadPendingVerificationEmail(),
+  );
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [operatorName, setOperatorName] = useState("there");
@@ -167,6 +191,37 @@ export function Pulse() {
   const [oracleSpeaking, setOracleSpeaking] = useState(false);
   const { isSimple, isAdvanced } = useSynexusUIMode();
   const biometric = useBiometricLogin();
+  const pendingAuthMethod = useRef<"password" | "signup" | "biometric" | null>(null);
+
+  const signupPasswordHint = useMemo(() => {
+    if (!password) return null;
+    const check = validateSignupPassword(password);
+    if (!check.ok && check.message) return check.message;
+    if (check.ok) return `Strength: ${passwordStrengthLabel(check.score)}`;
+    return null;
+  }, [password]);
+
+  const emailVerificationPending = Boolean(pendingVerificationEmail);
+
+  function markEmailVerificationPending(address: string) {
+    setPendingVerificationEmail(address);
+    savePendingVerificationEmail(address);
+  }
+
+  function clearEmailVerificationPending() {
+    setPendingVerificationEmail(null);
+    savePendingVerificationEmail(null);
+  }
+
+  async function rejectUnverifiedSession(user: User, message: string) {
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
+    setUserId(null);
+    setUserEmail(null);
+    markEmailVerificationPending(user.email ?? email);
+    setAuthMessage({ tone: "info", text: message });
+  }
 
   useEffect(() => {
     void refreshOwnerAccess().then((active) => {
@@ -262,6 +317,16 @@ export function Pulse() {
 
       if (!user) return;
 
+      if (!isEmailVerified(user)) {
+        await rejectUnverifiedSession(
+          user,
+          "Verify your email before accessing Operator Link. Check your inbox for the confirmation link.",
+        );
+        return;
+      }
+
+      clearEmailVerificationPending();
+
       const profile = await fetchProfile(user.id);
       setOperatorName(resolveOperatorName(profile, user.email));
       const rawPlan = profile?.paid_plan ?? localStorage.getItem(PLAN_STORAGE_KEY) ?? "FREE";
@@ -296,8 +361,86 @@ export function Pulse() {
     void refreshMarketSignals().catch(() => {
       /* keep empty until next poll */
     });
-    if (!hasSupabaseEnv) return;
+    if (!hasSupabaseEnv || !supabase) return;
+
     void loadData();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setRecoveryMode(true);
+        setAuthMessage({ tone: "info", text: "Choose a new access key to finish resetting." });
+        return;
+      }
+
+      const signedInUser = session?.user ?? null;
+      if (!signedInUser) {
+        if (event === "SIGNED_OUT") {
+          setUserId(null);
+          setUserEmail(null);
+          setPassword("");
+        }
+        return;
+      }
+
+      if (!isEmailVerified(signedInUser)) {
+        if (event !== "SIGNED_OUT") {
+          void signOut().catch(() => {
+            /* session may already be cleared */
+          });
+        }
+        markEmailVerificationPending(signedInUser.email ?? email);
+        setUserId(null);
+        setUserEmail(null);
+        if (event === "SIGNED_IN") {
+          setAuthMessage({
+            tone: "info",
+            text: "Confirm your email before signing in. Check your inbox for the verification link.",
+          });
+        }
+        pendingAuthMethod.current = null;
+        return;
+      }
+
+      clearEmailVerificationPending();
+      localStorage.removeItem(DEMO_SESSION_KEY);
+      setUserId(signedInUser.id);
+      setUserEmail(signedInUser.email ?? null);
+      if (signedInUser.email) saveRememberedEmail(signedInUser.email);
+
+      if (event === "SIGNED_IN") {
+        setPassword("");
+        setRecoveryMode(false);
+        window.history.replaceState(null, "", window.location.pathname);
+        const verifiedMessage = signedInUser.email
+          ? `Welcome back — ${signedInUser.email}.`
+          : "Synchronized with The Synexus.";
+        setAuthMessage({
+          tone: "success",
+          text: verifiedMessage,
+        });
+        const method = pendingAuthMethod.current;
+        pendingAuthMethod.current = null;
+        if (method === "signup") {
+          trackSiteEvent("sign_up", { userId: signedInUser.id, path: "/pulse" });
+        } else if (method === "biometric") {
+          trackSiteEvent("biometric_sign_in", { userId: signedInUser.id, path: "/pulse" });
+        } else {
+          trackSiteEvent("sign_in", { userId: signedInUser.id, path: "/pulse" });
+        }
+        if (session?.refresh_token && signedInUser.email) {
+          void enrollBiometricAfterLogin(signedInUser.email, session.refresh_token).then(() => {
+            void biometric.refresh();
+          });
+        }
+        void syncGiveawayEntries();
+      }
+
+      void loadData(signedInUser);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -454,30 +597,52 @@ export function Pulse() {
         setAuthMessage({ tone: "success", text: message });
         return;
       }
+      pendingAuthMethod.current = "signup";
       const result = await signUpWithEmail(email, password);
       localStorage.removeItem(DEMO_SESSION_KEY);
       const signupUser = result.session?.user ?? result.user ?? null;
-      setUserId(signupUser?.id ?? null);
-      setUserEmail(signupUser?.email ?? email);
       const signupEmail = signupUser?.email ?? email;
-      if (result.session && signupUser && signupEmail) {
+      setPassword("");
+      const needsVerification = !signupUser || !isEmailVerified(signupUser);
+      if (needsVerification) {
+        if (result.session && signupUser && supabase) {
+          await supabase.auth.signOut();
+        }
+        setUserId(null);
+        setUserEmail(null);
+        markEmailVerificationPending(signupEmail);
+        saveRememberedEmail(signupEmail);
+        setAuthMessage({
+          tone: "success",
+          text: `Check ${signupEmail} for a verification link. Operator Link stays locked until you confirm.`,
+        });
+        pendingAuthMethod.current = null;
+        trackSiteEvent("sign_up", { path: "/pulse", meta: { pending_confirmation: true } });
+        void refreshMarketSignals();
+        return;
+      }
+      setUserId(signupUser!.id);
+      setUserEmail(signupEmail);
+      saveRememberedEmail(signupEmail);
+      if (result.session && signupUser) {
         try {
           await upsertSignupProfile(signupUser.id, signupEmail, "");
         } catch {
           /* profile row may already exist */
         }
       }
-      const message = result.session
-        ? "Welcome to The Synexus. You are signed in."
-        : "Check your inbox to confirm your email, then sign in.";
+      const message = "Welcome to The Synexus. You are signed in.";
       if (result.session && signupUser) {
         void loadData(signupUser);
         await completeAuthWithBiometricOffer(result.session, signupEmail, message);
       } else {
         setAuthMessage({ tone: "success", text: message });
+        pendingAuthMethod.current = null;
+        trackSiteEvent("sign_up", { path: "/pulse" });
         void refreshMarketSignals();
       }
     } catch (err) {
+      pendingAuthMethod.current = null;
       const friendlyMessage =
         (err as Error).message?.toLowerCase().includes("rate")
           ? "Too many sign-up attempts. Please wait a minute before trying again."
@@ -507,6 +672,7 @@ export function Pulse() {
         setAuthMessage({ tone: "success", text: message });
         return;
       }
+      pendingAuthMethod.current = "password";
       const result = await signInWithEmail(email, password);
       localStorage.removeItem(DEMO_SESSION_KEY);
       const signedIn = result.session?.user ?? result.user ?? null;
@@ -517,14 +683,27 @@ export function Pulse() {
         });
         return;
       }
+      if (!isEmailVerified(signedIn)) {
+        pendingAuthMethod.current = null;
+        await rejectUnverifiedSession(
+          signedIn,
+          "Confirm your email before signing in. Check your inbox for the verification link.",
+        );
+        return;
+      }
+      clearEmailVerificationPending();
       setUserId(signedIn.id);
       setUserEmail(signedIn.email ?? email);
+      saveRememberedEmail(signedIn.email ?? email);
+      setPassword("");
       const message = signedIn.email
         ? `Synchronized as ${signedIn.email}.`
         : "Synchronized with The Synexus.";
       void loadData(signedIn);
+      void syncGiveawayEntries();
       await completeAuthWithBiometricOffer(result.session, signedIn.email ?? email, message);
     } catch (err) {
+      pendingAuthMethod.current = null;
       const message = describeAuthError(err);
       setAuthMessage({ tone: "error", text: message });
     } finally {
@@ -545,9 +724,11 @@ export function Pulse() {
         });
         return;
       }
+      pendingAuthMethod.current = "biometric";
       const { session, user } = await restoreSessionFromRefreshToken(vault.refreshToken);
       const signedIn = user ?? session?.user ?? null;
       if (!signedIn) {
+        pendingAuthMethod.current = null;
         await clearBiometricLogin();
         void biometric.refresh();
         setAuthMessage({
@@ -556,6 +737,15 @@ export function Pulse() {
         });
         return;
       }
+      if (!isEmailVerified(signedIn)) {
+        pendingAuthMethod.current = null;
+        await rejectUnverifiedSession(
+          signedIn,
+          "Confirm your email before using biometric sign-in. Check your inbox for the verification link.",
+        );
+        return;
+      }
+      clearEmailVerificationPending();
       localStorage.removeItem(DEMO_SESSION_KEY);
       setUserId(signedIn.id);
       setUserEmail(signedIn.email ?? vault.email);
@@ -570,8 +760,10 @@ export function Pulse() {
         void refreshBiometricVaultToken(signedIn.email ?? vault.email, session.refresh_token);
       }
       void loadData(signedIn);
+      void syncGiveawayEntries();
       void biometric.refresh();
     } catch (err) {
+      pendingAuthMethod.current = null;
       const message =
         err instanceof Error ? err.message : "Biometric sign-in failed. Try email instead.";
       setAuthMessage({ tone: "error", text: message });
@@ -619,19 +811,132 @@ export function Pulse() {
     });
   }
 
+  async function handleMagicLink() {
+    if (authBusy) return;
+    if (!email.trim()) {
+      setAuthMessage({ tone: "error", text: "Enter your email to receive a sign-in link." });
+      return;
+    }
+    try {
+      setAuthBusy(true);
+      setAuthMessage({ tone: "info", text: "Sending secure sign-in link…" });
+      if (!hasSupabaseEnv) {
+        setAuthMessage({
+          tone: "error",
+          text: "Email links require Supabase on the server. Use demo mode or add your keys.",
+        });
+        return;
+      }
+      await signInWithMagicLink(email);
+      saveRememberedEmail(email);
+      setPassword("");
+      trackSiteEvent("magic_link_sent", { path: "/pulse" });
+      setAuthMessage({
+        tone: "success",
+        text: "Check your email for a one-time sign-in link. It expires quickly for your security.",
+      });
+    } catch (err) {
+      setAuthMessage({ tone: "error", text: describeAuthError(err) });
+    } finally {
+      setAuthBusy(false);
+    }
+  }
+
+  async function handleForgotPassword() {
+    if (authBusy) return;
+    if (!email.trim()) {
+      setAuthMessage({ tone: "error", text: "Enter your email first, then request a reset link." });
+      return;
+    }
+    try {
+      setAuthBusy(true);
+      setAuthMessage({ tone: "info", text: "Sending password reset link…" });
+      await requestPasswordReset(email);
+      saveRememberedEmail(email);
+      setPassword("");
+      trackSiteEvent("password_reset_requested", { path: "/pulse" });
+      setAuthMessage({
+        tone: "success",
+        text: "Reset link sent. Check your email and choose a new access key.",
+      });
+    } catch (err) {
+      setAuthMessage({ tone: "error", text: describeAuthError(err) });
+    } finally {
+      setAuthBusy(false);
+    }
+  }
+
+  async function handleUpdatePassword(newPassword: string) {
+    if (authBusy) return;
+    try {
+      setAuthBusy(true);
+      setAuthMessage({ tone: "info", text: "Updating access key…" });
+      await updatePassword(newPassword);
+      setPassword("");
+      setRecoveryMode(false);
+      window.history.replaceState(null, "", window.location.pathname);
+      const user = await getCurrentUser();
+      if (user) {
+        setUserId(user.id);
+        setUserEmail(user.email ?? null);
+        void loadData(user);
+      }
+      setAuthMessage({ tone: "success", text: "Access key updated. Your session is secure." });
+    } catch (err) {
+      setAuthMessage({ tone: "error", text: describeAuthError(err) });
+    } finally {
+      setAuthBusy(false);
+    }
+  }
+
+  async function handleResendVerification() {
+    if (authBusy) return;
+    const target = pendingVerificationEmail ?? email.trim();
+    if (!target) {
+      setAuthMessage({ tone: "error", text: "Enter the email you used to sign up." });
+      return;
+    }
+    try {
+      setAuthBusy(true);
+      setAuthMessage({ tone: "info", text: "Sending verification email…" });
+      await resendSignupVerificationEmail(target);
+      markEmailVerificationPending(target);
+      setAuthMessage({
+        tone: "success",
+        text: "Verification email sent. Check your inbox and spam folder.",
+      });
+      trackSiteEvent("verification_email_resent", { path: "/pulse" });
+    } catch (err) {
+      setAuthMessage({ tone: "error", text: describeAuthError(err) });
+    } finally {
+      setAuthBusy(false);
+    }
+  }
+
+  function handleContinueToSignIn() {
+    clearEmailVerificationPending();
+    setAuthMessage({
+      tone: "info",
+      text: "Sign in after you click the verification link in your email.",
+    });
+  }
+
   async function handleSignOut() {
     if (!userId) {
       setAuthMessage({ tone: "error", text: "No active session to sign out." });
       return;
     }
+    const signingOutId = userId.startsWith("demo-") ? null : userId;
     if (!hasSupabaseEnv || userId.startsWith("demo-")) {
       localStorage.removeItem(DEMO_SESSION_KEY);
       setUserId(null);
       setUserEmail(null);
+      setPassword("");
       setWatchlist([]);
       setAlerts([]);
       setTracked([]);
       void biometric.refresh();
+      trackSiteEvent("sign_out", { userId: signingOutId, path: "/pulse" });
       setAuthMessage({ tone: "success", text: "Operator link disconnected." });
       return;
     }
@@ -641,10 +946,12 @@ export function Pulse() {
       localStorage.removeItem(DEMO_SESSION_KEY);
       setUserId(null);
       setUserEmail(null);
+      setPassword("");
       setWatchlist([]);
       setAlerts([]);
       setTracked([]);
       setOperatorName("there");
+      trackSiteEvent("sign_out", { userId: signingOutId, path: "/pulse" });
       setAuthMessage({ tone: "success", text: "Operator link disconnected." });
     } catch {
       setAuthMessage({ tone: "error", text: USER_FRIENDLY_ERROR });
@@ -750,6 +1057,7 @@ export function Pulse() {
       </section>
 
       <ProTrialBanner />
+      <GiveawayBanner />
 
       {isAdvanced ? (
         <SentinelAlertsHub
@@ -762,7 +1070,7 @@ export function Pulse() {
         />
       ) : null}
 
-      <ShouldIBuyPanel poolTokens={marketTokens} />
+      <ShouldIBuyPanel poolTokens={marketTokens} initialScan={scanQuery} />
       <TopMoversPanel />
       <WalletPerformanceDashboard />
       <OracleAdminControlCenter
@@ -877,6 +1185,10 @@ export function Pulse() {
         biometricSupport={biometric.support}
         biometricEnrolled={biometric.enrolled}
         biometricEmailHint={biometric.emailHint}
+        recoveryMode={recoveryMode}
+        emailVerificationPending={emailVerificationPending}
+        pendingVerificationEmail={pendingVerificationEmail}
+        signupPasswordHint={signupPasswordHint}
         onEmailChange={setEmail}
         onPasswordChange={setPassword}
         onSignUp={() => void handleSignUp()}
@@ -886,6 +1198,11 @@ export function Pulse() {
         onBiometricSignIn={() => void handleBiometricSignIn()}
         onEnableBiometric={() => void handleEnableBiometric()}
         onDisableBiometric={() => void handleDisableBiometric()}
+        onMagicLink={() => void handleMagicLink()}
+        onForgotPassword={() => void handleForgotPassword()}
+        onUpdatePassword={(next) => void handleUpdatePassword(next)}
+        onResendVerification={() => void handleResendVerification()}
+        onContinueToSignIn={handleContinueToSignIn}
         ownerUnlocked={hasStoredOwnerGrant()}
       />
 

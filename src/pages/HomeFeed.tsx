@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { TokenCard } from "../components/TokenCard";
 import { TrustIndicators } from "../components/TrustIndicators";
 import { NonCustodialDisclaimer } from "../components/NonCustodialDisclaimer";
@@ -10,6 +10,7 @@ import { ShouldIBuyPanel } from "../components/ShouldIBuyPanel";
 import { TopMoversPanel } from "../components/TopMoversPanel";
 import { ProDemoButton } from "../components/ProDemoButton";
 import { SynCoinLaunchBanner } from "../components/SynCoinLaunchBanner";
+import { GiveawayBanner } from "../components/GiveawayBanner";
 import { BeginnerQuickStart } from "../components/BeginnerQuickStart";
 import { SentinelAlertsHub } from "../components/SentinelAlertsHub";
 import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
@@ -18,6 +19,8 @@ import { fetchMvpTokenFeed } from "../services/marketDataService";
 
 export function HomeFeed() {
   const { isSimple } = useSynexusUIMode();
+  const [searchParams] = useSearchParams();
+  const scanQuery = searchParams.get("scan")?.trim() ?? "";
   const [allTokens, setAllTokens] = useState<Token[]>(sampleTokens);
   const [trendingTokens, setTrendingTokens] = useState<Token[]>(
     sampleTokens
@@ -68,6 +71,7 @@ export function HomeFeed() {
   return (
     <div className={`page${isSimple ? " page--easy" : ""}`}>
       <SynCoinLaunchBanner />
+      <GiveawayBanner />
       <section className={`landing-hero${isSimple ? " landing-hero--easy" : ""}`}>
         <div className="landing-hero__inner">
           <div className="landing-hero__masthead">
@@ -139,7 +143,7 @@ export function HomeFeed() {
 
       {isSimple ? <BeginnerQuickStart /> : null}
 
-      <ShouldIBuyPanel poolTokens={allTokens} />
+      <ShouldIBuyPanel poolTokens={allTokens} initialScan={scanQuery} />
       <TopMoversPanel />
 
       {isSimple ? (

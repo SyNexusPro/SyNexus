@@ -97,6 +97,7 @@ export const HOW_SYNEXUS_WORKS = [
 export const SECURITY_POINTS = [
   "Synexus is a non-custodial intelligence layer — we do not execute trades or hold user assets.",
   "Wallet connections happen in third-party wallet apps; private keys never pass through Synexus servers.",
+  "Operator accounts require email verification before Operator Link activates — unverified sign-ups cannot sync watchlists or Pro status.",
   "Operator accounts (email sign-in on Pulse) store profile, watchlists, and subscription status — not wallet seeds.",
   "Market data and Sentinel scoring use heuristics and third-party APIs; outputs can be wrong or delayed.",
   "Report suspicious tokens in-app; abuse and security incidents can be escalated via Contact.",
@@ -134,6 +135,10 @@ export const FAQ_ITEMS = [
   {
     q: "Is Sentinel, Oracle Supreme, or “Avoid / Watch / OK” financial advice?",
     a: "No. Automated risk bands, scores, verdicts, and AI chat are informational tools only. They can be wrong or delayed. Always verify contracts and do your own research before trading.",
+  },
+  {
+    q: "Is there a launch giveaway?",
+    a: "Yes — the Synexus.pro launch giveaway runs through July 12, 2026 (UTC). Create a free account on Pulse, verify your email, and complete your profile to enter. Win an iPad, AirPods Pro, or $50 Visa gift cards. Bonus entries for invites, social shares, and daily logins. Full rules at synexus.pro/giveaway.",
   },
   {
     q: "Is Synexus on Android / Google Play?",

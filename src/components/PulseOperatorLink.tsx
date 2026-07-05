@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import type { BiometricSupport } from "../lib/biometricLogin";
 
 type AuthTone = "info" | "success" | "error";
+type SignInMethod = "magic" | "password";
 
 type PulseOperatorLinkProps = {
   userId: string | null;
@@ -17,6 +18,10 @@ type PulseOperatorLinkProps = {
   biometricSupport: BiometricSupport | null;
   biometricEnrolled: boolean;
   biometricEmailHint: string | null;
+  recoveryMode?: boolean;
+  emailVerificationPending?: boolean;
+  pendingVerificationEmail?: string | null;
+  signupPasswordHint?: string | null;
   onEmailChange: (value: string) => void;
   onPasswordChange: (value: string) => void;
   onSignUp: () => void;
@@ -26,6 +31,11 @@ type PulseOperatorLinkProps = {
   onBiometricSignIn: () => void;
   onEnableBiometric: () => void;
   onDisableBiometric: () => void;
+  onMagicLink: () => void;
+  onForgotPassword: () => void;
+  onUpdatePassword: (password: string) => void;
+  onResendVerification: () => void;
+  onContinueToSignIn: () => void;
   ownerUnlocked?: boolean;
 };
 
@@ -62,6 +72,10 @@ export function PulseOperatorLink({
   biometricSupport,
   biometricEnrolled,
   biometricEmailHint,
+  recoveryMode = false,
+  emailVerificationPending = false,
+  pendingVerificationEmail = null,
+  signupPasswordHint,
   onEmailChange,
   onPasswordChange,
   onSignUp,
@@ -71,9 +85,17 @@ export function PulseOperatorLink({
   onBiometricSignIn,
   onEnableBiometric,
   onDisableBiometric,
+  onMagicLink,
+  onForgotPassword,
+  onUpdatePassword,
+  onResendVerification,
+  onContinueToSignIn,
   ownerUnlocked = false,
 }: PulseOperatorLinkProps) {
   const [mode, setMode] = useState<"return" | "link" | "command">("return");
+  const [signInMethod, setSignInMethod] = useState<SignInMethod>("magic");
+  const [showPassword, setShowPassword] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
   const linked = Boolean(userId);
   const isDemo = userId?.startsWith("demo-") ?? false;
   const biometricLabel = biometricSupport?.label ?? "Biometrics";
@@ -86,6 +108,115 @@ export function PulseOperatorLink({
   }, [isDemo, userEmail]);
 
   const initials = operatorInitials(operatorName, userEmail);
+
+  if (recoveryMode && hasSupabaseEnv) {
+    const passwordsMatch = password.length > 0 && password === confirmPassword;
+    return (
+      <section className="operator-link" aria-label="Set a new password">
+        <header className="operator-link__head">
+          <p className="operator-link__eyebrow">Secure reset</p>
+          <h2 className="operator-link__title">Choose a new access key</h2>
+          <p className="operator-link__lede">
+            Use at least 10 characters with letters and numbers. We never store your password in plain text.
+          </p>
+        </header>
+
+        <p className={`operator-link__message operator-link__message--${authMessage.tone}`} role="status">
+          {authMessage.text}
+        </p>
+
+        <div className="operator-link__fields">
+          <label className="operator-link__field">
+            <span>New access key</span>
+            <div className="operator-link__password-wrap">
+              <input
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                value={password}
+                disabled={authBusy}
+                placeholder="••••••••••"
+                onChange={(event) => onPasswordChange(event.target.value)}
+              />
+              <button
+                type="button"
+                className="operator-link__password-toggle"
+                disabled={authBusy}
+                aria-pressed={showPassword}
+                onClick={() => setShowPassword((v) => !v)}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
+            {signupPasswordHint ? (
+              <span className="operator-link__password-hint">{signupPasswordHint}</span>
+            ) : null}
+          </label>
+          <label className="operator-link__field">
+            <span>Confirm access key</span>
+            <input
+              type={showPassword ? "text" : "password"}
+              autoComplete="new-password"
+              value={confirmPassword}
+              disabled={authBusy}
+              placeholder="••••••••••"
+              onChange={(event) => setConfirmPassword(event.target.value)}
+            />
+          </label>
+        </div>
+
+        <button
+          type="button"
+          className="operator-link__submit"
+          disabled={authBusy || !passwordsMatch}
+          onClick={() => onUpdatePassword(password)}
+        >
+          {authBusy ? "Saving…" : "Save new access key"}
+        </button>
+      </section>
+    );
+  }
+
+  if (emailVerificationPending && hasSupabaseEnv) {
+    const maskedPending = pendingVerificationEmail ? maskEmail(pendingVerificationEmail) : "your inbox";
+    return (
+      <section className="operator-link operator-link--pending" aria-label="Verify your email">
+        <header className="operator-link__head">
+          <p className="operator-link__eyebrow">Security check</p>
+          <h2 className="operator-link__title">Verify your email</h2>
+          <p className="operator-link__lede">
+            We sent a confirmation link to <strong>{maskedPending}</strong>. Operator Link stays locked until
+            you verify — this keeps your watchlists and Pro status tied to a real inbox.
+          </p>
+        </header>
+
+        <p className={`operator-link__message operator-link__message--${authMessage.tone}`} role="status">
+          {authMessage.text}
+        </p>
+
+        <button
+          type="button"
+          className="operator-link__submit"
+          disabled={authBusy}
+          onClick={onResendVerification}
+        >
+          {authBusy ? authBusyLabel : "Resend verification email"}
+        </button>
+
+        <button
+          type="button"
+          className="operator-link__biometric-disable"
+          disabled={authBusy}
+          onClick={onContinueToSignIn}
+        >
+          I verified — sign in
+        </button>
+
+        <p className="operator-link__footnote">
+          Link expires after a while. Check spam, then resend if needed.
+        </p>
+      </section>
+    );
+  }
 
   if (linked) {
     return (
@@ -167,6 +298,16 @@ export function PulseOperatorLink({
     );
   }
 
+  const showPasswordField = mode !== "command" && (mode === "link" || signInMethod === "password");
+  const submitLabel =
+    mode === "command"
+      ? "Unlock full access"
+      : mode === "link"
+        ? "Establish operator link"
+        : signInMethod === "magic"
+          ? "Email me a sign-in link"
+          : "Reconnect to Synexus";
+
   return (
     <section className="operator-link" aria-label="Link your operator ID">
       <div className="operator-link__scanline" aria-hidden="true" />
@@ -174,8 +315,8 @@ export function PulseOperatorLink({
         <p className="operator-link__eyebrow">Operator link</p>
         <h2 className="operator-link__title">Save your Synexus command center</h2>
         <p className="operator-link__lede">
-          Link once to keep watchlists, alerts, and Synexus Pro on every device. After your first
-          sign-in, Synexus can save {biometricLabel} for faster return visits.
+          Sign in with a secure email link — no password to remember — or use an access key. After your first
+          sign-in, Synexus can save {biometricLabel} on mobile.
         </p>
       </header>
 
@@ -234,6 +375,27 @@ export function PulseOperatorLink({
         </button>
       </div>
 
+      {mode === "return" && hasSupabaseEnv ? (
+        <div className="operator-link__method" role="group" aria-label="Sign-in method">
+          <button
+            type="button"
+            className={`operator-link__method-btn${signInMethod === "magic" ? " operator-link__method-btn--active" : ""}`}
+            disabled={authBusy}
+            onClick={() => setSignInMethod("magic")}
+          >
+            Email link
+          </button>
+          <button
+            type="button"
+            className={`operator-link__method-btn${signInMethod === "password" ? " operator-link__method-btn--active" : ""}`}
+            disabled={authBusy}
+            onClick={() => setSignInMethod("password")}
+          >
+            Password
+          </button>
+        </div>
+      ) : null}
+
       <p className={`operator-link__message operator-link__message--${authMessage.tone}`} role="status">
         {authMessage.text}
       </p>
@@ -250,40 +412,72 @@ export function PulseOperatorLink({
           <input
             type={mode === "command" ? "text" : "email"}
             autoComplete={mode === "command" ? "username" : "email"}
+            inputMode={mode === "command" ? "text" : "email"}
             value={email}
             disabled={authBusy}
             placeholder={mode === "command" ? "your-secret-id" : "you@email.com"}
             onChange={(event) => onEmailChange(event.target.value)}
           />
         </label>
-        <label className="operator-link__field">
-          <span>{mode === "command" ? "Command key" : "Access key"}</span>
-          <input
-            type="password"
-            autoComplete={mode === "command" ? "current-password" : mode === "link" ? "new-password" : "current-password"}
-            value={password}
-            disabled={authBusy}
-            placeholder="••••••••"
-            onChange={(event) => onPasswordChange(event.target.value)}
-          />
-        </label>
+        {showPasswordField ? (
+          <label className="operator-link__field">
+            <span>{mode === "link" ? "Choose access key" : "Access key"}</span>
+            <div className="operator-link__password-wrap">
+              <input
+                type={showPassword ? "text" : "password"}
+                autoComplete={mode === "link" ? "new-password" : "current-password"}
+                value={password}
+                disabled={authBusy}
+                placeholder="••••••••••"
+                onChange={(event) => onPasswordChange(event.target.value)}
+              />
+              <button
+                type="button"
+                className="operator-link__password-toggle"
+                disabled={authBusy}
+                aria-pressed={showPassword}
+                onClick={() => setShowPassword((v) => !v)}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
+            {mode === "link" && signupPasswordHint ? (
+              <span className="operator-link__password-hint">{signupPasswordHint}</span>
+            ) : null}
+          </label>
+        ) : mode === "return" && signInMethod === "magic" ? (
+          <p className="operator-link__magic-note">
+            We&apos;ll email a one-time link that expires quickly. No password is sent or stored on this device.
+          </p>
+        ) : null}
       </div>
+
+      {mode === "return" && signInMethod === "password" && hasSupabaseEnv ? (
+        <button
+          type="button"
+          className="operator-link__text-action"
+          disabled={authBusy || !email.trim()}
+          onClick={onForgotPassword}
+        >
+          Forgot access key?
+        </button>
+      ) : null}
 
       <button
         type="button"
         className="operator-link__submit"
         disabled={authBusy}
         onClick={
-          mode === "command" ? onOwnerUnlock : mode === "link" ? onSignUp : onSignIn
+          mode === "command"
+            ? onOwnerUnlock
+            : mode === "link"
+              ? onSignUp
+              : signInMethod === "magic"
+                ? onMagicLink
+                : onSignIn
         }
       >
-        {authBusy
-          ? "Linking…"
-          : mode === "command"
-            ? "Unlock full access"
-            : mode === "link"
-              ? "Establish operator link"
-              : "Reconnect to Synexus"}
+        {authBusy ? "Linking…" : submitLabel}
       </button>
 
       {mode === "command" ? (
@@ -295,6 +489,10 @@ export function PulseOperatorLink({
       ) : !canUseBiometric && biometricSupport?.native === false ? (
         <p className="operator-link__footnote">
           Face ID and fingerprint sign-in are available in the Synexus Android and iOS app.
+        </p>
+      ) : mode === "return" && signInMethod === "magic" ? (
+        <p className="operator-link__footnote">
+          Prefer a password? Switch to Password above, or create a new link on the New link tab.
         </p>
       ) : null}
     </section>

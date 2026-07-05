@@ -1,6 +1,9 @@
 import type { Session, User } from "@supabase/supabase-js";
-import { supabase } from "./supabaseClient";
+import { authRedirectUrl, supabase } from "./supabaseClient";
+import { validateSignupPassword } from "./authCredentials";
 import { guardAuthAttempt } from "./securityBot";
+
+export { validateSignupPassword };
 
 function flattenErrorDiagnostics(err: unknown): string {
   const parts: string[] = [];
@@ -59,6 +62,7 @@ type AppProfile = {
   id: string;
   username: string | null;
   display_name: string | null;
+  bio?: string | null;
   paid_plan?: "FREE" | "BASIC" | "PRO" | null;
 };
 
@@ -78,13 +82,35 @@ export async function signUpWithEmail(
   if (!authGuard.allowed) {
     throw new Error(authGuard.message ?? "Sign-up blocked by Synexus security.");
   }
+  const passwordCheck = validateSignupPassword(password);
+  if (!passwordCheck.ok) {
+    throw new Error(passwordCheck.message ?? "Choose a stronger password.");
+  }
   if (!supabase) throw new Error("Supabase env vars are missing.");
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    ...(normalizedUsername
-      ? { options: { data: { username: normalizedUsername } } }
-      : {}),
+    options: {
+      emailRedirectTo: authRedirectUrl("/pulse"),
+      ...(normalizedUsername ? { data: { username: normalizedUsername } } : {}),
+    },
+  });
+  if (error) throwIfStructuralDbFailure(error);
+  return data;
+}
+
+export async function resendSignupVerificationEmail(email: string) {
+  const authGuard = guardAuthAttempt("sign_in", email);
+  if (!authGuard.allowed) {
+    throw new Error(authGuard.message ?? "Verification resend blocked by Synexus security.");
+  }
+  if (!supabase) throw new Error("Supabase env vars are missing.");
+  const { data, error } = await supabase.auth.resend({
+    type: "signup",
+    email: email.trim(),
+    options: {
+      emailRedirectTo: authRedirectUrl("/pulse"),
+    },
   });
   if (error) throwIfStructuralDbFailure(error);
   return data;
@@ -106,6 +132,47 @@ export async function signInWithEmail(email: string, password: string) {
     user = refreshed.session?.user ?? user;
   }
   return { ...data, session, user };
+}
+
+export async function signInWithMagicLink(email: string) {
+  const authGuard = guardAuthAttempt("sign_in", email);
+  if (!authGuard.allowed) {
+    throw new Error(authGuard.message ?? "Sign-in blocked by Synexus security.");
+  }
+  if (!supabase) throw new Error("Supabase env vars are missing.");
+  const { data, error } = await supabase.auth.signInWithOtp({
+    email: email.trim(),
+    options: {
+      emailRedirectTo: authRedirectUrl("/pulse"),
+      shouldCreateUser: false,
+    },
+  });
+  if (error) throwIfStructuralDbFailure(error);
+  return data;
+}
+
+export async function requestPasswordReset(email: string) {
+  const authGuard = guardAuthAttempt("sign_in", email);
+  if (!authGuard.allowed) {
+    throw new Error(authGuard.message ?? "Reset blocked by Synexus security.");
+  }
+  if (!supabase) throw new Error("Supabase env vars are missing.");
+  const { data, error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+    redirectTo: authRedirectUrl("/pulse?auth=recovery"),
+  });
+  if (error) throwIfStructuralDbFailure(error);
+  return data;
+}
+
+export async function updatePassword(newPassword: string) {
+  const passwordCheck = validateSignupPassword(newPassword);
+  if (!passwordCheck.ok) {
+    throw new Error(passwordCheck.message ?? "Choose a stronger password.");
+  }
+  if (!supabase) throw new Error("Supabase env vars are missing.");
+  const { data, error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) throwIfStructuralDbFailure(error);
+  return data;
 }
 
 export async function signOut() {
@@ -230,14 +297,14 @@ export async function fetchProfile(userId: string): Promise<AppProfile | null> {
   try {
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, username, display_name, paid_plan")
+      .select("id, username, display_name, paid_plan, bio")
       .eq("id", userId)
       .maybeSingle();
     if (!error) return data;
 
     const fallback = await supabase
       .from("profiles")
-      .select("id, username, display_name")
+      .select("id, username, display_name, bio")
       .eq("id", userId)
       .maybeSingle();
     if (!fallback.error) return fallback.data as AppProfile | null;
