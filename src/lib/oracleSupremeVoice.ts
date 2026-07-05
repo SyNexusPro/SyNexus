@@ -99,11 +99,22 @@ export type OracleSupremeSpeaker = {
   stop: () => void;
 };
 
-export function createOracleSupremeSpeaker(handlers: {
+export type OracleSupremeSpeakerOptions = {
   onStart?: () => void;
   onEnd?: () => void;
   onError?: () => void;
-}): OracleSupremeSpeaker {
+  /** Slower, warmer delivery for the boot welcome line. */
+  variant?: "default" | "intro";
+};
+
+function splitIntroSpeech(text: string): string[] {
+  const normalized = speakLine(text);
+  const match = normalized.match(/^(.+?\.\s+)(.+)$/);
+  if (!match) return [normalized];
+  return [match[1]!.trim(), match[2]!.trim()];
+}
+
+export function createOracleSupremeSpeaker(handlers: OracleSupremeSpeakerOptions): OracleSupremeSpeaker {
   if (!isOracleSupremeVoiceSupported()) {
     return {
       speak: () => {},
@@ -114,25 +125,29 @@ export function createOracleSupremeSpeaker(handlers: {
   }
 
   const synth = window.speechSynthesis;
+  const isIntro = handlers.variant === "intro";
+  let introChainToken = 0;
 
   const stop = () => {
+    introChainToken += 1;
     synth.cancel();
     handlers.onEnd?.();
   };
 
-  const speak = (text: string) => {
-    if (!text.trim()) return;
-
-    synth.cancel();
-
+  const speakOne = (text: string, onComplete: () => void, fireStart?: boolean) => {
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.9;
-    utterance.pitch = 1.06;
+    utterance.rate = isIntro ? 0.84 : 0.9;
+    utterance.pitch = isIntro ? 0.97 : 1.06;
     utterance.volume = 1;
 
-    utterance.onstart = () => handlers.onStart?.();
-    utterance.onend = () => handlers.onEnd?.();
-    utterance.onerror = () => handlers.onError?.();
+    utterance.onstart = () => {
+      if (fireStart) handlers.onStart?.();
+    };
+    utterance.onend = () => onComplete();
+    utterance.onerror = () => {
+      handlers.onError?.();
+      onComplete();
+    };
 
     const launch = () => {
       const voice = pickOracleSupremeVoice();
@@ -150,6 +165,43 @@ export function createOracleSupremeSpeaker(handlers: {
     } else {
       launch();
     }
+  };
+
+  const speak = (text: string) => {
+    if (!text.trim()) return;
+
+    synth.cancel();
+    introChainToken += 1;
+    const chainId = introChainToken;
+
+    const finish = () => {
+      if (chainId !== introChainToken) return;
+      handlers.onEnd?.();
+    };
+
+    const parts = isIntro ? splitIntroSpeech(text) : [speakLine(text)];
+
+    const speakPart = (index: number) => {
+      if (chainId !== introChainToken) return;
+      if (index >= parts.length) {
+        finish();
+        return;
+      }
+      speakOne(
+        parts[index]!,
+        () => {
+          if (chainId !== introChainToken) return;
+          if (index + 1 < parts.length) {
+            window.setTimeout(() => speakPart(index + 1), isIntro ? 520 : 0);
+          } else {
+            finish();
+          }
+        },
+        index === 0,
+      );
+    };
+
+    speakPart(0);
   };
 
   return { speak, stop };

@@ -1,7 +1,12 @@
 import type { CSSProperties, ReactNode } from "react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createOracleSupremeSpeaker, isOracleSupremeVoiceSupported } from "../lib/oracleSupremeVoice";
-import { markIntroWelcomeSpoken, ORACLE_INTRO_VOICE_LINE, wasIntroWelcomeSpoken } from "../lib/oracleSupremeConversation";
+import {
+  buildOracleIntroVoiceLine,
+  markIntroWelcomeSpoken,
+  resolveIntroOperatorName,
+  wasIntroWelcomeSpoken,
+} from "../lib/oracleSupremeConversation";
 import {
   getBootDurations,
   getBootExitMs,
@@ -17,7 +22,7 @@ import { notifySynexusBootComplete } from "../lib/synexusBootComplete";
 
 const PHASE_COPY: readonly string[] = [
   "SYNEXUS INITIALIZING",
-  "WELCOME TO THE SYNEXUS · HOW MAY I BE OF SERVICE",
+  "WELCOME TO THE SYNEXUS",
   "DEPLOYING SENTINELS",
   "MARKET FEED LIVE — NOTHING MOVES UNSEEN",
   "ENTER THE SYNEXUS",
@@ -157,11 +162,21 @@ export function SynexusBootSequence({ children }: Props) {
       markIntroWelcomeSpoken();
       return;
     }
-    speakerRef.current = createOracleSupremeSpeaker({});
-    markIntroWelcomeSpoken();
-    speakerRef.current.speak(ORACLE_INTRO_VOICE_LINE);
-    return () => speakerRef.current?.stop();
+    const introLine = buildOracleIntroVoiceLine(resolveIntroOperatorName());
+    speakerRef.current = createOracleSupremeSpeaker({
+      variant: "intro",
+      onEnd: () => markIntroWelcomeSpoken(),
+      onError: () => markIntroWelcomeSpoken(),
+    });
+    speakerRef.current.speak(introLine);
+    // Do not stop voice when phase advances — only on unmount or explicit skip.
   }, [phase, profile, removed, exiting, skipEntirely]);
+
+  useEffect(() => {
+    return () => {
+      speakerRef.current?.stop();
+    };
+  }, []);
 
   useEffect(() => {
     if (!removed) {
@@ -217,6 +232,11 @@ export function SynexusBootSequence({ children }: Props) {
                   <span aria-hidden>{visibleTitle}</span>
                   {typing ? <span className="synexus-boot__caret" aria-hidden /> : null}
                 </h1>
+                {phase === 1 ? (
+                  <p className="synexus-boot__subtitle" aria-hidden>
+                    Oracle Supreme · your intelligence commander
+                  </p>
+                ) : null}
               </div>
               <div className="synexus-boot__title-glow" aria-hidden />
             </div>

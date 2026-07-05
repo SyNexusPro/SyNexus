@@ -6,6 +6,7 @@ import {
   markGreetedThisSession,
   readDaysSinceLastVisit,
   resolveOperatorName,
+  saveIntroOperatorName,
   touchLastVisit,
   type OracleConversationContext,
 } from "../lib/oracleSupremeConversation";
@@ -58,7 +59,9 @@ export function OracleSupremePresence() {
         if (user) {
           const profile = await fetchProfile(user.id);
           if (!cancelled) {
-            setOperatorName(resolveOperatorName(profile, user.email));
+            const name = resolveOperatorName(profile, user.email);
+            setOperatorName(name);
+            saveIntroOperatorName(name);
             setPlan(normalizePlan(profile?.paid_plan ?? localStorage.getItem(PLAN_STORAGE_KEY)));
           }
           if (hasSupabaseEnv) {

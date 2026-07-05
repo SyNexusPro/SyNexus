@@ -49,9 +49,10 @@ export function resolveBootProfile(reducedMotion = readPrefersReducedMotion()): 
 export function getBootDurations(profile: BootProfile): readonly number[] {
   if (profile === "skip") return [0, 0, 0, 0, 0, 0];
   if (profile === "fast") {
-    return [120, 180, 280, 180, 260, 180] as const;
+    // Phase 1 hold must cover the spoken welcome (was 180ms — voice clipped after "Welcome").
+    return [120, 3800, 280, 180, 260, 180] as const;
   }
-  return [600, 950, 2500, 950, 1350, 700] as const;
+  return [600, 4500, 2500, 950, 1350, 700] as const;
 }
 
 export function getBootExitMs(profile: BootProfile): number {
@@ -64,7 +65,7 @@ export function shouldBootTypewriter(profile: BootProfile): boolean {
 }
 
 export function shouldBootVoice(profile: BootProfile): boolean {
-  return profile === "full";
+  return profile === "full" || profile === "fast";
 }
 
 export function shouldShowBootSentinels(profile: BootProfile, phase: number): boolean {

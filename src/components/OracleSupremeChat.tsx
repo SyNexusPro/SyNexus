@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   buildFollowUpAfterMood,
   buildOpeningGreeting,
+  buildOracleIntroVoiceLine,
   createTurn,
   type ConversationTurn,
   type DayMoodReply,
@@ -11,7 +12,6 @@ import {
   reactToFreeText,
   saveConversationHistory,
   wasIntroWelcomeSpoken,
-  ORACLE_INTRO_VOICE_LINE,
   DAY_MOOD_QUICK_REPLIES,
 } from "../lib/oracleSupremeConversation";
 import { createOracleSupremeSpeaker, isOracleSupremeVoiceSupported } from "../lib/oracleSupremeVoice";
@@ -191,7 +191,7 @@ export function OracleSupremeChat({
         {visibleTurns.length === 0 ? (
           <div className="oracle-chat__empty-wrap">
             <p className="oracle-chat__empty">
-              Welcome to the SyNexus — tap below when you&apos;re ready to talk.
+              Welcome to The Synexus — tap below when you&apos;re ready to talk.
             </p>
             <button type="button" className="oracle-chat__chip" onClick={handleCheckIn}>
               How may I be of service?
@@ -268,7 +268,11 @@ export function OracleSupremeChat({
 
       {voiceSupported ? (
         <div className="oracle-chat__voice-row">
-          <button type="button" className="oracle-chat__voice-btn" onClick={() => speak(ORACLE_INTRO_VOICE_LINE)}>
+          <button
+            type="button"
+            className="oracle-chat__voice-btn"
+            onClick={() => speak(buildOracleIntroVoiceLine(context.operatorName))}
+          >
             Replay welcome
           </button>
           <button type="button" className="oracle-chat__voice-btn" onClick={() => speak(openingLine)}>

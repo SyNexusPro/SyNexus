@@ -1,5 +1,6 @@
 import { oracleRespondToMessage } from "./oracleCryptoBrain";
 import type { Token } from "../data/tokens";
+import { loadRememberedEmail } from "./authRemember";
 
 export type TimeBand = "morning" | "afternoon" | "evening" | "night";
 
@@ -27,8 +28,49 @@ export const ORACLE_LAST_VISIT_KEY = "oracle_supreme_last_visit";
 export const ORACLE_SESSION_GREET_KEY = "oracle_supreme_greeted_session";
 export const SYNEXUS_INTRO_WELCOME_SPOKEN_KEY = "synexus_intro_welcome_spoken";
 
-/** Spoken by Oracle on app open (boot intro + voice). */
-export const ORACLE_INTRO_VOICE_LINE = "Welcome to the SyNexus. How may I be of service?";
+/** Spoken by Oracle on app open (boot intro + voice). Use buildOracleIntroVoiceLine for the full line. */
+export function buildOracleIntroVoiceLine(operatorName?: string | null): string {
+  const name = operatorName?.trim();
+  const named = Boolean(name && name !== "there");
+  if (named) {
+    return (
+      `Welcome to The Synexus, ${name}. ` +
+      `I'm Oracle Supreme — your intelligence commander. ` +
+      `I'm here when you need me. How may I be of service?`
+    );
+  }
+  return (
+    "Welcome to The Synexus. " +
+    "I'm Oracle Supreme — your intelligence commander for safer Solana trading. " +
+    "How may I be of service?"
+  );
+}
+
+/** @deprecated Use buildOracleIntroVoiceLine() — kept for replay buttons that resolve name at call time. */
+export const ORACLE_INTRO_VOICE_LINE = buildOracleIntroVoiceLine();
+
+const INTRO_OPERATOR_NAME_KEY = "synexus_operator_display_name";
+
+export function saveIntroOperatorName(name: string): void {
+  const trimmed = name.trim();
+  if (!trimmed || trimmed === "there") return;
+  try {
+    localStorage.setItem(INTRO_OPERATOR_NAME_KEY, trimmed);
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Best-effort name for boot voice before async profile hydration. */
+export function resolveIntroOperatorName(): string {
+  try {
+    const stored = localStorage.getItem(INTRO_OPERATOR_NAME_KEY)?.trim();
+    if (stored) return stored;
+  } catch {
+    /* ignore */
+  }
+  return resolveOperatorName(null, loadRememberedEmail() || null);
+}
 
 type ProfileLike = {
   display_name?: string | null;
@@ -150,8 +192,8 @@ function oracleWelcomeLead(name: string, skipWelcomeLine?: boolean): string {
     return named ? `Hey ${name}. How may I be of service?` : "How may I be of service?";
   }
   return named
-    ? `Welcome to the SyNexus, ${name}. How may I be of service?`
-    : "Welcome to the SyNexus. How may I be of service?";
+    ? `Welcome to The Synexus, ${name}. How may I be of service?`
+    : "Welcome to The Synexus. How may I be of service?";
 }
 
 export function buildOpeningGreeting(

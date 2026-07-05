@@ -65,6 +65,7 @@ import {
 } from "../lib/pulseFormatting";
 import {
   resolveOperatorName,
+  saveIntroOperatorName,
 } from "../lib/oracleSupremeConversation";
 import { hasSupabaseEnv, supabase } from "../lib/supabaseClient";
 import { isProDemoActive, clearExpiredProDemo } from "../lib/proDemo";
@@ -327,6 +328,7 @@ export function Pulse() {
 
       const profile = await fetchProfile(user.id);
       setOperatorName(resolveOperatorName(profile, user.email));
+      saveIntroOperatorName(resolveOperatorName(profile, user.email));
       const rawPlan = profile?.paid_plan ?? localStorage.getItem(PLAN_STORAGE_KEY) ?? "FREE";
       if (hasStoredOwnerGrant()) {
         setPlan("PRO");
