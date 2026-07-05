@@ -2,6 +2,7 @@ import react from "@vitejs/plugin-react";
 import { defineConfig, loadEnv } from "vite";
 import { configureStripeCheckoutApi } from "./api/checkout";
 import { configureOwnerUnlockApi } from "./api/ownerUnlock";
+import { configureAnalyticsApi } from "./api/analytics";
 import { configureStripeWebhookApi } from "./api/webhook";
 
 /** Client bundle reads only VITE_* from import.meta.env; Vercel often sets SUPABASE_* without the prefix. */
@@ -55,6 +56,7 @@ export default defineConfig(({ mode }) => {
           configureStripeCheckoutApi(server, env);
           configureStripeWebhookApi(server, env);
           configureOwnerUnlockApi(server, env);
+          configureAnalyticsApi(server);
         },
       },
     ],
