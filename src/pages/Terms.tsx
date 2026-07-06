@@ -103,13 +103,12 @@ export function Terms() {
       <section className="legal-section marketing-panel">
         <h2>Subscriptions and billing</h2>
         <p>
-          Paid plans (including Synexus Pro at the price shown at checkout, currently $19.99/month where
-          applicable) include a <strong>7-day free trial</strong> of full Pro access for new accounts and
-          visitors (one trial per device unless otherwise stated at checkout). After the trial, billing on a
-          recurring basis begins when you subscribe through checkout. Payment is processed by third-party
-          payment processors (such as Stripe). By subscribing, you authorize us and our processors to charge
-          your payment method on a recurring basis until you cancel according to checkout and processor
-          flows. Prices, taxes, and
+          Paid plans (including Synexus Pro at the price shown at checkout, currently $9.99/month where
+          applicable) include a <strong>7-day free trial</strong> of full Pro access after you create and
+          verify your account (no credit card required for the trial). After the trial, billing on a recurring
+          basis begins only when you subscribe through checkout. Payment is processed by third-party payment
+          processors (such as Stripe). By subscribing, you authorize us and our processors to charge your
+          payment method on a recurring basis until you cancel according to checkout and processor flows. Prices, taxes, and
           features may change with notice where required by law. Unless mandatory law provides otherwise,{" "}
           <strong>fees are non-refundable</strong> once a billing period begins, including partial periods.
           Failed payments, disputed charges, or chargebacks may suspend paid features. Cancel before renewal to

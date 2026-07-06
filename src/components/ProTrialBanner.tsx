@@ -1,7 +1,10 @@
 import { useState } from "react";
+import { SYNEXUS_PRO_TRIAL_DAYS, SYNEXUS_PRO_TRIAL_LABEL } from "../config/proTrial";
+import { SYNEXUS_PRO_PRICE_LABEL } from "../config/proPricing";
 import { hasStoredOwnerGrant } from "../lib/ownerAccess";
 import { isProTrialActive } from "../lib/proDemo";
-import { SYNEXUS_PRO_TRIAL_DAYS, SYNEXUS_PRO_TRIAL_LABEL } from "../config/proTrial";
+import { openOracleLogin } from "../lib/openOracleLogin";
+import { useOperatorAuth } from "../hooks/useOperatorAuth";
 import { ProDemoButton } from "./ProDemoButton";
 
 const PLAN_STORAGE_KEY = "hivemind_paid_plan";
@@ -27,6 +30,7 @@ function isBannerDismissed(): boolean {
 }
 
 export function ProTrialBanner() {
+  const { linked } = useOperatorAuth();
   const [hidden, setHidden] = useState(() => isSynexusProPlan() || isBannerDismissed());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
@@ -44,6 +48,10 @@ export function ProTrialBanner() {
 
   async function startCheckout() {
     if (busy) return;
+    if (!linked) {
+      openOracleLogin();
+      return;
+    }
     setError(false);
     try {
       setBusy(true);
@@ -61,25 +69,32 @@ export function ProTrialBanner() {
     }
   }
 
+  const detail = !linked
+    ? `${SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial after sign-up · no card required · then ${SYNEXUS_PRO_PRICE_LABEL}`
+    : error
+      ? "Checkout couldn't open. Tap to retry."
+      : `${SYNEXUS_PRO_TRIAL_LABEL} active or available · ${SYNEXUS_PRO_PRICE_LABEL} after trial · cancel anytime`;
+
   return (
     <div className="pro-trial-banner" role="region" aria-label="Synexus Pro subscription">
       <div className="pro-trial-banner__text">
         <span className="pro-trial-banner__headline">Synexus Pro</span>
-        <span className="pro-trial-banner__detail">
-          {error
-            ? "Checkout couldn't open. Tap to retry."
-            : `${SYNEXUS_PRO_TRIAL_DAYS}-day free trial on every account · then $19.99/month · cancel anytime`}
-        </span>
+        <span className="pro-trial-banner__detail">{detail}</span>
       </div>
-      <ProDemoButton className="pro-trial-banner__demo" label={`Open ${SYNEXUS_PRO_TRIAL_LABEL}`} />
-      <button
-        type="button"
-        className="pro-trial-banner__cta"
-        disabled={busy}
-        onClick={() => void startCheckout()}
-      >
-        {busy ? "Opening…" : "Subscribe"}
-      </button>
+      <ProDemoButton
+        className="pro-trial-banner__demo"
+        label={linked ? `Open ${SYNEXUS_PRO_TRIAL_LABEL}` : "Enter Oracle · sign up free"}
+      />
+      {linked ? (
+        <button
+          type="button"
+          className="pro-trial-banner__cta"
+          disabled={busy}
+          onClick={() => void startCheckout()}
+        >
+          {busy ? "Opening…" : "Subscribe"}
+        </button>
+      ) : null}
       <button type="button" className="pro-trial-banner__close" onClick={dismiss} aria-label="Dismiss offer">
         ×
       </button>

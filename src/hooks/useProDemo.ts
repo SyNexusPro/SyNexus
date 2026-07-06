@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { SYNEXUS_PLAN_CHANGED } from "./useSynexusPlan";
+import { useOperatorAuth } from "./useOperatorAuth";
 import {
   PRO_DEMO_CHANGED,
   clearExpiredProDemo,
@@ -10,6 +11,7 @@ import {
 } from "../lib/proDemo";
 
 export function useProDemo() {
+  const { userId, linked } = useOperatorAuth();
   const [active, setActive] = useState(() => isProDemoActive());
   const [remainingMs, setRemainingMs] = useState(() => getProDemoRemainingMs());
 
@@ -32,9 +34,10 @@ export function useProDemo() {
   }, [sync]);
 
   const beginDemo = useCallback(() => {
-    startProDemo();
+    if (!userId || !linked) return;
+    startProDemo(userId);
     sync();
-  }, [sync]);
+  }, [linked, sync, userId]);
 
   return {
     active,

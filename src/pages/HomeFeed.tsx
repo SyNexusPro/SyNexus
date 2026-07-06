@@ -9,6 +9,7 @@ import { SynexusLiveScanner } from "../components/SynexusLiveScanner";
 import { ShouldIBuyPanel } from "../components/ShouldIBuyPanel";
 import { TopMoversPanel } from "../components/TopMoversPanel";
 import { ProDemoButton } from "../components/ProDemoButton";
+import { SYNEXUS_PRO_PRICE_LABEL } from "../config/proPricing";
 import { SynCoinLaunchBanner } from "../components/SynCoinLaunchBanner";
 import { BeginnerQuickStart } from "../components/BeginnerQuickStart";
 import { SentinelAlertsHub } from "../components/SentinelAlertsHub";
@@ -377,7 +378,7 @@ export function HomeFeed() {
           <h3>Built for faster decisions</h3>
           <p>1) Search coins before you buy.</p>
           <p>2) Read Sentinel risk signals before you chase hype.</p>
-          <p>3) Every account gets a 7-day Pro trial — then subscribe when you want the full grid.</p>
+          <p>3) Sign up through Oracle for a 7-day Pro trial — no card — then {SYNEXUS_PRO_PRICE_LABEL} if you keep it.</p>
         </div>
       </section>
         </>

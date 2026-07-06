@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import type { BiometricSupport } from "../lib/biometricLogin";
+import { SYNEXUS_PRO_TRIAL_DAYS } from "../config/proTrial";
 
 type AuthTone = "info" | "success" | "error";
 type SignInMethod = "magic" | "password";
@@ -37,6 +38,7 @@ type PulseOperatorLinkProps = {
   onResendVerification: () => void;
   onContinueToSignIn: () => void;
   ownerUnlocked?: boolean;
+  variant?: "default" | "oracle";
 };
 
 function maskEmail(email: string): string {
@@ -91,8 +93,9 @@ export function PulseOperatorLink({
   onResendVerification,
   onContinueToSignIn,
   ownerUnlocked = false,
+  variant = "default",
 }: PulseOperatorLinkProps) {
-  const [mode, setMode] = useState<"return" | "link" | "command">("return");
+  const [mode, setMode] = useState<"return" | "link" | "command">(variant === "oracle" ? "link" : "return");
   const [signInMethod, setSignInMethod] = useState<SignInMethod>("magic");
   const [showPassword, setShowPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -309,14 +312,31 @@ export function PulseOperatorLink({
           : "Reconnect to Synexus";
 
   return (
-    <section className="operator-link" aria-label="Link your operator ID">
+    <section
+      className={`operator-link${variant === "oracle" ? " operator-link--oracle-gate" : ""}`}
+      aria-label={variant === "oracle" ? "Oracle Supreme access gate" : "Link your operator ID"}
+    >
       <div className="operator-link__scanline" aria-hidden="true" />
       <header className="operator-link__head">
-        <p className="operator-link__eyebrow">Operator link</p>
-        <h2 className="operator-link__title">Save your Synexus command center</h2>
+        <p className="operator-link__eyebrow">
+          {variant === "oracle" ? "Oracle Supreme · access gate" : "Operator link"}
+        </p>
+        <h2 className="operator-link__title">
+          {variant === "oracle" ? "Create your operator link" : "Save your Synexus command center"}
+        </h2>
         <p className="operator-link__lede">
-          Sign in with a secure email link — no password to remember — or use an access key. After your first
-          sign-in, Synexus can save {biometricLabel} on mobile.
+          {variant === "oracle" ? (
+            <>
+              Sign up free to enter Oracle Supreme and unlock a{" "}
+              <strong>{SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial</strong> — no credit card required. Already
+              linked? Switch to Return.
+            </>
+          ) : (
+            <>
+              Sign in with a secure email link — no password to remember — or use an access key. After your
+              first sign-in, Synexus can save {biometricLabel} on mobile.
+            </>
+          )}
         </p>
       </header>
 

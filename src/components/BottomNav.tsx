@@ -21,11 +21,11 @@ export function BottomNav() {
         </span>
         Hub
       </NavLink>
-      <NavLink to="/pulse" className={linkClass}>
-        <span className="bottom-nav__icon" aria-hidden>
-          {isSimple ? "◈" : "∿"}
+      <NavLink to="/pulse#oracle-admin" className={linkClass}>
+        <span className="bottom-nav__icon bottom-nav__icon--oracle" aria-hidden>
+          {isSimple ? "◉" : "∿"}
         </span>
-        {isSimple ? "Tools" : "Sentinels"}
+        {isSimple ? "Oracle" : "Sentinels"}
       </NavLink>
     </nav>
   );

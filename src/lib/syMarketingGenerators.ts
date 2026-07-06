@@ -12,7 +12,7 @@ export function marketingAppOrigin(): string {
   return "";
 }
 
-const PRO_PRICE_LINE = "Synexus Pro · $19.99/month · cancel anytime.";
+const PRO_PRICE_LINE = "Synexus Pro · $9.99/month · cancel anytime.";
 
 const HOOKS = [
   "Should I buy this? Paste any Solana token. Synexus answers in seconds.",

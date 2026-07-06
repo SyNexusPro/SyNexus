@@ -8707,6 +8707,71 @@ a {
   display: none;
 }
 
+.oracle-admin--gate {
+  border-color: rgba(167, 139, 250, 0.42);
+  box-shadow:
+    0 0 0 1px rgba(94, 231, 255, 0.08),
+    0 12px 40px rgba(88, 28, 135, 0.22);
+}
+
+.oracle-admin--gate .oracle-admin__dock-logo--pulse {
+  filter: drop-shadow(0 0 10px rgba(167, 139, 250, 0.55));
+}
+
+.oracle-admin__toggle--gate {
+  border-color: rgba(94, 231, 255, 0.55);
+  background: linear-gradient(120deg, rgba(167, 139, 250, 0.28), rgba(94, 231, 255, 0.18));
+  color: #f5f3ff;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.oracle-admin__gate {
+  position: relative;
+  padding: 8px 0 4px;
+}
+
+.oracle-admin__gate-aura {
+  position: absolute;
+  inset: -20px 10% auto;
+  height: 120px;
+  background: radial-gradient(circle at 50% 30%, rgba(167, 139, 250, 0.22), transparent 70%);
+  pointer-events: none;
+}
+
+.oracle-admin__gate-head {
+  position: relative;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.oracle-admin__gate-logo {
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 14px rgba(94, 231, 255, 0.35));
+}
+
+.operator-link--oracle-gate {
+  position: relative;
+  margin: 0;
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  background: linear-gradient(165deg, rgba(12, 8, 22, 0.95), rgba(8, 12, 18, 0.92));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.operator-link--oracle-gate .operator-link__title {
+  background: linear-gradient(90deg, #e9d5ff, #5ee7ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.bottom-nav__icon--oracle {
+  color: #c4b5fd;
+  text-shadow: 0 0 12px rgba(167, 139, 250, 0.65);
+}
+
 /* Synexus Journal (blog) */
 .blog-page {
   max-width: 720px;

@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { fetchGuardianAlerts, fetchProfile, fetchWatchlistTokens, getCurrentUser } from "../lib/supabaseData";
 import { hasSupabaseEnv } from "../lib/supabaseClient";
+import { openOracleLogin } from "../lib/openOracleLogin";
+import { useOperatorAuth } from "../hooks/useOperatorAuth";
 import {
   hasGreetedThisSession,
   markGreetedThisSession,
@@ -24,6 +26,7 @@ function normalizePlan(raw: string | null | undefined): "FREE" | "PRO" {
 }
 
 export function OracleSupremePresence() {
+  const { linked } = useOperatorAuth();
   const [bootReady, setBootReady] = useState(isSynexusBootComplete());
   const [expanded, setExpanded] = useState(false);
   const [speaking, setSpeaking] = useState(false);
@@ -124,7 +127,13 @@ export function OracleSupremePresence() {
       <button
         type="button"
         className={`oracle-presence-fab${expanded ? " oracle-presence-fab--open" : ""}${speaking ? " oracle-presence-fab--speaking" : ""}`}
-        onClick={() => setExpanded((open) => !open)}
+        onClick={() => {
+          if (!linked) {
+            openOracleLogin();
+            return;
+          }
+          setExpanded((open) => !open);
+        }}
         aria-expanded={expanded}
         aria-label={
           expanded

@@ -9,6 +9,7 @@ export const PRO_TRIAL_UNTIL_KEY = "synexus_pro_trial_until";
 /** Legacy 5-minute demo key — read for migration only. */
 export const PRO_DEMO_UNTIL_KEY = "synexus_pro_demo_until";
 export const PRO_TRIAL_STARTED_KEY = "synexus_pro_trial_started";
+export const PRO_TRIAL_USER_ID_KEY = "synexus_pro_trial_user_id";
 export const PRO_DEMO_CHANGED = "synexus-pro-demo-changed";
 
 export const PRO_DEMO_DURATION_MS = SYNEXUS_PRO_TRIAL_MS;
@@ -45,9 +46,12 @@ function readUntil(): number | null {
   }
 }
 
-export function hasProTrialBeenUsed(): boolean {
+export function hasProTrialBeenUsed(userId?: string): boolean {
   try {
-    return localStorage.getItem(PRO_TRIAL_STARTED_KEY) === "1";
+    if (localStorage.getItem(PRO_TRIAL_STARTED_KEY) !== "1") return false;
+    const trialUserId = localStorage.getItem(PRO_TRIAL_USER_ID_KEY);
+    if (!userId) return Boolean(trialUserId);
+    return trialUserId === userId;
   } catch {
     return false;
   }
@@ -90,10 +94,11 @@ function notifyDemoChanged() {
   window.dispatchEvent(new Event(PRO_DEMO_CHANGED));
 }
 
-function writeTrialUntil(until: number) {
+function writeTrialUntil(until: number, userId: string) {
   try {
     localStorage.setItem(PRO_TRIAL_UNTIL_KEY, String(until));
     localStorage.setItem(PRO_TRIAL_STARTED_KEY, "1");
+    localStorage.setItem(PRO_TRIAL_USER_ID_KEY, userId);
     localStorage.removeItem(PRO_DEMO_UNTIL_KEY);
     recordTrustedPlanGrant("PRO", "trial_7d");
     localStorage.setItem(PLAN_STORAGE_KEY, "PRO");
@@ -136,30 +141,44 @@ export function clearExpiredProTrial(now = Date.now()): boolean {
   return clearExpiredProDemo(now);
 }
 
-/** Start (or refresh) the one-time universal 7-day Pro trial on this device. */
-export function startProDemo(now = Date.now()): number {
+/** Start the one-time 7-day Pro trial for a signed-in operator. */
+export function startProDemo(userId: string, now = Date.now()): number {
+  if (!userId || userId.startsWith("demo-")) return now;
   clearExpiredProDemo(now);
   if (hasPaidProGrant()) return readUntil() ?? now;
   const until = now + PRO_TRIAL_DURATION_MS;
-  writeTrialUntil(until);
+  writeTrialUntil(until, userId);
   return until;
 }
 
-export function startProTrial(now = Date.now()): number {
-  return startProDemo(now);
+export function startProTrial(userId: string, now = Date.now()): number {
+  return startProDemo(userId, now);
 }
 
 /**
- * Auto-enroll every visitor in the 7-day Pro trial unless they already have paid Pro.
- * Call once on app boot and after sign-in profile sync.
+ * Start the 7-day Pro trial after a verified sign-up / sign-in.
+ * No credit card — app-granted access only.
  */
-export function ensureUniversalProTrial(now = Date.now()): boolean {
+export function ensureProTrialAfterSignup(userId: string, now = Date.now()): boolean {
+  if (!userId || userId.startsWith("demo-")) return false;
   clearExpiredProDemo(now);
   if (hasPaidProGrant()) return false;
-  if (isProTrialActive(now)) return true;
-  if (hasProTrialBeenUsed()) return false;
-  startProDemo(now);
+
+  const trialUserId = localStorage.getItem(PRO_TRIAL_USER_ID_KEY);
+  if (isProTrialActive(now)) {
+    return trialUserId === userId;
+  }
+
+  if (hasProTrialBeenUsed(userId)) return false;
+
+  startProDemo(userId, now);
   return true;
+}
+
+/** @deprecated Use ensureProTrialAfterSignup after verified sign-in. */
+export function ensureUniversalProTrial(now = Date.now()): boolean {
+  void now;
+  return false;
 }
 
 export function endProDemo() {

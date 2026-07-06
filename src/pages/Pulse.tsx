@@ -68,8 +68,9 @@ import {
   saveIntroOperatorName,
 } from "../lib/oracleSupremeConversation";
 import { hasSupabaseEnv, supabase } from "../lib/supabaseClient";
-import { isProDemoActive, clearExpiredProDemo, ensureUniversalProTrial, formatProDemoRemaining, getProDemoRemainingMs } from "../lib/proDemo";
-import { SYNEXUS_PRO_TRIAL_LABEL } from "../config/proTrial";
+import { isProDemoActive, clearExpiredProDemo, ensureProTrialAfterSignup, formatProDemoRemaining, getProDemoRemainingMs } from "../lib/proDemo";
+import { SYNEXUS_PRO_PRICE_LABEL, SYNEXUS_PRO_SUBSCRIBE_LABEL } from "../config/proPricing";
+import { SYNEXUS_PRO_TRIAL_DAYS, SYNEXUS_PRO_TRIAL_LABEL } from "../config/proTrial";
 import { getSentinelIdleMessage, getSentinelMessage } from "../lib/watcherVoice";
 import type { Token } from "../data/tokens";
 import { fetchMvpTokenFeed } from "../services/marketDataService";
@@ -340,7 +341,7 @@ export function Pulse() {
         setPlan(normalizedPlan);
       }
       if (profile?.paid_plan !== "PRO") {
-        ensureUniversalProTrial();
+        ensureProTrialAfterSignup(user.id);
       }
       notifySynexusPlanChanged();
 
@@ -1048,13 +1049,53 @@ export function Pulse() {
   const authBusyLabel =
     authLoadPhrase === "synexus" ? "Connecting to Synexus..." : "Synchronizing Sentinels...";
 
+  const operatorLinked = Boolean(userId && !userId.startsWith("demo-"));
+
+  const operatorLinkPanel = (
+    <PulseOperatorLink
+      variant="oracle"
+      userId={userId}
+      operatorName={operatorName}
+      userEmail={userEmail}
+      plan={plan}
+      email={email}
+      password={password}
+      authBusy={authBusy}
+      authBusyLabel={authBusyLabel}
+      authMessage={authMessage}
+      hasSupabaseEnv={hasSupabaseEnv}
+      biometricSupport={biometric.support}
+      biometricEnrolled={biometric.enrolled}
+      biometricEmailHint={biometric.emailHint}
+      recoveryMode={recoveryMode}
+      emailVerificationPending={emailVerificationPending}
+      pendingVerificationEmail={pendingVerificationEmail}
+      signupPasswordHint={signupPasswordHint}
+      onEmailChange={setEmail}
+      onPasswordChange={setPassword}
+      onSignUp={() => void handleSignUp()}
+      onSignIn={() => void handleSignIn()}
+      onSignOut={() => void handleSignOut()}
+      onOwnerUnlock={() => void handleOwnerUnlock()}
+      onBiometricSignIn={() => void handleBiometricSignIn()}
+      onEnableBiometric={() => void handleEnableBiometric()}
+      onDisableBiometric={() => void handleDisableBiometric()}
+      onMagicLink={() => void handleMagicLink()}
+      onForgotPassword={() => void handleForgotPassword()}
+      onUpdatePassword={(next) => void handleUpdatePassword(next)}
+      onResendVerification={() => void handleResendVerification()}
+      onContinueToSignIn={handleContinueToSignIn}
+      ownerUnlocked={hasStoredOwnerGrant()}
+    />
+  );
+
   return (
     <div className={`page${isSimple ? " page--easy" : ""}`}>
       <section className="page__intro">
-        <h1 className="page__headline">{isSimple ? "Your tools" : "Sentinels"}</h1>
+        <h1 className="page__headline">{isSimple ? "Oracle" : "Sentinels"}</h1>
         <p className="page__lede">
           {isSimple
-            ? "Scan tokens, check your wallet, and talk to Oracle — everything you need without the noise."
+            ? "Tap Enter Oracle to sign up free — 7-day Pro trial included, no credit card required."
             : "Full command center — alerts, Sentinel grid, operator tools, and Oracle Supreme."}
         </p>
       </section>
@@ -1084,6 +1125,8 @@ export function Pulse() {
         marketTokenCount={marketTokens.length}
         alertCount={alerts.length + sentinelAlerts.length}
         checkoutBusy={checkoutBusy}
+        loggedIn={operatorLinked}
+        authPanel={operatorLinkPanel}
         onRefreshReport={handleOracleSupremeReport}
         onUpgrade={() => void handleUpgradeTrigger()}
         onSpeakingChange={setOracleSpeaking}
@@ -1173,6 +1216,7 @@ export function Pulse() {
         </div>
       </section>
 
+      {operatorLinked ? (
       <PulseOperatorLink
         userId={userId}
         operatorName={operatorName}
@@ -1207,6 +1251,7 @@ export function Pulse() {
         onContinueToSignIn={handleContinueToSignIn}
         ownerUnlocked={hasStoredOwnerGrant()}
       />
+      ) : null}
 
       <div className="pulse-card">
         <p className="pulse-card__title">Saved watchlist tokens</p>
@@ -1295,11 +1340,12 @@ export function Pulse() {
         <div className="pulse-synexus-pro-promo">
           <div className="pulse-synexus-pro-promo__honeycomb" aria-hidden />
           <p className="pulse-synexus-pro-promo__label">Synexus Pro</p>
-          <p className="pulse-synexus-pro-promo__price">$19.99/month</p>
+          <p className="pulse-synexus-pro-promo__price">{SYNEXUS_PRO_PRICE_LABEL}</p>
           <p className="pulse-synexus-pro-promo__headline">Unlimited trading intelligence. One simple price.</p>
           <p className="pulse-synexus-pro-promo__body">
-            Unlock the full Synexus system with real-time Sentinel analysis, risk scanning, momentum tracking, whale
-            activity signals, pattern detection, and unlimited trading intelligence tools.
+            Sign up free for a {SYNEXUS_PRO_TRIAL_DAYS}-day full Pro trial — no credit card. Then unlock the full
+            Synexus system with real-time Sentinel analysis, risk scanning, momentum tracking, whale activity
+            signals, pattern detection, and unlimited trading intelligence tools.
           </p>
           <ul className="pulse-synexus-pro-promo__bullets">
             <li>Unlimited Synexus access</li>
@@ -1324,7 +1370,7 @@ export function Pulse() {
                   disabled={checkoutBusy}
                   onClick={() => void handleUpgradeTrigger()}
                 >
-                  {checkoutBusy ? "Opening…" : "Subscribe — $19.99/month"}
+                  {checkoutBusy ? "Opening…" : SYNEXUS_PRO_SUBSCRIBE_LABEL}
                 </button>
               </>
             ) : isProDemoActive() ? (

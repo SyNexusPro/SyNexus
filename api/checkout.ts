@@ -6,7 +6,7 @@ type PaidPlan = "PRO";
 type CheckoutEnv = {
   STRIPE_SECRET_KEY?: string;
   STRIPE_PRICE_ID_PRO?: string;
-  /** Optional trial days for Synexus Pro checkout (0 = bill immediately). Default 0. */
+  /** Optional Stripe-side trial days (0 = bill on subscribe; app trial is card-free after sign-up). */
   STRIPE_TRIAL_DAYS_PRO?: string;
   VITE_APP_URL?: string;
 };
@@ -65,7 +65,7 @@ function getCheckoutErrorMessage(error: unknown) {
 }
 
 function trialDaysFromEnv(raw: string | undefined): number {
-  if (raw === undefined || raw.trim() === "") return 7;
+  if (raw === undefined || raw.trim() === "") return 0;
   const n = Number.parseInt(raw, 10);
   if (!Number.isFinite(n) || n <= 0) return 0;
   return Math.min(n, 730);
