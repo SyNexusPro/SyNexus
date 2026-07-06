@@ -56,7 +56,7 @@ export function Terms() {
           <strong>Nothing on the Service is investment, trading, legal, tax, accounting, or other professional
           advice.</strong> We do not recommend, endorse, or solicit buying, selling, holding, staking,
           bridging, or otherwise transacting in any asset. Labels such as &quot;safe,&quot; &quot;warning,&quot;
-          &quot;danger,&quot; grades, confidence percentages, momentum reads, or Sentinel / Oracle Supreme
+          &quot;danger,&quot; grades, confidence percentages, momentum reads, or Sentinel / Titan
           commentary are automated or heuristic summaries—not guarantees. Always do your own research and consult
           qualified professionals before making decisions.
         </p>
@@ -65,7 +65,7 @@ export function Terms() {
       <section className="legal-section marketing-panel">
         <h2>AI, automation, and simulated features</h2>
         <p>
-          Parts of the Service use automated systems, including features branded as Sentinels, Oracle Supreme,
+          Parts of the Service use automated systems, including features branded as Sentinels and Titan,
           scanners, and similar tools. These systems may use third-party data, heuristics, machine learning, or
           synthetic presentation (including levels, XP, or demo-style metrics).{" "}
           <strong>Outputs may be incomplete, delayed, inaccurate, or misleading.</strong> AI and automated

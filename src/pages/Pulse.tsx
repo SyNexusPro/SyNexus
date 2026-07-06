@@ -68,7 +68,15 @@ import {
   saveIntroOperatorName,
 } from "../lib/oracleSupremeConversation";
 import { hasSupabaseEnv, supabase } from "../lib/supabaseClient";
-import { isProDemoActive, clearExpiredProDemo, ensureProTrialAfterSignup, formatProDemoRemaining, getProDemoRemainingMs } from "../lib/proDemo";
+import { saveTitanBotName } from "../lib/titanBotName";
+import { useTitanBotName } from "../hooks/useTitanBotName";
+import {
+  isProDemoActive,
+  clearExpiredProDemo,
+  ensureProTrialAfterSignup,
+  formatProDemoRemaining,
+  getProDemoRemainingMs,
+} from "../lib/proDemo";
 import { SYNEXUS_PRO_PRICE_LABEL, SYNEXUS_PRO_SUBSCRIBE_LABEL } from "../config/proPricing";
 import { SYNEXUS_PRO_TRIAL_DAYS, SYNEXUS_PRO_TRIAL_LABEL } from "../config/proTrial";
 import { getSentinelIdleMessage, getSentinelMessage } from "../lib/watcherVoice";
@@ -193,6 +201,7 @@ export function Pulse() {
   const [oracleSupremeReportStamp, setOracleSupremeReportStamp] = useState(() => Date.now());
   const [oracleSpeaking, setOracleSpeaking] = useState(false);
   const { isSimple, isAdvanced } = useSynexusUIMode();
+  const { name: titanBotName } = useTitanBotName();
   const biometric = useBiometricLogin();
   const pendingAuthMethod = useRef<"password" | "signup" | "biometric" | null>(null);
 
@@ -331,6 +340,9 @@ export function Pulse() {
       clearEmailVerificationPending();
 
       const profile = await fetchProfile(user.id);
+      if (profile?.titan_bot_name) {
+        saveTitanBotName(profile.titan_bot_name);
+      }
       setOperatorName(resolveOperatorName(profile, user.email));
       saveIntroOperatorName(resolveOperatorName(profile, user.email));
       const rawPlan = profile?.paid_plan ?? localStorage.getItem(PLAN_STORAGE_KEY) ?? "FREE";
@@ -1023,8 +1035,8 @@ export function Pulse() {
   }, [alerts.length, plan, tracked.length, sentinelAlerts.length, watchlist.length]);
 
   const syntheticSentinels = useMemo(
-    () => buildSyntheticSentinels(sentinelSignals),
-    [sentinelSignals],
+    () => buildSyntheticSentinels(sentinelSignals, titanBotName),
+    [sentinelSignals, titanBotName],
   );
 
   const sentinelLiveIntel = useMemo(
@@ -1038,12 +1050,12 @@ export function Pulse() {
     [marketTokens, plan, sentinelAlerts, syntheticSentinels],
   );
   const oracleSupremeBriefing = useMemo(
-    () => buildOracleSupremeBriefing(syntheticSentinels, sentinelSignals),
-    [syntheticSentinels, sentinelSignals],
+    () => buildOracleSupremeBriefing(syntheticSentinels, sentinelSignals, titanBotName),
+    [syntheticSentinels, sentinelSignals, titanBotName],
   );
   const oracleSupremeDailyReport = useMemo(
-    () => buildOracleSupremeDailyReport(syntheticSentinels, sentinelSignals),
-    [oracleSupremeReportStamp, syntheticSentinels, sentinelSignals],
+    () => buildOracleSupremeDailyReport(syntheticSentinels, sentinelSignals, titanBotName),
+    [oracleSupremeReportStamp, syntheticSentinels, sentinelSignals, titanBotName],
   );
 
   const authBusyLabel =
@@ -1092,11 +1104,11 @@ export function Pulse() {
   return (
     <div className={`page${isSimple ? " page--easy" : ""}`}>
       <section className="page__intro">
-        <h1 className="page__headline">{isSimple ? "Oracle" : "Sentinels"}</h1>
+        <h1 className="page__headline">{isSimple ? "Titan" : "Sentinels"}</h1>
         <p className="page__lede">
           {isSimple
-            ? "Tap Enter Oracle to sign up free — 7-day Pro trial included, no credit card required."
-            : "Full command center — alerts, Sentinel grid, operator tools, and Oracle Supreme."}
+            ? `Tap Enter ${titanBotName} to sign up free — 7-day Pro trial included, no credit card required.`
+            : `Full command center — alerts, Sentinel grid, operator tools, and ${titanBotName}.`}
         </p>
       </section>
 
@@ -1150,7 +1162,7 @@ export function Pulse() {
         <div className="token-section__head">
           <h2 className="token-section__title">Sentinels</h2>
           <p className="token-section__lede">
-            Oracle Supreme commands each lane — live orders and reports every {plan === "PRO" ? "8" : "12"}s across{" "}
+            {titanBotName} commands each lane — live orders and reports every {plan === "PRO" ? "8" : "12"}s across{" "}
             {marketTokens.length || "all"} tracked pairs.
           </p>
         </div>

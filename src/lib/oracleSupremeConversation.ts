@@ -1,3 +1,4 @@
+import { resolveTitanBotName } from "./titanBotName";
 import { oracleRespondToMessage } from "./oracleCryptoBrain";
 import type { Token } from "../data/tokens";
 import { loadRememberedEmail } from "./authRemember";
@@ -8,6 +9,7 @@ export type DayMoodReply = "good" | "long" | "trading" | "rough";
 
 export type OracleConversationContext = {
   operatorName: string;
+  titanBotName: string;
   alertCount: number;
   watchlistCount: number;
   plan: "FREE" | "PRO";
@@ -28,20 +30,23 @@ export const ORACLE_LAST_VISIT_KEY = "oracle_supreme_last_visit";
 export const ORACLE_SESSION_GREET_KEY = "oracle_supreme_greeted_session";
 export const SYNEXUS_INTRO_WELCOME_SPOKEN_KEY = "synexus_intro_welcome_spoken";
 
-/** Spoken by Oracle on app open (boot intro + voice). Use buildOracleIntroVoiceLine for the full line. */
-export function buildOracleIntroVoiceLine(operatorName?: string | null): string {
+/** Spoken by the commander on app open (boot intro + voice). Use buildOracleIntroVoiceLine for the full line. */
+export function buildOracleIntroVoiceLine(
+  operatorName?: string | null,
+  titanBotName = resolveTitanBotName(),
+): string {
   const name = operatorName?.trim();
   const named = Boolean(name && name !== "there");
   if (named) {
     return (
       `Welcome to The Synexus, ${name}. ` +
-      `I'm Oracle Supreme — your intelligence commander. ` +
+      `I'm ${titanBotName} — your intelligence commander. ` +
       `I'm here when you need me. How may I be of service?`
     );
   }
   return (
     "Welcome to The Synexus. " +
-    "I'm Oracle Supreme — your intelligence commander for safer Solana trading. " +
+    `I'm ${titanBotName} — your intelligence commander for safer Solana trading. ` +
     "How may I be of service?"
   );
 }
@@ -285,7 +290,7 @@ export function reactToFreeText(text: string, ctx: OracleConversationContext): s
   }
 
   if (/who are you|what are you/.test(lower)) {
-    return `I'm Oracle Supreme — your synthetic commander. I learn, I decide in seconds, and I run Aegis, Pulse, Titan, and Cipher for you.`;
+    return `I'm ${ctx.titanBotName} — your synthetic commander. I learn, I decide in seconds, and I run Aegis, Pulse, Leviathan, and Cipher for you.`;
   }
 
   return `I hear you, ${ctx.operatorName}. "${text}" — noted. Head to Pulse if you want a market read, or keep talking here.`;

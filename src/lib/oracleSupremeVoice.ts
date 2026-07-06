@@ -2,6 +2,7 @@ import {
   type OracleSupremeDailyReport,
   oracleSupremeMoodLabel,
 } from "../data/syntheticWatchers";
+import { resolveTitanBotName } from "./titanBotName";
 
 const VOICE_PATTERNS = [
   /samantha/i,
@@ -44,51 +45,54 @@ function speakLine(text: string): string {
   return text.replace(/\s+/g, " ").trim();
 }
 
-function briefingToFirstPerson(briefing: string): string {
+function briefingToFirstPerson(briefing: string, commanderName: string): string {
+  const escaped = commanderName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   return briefing
-    .replace(/^Oracle Supreme is online and waiting\./, "I'm online and ready.")
-    .replace(/^Oracle is monitoring/, "I'm monitoring")
-    .replace(/^Oracle just reviewed/, "I just reviewed")
-    .replace(/Oracle is (\d+)% confident/, "I'm $1% confident")
-    .replace(/Oracle's call/, "My call")
+    .replace(new RegExp(`^${escaped} is online and waiting\\.`), "I'm online and ready.")
+    .replace(new RegExp(`^${escaped} is monitoring`), "I'm monitoring")
+    .replace(new RegExp(`^${escaped} just reviewed`), "I just reviewed")
+    .replace(new RegExp(`${escaped} is (\\d+)% confident`), "I'm $1% confident")
+    .replace(new RegExp(`${escaped}'s call`), "My call")
     .replace(/ — see your briefing below\.?$/, ".");
 }
 
-function reportLineToSpeech(text: string): string {
+function reportLineToSpeech(text: string, commanderName: string): string {
+  const escaped = commanderName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   return text
-    .replace(/^Oracle /, "I ")
-    .replace(/^Oracle's advice/, "My advice")
-    .replace(/ Oracle /g, " I ")
-    .replace(/Oracle is /g, "I'm ")
-    .replace(/Oracle's /g, "My ");
+    .replace(new RegExp(`^${escaped} `), "I ")
+    .replace(new RegExp(`^${escaped}'s advice`), "My advice")
+    .replace(new RegExp(` ${escaped} `, "g"), " I ")
+    .replace(new RegExp(`${escaped} is `, "g"), "I'm ")
+    .replace(new RegExp(`${escaped}'s `, "g"), "My ");
 }
 
 export function buildOracleSupremeSpeakScript(
   mode: "sample" | "full",
   briefing: string,
   report?: OracleSupremeDailyReport,
+  titanBotName = resolveTitanBotName(),
 ): string {
   if (mode === "sample") {
     return speakLine(
-      "Oracle Supreme online. I'm your synthetic commander — I learn, I decide, and I run your Sentinels. " +
+      `${titanBotName} online. I'm your synthetic commander — I learn, I decide, and I run your Sentinels. ` +
         "Synexus Pro unlocks my full voice briefings: every alert and every read, delivered personally to you.",
     );
   }
 
-  const parts: string[] = ["Oracle Supreme, reporting.", briefingToFirstPerson(briefing)];
+  const parts: string[] = [`${titanBotName}, reporting.`, briefingToFirstPerson(briefing, titanBotName)];
 
   if (report) {
     const mood = oracleSupremeMoodLabel(report.mood).toLowerCase();
     parts.push(
       `Market stress is ${mood}. Your Sentinel team is at ${report.systemHealth} percent health, graded ${report.oversightGrade}.`,
     );
-    parts.push(reportLineToSpeech(report.headline));
-    parts.push(reportLineToSpeech(report.daySummary));
+    parts.push(reportLineToSpeech(report.headline, titanBotName));
+    parts.push(reportLineToSpeech(report.daySummary, titanBotName));
     parts.push("Here's what I need you to focus on.");
     report.priorities.forEach((priority, index) => {
-      parts.push(`${index + 1}. ${reportLineToSpeech(priority)}`);
+      parts.push(`${index + 1}. ${reportLineToSpeech(priority, titanBotName)}`);
     });
-    parts.push(reportLineToSpeech(report.closingNote));
+    parts.push(reportLineToSpeech(report.closingNote, titanBotName));
   }
 
   return speakLine(parts.join(" "));

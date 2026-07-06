@@ -14,6 +14,8 @@ import { ORACLE_OPEN_LOGIN_EVENT } from "../lib/openOracleLogin";
 import { OracleSupremeVoiceBar } from "./OracleSupremeVoiceBar";
 import { ProDemoButton } from "./ProDemoButton";
 import { SynexusSymbolMark } from "./SynexusSymbolMark";
+import { TitanBotRename } from "./TitanBotRename";
+import { useTitanBotName } from "../hooks/useTitanBotName";
 
 type Props = {
   plan: SynexusPlan;
@@ -50,6 +52,7 @@ export function OracleAdminControlCenter({
   speaking,
   compact = false,
 }: Props) {
+  const { name: titanBotName } = useTitanBotName();
   const [open, setOpen] = useState(() => window.location.hash === "#oracle-admin");
   const lanes = syntheticSentinels.filter((s) => !s.isOracleSupreme);
   const briefingLine = pulseFormatSentinelNamesInText(briefing);
@@ -71,10 +74,10 @@ export function OracleAdminControlCenter({
     return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
 
-  const toggleLabel = !loggedIn ? "Enter Oracle" : open ? "Close" : "Open Oracle";
+  const toggleLabel = !loggedIn ? `Enter ${titanBotName}` : open ? "Close" : `Open ${titanBotName}`;
   const dockMeta = !loggedIn
     ? `${SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial after sign-up · no card required`
-    : `${alertCount} alert${alertCount === 1 ? "" : "s"} · ${marketTokenCount} pairs · Tap the Oracle orb to talk`;
+    : `${alertCount} alert${alertCount === 1 ? "" : "s"} · ${marketTokenCount} pairs · Tap the orb to talk to ${titanBotName}`;
 
   return (
     <section
@@ -86,7 +89,7 @@ export function OracleAdminControlCenter({
         <SynexusSymbolMark className="oracle-admin__dock-logo oracle-admin__dock-logo--pulse" size="chat" />
         <div className="oracle-admin__dock-copy">
           <p className="oracle-admin__dock-title" id="oracle-admin-title">
-            {loggedIn ? "Oracle Admin" : "Oracle Supreme"}
+            {loggedIn ? titanBotName : titanBotName}
           </p>
           <p className="oracle-admin__dock-meta">{dockMeta}</p>
         </div>
@@ -109,7 +112,7 @@ export function OracleAdminControlCenter({
               <header className="oracle-admin__gate-head">
                 <SynexusSymbolMark className="oracle-admin__gate-logo" size="panel" />
                 <div>
-                  <p className="oracle-admin__eyebrow">Access gate · Oracle Supreme</p>
+                  <p className="oracle-admin__eyebrow">Access gate · {titanBotName}</p>
                   <h2 className="oracle-admin__title">Link your operator ID</h2>
                   <p className="oracle-admin__lede">
                     Sign up free to enter the command center. You&apos;ll get a{" "}
@@ -126,14 +129,15 @@ export function OracleAdminControlCenter({
                 <SynexusSymbolMark className="oracle-admin__logo" size="panel" />
                 <div>
                   <p className="oracle-admin__eyebrow">Command center</p>
-                  <h2 className="oracle-admin__title">Oracle Supreme</h2>
+                  <h2 className="oracle-admin__title">{titanBotName}</h2>
                   <p className="oracle-admin__lede">
-                    Aegis, Pulse, Titan, and Cipher — your private operator console.
+                    Aegis, Pulse, Leviathan, and Cipher — your private operator console.
                   </p>
                 </div>
               </div>
+              <TitanBotRename compact />
 
-              <div className="oracle-admin__metrics" aria-label="Oracle system status">
+              <div className="oracle-admin__metrics" aria-label="Commander system status">
                 <span>{marketTokenCount} pairs tracked</span>
                 <span>{alertCount} active alerts</span>
                 <span>{plan === "PRO" ? "Pro · online" : "Pro · standby"}</span>
@@ -162,6 +166,7 @@ export function OracleAdminControlCenter({
                 plan={plan}
                 briefing={briefingLine}
                 report={plan === "PRO" ? dailyReport : undefined}
+                titanBotName={titanBotName}
                 onSpeakingChange={onSpeakingChange}
               />
 
@@ -177,7 +182,7 @@ export function OracleAdminControlCenter({
                   <p>{dailyReport.daySummary}</p>
                   {!compact ? (
                     <>
-                      <p className="oracle-admin__priorities-label">Oracle priorities</p>
+                      <p className="oracle-admin__priorities-label">{titanBotName} priorities</p>
                       <ul>
                         {dailyReport.priorities.map((priority) => (
                           <li key={priority}>{pulseFormatSentinelNamesInText(priority)}</li>
@@ -192,7 +197,7 @@ export function OracleAdminControlCenter({
               ) : (
                 <div className="oracle-admin__unlock">
                   <p>
-                    Unlock Oracle Admin briefings with Synexus Pro — {SYNEXUS_PRO_PRICE_LABEL}. Your{" "}
+                    Unlock {titanBotName} briefings with Synexus Pro — {SYNEXUS_PRO_PRICE_LABEL}. Your{" "}
                     {SYNEXUS_PRO_TRIAL_DAYS}-day trial starts when you sign up — no card required.
                   </p>
                   <ProDemoButton

@@ -8772,6 +8772,95 @@ a {
   text-shadow: 0 0 12px rgba(167, 139, 250, 0.65);
 }
 
+.titan-bot-rename {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(167, 139, 250, 0.28);
+  background: rgba(167, 139, 250, 0.06);
+}
+
+.titan-bot-rename__current {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 8px;
+}
+
+.titan-bot-rename__name {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #e9d5ff;
+}
+
+.titan-bot-rename__tag {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+
+.titan-bot-rename__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.titan-bot-rename__edit,
+.titan-bot-rename__reset,
+.titan-bot-rename__save,
+.titan-bot-rename__cancel {
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.titan-bot-rename__save {
+  border-color: rgba(94, 231, 255, 0.45);
+  background: rgba(94, 231, 255, 0.12);
+}
+
+.titan-bot-rename__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.titan-bot-rename__input {
+  flex: 1 1 160px;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  background: rgba(8, 10, 16, 0.85);
+  color: inherit;
+}
+
+.titan-bot-rename__label {
+  margin: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+.titan-bot-rename__hint,
+.titan-bot-rename__error {
+  margin: 8px 0 0;
+  font-size: 0.78rem;
+}
+
+.titan-bot-rename__error {
+  color: #ffb4b4;
+}
+
 /* Synexus Journal (blog) */
 .blog-page {
   max-width: 720px;

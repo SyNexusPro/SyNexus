@@ -1,5 +1,6 @@
 import type { Token } from "../data/tokens";
 import { synexusRiskBandLabel } from "../data/tokens";
+import { DEFAULT_TITAN_BOT_NAME } from "../config/titanBot";
 import type { SentinelLaneId } from "./sentinelIntel";
 
 export type OracleSentinelDirective = {
@@ -205,7 +206,7 @@ export function buildAllOracleDirectives(tokens: Token[]): Record<SentinelLaneId
   return out;
 }
 
-export function answerCryptoConcept(question: string): string | null {
+export function answerCryptoConcept(question: string, commanderName = DEFAULT_TITAN_BOT_NAME): string | null {
   const q = question.toLowerCase();
   if (/rug pull|rugpull/.test(q)) {
     return "A rug pull is when developers drain liquidity or mint away value — Aegis watches liquidity depth, wallet concentration, and contract authority flags for exactly this.";
@@ -214,25 +215,25 @@ export function answerCryptoConcept(question: string): string | null {
     return "Liquidity is how much real money sits in the pool — thin liquidity means slippage and exit risk. Synexus tracks it on every pair Aegis scans.";
   }
   if (/whale/.test(q)) {
-    return "Whales are wallets holding large supply — Titan tracks top-holder percent and sudden concentration shifts before price reacts.";
+    return "Whales are wallets holding large supply — Leviathan tracks top-holder percent and sudden concentration shifts before price reacts.";
   }
   if (/market cap|mcap|fdv/.test(q)) {
-    return "Market cap is price × supply — FDV includes locked tokens. Synexus uses both with volume and liquidity so Oracle doesn't chase inflated numbers.";
+    return "Market cap is price × supply — FDV includes locked tokens. Synexus uses both with volume and liquidity so your commander doesn't chase inflated numbers.";
   }
   if (/solana|sol\b/.test(q) && /what|explain|how/.test(q)) {
     return "Solana is the chain Synexus scans first — fast blocks, meme velocity, and rug risk. Sentinels watch SPL tokens, pools, and wallet flow in real time.";
   }
-  if (/sentinel|aegis|pulse|titan|cipher/.test(q) && /what|who|do/.test(q)) {
-    return "Aegis hunts scams, Pulse reads momentum, Titan shadows whales, Cipher fuses weak signals. Oracle Supreme commands each lane and reads their reports.";
+  if (/sentinel|aegis|pulse|leviathan|cipher/.test(q) && /what|who|do/.test(q)) {
+    return `Aegis hunts scams, Pulse reads momentum, Leviathan shadows whales, Cipher fuses weak signals. ${commanderName} commands each lane and reads their reports.`;
   }
   return null;
 }
 
 export function oracleRespondToMessage(text: string, ctx: OracleMessageContext): string {
   const lower = text.toLowerCase().trim();
-  const { operatorName: name, tokens, plan } = ctx;
+  const { operatorName: name, tokens, plan, titanBotName } = ctx;
 
-  const concept = answerCryptoConcept(text);
+  const concept = answerCryptoConcept(text, titanBotName);
   if (concept) return concept;
 
   if (/^(search|find|scan|look up|lookup)\b/.test(lower) || /\b(bonk|pepe|sol|btc|eth|syn|wif|jup)\b/i.test(text)) {
@@ -247,13 +248,13 @@ export function oracleRespondToMessage(text: string, ctx: OracleMessageContext):
     return `No match in the live Synexus feed, ${name}. Try symbol or name — e.g. BONK, SOL, SYN.`;
   }
 
-  if (/sentinel|aegis|pulse|titan|cipher/.test(lower) && /status|report|doing|orders?/.test(lower)) {
+  if (/sentinel|aegis|pulse|leviathan|cipher/.test(lower) && /status|report|doing|orders?/.test(lower)) {
     const dirs = buildAllOracleDirectives(tokens);
     return [
-      "Sentinel status under my command:",
+      `Sentinel status under ${titanBotName}:`,
       `Aegis → ${dirs.aegis.order}`,
       `Pulse → ${dirs.pulse.order}`,
-      `Titan → ${dirs.titan.order}`,
+      `Leviathan → ${dirs.titan.order}`,
       `Cipher → ${dirs.cipher.order}`,
     ].join("\n");
   }
@@ -274,7 +275,7 @@ export function oracleRespondToMessage(text: string, ctx: OracleMessageContext):
   if (/precise|precision|fast|speed|best app/.test(lower)) {
     return plan === "PRO"
       ? `Synexus Pro runs sub-40ms Sentinel response on hot lanes, ${tokens.length} pairs scanned per minute, and fused reads from Cipher before you act, ${name}.`
-      : `Free tier already scans ${tokens.length} pairs — Synexus Pro cuts response time and unlocks Titan and Cipher precision on Pulse.`;
+      : `Free tier already scans ${tokens.length} pairs — Synexus Pro cuts response time and unlocks Leviathan and Cipher precision on Pulse.`;
   }
 
   return "";
@@ -282,6 +283,7 @@ export function oracleRespondToMessage(text: string, ctx: OracleMessageContext):
 
 export type OracleMessageContext = {
   operatorName: string;
+  titanBotName: string;
   alertCount: number;
   watchlistCount: number;
   plan: "FREE" | "PRO";

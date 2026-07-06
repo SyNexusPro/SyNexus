@@ -4,12 +4,14 @@ import {
   createOracleSupremeSpeaker,
   isOracleSupremeVoiceSupported,
 } from "../lib/oracleSupremeVoice";
+import { resolveTitanBotName } from "../lib/titanBotName";
 import type { OracleSupremeDailyReport } from "../data/syntheticWatchers";
 
 type OracleSupremeVoiceBarProps = {
   plan: "FREE" | "PRO";
   briefing: string;
   report?: OracleSupremeDailyReport;
+  titanBotName?: string;
   onSpeakingChange?: (speaking: boolean) => void;
 };
 
@@ -17,8 +19,10 @@ export function OracleSupremeVoiceBar({
   plan,
   briefing,
   report,
+  titanBotName,
   onSpeakingChange,
 }: OracleSupremeVoiceBarProps) {
+  const commanderName = titanBotName ?? resolveTitanBotName();
   const supported = isOracleSupremeVoiceSupported();
   const [speaking, setSpeaking] = useState(false);
   const speakerRef = useRef<ReturnType<typeof createOracleSupremeSpeaker> | null>(null);
@@ -29,8 +33,9 @@ export function OracleSupremeVoiceBar({
         plan === "PRO" ? "full" : "sample",
         briefing,
         plan === "PRO" ? report : undefined,
+        commanderName,
       ),
-    [plan, briefing, report],
+    [briefing, commanderName, plan, report],
   );
 
   useEffect(() => {
@@ -70,7 +75,7 @@ export function OracleSupremeVoiceBar({
     <div
       className={`oracle-supreme-voice${speaking ? " oracle-supreme-voice--active" : ""}`}
       role="region"
-      aria-label="Oracle Supreme voice briefing"
+      aria-label={`${commanderName} voice briefing`}
     >
       <div className="oracle-supreme-voice__wave" aria-hidden="true">
         {Array.from({ length: 5 }, (_, index) => (
@@ -79,12 +84,12 @@ export function OracleSupremeVoiceBar({
       </div>
       <div className="oracle-supreme-voice__text">
         <p className="oracle-supreme-voice__title">
-          {speaking ? "Oracle Supreme is speaking…" : "Hear Oracle Supreme"}
+          {speaking ? `${commanderName} is speaking…` : `Hear ${commanderName}`}
         </p>
         <p className="oracle-supreme-voice__hint">
           {plan === "PRO"
-            ? "Oracle will read your full private briefing aloud."
-            : "Sample Oracle's voice — Pro unlocks full spoken briefings."}
+            ? `${commanderName} will read your full private briefing aloud.`
+            : `Sample ${commanderName}'s voice — Pro unlocks full spoken briefings.`}
         </p>
       </div>
       <button

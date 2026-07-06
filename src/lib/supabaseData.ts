@@ -58,12 +58,15 @@ function throwIfStructuralDbFailure(err: unknown): never {
   throw err instanceof Error ? err : new Error(flattenErrorDiagnostics(err) || "Unexpected error");
 }
 
+import { saveTitanBotName } from "./titanBotName";
+
 type AppProfile = {
   id: string;
   username: string | null;
   display_name: string | null;
   bio?: string | null;
   paid_plan?: "FREE" | "BASIC" | "PRO" | null;
+  titan_bot_name?: string | null;
 };
 
 export type WatchlistRecord = {
@@ -283,6 +286,18 @@ export async function upsertProfile(userId: string, displayName: string, usernam
   if (error) throw error;
 }
 
+export async function updateTitanBotName(userId: string, titanBotName: string) {
+  saveTitanBotName(titanBotName);
+  if (!supabase) return;
+  const { error } = await supabase.from("profiles").upsert({
+    id: userId,
+    titan_bot_name: titanBotName,
+  });
+  if (error) {
+    /* column may not exist on older DBs — local name still applies */
+  }
+}
+
 export async function updatePaidPlan(userId: string, paidPlan: "FREE" | "BASIC" | "PRO") {
   if (!supabase) throw new Error("Supabase env vars are missing.");
   const { error } = await supabase.from("profiles").upsert({
@@ -297,7 +312,7 @@ export async function fetchProfile(userId: string): Promise<AppProfile | null> {
   try {
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, username, display_name, paid_plan, bio")
+      .select("id, username, display_name, paid_plan, bio, titan_bot_name")
       .eq("id", userId)
       .maybeSingle();
     if (!error) return data;

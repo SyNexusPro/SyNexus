@@ -16,7 +16,7 @@ export function Disclaimer() {
         <p>
           Synexus is an <strong>informational technology platform</strong>. Nothing on the Service — including
           &quot;Should I buy this?&quot; verdicts (Avoid · Watch · OK), risk scores, Sentinel alerts, whale
-          reads, trade journal stats, Oracle Supreme chat, voice briefings, or marketing content — is
+          reads, trade journal stats, Titan chat, voice briefings, or marketing content — is
           investment, trading, legal, tax, or accounting advice. We do not recommend buying, selling, or
           holding any digital asset. Consult qualified professionals before making financial decisions.
         </p>

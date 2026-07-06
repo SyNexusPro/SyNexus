@@ -14,7 +14,7 @@ type Props = {
 const SENTINEL_LANES = [
   { id: "aegis", label: "Aegis", role: "Risk", pro: false },
   { id: "pulse", label: "Pulse", role: "Momentum", pro: false },
-  { id: "titan", label: "Titan", role: "Whales", pro: true },
+  { id: "titan", label: "Leviathan", role: "Whales", pro: true },
   { id: "cipher", label: "Cipher", role: "Patterns", pro: true },
 ] as const;
 

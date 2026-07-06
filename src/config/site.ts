@@ -89,7 +89,7 @@ export const HOW_SYNEXUS_WORKS = [
   },
   {
     step: 5,
-    title: "Ask Oracle Supreme",
+    title: "Ask Titan",
     body: "The AI assistant explains tokens, Sentinel reads, and market context. Outputs are informational — not financial advice.",
   },
 ] as const;
@@ -133,7 +133,7 @@ export const FAQ_ITEMS = [
     a: "Cancel through the same checkout or payment portal you used to subscribe (for example Stripe customer portal linked from Pulse). Access continues until the end of the paid billing period.",
   },
   {
-    q: "Is Sentinel, Oracle Supreme, or “Avoid / Watch / OK” financial advice?",
+    q: "Is Sentinel, Titan, or “Avoid / Watch / OK” financial advice?",
     a: "No. Automated risk bands, scores, verdicts, and AI chat are informational tools only. They can be wrong or delayed. Always verify contracts and do your own research before trading.",
   },
   {
@@ -164,7 +164,7 @@ export const SYN_COIN_ROADMAP = [
     status: "Live on pump.fun",
     items: [
       "SYN community token launched on pump.fun",
-      "Synexus app: feed, Sentinels, Oracle Supreme, Pro subscriptions",
+      "Synexus app: feed, Sentinels, Titan, Pro subscriptions",
       "Transparent trading fee model and treasury allocation policy",
       "Community reports and Operator Link accounts",
     ],

@@ -161,7 +161,7 @@ export function OracleSupremeChat({
     <div
       className={`oracle-chat oracle-chat--${variant}${speaking ? " oracle-chat--speaking" : ""}`}
       role="region"
-      aria-label="Conversation with Oracle Supreme"
+      aria-label={`Conversation with ${context.titanBotName}`}
     >
       <div className="oracle-chat__head">
         <div className="oracle-chat__avatar" aria-hidden="true">
@@ -169,7 +169,7 @@ export function OracleSupremeChat({
           <SynexusSymbolMark size="chat" />
         </div>
         <div>
-          <p className="oracle-chat__name">Oracle Supreme</p>
+          <p className="oracle-chat__name">{context.titanBotName}</p>
           <p className="oracle-chat__status">
             {speaking
               ? "Speaking…"
@@ -258,8 +258,8 @@ export function OracleSupremeChat({
         <input
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
-          placeholder={`Search a coin or ask Oracle…`}
-          aria-label="Message to Oracle Supreme"
+          placeholder={`Search a coin or ask ${context.titanBotName}…`}
+          aria-label={`Message to ${context.titanBotName}`}
         />
         <button type="submit" disabled={!draft.trim()}>
           Send
@@ -271,7 +271,7 @@ export function OracleSupremeChat({
           <button
             type="button"
             className="oracle-chat__voice-btn"
-            onClick={() => speak(buildOracleIntroVoiceLine(context.operatorName))}
+            onClick={() => speak(buildOracleIntroVoiceLine(context.operatorName, context.titanBotName))}
           >
             Replay welcome
           </button>

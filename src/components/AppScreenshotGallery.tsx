@@ -82,7 +82,7 @@ function ScreenshotFrame({ id, title, caption }: FrameProps) {
           ) : null}
           {id === "oracle" ? (
             <>
-              <p className="app-screenshot__eyebrow">Oracle Supreme</p>
+              <p className="app-screenshot__eyebrow">Titan</p>
               <div className="app-screenshot__chat app-screenshot__chat--bot">
                 Welcome to the SyNexus, the future of trading.
               </div>
@@ -128,7 +128,7 @@ const FRAMES: FrameProps[] = [
   {
     id: "oracle",
     title: "AI assistant",
-    caption: "Oracle Supreme explains tokens and Sentinel context on demand.",
+    caption: "Titan explains tokens and Sentinel context on demand.",
   },
 ];
 

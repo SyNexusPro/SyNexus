@@ -164,7 +164,7 @@ export function HomeFeed() {
             </Link>
             <Link to="/pulse#oracle-admin" className="simple-launch-links__card">
               <p className="simple-launch-links__eyebrow">Bonus · Command</p>
-              <h2>Oracle tools</h2>
+              <h2>Titan tools</h2>
               <p>Ask questions and run Sentinels when you&apos;re ready to go deeper.</p>
             </Link>
           </section>
@@ -378,7 +378,7 @@ export function HomeFeed() {
           <h3>Built for faster decisions</h3>
           <p>1) Search coins before you buy.</p>
           <p>2) Read Sentinel risk signals before you chase hype.</p>
-          <p>3) Sign up through Oracle for a 7-day Pro trial — no card — then {SYNEXUS_PRO_PRICE_LABEL} if you keep it.</p>
+          <p>3) Sign up through Titan for a 7-day Pro trial — no card — then {SYNEXUS_PRO_PRICE_LABEL} if you keep it.</p>
         </div>
       </section>
         </>

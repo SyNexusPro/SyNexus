@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { SYNEXUS_PRO_TRIAL_DAYS, SYNEXUS_PRO_TRIAL_LABEL } from "../config/proTrial";
+import { DEFAULT_TITAN_BOT_NAME } from "../config/titanBot";
 import { SYNEXUS_PRO_PRICE_LABEL } from "../config/proPricing";
 import { hasStoredOwnerGrant } from "../lib/ownerAccess";
 import { isProTrialActive } from "../lib/proDemo";
@@ -83,7 +84,7 @@ export function ProTrialBanner() {
       </div>
       <ProDemoButton
         className="pro-trial-banner__demo"
-        label={linked ? `Open ${SYNEXUS_PRO_TRIAL_LABEL}` : "Enter Oracle · sign up free"}
+        label={linked ? `Open ${SYNEXUS_PRO_TRIAL_LABEL}` : `Enter ${DEFAULT_TITAN_BOT_NAME} · sign up free`}
       />
       {linked ? (
         <button

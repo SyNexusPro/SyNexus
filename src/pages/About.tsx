@@ -21,7 +21,7 @@ export function About() {
         <p>
           Retail traders on Solana move faster than most tools can warn them. Rugs, thin liquidity, and whale
           exits often hit before a chart update. Synexus exists to close that gap: combine Sentinel automation,
-          community reports, and Oracle Supreme AI into one feed so you can scan first and execute when you are
+          community reports, and Titan AI into one feed so you can scan first and execute when you are
           ready — always on your own terms.
         </p>
         <p>
@@ -49,23 +49,24 @@ export function About() {
       </section>
 
       <section className="about-page__section marketing-panel">
-        <h2>Oracle Supreme</h2>
+        <h2>Titan</h2>
         <p>
-          Oracle Supreme is Synexus&apos;s conversational AI layer — the strategic voice of the network. It
-          synthesizes Sentinel intel, token metadata, and market context into briefings you can read or hear.
-          Ask about a coin, request a risk summary, or get a plain-language explanation of why a token flagged
-          Warning or Danger.
+          Titan is Synexus&apos;s conversational AI commander — your synthetic bot and the strategic voice of
+          the network. You can rename Titan to whatever you want; the four Sentinels keep their fixed names.
+          Titan synthesizes Sentinel intel, token metadata, and market context into briefings you can read or
+          hear. Ask about a coin, request a risk summary, or get a plain-language explanation of why a token
+          flagged Warning or Danger.
         </p>
         <p>
-          Oracle Supreme is informational only. It can be incomplete, delayed, or wrong. Always verify mint
-          addresses and on-chain data before trading.
+          Titan is informational only. It can be incomplete, delayed, or wrong. Always verify mint addresses
+          and on-chain data before trading.
         </p>
       </section>
 
       <section className="about-page__section marketing-panel">
         <h2>The Synexus Sentinels</h2>
         <p>
-          Four Sentinel lanes — <strong>Aegis</strong>, <strong>Pulse</strong>, <strong>Titan</strong>, and{" "}
+          Four Sentinel lanes — <strong>Aegis</strong>, <strong>Pulse</strong>, <strong>Leviathan</strong>, and{" "}
           <strong>Cipher</strong> — run parallel scans on every tracked token:
         </p>
         <ul className="about-page__bullets">
@@ -76,14 +77,14 @@ export function About() {
             <strong>Pulse</strong> — volume, momentum, and volatility spikes
           </li>
           <li>
-            <strong>Titan</strong> — whale concentration and large-wallet flows
+            <strong>Leviathan</strong> — whale concentration and large-wallet flows
           </li>
           <li>
             <strong>Cipher</strong> — pattern matching, naming traps, and swarm reports
           </li>
         </ul>
         <p>
-          Sentinels feed the risk score, alert cards on Pulse, and Oracle Supreme directives. Synexus Pro
+          Sentinels feed the risk score, alert cards on Pulse, and Titan directives. Synexus Pro
           subscribers get faster refresh and deeper precision on these surfaces.
         </p>
       </section>

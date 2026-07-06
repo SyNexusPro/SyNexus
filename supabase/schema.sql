@@ -41,6 +41,8 @@ create table if not exists public.profiles (
 alter table public.profiles
   add column if not exists paid_plan text not null default 'FREE';
 alter table public.profiles
+  add column if not exists titan_bot_name text;
+alter table public.profiles
   drop constraint if exists profiles_paid_plan_check;
 alter table public.profiles
   add constraint profiles_paid_plan_check check (paid_plan in ('FREE', 'BASIC', 'PRO'));

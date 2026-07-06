@@ -8,6 +8,6 @@ export function pulseFormatSentinelNamesInText(text: string) {
   return text
     .replace(/Sentinel Aegis/g, "Aegis")
     .replace(/Sentinel Pulse/g, "Pulse")
-    .replace(/Sentinel Titan/g, "Titan")
+    .replace(/Sentinel Leviathan/g, "Leviathan")
     .replace(/Sentinel Cipher/g, "Cipher");
 }

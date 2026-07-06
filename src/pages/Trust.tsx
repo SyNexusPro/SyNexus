@@ -84,7 +84,7 @@ export function Trust() {
       <section id="trust-screenshots" className="trust-page__section marketing-panel">
         <h2>App screenshots</h2>
         <p>
-          Token scanner, whale tracker, risk score, Pulse alerts, and Oracle Supreme — the surfaces Google Play
+          Token scanner, whale tracker, risk score, Pulse alerts, and Titan — the surfaces Google Play
           reviewers and new users expect to see before install.
         </p>
         <AppScreenshotGallery showPlayHint />

@@ -1,3 +1,5 @@
+import { DEFAULT_TITAN_BOT_NAME } from "../config/titanBot";
+
 export type SentinelRank = "Scout" | "Sentinel" | "Bulwark" | "Oracle" | "Synexus Core";
 
 export type SyntheticSentinel = {
@@ -12,6 +14,7 @@ export type SyntheticSentinel = {
   status: string;
   lesson: string;
   accent: "green" | "gold" | "danger";
+  /** Commander synthetic bot (user-renamable; default Titan). */
   isOracleSupreme?: boolean;
 };
 
@@ -38,14 +41,14 @@ const XP_PER_LEVEL = 140;
 
 const sentinelSeeds = [
   {
-    id: "oracle-supreme",
-    name: "Oracle Supreme",
+    id: "titan-commander",
+    name: DEFAULT_TITAN_BOT_NAME,
     role: "Commander · your private AI briefing officer",
     baseXp: 180,
     status:
-      "Oracle commands Aegis, Pulse, Titan, and Cipher — then tells you what matters in plain English.",
+      "Titan commands Aegis, Pulse, Leviathan, and Cipher — then tells you what matters in plain English.",
     lesson:
-      "Oracle is synthetic: Oracle learns from every alert and report you feed Synexus, and makes calls in seconds.",
+      "Titan is synthetic: your bot learns from every alert and report you feed Synexus, and makes calls in seconds.",
     accent: "gold" as const,
     isOracleSupreme: true,
   },
@@ -69,11 +72,11 @@ const sentinelSeeds = [
   },
   {
     id: "titan",
-    name: "Sentinel Titan",
+    name: "Sentinel Leviathan",
     role: "Whale & wallet tracking",
     baseXp: 112,
     status: "Watching large wallets, sudden concentration shifts, and exit pressure.",
-    lesson: "Titan flags when whales move before the timeline catches up.",
+    lesson: "Leviathan flags when whales move before the timeline catches up.",
     accent: "danger" as const,
   },
   {
@@ -82,7 +85,7 @@ const sentinelSeeds = [
     role: "Pattern & signal fusion",
     baseXp: 124,
     status: "Connecting today's warnings to past ripples so weak signals stack into real risk.",
-    lesson: "Cipher tightens confidence when multiple lanes agree — that's when Oracle Supreme escalates.",
+    lesson: "Cipher tightens confidence when multiple lanes agree — that's when Titan escalates.",
     accent: "gold" as const,
   },
 ];
@@ -102,7 +105,10 @@ function scoreSignals(signals: SentinelSignals) {
   );
 }
 
-export function buildSyntheticSentinels(signals: SentinelSignals): SyntheticSentinel[] {
+export function buildSyntheticSentinels(
+  signals: SentinelSignals,
+  commanderName = DEFAULT_TITAN_BOT_NAME,
+): SyntheticSentinel[] {
   const signalXp = scoreSignals(signals);
 
   return sentinelSeeds.map((sentinel, index) => {
@@ -115,8 +121,11 @@ export function buildSyntheticSentinels(signals: SentinelSignals): SyntheticSent
       62 + level * 9 + signals.alertCount * 2 + signals.reportCount * 3 + proBoost,
     );
 
+    const name = sentinel.isOracleSupreme ? commanderName : sentinel.name;
+
     return {
       ...sentinel,
+      name,
       level,
       levelName: getRankForLevel(level),
       xp,
@@ -135,9 +144,10 @@ export function oracleSupremeMoodLabel(mood: OracleSupremeDailyReport["mood"]): 
 export function buildOracleSupremeBriefing(
   sentinels: SyntheticSentinel[],
   signals: SentinelSignals,
+  commanderName = DEFAULT_TITAN_BOT_NAME,
 ): string {
-  const oracle = sentinels.find((s) => s.isOracleSupreme);
-  const confidence = oracle?.confidence ?? 70;
+  const commander = sentinels.find((s) => s.isOracleSupreme);
+  const confidence = commander?.confidence ?? 70;
   const activeAlerts = signals.alertCount;
   const watchedTokens = signals.watchlistCount + signals.trackedCount;
   const topSentinel = sentinels
@@ -148,19 +158,20 @@ export function buildOracleSupremeBriefing(
     : "your Sentinels";
 
   if (watchedTokens === 0 && activeAlerts === 0) {
-    return "Oracle Supreme is online and waiting. Add tokens to your watchlist — Oracle will command your Sentinels to watch them and brief you here.";
+    return `${commanderName} is online and waiting. Add tokens to your watchlist — ${commanderName} will command your Sentinels to watch them and brief you here.`;
   }
 
   if (activeAlerts === 0) {
-    return `Oracle is monitoring ${watchedTokens} token${watchedTokens === 1 ? "" : "s"} for you. Nothing urgent right now — ${leadName} is leading the team at level ${topSentinel?.level ?? 1}. Oracle is ${confidence}% confident in the read.`;
+    return `${commanderName} is monitoring ${watchedTokens} token${watchedTokens === 1 ? "" : "s"} for you. Nothing urgent right now — ${leadName} is leading the team at level ${topSentinel?.level ?? 1}. ${commanderName} is ${confidence}% confident in the read.`;
   }
 
-  return `Oracle just reviewed ${activeAlerts} alert${activeAlerts === 1 ? "" : "s"} across ${watchedTokens} watched token${watchedTokens === 1 ? "" : "s"}. ${leadName} is on point at level ${topSentinel?.level ?? 1}. Oracle's call: ${confidence}% confidence — see your briefing below.`;
+  return `${commanderName} just reviewed ${activeAlerts} alert${activeAlerts === 1 ? "" : "s"} across ${watchedTokens} watched token${watchedTokens === 1 ? "" : "s"}. ${leadName} is on point at level ${topSentinel?.level ?? 1}. ${commanderName}'s call: ${confidence}% confidence — see your briefing below.`;
 }
 
 export function buildOracleSupremeDailyReport(
   sentinels: SyntheticSentinel[],
   signals: SentinelSignals,
+  commanderName = DEFAULT_TITAN_BOT_NAME,
 ): OracleSupremeDailyReport {
   const averageConfidence = Math.round(
     sentinels.reduce((total, s) => total + s.confidence, 0) / sentinels.length,
@@ -182,28 +193,28 @@ export function buildOracleSupremeDailyReport(
     oversightGrade,
     headline:
       watchedAssets > 0
-        ? `Your Sentinel team is graded ${oversightGrade} today — Oracle Supreme is holding the line above them.`
-        : "Oracle Supreme is ready — add watchlist tokens so Oracle has live data to command with.",
+        ? `Your Sentinel team is graded ${oversightGrade} today — ${commanderName} is holding the line above them.`
+        : `${commanderName} is ready — add watchlist tokens so ${commanderName} has live data to command with.`,
     daySummary:
       watchedAssets > 0
-        ? `Oracle pulled together ${watchedAssets} watched token${watchedAssets === 1 ? "" : "s"}, ${activeAlerts} alert${activeAlerts === 1 ? "" : "s"}, and ${signals.reportCount} community report${signals.reportCount === 1 ? "" : "s"}. This briefing is for you only — the Sentinels don't see Oracle's full notes.`
-        : "Synexus Pro gives you Oracle's private commander briefings: what Oracle sees, what Oracle recommends, and which Sentinel Oracle sends first.",
+        ? `${commanderName} pulled together ${watchedAssets} watched token${watchedAssets === 1 ? "" : "s"}, ${activeAlerts} alert${activeAlerts === 1 ? "" : "s"}, and ${signals.reportCount} community report${signals.reportCount === 1 ? "" : "s"}. This briefing is for you only — the Sentinels don't see ${commanderName}'s full notes.`
+        : `Synexus Pro gives you ${commanderName}'s private commander briefings: what ${commanderName} sees, what ${commanderName} recommends, and which Sentinel ${commanderName} sends first.`,
     priorities: [
       activeAlerts > 0
-        ? `Review ${activeAlerts} live alert${activeAlerts === 1 ? "" : "s"} — Oracle flagged them for you, not for the public feed.`
-        : "Add tokens to your watchlist so Oracle can assign Aegis, Pulse, Titan, and Cipher to real targets.",
+        ? `Review ${activeAlerts} live alert${activeAlerts === 1 ? "" : "s"} — ${commanderName} flagged them for you, not for the public feed.`
+        : `Add tokens to your watchlist so ${commanderName} can assign Aegis, Pulse, Leviathan, and Cipher to real targets.`,
       signals.reportCount > 0
-        ? "Keep submitting reports on shady tokens — Oracle learns from every one and retrains the Sentinels."
-        : "Tap Report on suspicious tokens. Oracle reads those first, then decides which Sentinel to sharpen.",
+        ? "Keep submitting reports on shady tokens — your commander learns from every one and retrains the Sentinels."
+        : "Tap Report on suspicious tokens. Your commander reads those first, then decides which Sentinel to sharpen.",
       topSentinel
-        ? `${leadName} is your strongest lane right now (level ${topSentinel.level}). Oracle Supreme still outranks them — ask for a fresh brief anytime.`
-        : "Build your watchlist — Oracle establishes a baseline, then the Sentinels execute.",
+        ? `${leadName} is your strongest lane right now (level ${topSentinel.level}). ${commanderName} still outranks them — ask for a fresh brief anytime.`
+        : "Build your watchlist — your commander establishes a baseline, then the Sentinels execute.",
     ],
     closingNote:
       mood === "High Guard"
-        ? "Oracle's advice: play defense. Oracle is tracking escalation for you — keep alerts on until Oracle clears the lane."
+        ? `${commanderName}'s advice: play defense. ${commanderName} is tracking escalation for you — keep alerts on until the lane clears.`
         : mood === "Alert"
-          ? "Something moved. Oracle wants you to double-check before acting — Oracle won't spam the Sentinels until you're ready."
-          : "Markets look calm from Oracle's chair — good time to grow your watchlist. Oracle will ping you the second that changes.",
+          ? "Something moved. Double-check before acting — your commander won't spam the Sentinels until you're ready."
+          : `Markets look calm from ${commanderName}'s chair — good time to grow your watchlist. ${commanderName} will ping you the second that changes.`,
   };
 }

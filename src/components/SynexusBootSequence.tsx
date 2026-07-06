@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createOracleSupremeSpeaker, isOracleSupremeVoiceSupported } from "../lib/oracleSupremeVoice";
+import { resolveTitanBotName } from "../lib/titanBotName";
 import {
   buildOracleIntroVoiceLine,
   markIntroWelcomeSpoken,
@@ -31,7 +32,7 @@ const PHASE_COPY: readonly string[] = [
 const SENTINELS = [
   { name: "Sentinel Aegis", role: "Hunts scams and rug pulls." },
   { name: "Sentinel Pulse", role: "Reads momentum as it breaks." },
-  { name: "Sentinel Titan", role: "Shadows the whale wallets." },
+  { name: "Sentinel Leviathan", role: "Shadows the whale wallets." },
   { name: "Sentinel Cipher", role: "Decodes patterns with AI." },
 ] as const;
 
@@ -162,7 +163,7 @@ export function SynexusBootSequence({ children }: Props) {
       markIntroWelcomeSpoken();
       return;
     }
-    const introLine = buildOracleIntroVoiceLine(resolveIntroOperatorName());
+    const introLine = buildOracleIntroVoiceLine(resolveIntroOperatorName(), resolveTitanBotName());
     speakerRef.current = createOracleSupremeSpeaker({
       variant: "intro",
       onEnd: () => markIntroWelcomeSpoken(),
@@ -234,7 +235,7 @@ export function SynexusBootSequence({ children }: Props) {
                 </h1>
                 {phase === 1 ? (
                   <p className="synexus-boot__subtitle" aria-hidden>
-                    Oracle Supreme · your intelligence commander
+                    {resolveTitanBotName()} · your intelligence commander
                   </p>
                 ) : null}
               </div>

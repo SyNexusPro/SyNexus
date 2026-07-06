@@ -25,7 +25,7 @@ export function BottomNav() {
         <span className="bottom-nav__icon bottom-nav__icon--oracle" aria-hidden>
           {isSimple ? "◉" : "∿"}
         </span>
-        {isSimple ? "Oracle" : "Sentinels"}
+        {isSimple ? "Titan" : "Sentinels"}
       </NavLink>
     </nav>
   );

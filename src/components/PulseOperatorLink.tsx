@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import type { BiometricSupport } from "../lib/biometricLogin";
 import { SYNEXUS_PRO_TRIAL_DAYS } from "../config/proTrial";
+import { useTitanBotName } from "../hooks/useTitanBotName";
 
 type AuthTone = "info" | "success" | "error";
 type SignInMethod = "magic" | "password";
@@ -95,6 +96,7 @@ export function PulseOperatorLink({
   ownerUnlocked = false,
   variant = "default",
 }: PulseOperatorLinkProps) {
+  const { name: titanBotName } = useTitanBotName();
   const [mode, setMode] = useState<"return" | "link" | "command">(variant === "oracle" ? "link" : "return");
   const [signInMethod, setSignInMethod] = useState<SignInMethod>("magic");
   const [showPassword, setShowPassword] = useState(false);
@@ -314,12 +316,12 @@ export function PulseOperatorLink({
   return (
     <section
       className={`operator-link${variant === "oracle" ? " operator-link--oracle-gate" : ""}`}
-      aria-label={variant === "oracle" ? "Oracle Supreme access gate" : "Link your operator ID"}
+      aria-label={variant === "oracle" ? `${titanBotName} access gate` : "Link your operator ID"}
     >
       <div className="operator-link__scanline" aria-hidden="true" />
       <header className="operator-link__head">
         <p className="operator-link__eyebrow">
-          {variant === "oracle" ? "Oracle Supreme · access gate" : "Operator link"}
+          {variant === "oracle" ? `${titanBotName} · access gate` : "Operator link"}
         </p>
         <h2 className="operator-link__title">
           {variant === "oracle" ? "Create your operator link" : "Save your Synexus command center"}
@@ -327,7 +329,7 @@ export function PulseOperatorLink({
         <p className="operator-link__lede">
           {variant === "oracle" ? (
             <>
-              Sign up free to enter Oracle Supreme and unlock a{" "}
+              Sign up free to enter {titanBotName} and unlock a{" "}
               <strong>{SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial</strong> — no credit card required. Already
               linked? Switch to Return.
             </>

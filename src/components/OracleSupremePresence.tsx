@@ -3,6 +3,7 @@ import { fetchGuardianAlerts, fetchProfile, fetchWatchlistTokens, getCurrentUser
 import { hasSupabaseEnv } from "../lib/supabaseClient";
 import { openOracleLogin } from "../lib/openOracleLogin";
 import { useOperatorAuth } from "../hooks/useOperatorAuth";
+import { useTitanBotName } from "../hooks/useTitanBotName";
 import {
   hasGreetedThisSession,
   markGreetedThisSession,
@@ -27,6 +28,7 @@ function normalizePlan(raw: string | null | undefined): "FREE" | "PRO" {
 
 export function OracleSupremePresence() {
   const { linked } = useOperatorAuth();
+  const { name: titanBotName } = useTitanBotName();
   const [bootReady, setBootReady] = useState(isSynexusBootComplete());
   const [expanded, setExpanded] = useState(false);
   const [speaking, setSpeaking] = useState(false);
@@ -101,6 +103,7 @@ export function OracleSupremePresence() {
   const context = useMemo<OracleConversationContext>(
     () => ({
       operatorName,
+      titanBotName,
       alertCount,
       watchlistCount,
       plan,
@@ -108,13 +111,13 @@ export function OracleSupremePresence() {
       tokens,
       feedSource,
     }),
-    [alertCount, feedSource, operatorName, plan, tokens, watchlistCount],
+    [alertCount, feedSource, operatorName, plan, titanBotName, tokens, watchlistCount],
   );
 
   return (
     <>
       {expanded ? (
-        <div className="oracle-presence-panel" role="dialog" aria-label="Talk to Oracle Supreme">
+        <div className="oracle-presence-panel" role="dialog" aria-label={`Talk to ${titanBotName}`}>
           <OracleSupremeChat
             context={context}
             variant="widget"
@@ -137,12 +140,12 @@ export function OracleSupremePresence() {
         aria-expanded={expanded}
         aria-label={
           expanded
-            ? "Minimize Oracle Supreme chat"
+            ? `Minimize ${titanBotName} chat`
             : speaking
-              ? "Oracle Supreme is speaking"
-              : "Talk to Oracle Supreme"
+              ? `${titanBotName} is speaking`
+              : `Talk to ${titanBotName}`
         }
-        title="Oracle Supreme"
+        title={titanBotName}
       >
         <span className="oracle-presence-fab__ring" aria-hidden />
         <span className="oracle-presence-fab__avatar" aria-hidden>
@@ -150,7 +153,7 @@ export function OracleSupremePresence() {
         </span>
         {!expanded ? (
           <span className="oracle-presence-fab__copy">
-            <span className="oracle-presence-fab__label">Oracle</span>
+            <span className="oracle-presence-fab__label">{titanBotName}</span>
           </span>
         ) : null}
       </button>
