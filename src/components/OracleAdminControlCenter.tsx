@@ -146,7 +146,7 @@ export function OracleAdminControlCenter({
           ) : (
             <div className="oracle-admin__unlock">
               <p>Unlock Oracle Admin briefings with Synexus Pro — $19.99/month.</p>
-              <ProDemoButton className="oracle-admin__demo pulse-demo-button" label="Try 5-min Pro demo first" />
+              <ProDemoButton className="oracle-admin__demo pulse-demo-button" label="7-day Pro trial included" />
               <button type="button" disabled={checkoutBusy} onClick={onUpgrade}>
                 {checkoutBusy ? "Opening checkout…" : "Subscribe · unlock Oracle"}
               </button>

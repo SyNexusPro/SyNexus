@@ -16,7 +16,7 @@ import type {
 } from "./types";
 
 const PLAN_GRANT_KEY = "synexus_aegis_plan_grant";
-const TRUSTED_PLAN_SOURCES = ["stripe_checkout", "supabase_profile", "demo_session", "admin", "owner"];
+const TRUSTED_PLAN_SOURCES = ["stripe_checkout", "supabase_profile", "demo_session", "trial_7d", "admin", "owner"];
 
 type PlanGrant = { plan: "PRO" | "FREE"; source: string; at: number };
 
@@ -32,7 +32,14 @@ function readPlanGrant(): PlanGrant | null {
 function isTrustedProGrant(grant: PlanGrant | null): boolean {
   if (!grant || grant.plan !== "PRO") return false;
   if (!TRUSTED_PLAN_SOURCES.includes(grant.source)) return false;
-  const maxAge = grant.source === "owner" ? 90 * 86_400_000 : 86_400_000;
+  const maxAge =
+    grant.source === "owner"
+      ? 90 * 86_400_000
+      : grant.source === "trial_7d"
+        ? 8 * 86_400_000
+        : grant.source === "demo_session"
+          ? 8 * 86_400_000
+          : 86_400_000;
   return Date.now() - grant.at < maxAge;
 }
 

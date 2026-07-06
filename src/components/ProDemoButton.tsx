@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { SYNEXUS_PRO_TRIAL_LABEL } from "../config/proTrial";
 import { useProDemo } from "../hooks/useProDemo";
 import { useSynexusPlan } from "../hooks/useSynexusPlan";
 
@@ -15,7 +16,7 @@ export function ProDemoButton({
   className = "pulse-demo-button",
   goToPulse = false,
   pulseHash = "",
-  label = "Try 5-minute Pro demo",
+  label = `Start ${SYNEXUS_PRO_TRIAL_LABEL}`,
   disabled = false,
 }: Props) {
   const navigate = useNavigate();
@@ -39,9 +40,9 @@ export function ProDemoButton({
       className={className}
       disabled={disabled}
       onClick={handleClick}
-      aria-label={active ? `Pro demo active, ${remainingLabel} remaining` : label}
+      aria-label={active ? `Pro trial active, ${remainingLabel} remaining` : label}
     >
-      {active ? `Pro demo · ${remainingLabel} left` : label}
+      {active ? `Pro trial · ${remainingLabel}` : label}
     </button>
   );
 }

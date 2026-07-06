@@ -68,7 +68,8 @@ import {
   saveIntroOperatorName,
 } from "../lib/oracleSupremeConversation";
 import { hasSupabaseEnv, supabase } from "../lib/supabaseClient";
-import { isProDemoActive, clearExpiredProDemo } from "../lib/proDemo";
+import { isProDemoActive, clearExpiredProDemo, ensureUniversalProTrial, formatProDemoRemaining, getProDemoRemainingMs } from "../lib/proDemo";
+import { SYNEXUS_PRO_TRIAL_LABEL } from "../config/proTrial";
 import { getSentinelIdleMessage, getSentinelMessage } from "../lib/watcherVoice";
 import type { Token } from "../data/tokens";
 import { fetchMvpTokenFeed } from "../services/marketDataService";
@@ -119,7 +120,9 @@ function normalizeStoredPlan(plan: string | null | undefined): AppPlan {
 }
 
 function formatPlanName(plan: AppPlan) {
-  if (plan === "PRO" && isProDemoActive()) return "Pro demo (5 min)";
+  if (plan === "PRO" && isProDemoActive()) {
+    return `Synexus Pro trial · ${formatProDemoRemaining(getProDemoRemainingMs())}`;
+  }
   if (plan === "PRO") return "Synexus Pro";
   return "Free";
 }
@@ -335,6 +338,9 @@ export function Pulse() {
       } else {
         const normalizedPlan = enforceStoredPlan(rawPlan, profile?.paid_plan === "PRO");
         setPlan(normalizedPlan);
+      }
+      if (profile?.paid_plan !== "PRO") {
+        ensureUniversalProTrial();
       }
       notifySynexusPlanChanged();
 
@@ -1310,7 +1316,7 @@ export function Pulse() {
               <>
                 <ProDemoButton
                   className="pulse-demo-button pulse-demo-button--first pulse-synexus-pro-promo__demo"
-                  label="Try 5-minute Pro demo — see everything"
+                  label={`${SYNEXUS_PRO_TRIAL_LABEL} — see everything`}
                 />
                 <button
                   type="button"
@@ -1323,7 +1329,9 @@ export function Pulse() {
               </>
             ) : isProDemoActive() ? (
               <>
-                <p className="pulse-synexus-pro-promo__active">Pro demo running — full access unlocked.</p>
+                <p className="pulse-synexus-pro-promo__active">
+                  {SYNEXUS_PRO_TRIAL_LABEL} active — full Pro unlocked.
+                </p>
                 <button
                   type="button"
                   className="pulse-button--pro pulse-synexus-pro-promo__cta"

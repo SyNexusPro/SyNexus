@@ -65,7 +65,7 @@ function getCheckoutErrorMessage(error: unknown) {
 }
 
 function trialDaysFromEnv(raw: string | undefined): number {
-  if (raw === undefined || raw.trim() === "") return 0;
+  if (raw === undefined || raw.trim() === "") return 7;
   const n = Number.parseInt(raw, 10);
   if (!Number.isFinite(n) || n <= 0) return 0;
   return Math.min(n, 730);

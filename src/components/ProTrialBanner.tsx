@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { hasStoredOwnerGrant } from "../lib/ownerAccess";
+import { isProTrialActive } from "../lib/proDemo";
+import { SYNEXUS_PRO_TRIAL_DAYS, SYNEXUS_PRO_TRIAL_LABEL } from "../config/proTrial";
 import { ProDemoButton } from "./ProDemoButton";
 
 const PLAN_STORAGE_KEY = "hivemind_paid_plan";
@@ -7,7 +9,10 @@ const BANNER_DISMISS_KEY = "hivemind_pro_banner_dismissed";
 
 function isSynexusProPlan(): boolean {
   try {
-    return localStorage.getItem(PLAN_STORAGE_KEY) === "PRO" || hasStoredOwnerGrant();
+    return (
+      (localStorage.getItem(PLAN_STORAGE_KEY) === "PRO" && !isProTrialActive()) ||
+      hasStoredOwnerGrant()
+    );
   } catch {
     return false;
   }
@@ -61,10 +66,12 @@ export function ProTrialBanner() {
       <div className="pro-trial-banner__text">
         <span className="pro-trial-banner__headline">Synexus Pro</span>
         <span className="pro-trial-banner__detail">
-          {error ? "Checkout couldn't open. Tap to retry." : "$19.99/month · full Sentinel intelligence · cancel anytime"}
+          {error
+            ? "Checkout couldn't open. Tap to retry."
+            : `${SYNEXUS_PRO_TRIAL_DAYS}-day free trial on every account · then $19.99/month · cancel anytime`}
         </span>
       </div>
-      <ProDemoButton className="pro-trial-banner__demo" label="Try 5-min demo" />
+      <ProDemoButton className="pro-trial-banner__demo" label={`Open ${SYNEXUS_PRO_TRIAL_LABEL}`} />
       <button
         type="button"
         className="pro-trial-banner__cta"

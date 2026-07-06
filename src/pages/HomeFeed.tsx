@@ -377,7 +377,7 @@ export function HomeFeed() {
           <h3>Built for faster decisions</h3>
           <p>1) Search coins before you buy.</p>
           <p>2) Read Sentinel risk signals before you chase hype.</p>
-          <p>3) Upgrade to Synexus Pro when you want the full intelligence grid.</p>
+          <p>3) Every account gets a 7-day Pro trial — then subscribe when you want the full grid.</p>
         </div>
       </section>
         </>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { SYNEXUS_PRO_TRIAL_LABEL } from "../config/proTrial";
 import { useProDemo } from "../hooks/useProDemo";
 
 export function ProDemoBanner() {
@@ -28,9 +29,9 @@ export function ProDemoBanner() {
   return (
     <div className="pro-demo-banner" role="status" aria-live="polite">
       <div className="pro-demo-banner__text">
-        <strong>Pro demo active</strong>
+        <strong>{SYNEXUS_PRO_TRIAL_LABEL} active</strong>
         <span>
-          {remainingLabel} left — Oracle, Sentinels, and full Pulse unlocked. Subscribe to keep access.
+          {remainingLabel} — Oracle, Sentinels, and full Pulse unlocked. Subscribe to keep access after your trial.
         </span>
       </div>
       <div className="pro-demo-banner__actions">
