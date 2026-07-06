@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { SYNEXUS_PRO_PRICE_SHORT } from "../config/proPricing";
 import { SYNEXUS_PRO_TRIAL_LABEL } from "../config/proTrial";
+import { DEFAULT_TITAN_BOT_NAME } from "../config/titanBot";
 import { useProDemo } from "../hooks/useProDemo";
 
 export function ProDemoBanner() {
@@ -32,7 +33,7 @@ export function ProDemoBanner() {
       <div className="pro-demo-banner__text">
         <strong>{SYNEXUS_PRO_TRIAL_LABEL} active</strong>
         <span>
-          {remainingLabel} — Oracle, Sentinels, and full Pulse unlocked. No card was required for your trial.
+          {remainingLabel} — {DEFAULT_TITAN_BOT_NAME}, Sentinels, and full Pulse unlocked. No card was required for your trial.
           Subscribe to keep access after it ends.
         </span>
       </div>

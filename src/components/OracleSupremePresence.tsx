@@ -4,6 +4,8 @@ import { hasSupabaseEnv } from "../lib/supabaseClient";
 import { openOracleLogin } from "../lib/openOracleLogin";
 import { useOperatorAuth } from "../hooks/useOperatorAuth";
 import { useTitanBotName } from "../hooks/useTitanBotName";
+import { DEFAULT_TITAN_BOT_NAME } from "../config/titanBot";
+import { resolveTitanBotName } from "../lib/titanBotName";
 import {
   hasGreetedThisSession,
   markGreetedThisSession,
@@ -29,6 +31,7 @@ function normalizePlan(raw: string | null | undefined): "FREE" | "PRO" {
 export function OracleSupremePresence() {
   const { linked } = useOperatorAuth();
   const { name: titanBotName } = useTitanBotName();
+  const commanderLabel = titanBotName || resolveTitanBotName() || DEFAULT_TITAN_BOT_NAME;
   const [bootReady, setBootReady] = useState(isSynexusBootComplete());
   const [expanded, setExpanded] = useState(false);
   const [speaking, setSpeaking] = useState(false);
@@ -103,7 +106,7 @@ export function OracleSupremePresence() {
   const context = useMemo<OracleConversationContext>(
     () => ({
       operatorName,
-      titanBotName,
+      titanBotName: commanderLabel,
       alertCount,
       watchlistCount,
       plan,
@@ -111,13 +114,13 @@ export function OracleSupremePresence() {
       tokens,
       feedSource,
     }),
-    [alertCount, feedSource, operatorName, plan, titanBotName, tokens, watchlistCount],
+    [alertCount, feedSource, operatorName, plan, commanderLabel, tokens, watchlistCount],
   );
 
   return (
     <>
       {expanded ? (
-        <div className="oracle-presence-panel" role="dialog" aria-label={`Talk to ${titanBotName}`}>
+        <div className="oracle-presence-panel" role="dialog" aria-label={`Talk to ${commanderLabel}`}>
           <OracleSupremeChat
             context={context}
             variant="widget"
@@ -140,12 +143,12 @@ export function OracleSupremePresence() {
         aria-expanded={expanded}
         aria-label={
           expanded
-            ? `Minimize ${titanBotName} chat`
+            ? `Minimize ${commanderLabel} chat`
             : speaking
-              ? `${titanBotName} is speaking`
-              : `Talk to ${titanBotName}`
+              ? `${commanderLabel} is speaking`
+              : `Talk to ${commanderLabel}`
         }
-        title={titanBotName}
+        title={commanderLabel}
       >
         <span className="oracle-presence-fab__ring" aria-hidden />
         <span className="oracle-presence-fab__avatar" aria-hidden>
@@ -153,7 +156,7 @@ export function OracleSupremePresence() {
         </span>
         {!expanded ? (
           <span className="oracle-presence-fab__copy">
-            <span className="oracle-presence-fab__label">{titanBotName}</span>
+            <span className="oracle-presence-fab__label">{commanderLabel}</span>
           </span>
         ) : null}
       </button>

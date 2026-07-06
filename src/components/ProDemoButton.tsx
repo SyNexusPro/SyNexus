@@ -3,6 +3,7 @@ import { SYNEXUS_PRO_TRIAL_LABEL } from "../config/proTrial";
 import { useProDemo } from "../hooks/useProDemo";
 import { useOperatorAuth } from "../hooks/useOperatorAuth";
 import { useSynexusPlan } from "../hooks/useSynexusPlan";
+import { useTitanBotName } from "../hooks/useTitanBotName";
 import { openOracleLogin } from "../lib/openOracleLogin";
 
 type Props = {
@@ -24,6 +25,7 @@ export function ProDemoButton({
   const navigate = useNavigate();
   const plan = useSynexusPlan();
   const { linked } = useOperatorAuth();
+  const { name: titanBotName } = useTitanBotName();
   const { active, remainingLabel, beginDemo } = useProDemo();
 
   if (plan === "PRO" && !active) return null;
@@ -41,7 +43,11 @@ export function ProDemoButton({
     if (goToPulse) navigate(`/pulse${pulseHash}`);
   }
 
-  const displayLabel = !linked ? "Sign up · free Pro trial" : active ? `Pro trial · ${remainingLabel}` : label;
+  const displayLabel = !linked
+    ? `Enter ${titanBotName}`
+    : active
+      ? `Pro trial · ${remainingLabel}`
+      : label;
 
   return (
     <button
@@ -51,7 +57,7 @@ export function ProDemoButton({
       onClick={handleClick}
       aria-label={
         !linked
-          ? "Sign up for a free Pro trial"
+          ? `Enter ${titanBotName} and sign up for a free Pro trial`
           : active
             ? `Pro trial active, ${remainingLabel} remaining`
             : label
