@@ -16,6 +16,8 @@ import {
 } from "../lib/oracleSupremeConversation";
 import { createOracleSupremeSpeaker, isOracleSupremeVoiceSupported } from "../lib/oracleSupremeVoice";
 import { guardOracleChat } from "../lib/securityBot";
+import { recordTitanFeedback, hasTitanFeedbackConsent } from "../lib/titanFeedback";
+import { TitanChatSettings } from "./TitanChatSettings";
 import { SynexusSymbolMark } from "./SynexusSymbolMark";
 
 type OracleSupremeChatProps = {
@@ -37,6 +39,7 @@ export function OracleSupremeChat({
   const [draft, setDraft] = useState("");
   const [awaitingDayReply, setAwaitingDayReply] = useState(showOpeningPrompt);
   const [speaking, setSpeaking] = useState(false);
+  const [lastUserTopic, setLastUserTopic] = useState("");
   const speakerRef = useRef<ReturnType<typeof createOracleSupremeSpeaker> | null>(null);
   const autoSpokeRef = useRef(false);
   const voiceSupported = isOracleSupremeVoiceSupported();
@@ -65,6 +68,7 @@ export function OracleSupremeChat({
 
     setDraft("");
     setAwaitingDayReply(false);
+    setLastUserTopic(trimmed);
     appendUser(trimmed);
     appendOracle(reactToFreeText(trimmed, context), { speak: false });
   }
@@ -174,7 +178,7 @@ export function OracleSupremeChat({
             {speaking
               ? "Speaking…"
               : context.tokens.length
-                ? `${context.tokens.length} coins · ${context.feedSource} feed`
+                ? `Live feed · ask ${context.titanBotName}, not the menus`
                 : "Syncing market feed…"}
           </p>
         </div>
@@ -191,7 +195,7 @@ export function OracleSupremeChat({
         {visibleTurns.length === 0 ? (
           <div className="oracle-chat__empty-wrap">
             <p className="oracle-chat__empty">
-              Welcome to The Synexus — tap below when you&apos;re ready to talk.
+              Ask {context.titanBotName} — scans, risk reads, and coaching. Tap when you&apos;re ready.
             </p>
             <button type="button" className="oracle-chat__chip" onClick={handleCheckIn}>
               How may I be of service?
@@ -226,6 +230,13 @@ export function OracleSupremeChat({
             >
               Sentinel status
             </button>
+            <button
+              type="button"
+              className="oracle-chat__chip oracle-chat__chip--coin"
+              onClick={() => submitQuery("what can you do")}
+            >
+              What can you do?
+            </button>
           </div>
         </div>
       ) : null}
@@ -258,7 +269,7 @@ export function OracleSupremeChat({
         <input
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
-          placeholder={`Search a coin or ask ${context.titanBotName}…`}
+          placeholder={`Ask ${context.titanBotName} — scan a coin, explain risk, coach a decision…`}
           aria-label={`Message to ${context.titanBotName}`}
         />
         <button type="submit" disabled={!draft.trim()}>
@@ -289,6 +300,28 @@ export function OracleSupremeChat({
           ) : null}
         </div>
       ) : null}
+
+      {visibleTurns.length > 0 && hasTitanFeedbackConsent() ? (
+        <div className="oracle-chat__feedback">
+          <span className="oracle-chat__feedback-label">Was that helpful?</span>
+          <button
+            type="button"
+            className="oracle-chat__feedback-btn"
+            onClick={() => recordTitanFeedback("helpful", lastUserTopic || visibleTurns.at(-1)?.text || "chat")}
+          >
+            Yes
+          </button>
+          <button
+            type="button"
+            className="oracle-chat__feedback-btn"
+            onClick={() => recordTitanFeedback("not_helpful", lastUserTopic || visibleTurns.at(-1)?.text || "chat")}
+          >
+            Not really
+          </button>
+        </div>
+      ) : null}
+
+      <TitanChatSettings titanBotName={context.titanBotName} />
     </div>
   );
 }

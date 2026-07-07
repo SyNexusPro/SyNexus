@@ -1,4 +1,7 @@
 import { resolveTitanBotName } from "./titanBotName";
+import { buildTitanIdentityLine } from "../config/titanGuidelines";
+import { hasTitanMemoryConsent, titanMemoryContextLine } from "./titanMemory";
+import { softenTitanResponse } from "./titanGuardrails";
 import { oracleRespondToMessage } from "./oracleCryptoBrain";
 import type { Token } from "../data/tokens";
 import { loadRememberedEmail } from "./authRemember";
@@ -41,13 +44,13 @@ export function buildOracleIntroVoiceLine(
     return (
       `Welcome to The Synexus, ${name}. ` +
       `I'm ${titanBotName} — your intelligence commander. ` +
-      `I'm here when you need me. How may I be of service?`
+      "Don't dig through menus — ask me. How may I be of service?"
     );
   }
   return (
     "Welcome to The Synexus. " +
     `I'm ${titanBotName} — your intelligence commander for safer Solana trading. ` +
-    "How may I be of service?"
+    "Ask me about any coin, risk read, or market move. How may I be of service?"
   );
 }
 
@@ -220,7 +223,10 @@ export function buildOpeningGreeting(
   }
 
   if (ctx.tokens.length > 0) {
-    return `${lead} Ask about any coin, or tell me to command the Sentinels.`;
+    const memory = titanMemoryContextLine();
+    return memory
+      ? `${lead} ${memory.charAt(0).toUpperCase()}${memory.slice(1)}.`
+      : `${lead} Ask me about any coin — I'll read live data, not guesses.`;
   }
 
   return lead;
@@ -290,7 +296,16 @@ export function reactToFreeText(text: string, ctx: OracleConversationContext): s
   }
 
   if (/who are you|what are you/.test(lower)) {
-    return `I'm ${ctx.titanBotName} — your synthetic commander. I learn, I decide in seconds, and I run Aegis, Pulse, Leviathan, and Cipher for you.`;
+    return buildTitanIdentityLine(ctx.titanBotName);
+  }
+
+  if (/what can you do|help me|capabilities/.test(lower)) {
+    const memory = hasTitanMemoryConsent()
+      ? "Personalized memory is on — I'll remember your favorites and risk style."
+      : "Turn on personalized memory in chat settings if you want me to remember your preferences.";
+    return softenTitanResponse(
+      `${buildTitanIdentityLine(ctx.titanBotName)}\n\nLive market scans, scam analysis, Sentinel commands, and trading coaching — ${memory}`,
+    );
   }
 
   return `I hear you, ${ctx.operatorName}. "${text}" — noted. Head to Pulse if you want a market read, or keep talking here.`;

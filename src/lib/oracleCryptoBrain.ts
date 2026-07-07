@@ -2,6 +2,13 @@ import type { Token } from "../data/tokens";
 import { synexusRiskBandLabel } from "../data/tokens";
 import { DEFAULT_TITAN_BOT_NAME } from "../config/titanBot";
 import type { SentinelLaneId } from "./sentinelIntel";
+import {
+  appendTitanDecisionFooter,
+  buildTitanCoachRedirect,
+  isFinancialAdviceRequest,
+  softenTitanResponse,
+} from "./titanGuardrails";
+import { rememberFavoriteSymbol, titanMemoryContextLine } from "./titanMemory";
 
 export type OracleSentinelDirective = {
   lane: SentinelLaneId;
@@ -233,13 +240,27 @@ export function oracleRespondToMessage(text: string, ctx: OracleMessageContext):
   const lower = text.toLowerCase().trim();
   const { operatorName: name, tokens, plan, titanBotName } = ctx;
 
+  if (isFinancialAdviceRequest(text) && !/^(search|find|scan|look up|lookup)\b/.test(lower)) {
+    const token = resolveOracleTokenQuery(text, tokens);
+    if (token && /should i buy|worth buying|safe to buy/.test(lower)) {
+      rememberFavoriteSymbol(token.symbol);
+      return appendTitanDecisionFooter(
+        `Scan on ${token.symbol}:\n${buildTokenIntelBrief(token)}\n\nVerdict lane: ${synexusRiskBandLabel(token.guardianRisk)} — use Avoid · Watch · OK framing, not a blind ape.`,
+      );
+    }
+    return buildTitanCoachRedirect(name, text.length);
+  }
+
   const concept = answerCryptoConcept(text, titanBotName);
-  if (concept) return concept;
+  if (concept) return softenTitanResponse(concept);
 
   if (/^(search|find|scan|look up|lookup)\b/.test(lower) || /\b(bonk|pepe|sol|btc|eth|syn|wif|jup)\b/i.test(text)) {
     const token = resolveOracleTokenQuery(text, tokens);
     if (token) {
-      return `Found ${token.symbol} in ${tokens.length} tracked pairs:\n${buildTokenIntelBrief(token)}\n\nI'm directing Sentinels on ${token.symbol} now — check Pulse for live orders and reports.`;
+      rememberFavoriteSymbol(token.symbol);
+      return appendTitanDecisionFooter(
+        `Found ${token.symbol} in ${tokens.length} tracked pairs:\n${buildTokenIntelBrief(token)}\n\nI'm directing Sentinels on ${token.symbol} — check Pulse for live orders and reports.`,
+      );
     }
     const partial = searchOracleTokens(text.replace(/[^\w\s]/g, " "), tokens);
     if (partial.length) {
@@ -273,9 +294,12 @@ export function oracleRespondToMessage(text: string, ctx: OracleMessageContext):
   }
 
   if (/precise|precision|fast|speed|best app/.test(lower)) {
-    return plan === "PRO"
-      ? `Synexus Pro runs sub-40ms Sentinel response on hot lanes, ${tokens.length} pairs scanned per minute, and fused reads from Cipher before you act, ${name}.`
-      : `Free tier already scans ${tokens.length} pairs — Synexus Pro cuts response time and unlocks Leviathan and Cipher precision on Pulse.`;
+    const memory = titanMemoryContextLine();
+    const base =
+      plan === "PRO"
+        ? `Synexus Pro runs sub-40ms Sentinel response on hot lanes, ${tokens.length} pairs scanned per minute, and fused reads from Cipher before you act, ${name}.`
+        : `Free tier already scans ${tokens.length} pairs — Synexus Pro cuts response time and unlocks Leviathan and Cipher precision on Pulse.`;
+    return softenTitanResponse(memory ? `${base}\n\n${memory}.` : base);
   }
 
   return "";

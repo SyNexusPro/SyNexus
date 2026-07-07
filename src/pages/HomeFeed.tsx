@@ -100,11 +100,11 @@ export function HomeFeed() {
             </div>
           </div>
           <h1 className="landing-hero__headline">
-            {isSimple ? "Should I buy this?" : "AI-powered Solana trading intelligence"}
+            {isSimple ? "Ask Titan — should I buy this?" : "AI-powered Solana trading intelligence"}
           </h1>
           <p className="landing-hero__subtext">
             {isSimple
-              ? `Paste any token. Get a simple answer in seconds — ${SYNEXUS_PRO_OFFER_SHORT}`
+              ? `Don't dig through menus. Paste any token and ask Titan — ${SYNEXUS_PRO_OFFER_SHORT}`
               : "Detect scams, track whales, monitor momentum, and trade smarter."}
           </p>
           <div className="landing-hero__actions">

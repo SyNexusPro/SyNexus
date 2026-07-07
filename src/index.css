@@ -4923,6 +4923,66 @@ a {
   color: rgba(255, 200, 190, 0.95);
 }
 
+.oracle-chat__feedback {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px 8px;
+}
+
+.oracle-chat__feedback-label {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.oracle-chat__feedback-btn {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(94, 231, 255, 0.25);
+  background: rgba(6, 14, 18, 0.6);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.oracle-chat__feedback-btn:hover {
+  border-color: rgba(137, 255, 47, 0.4);
+  color: var(--text);
+}
+
+.titan-chat-settings {
+  padding: 10px 12px 12px;
+  border-top: 1px solid rgba(94, 231, 255, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.titan-chat-settings__disclaimer {
+  margin: 0;
+  font-size: 0.68rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+  opacity: 0.9;
+}
+
+.titan-chat-settings__toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.titan-chat-settings__toggle input {
+  margin-top: 2px;
+  accent-color: rgba(137, 255, 47, 0.85);
+}
+
 .synexus-core-panel__core-ai {
   font-size: 0.68rem;
   font-weight: 750;
