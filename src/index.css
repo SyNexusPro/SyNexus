@@ -8421,12 +8421,16 @@ a {
 
 .simple-launch-links__card {
   display: block;
+  width: 100%;
   padding: 16px;
   border-radius: 14px;
   border: 1px solid rgba(94, 231, 255, 0.22);
   background: rgba(6, 14, 18, 0.7);
   text-decoration: none;
+  text-align: left;
+  font: inherit;
   color: inherit;
+  cursor: pointer;
 }
 
 .simple-launch-links__card:hover {

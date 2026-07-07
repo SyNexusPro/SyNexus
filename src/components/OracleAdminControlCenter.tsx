@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { useLocation } from "react-router-dom";
 import type { OracleSupremeDailyReport, SyntheticSentinel } from "../data/syntheticWatchers";
 import type { SynexusPlan } from "../lib/tradingFees";
 import type { SentinelLaneId, SentinelLiveIntel } from "../lib/sentinelIntel";
@@ -10,7 +11,12 @@ import {
 import { oracleSupremeMoodLabel } from "../data/syntheticWatchers";
 import { SYNEXUS_PRO_PRICE_LABEL } from "../config/proPricing";
 import { SYNEXUS_PRO_TRIAL_DAYS } from "../config/proTrial";
-import { ORACLE_OPEN_LOGIN_EVENT } from "../lib/openOracleLogin";
+import {
+  ORACLE_OPEN_LOGIN_EVENT,
+  consumeTitanGateOpenIntent,
+  hasTitanGateOpenIntent,
+  scrollTitanGateIntoView,
+} from "../lib/openOracleLogin";
 import { OracleSupremeVoiceBar } from "./OracleSupremeVoiceBar";
 import { ProDemoButton } from "./ProDemoButton";
 import { SynexusSymbolMark } from "./SynexusSymbolMark";
@@ -52,15 +58,32 @@ export function OracleAdminControlCenter({
   speaking,
   compact = false,
 }: Props) {
+  const location = useLocation();
   const { name: titanBotName } = useTitanBotName();
-  const [open, setOpen] = useState(() => window.location.hash === "#oracle-admin");
+  const [open, setOpen] = useState(
+    () => window.location.hash === "#oracle-admin" || hasTitanGateOpenIntent(),
+  );
   const lanes = syntheticSentinels.filter((s) => !s.isOracleSupreme);
   const briefingLine = pulseFormatSentinelNamesInText(briefing);
 
   useEffect(() => {
+    if (location.hash === "#oracle-admin") {
+      setOpen(true);
+      scrollTitanGateIntoView();
+      return;
+    }
+    if (consumeTitanGateOpenIntent()) {
+      setOpen(true);
+      window.location.hash = "#oracle-admin";
+      scrollTitanGateIntoView();
+    }
+  }, [location.pathname, location.hash]);
+
+  useEffect(() => {
     function openFromEvent() {
       setOpen(true);
-      window.location.hash = "oracle-admin";
+      window.location.hash = "#oracle-admin";
+      scrollTitanGateIntoView();
     }
     window.addEventListener(ORACLE_OPEN_LOGIN_EVENT, openFromEvent);
     return () => window.removeEventListener(ORACLE_OPEN_LOGIN_EVENT, openFromEvent);
@@ -68,7 +91,10 @@ export function OracleAdminControlCenter({
 
   useEffect(() => {
     function onHashChange() {
-      if (window.location.hash === "#oracle-admin") setOpen(true);
+      if (window.location.hash === "#oracle-admin") {
+        setOpen(true);
+        scrollTitanGateIntoView();
+      }
     }
     window.addEventListener("hashchange", onHashChange);
     return () => window.removeEventListener("hashchange", onHashChange);

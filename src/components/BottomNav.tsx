@@ -1,4 +1,5 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
+import { useOpenTitanGate } from "../hooks/useOpenTitanGate";
 import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
@@ -6,6 +7,9 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
 
 export function BottomNav() {
   const { isSimple } = useSynexusUIMode();
+  const location = useLocation();
+  const openTitanGate = useOpenTitanGate();
+  const titanActive = location.pathname === "/pulse";
 
   return (
     <nav className="bottom-nav" aria-label="Primary">
@@ -21,12 +25,16 @@ export function BottomNav() {
         </span>
         Hub
       </NavLink>
-      <NavLink to="/pulse#oracle-admin" className={linkClass}>
+      <button
+        type="button"
+        className={`bottom-nav__link${titanActive ? " is-active" : ""}`}
+        onClick={openTitanGate}
+      >
         <span className="bottom-nav__icon bottom-nav__icon--oracle" aria-hidden>
           {isSimple ? "◉" : "∿"}
         </span>
         {isSimple ? "Titan" : "Sentinels"}
-      </NavLink>
+      </button>
     </nav>
   );
 }

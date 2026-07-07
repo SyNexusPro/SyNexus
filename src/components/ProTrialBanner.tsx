@@ -4,8 +4,8 @@ import { DEFAULT_TITAN_BOT_NAME } from "../config/titanBot";
 import { SYNEXUS_PRO_PRICE_LABEL } from "../config/proPricing";
 import { hasStoredOwnerGrant } from "../lib/ownerAccess";
 import { isProTrialActive } from "../lib/proDemo";
-import { openOracleLogin } from "../lib/openOracleLogin";
 import { useOperatorAuth } from "../hooks/useOperatorAuth";
+import { useOpenTitanGate } from "../hooks/useOpenTitanGate";
 import { ProDemoButton } from "./ProDemoButton";
 
 const PLAN_STORAGE_KEY = "hivemind_paid_plan";
@@ -32,6 +32,7 @@ function isBannerDismissed(): boolean {
 
 export function ProTrialBanner() {
   const { linked } = useOperatorAuth();
+  const openTitanGate = useOpenTitanGate();
   const [hidden, setHidden] = useState(() => isSynexusProPlan() || isBannerDismissed());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
@@ -50,7 +51,7 @@ export function ProTrialBanner() {
   async function startCheckout() {
     if (busy) return;
     if (!linked) {
-      openOracleLogin();
+      openTitanGate();
       return;
     }
     setError(false);

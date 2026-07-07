@@ -4,7 +4,7 @@ import { useProDemo } from "../hooks/useProDemo";
 import { useOperatorAuth } from "../hooks/useOperatorAuth";
 import { useSynexusPlan } from "../hooks/useSynexusPlan";
 import { useTitanBotName } from "../hooks/useTitanBotName";
-import { openOracleLogin } from "../lib/openOracleLogin";
+import { useOpenTitanGate } from "../hooks/useOpenTitanGate";
 
 type Props = {
   className?: string;
@@ -23,6 +23,7 @@ export function ProDemoButton({
   disabled = false,
 }: Props) {
   const navigate = useNavigate();
+  const openTitanGate = useOpenTitanGate();
   const plan = useSynexusPlan();
   const { linked } = useOperatorAuth();
   const { name: titanBotName } = useTitanBotName();
@@ -32,7 +33,7 @@ export function ProDemoButton({
 
   function handleClick() {
     if (!linked) {
-      openOracleLogin();
+      openTitanGate();
       return;
     }
     if (active) {

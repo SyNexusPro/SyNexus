@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { fetchGuardianAlerts, fetchProfile, fetchWatchlistTokens, getCurrentUser } from "../lib/supabaseData";
 import { hasSupabaseEnv } from "../lib/supabaseClient";
-import { openOracleLogin } from "../lib/openOracleLogin";
+import { useOpenTitanGate } from "../hooks/useOpenTitanGate";
 import { useOperatorAuth } from "../hooks/useOperatorAuth";
 import { useTitanBotName } from "../hooks/useTitanBotName";
 import { DEFAULT_TITAN_BOT_NAME } from "../config/titanBot";
@@ -30,6 +30,7 @@ function normalizePlan(raw: string | null | undefined): "FREE" | "PRO" {
 
 export function OracleSupremePresence() {
   const { linked } = useOperatorAuth();
+  const openTitanGate = useOpenTitanGate();
   const { name: titanBotName } = useTitanBotName();
   const commanderLabel = titanBotName || resolveTitanBotName() || DEFAULT_TITAN_BOT_NAME;
   const [bootReady, setBootReady] = useState(isSynexusBootComplete());
@@ -135,7 +136,7 @@ export function OracleSupremePresence() {
         className={`oracle-presence-fab${expanded ? " oracle-presence-fab--open" : ""}${speaking ? " oracle-presence-fab--speaking" : ""}`}
         onClick={() => {
           if (!linked) {
-            openOracleLogin();
+            openTitanGate();
             return;
           }
           setExpanded((open) => !open);

@@ -14,11 +14,13 @@ import { SynCoinLaunchBanner } from "../components/SynCoinLaunchBanner";
 import { BeginnerQuickStart } from "../components/BeginnerQuickStart";
 import { SentinelAlertsHub } from "../components/SentinelAlertsHub";
 import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
+import { useOpenTitanGate } from "../hooks/useOpenTitanGate";
 import { sampleTokens, type Token } from "../data/tokens";
 import { fetchMvpTokenFeed } from "../services/marketDataService";
 
 export function HomeFeed() {
   const { isSimple } = useSynexusUIMode();
+  const openTitanGate = useOpenTitanGate();
   const [searchParams] = useSearchParams();
   const scanQuery = searchParams.get("scan")?.trim() ?? "";
   const [allTokens, setAllTokens] = useState<Token[]>(sampleTokens);
@@ -162,11 +164,11 @@ export function HomeFeed() {
               <h2>Wallet dashboard</h2>
               <p>See wins, losses, and habits — your trading stats in one place.</p>
             </Link>
-            <Link to="/pulse#oracle-admin" className="simple-launch-links__card">
+            <button type="button" className="simple-launch-links__card" onClick={openTitanGate}>
               <p className="simple-launch-links__eyebrow">Bonus · Command</p>
               <h2>Titan tools</h2>
               <p>Ask questions and run Sentinels when you&apos;re ready to go deeper.</p>
-            </Link>
+            </button>
           </section>
 
           <section className="token-section">
