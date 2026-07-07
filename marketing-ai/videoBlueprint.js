@@ -1,5 +1,5 @@
 import { buildDailyPack, growthMissionLine, HOOKS } from "./synexusMarketingBot.js";
-import { buildDailyVoiceover, buildYouTubeTitle } from "./marketingCopy.js";
+import { buildDailyVoiceover, buildYouTubeTitle, TRIAL_OFFER_SHORT } from "./marketingCopy.js";
 
 const FLOW_STEPS = [
   { label: "PASTE TOKEN", sub: "Mint or symbol — 3 seconds" },
@@ -105,7 +105,7 @@ export function buildScenes(pack) {
       id: "cta",
       kicker: "Free scan",
       headline: "synexus.pro",
-      sub: "Pro $19.99/mo · cancel anytime",
+      sub: TRIAL_OFFER_SHORT,
       durationRatio: 0.22,
     },
   ];

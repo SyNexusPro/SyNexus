@@ -9,7 +9,11 @@ import { SynexusLiveScanner } from "../components/SynexusLiveScanner";
 import { ShouldIBuyPanel } from "../components/ShouldIBuyPanel";
 import { TopMoversPanel } from "../components/TopMoversPanel";
 import { ProDemoButton } from "../components/ProDemoButton";
-import { SYNEXUS_PRO_PRICE_LABEL } from "../config/proPricing";
+import {
+  SYNEXUS_PRO_OFFER_SHORT,
+  SYNEXUS_PRO_PRICE_LABEL,
+} from "../config/proPricing";
+import { SYNEXUS_PRO_TRIAL_DAYS } from "../config/proTrial";
 import { SynCoinLaunchBanner } from "../components/SynCoinLaunchBanner";
 import { BeginnerQuickStart } from "../components/BeginnerQuickStart";
 import { SentinelAlertsHub } from "../components/SentinelAlertsHub";
@@ -100,7 +104,7 @@ export function HomeFeed() {
           </h1>
           <p className="landing-hero__subtext">
             {isSimple
-              ? "Paste any token. Get a simple answer in seconds — no trading jargon."
+              ? `Paste any token. Get a simple answer in seconds — ${SYNEXUS_PRO_OFFER_SHORT}`
               : "Detect scams, track whales, monitor momentum, and trade smarter."}
           </p>
           <div className="landing-hero__actions">
@@ -380,7 +384,7 @@ export function HomeFeed() {
           <h3>Built for faster decisions</h3>
           <p>1) Search coins before you buy.</p>
           <p>2) Read Sentinel risk signals before you chase hype.</p>
-          <p>3) Sign up through Titan for a 7-day Pro trial — no card — then {SYNEXUS_PRO_PRICE_LABEL} if you keep it.</p>
+          <p>3) Sign up through Titan — {SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial, no card — then {SYNEXUS_PRO_PRICE_LABEL} if you keep it.</p>
         </div>
       </section>
         </>

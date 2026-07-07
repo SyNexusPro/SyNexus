@@ -545,7 +545,7 @@ Automatic copyright exists in original works. Optional registration ([copyright.
 | **App name** | Synexus |
 | **Bundle ID** | com.synexus.app |
 | **Platform** | Web, Android, iOS |
-| **Subscription** | Synexus Pro — $19.99/month |
+| **Subscription** | Synexus Pro — $9.99/month (7-day free trial after sign-up) |
 | **Community token** | $SyN (pump.fun) — separate from app TM counsel |
 
 ---

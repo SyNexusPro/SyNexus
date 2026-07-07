@@ -18,7 +18,7 @@ async function main() {
     console.log(`Log revenue into the reinvest-only treasury pot.
 
   npm run treasury:status
-  npm run treasury:log -- --source=pro_subs --amount=19.99 --note="1 sub"
+  npm run treasury:log -- --source=pro_subs --amount=9.99 --note="1 sub"
 
 Sources: pro_subs · trading_fees · affiliate · other
 `);

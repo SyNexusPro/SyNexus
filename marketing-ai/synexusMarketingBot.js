@@ -17,6 +17,7 @@ import { fileURLToPath } from "node:url";
 import {
   TRUST_LINE,
   PRO_LINE,
+  TRIAL_OFFER_SHORT,
   buildDailyTelegramBrief,
   buildSocialCaption,
   buildDiscordPost,
@@ -29,6 +30,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const TAGS = "#Synexus #Solana #Crypto #ShouldIBuyThis";
 const PRO_PRICE_LINE = PRO_LINE;
+const TRIAL_LINE = TRIAL_OFFER_SHORT;
 const SYN_PUMPFUN_URL =
   process.env.SYN_PUMPFUN_URL?.trim() ||
   "https://pump.fun/communities/9naVtLAGKWYuEcGehe1BZ3DpiSLHjSNsaeFr2JPHpump";
@@ -46,11 +48,11 @@ const HOOKS = [
 
 /** Supporting lines — still simple, no operator jargon. */
 const SUPPORT = [
-  "Free scan on every token. Pro unlocks Oracle briefings + full Sentinel grid.",
+  "Sign up free → 7-day Pro trial, no card. Then $9.99/mo if you keep it.",
+  "Free scan on every token. Pro unlocks Titan briefings + full Sentinel grid.",
   "Your wallet signs every trade — Synexus just shows you the risk first.",
   "Trade journal tracks entries, exits, and P/L so you see your habits.",
   "Live alerts when whales move or risk spikes — before the timeline screams.",
-  "Built for people who want one clear answer, not a wall of charts.",
 ];
 
 function pick(list, offset) {
@@ -74,6 +76,7 @@ export function generateXPost(now = Date.now()) {
     support,
     "",
     `Try free → ${appOrigin()}`,
+    TRIAL_LINE,
     PRO_PRICE_LINE,
     TAGS,
   ].join("\n");
@@ -95,7 +98,7 @@ export function generateTikTokScript(now = Date.now()) {
     `[0–3s] Show paste box + instant verdict card (Avoid / Watch / OK).`,
     `[3–7s] Flash scorecard: risk · whales · momentum · liquidity · rug warning.`,
     `[7–11s] One line: "Not financial advice — you still sign in your wallet."`,
-    `[11–15s] Syn the bunny floats in corner. CTA: Try free · ${appOrigin()} · ${PRO_PRICE_LINE}`,
+    `[11–15s] Syn the bunny floats in corner. CTA: Try free · ${appOrigin()} · ${TRIAL_LINE}`,
     "",
     `Tags: ${TAGS}`,
   ].join("\n");
@@ -112,6 +115,7 @@ export function generateTelegramUpdate(now = Date.now()) {
     "Paste a Solana mint → **Avoid · Watch · OK** with fused risk, whale, and liquidity signals.",
     "",
     `**Scan** → ${origin}`,
+    TRIAL_LINE,
     PRO_PRICE_LINE,
     "",
     TRUST_LINE,
@@ -147,6 +151,7 @@ export function generateRedditPost(now = Date.now()) {
     "",
     "Non-custodial — your wallet signs every swap. Not financial advice.",
     "",
+    TRIAL_LINE,
     PRO_PRICE_LINE,
     "",
     `Try it: ${origin}`,
@@ -167,6 +172,7 @@ export function generateReferralBlurb(now = Date.now()) {
     "",
     "Send them Synexus — paste a token, get a clear answer, trade on their own terms.",
     "",
+    TRIAL_LINE,
     PRO_PRICE_LINE,
     "",
     origin,
@@ -175,18 +181,19 @@ export function generateReferralBlurb(now = Date.now()) {
 
 export function growthMissionLine(date = new Date()) {
   const missions = [
+    'Post a reel: on-screen text "7-day Pro free when you sign up" + paste → Avoid/Watch demo.',
     'Post a 15s clip: paste a trending ticker → show the "Avoid" or "Watch" verdict on screen.',
-    "Screen record: type BONK in Should I buy? — let the plain-English answer be the hook.",
-    "TikTok text overlay: \"I paste every coin before I buy now.\" Show the scorecard.",
-    "X thread (3 tweets): the problem (aping blind) → the fix (paste → verdict) → link.",
-    "Telegram: ask \"What token should I scan live tomorrow?\" — engagement + demo.",
-    "Discord: share one real Avoid verdict (blur ticker if needed) — educational not hype.",
-    "Reddit comment helpfully: \"I use a paste-and-scan tool for risk — happy to show.\"",
+    "Screen record: sign up → show 7-day Pro trial banner → scan BONK in Should I buy?",
+    'TikTok text overlay: "7 days Pro free · $9.99/mo after · no card to start."',
+    "X thread (3 tweets): aping blind → paste verdict fix → 7-day free trial link.",
+    "Telegram: pin the offer — 7-day Pro trial, sign up free, $9.99/mo after.",
+    "Discord: share one Avoid verdict + trial offer in footer — educational not hype.",
+    "Reddit comment: mention free scan + 7-day Pro trial after sign-up — no spam.",
     "Film wallet journal stats — people love seeing their own win rate.",
     "Compare: influencer \"100x gem\" vs Synexus Danger band on the same token.",
     "Short: \"3 seconds to paste. 5 seconds to know if you should touch it.\"",
     "Carousel: Avoid vs Watch vs OK — what each means in one sentence each.",
-    "Story/Reel: Oracle one-liner + Should I buy? demo — keep it under 20 seconds.",
+    "Story/Reel: Titan sign-up gate + Should I buy? demo — end card with trial offer.",
   ];
   const start = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
   const idx = Math.floor(start / 86_400_000) % missions.length;

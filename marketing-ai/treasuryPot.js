@@ -51,6 +51,6 @@ export async function printTreasuryReport() {
     console.log(`  ${key}: ${val}`);
   }
   console.log("\nStripe Pro payments auto-log via webhook → Supabase treasury_revenue");
-  console.log("Manual: npm run treasury:log -- --source=pro_subs --amount=19.99");
+  console.log("Manual: npm run treasury:log -- --source=pro_subs --amount=9.99");
   console.log("");
 }

@@ -10,7 +10,7 @@
     { "id": "reserve", "label": "Emergency reserve", "pct": 5 }
   ],
   "revenueStreams": [
-    { "id": "pro_subs", "label": "Synexus Pro ($19.99/mo)", "targetMonthlyUsd": 500 },
+    { "id": "pro_subs", "label": "Synexus Pro ($9.99/mo)", "targetMonthlyUsd": 500 },
     { "id": "trading_fees", "label": "Jupiter swap fees", "targetMonthlyUsd": 200 },
     { "id": "affiliate", "label": "Affiliate / referrals", "targetMonthlyUsd": 100 }
   ],

@@ -109,7 +109,7 @@ export async function runGrowthOnce({ force = false } = {}) {
   await writeGrowthState(growthState);
 
   console.log("\n✓ Growth cycle complete. Log Stripe revenue:");
-  console.log("  npm run treasury:log -- --source=pro_subs --amount=19.99\n");
+  console.log("  npm run treasury:log -- --source=pro_subs --amount=9.99\n");
 }
 
 export async function printGrowthStatus() {

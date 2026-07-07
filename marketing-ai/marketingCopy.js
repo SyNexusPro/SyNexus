@@ -4,13 +4,19 @@
  */
 
 import { curiosityTitle, primaryCta } from "./viralContentSystem.js";
+import {
+  PRO_LINE,
+  TRIAL_OFFER_LINE,
+  TRIAL_OFFER_SHORT,
+  TRIAL_OFFER_SOCIAL,
+} from "./pricing.js";
 
 function appOrigin() {
   return process.env.APP_ORIGIN?.trim() || "https://synexus.pro";
 }
 
 export const TRUST_LINE = "Non-custodial · You sign every trade · Not financial advice.";
-export const PRO_LINE = "Synexus Pro · $19.99/mo · cancel anytime";
+export { PRO_LINE, TRIAL_OFFER_LINE, TRIAL_OFFER_SHORT, TRIAL_OFFER_SOCIAL };
 
 const CTA_VARIANTS = [
   "Download SyNexus and let the AI check your next coin.",
@@ -127,6 +133,8 @@ export function buildTelegramCaption({ hook, build, payoff, loop, id = "" }) {
     "",
     `**${cta}** ${origin}`,
     "",
+    TRIAL_OFFER_SHORT,
+    "",
     TRUST_LINE,
   ];
 
@@ -137,7 +145,13 @@ export function buildXCaption({ hook, build, payoff, id = "" }) {
   const origin = appOrigin();
   const seed = id.split("").reduce((n, c) => n + c.charCodeAt(0), 0);
   const insight = stripTelegramMeta(payoff) || stripTelegramMeta(build);
-  const lines = [hook, insight, `${pickCta(seed)} ${origin}`, "#Synexus #Solana"].filter(Boolean);
+  const lines = [
+    hook,
+    insight,
+    `${pickCta(seed)} ${origin}`,
+    TRIAL_OFFER_SHORT,
+    "#Synexus #Solana",
+  ].filter(Boolean);
   const text = lines.join("\n\n");
   return text.length <= 280 ? text : `${text.slice(0, 277)}…`;
 }
@@ -152,6 +166,8 @@ export function buildTikTokCaption({ hook, build, payoff, id = "" }) {
     stripTelegramMeta(payoff),
     "",
     `${pickCta(id.length)} ${origin}`,
+    "",
+    TRIAL_OFFER_SHORT,
     "",
     "#Synexus #Solana #ShouldIBuyThis #Crypto #Shorts",
   ]
@@ -174,6 +190,8 @@ export function buildYouTubeMeta({ hook, build, payoff, id = "", titleBase = "" 
     "Paste any mint → Avoid · Watch · OK in seconds.",
     "",
     `Free scan: ${origin}`,
+    "",
+    TRIAL_OFFER_LINE,
     "",
     TRUST_LINE,
     "",
@@ -216,6 +234,8 @@ export function buildDailyTelegramBrief({ hook, slot = 0 }) {
     "",
     `**Scan** → ${origin}`,
     "",
+    TRIAL_OFFER_SHORT,
+    "",
     TRUST_LINE,
   ].join("\n");
 }
@@ -250,6 +270,8 @@ export function buildSocialCaption({ hook, platform = "facebook" }) {
     "",
     `Scan → ${origin}`,
     "",
+    TRIAL_OFFER_SHORT,
+    "",
     tags,
   ].join("\n");
 }
@@ -264,6 +286,8 @@ export function buildDiscordPost({ hook, build, payoff }) {
     stripTelegramMeta(payoff),
     "",
     `Scan → ${origin}`,
+    "",
+    TRIAL_OFFER_SHORT,
     "",
     TRUST_LINE,
   ].join("\n");

@@ -110,7 +110,7 @@ export const SOLUTIONS = [
 export const SYNEXUS_DEMO = [
   "Synexus scans any Solana token — non-custodial, you sign every trade.",
   "Four Sentinels fuse into one verdict: Avoid, Watch, or OK.",
-  "Pro unlocks Oracle briefings and full Sentinel grid refresh.",
+  "Sign up free → 7-day Pro trial, no card. Then $9.99/mo if you keep it.",
 ];
 
 export const TEASES = [

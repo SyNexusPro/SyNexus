@@ -3,6 +3,8 @@
  * Voice: simple, grabby, plain English. Lead with "Should I buy this?"
  */
 
+import { SYNEXUS_PRO_OFFER_SHORT, SYNEXUS_PRO_PRICE_SHORT } from "../config/proPricing";
+
 const TAGS = "#Synexus #Solana #Crypto #ShouldIBuyThis";
 
 export function marketingAppOrigin(): string {
@@ -12,7 +14,8 @@ export function marketingAppOrigin(): string {
   return "";
 }
 
-const PRO_PRICE_LINE = "Synexus Pro · $9.99/month · cancel anytime.";
+const PRO_PRICE_LINE = `Synexus Pro · ${SYNEXUS_PRO_PRICE_SHORT} · cancel anytime.`;
+const TRIAL_OFFER_SHORT = SYNEXUS_PRO_OFFER_SHORT;
 
 const HOOKS = [
   "Should I buy this? Paste any Solana token. Synexus answers in seconds.",
@@ -24,11 +27,11 @@ const HOOKS = [
 ];
 
 const SUPPORT = [
-  "Free scan on every token. Pro unlocks Oracle briefings + full Sentinel grid.",
+  "Sign up free → 7-day Pro trial, no card. Then $9.99/mo if you keep it.",
+  "Free scan on every token. Pro unlocks Titan briefings + full Sentinel grid.",
   "Your wallet signs every trade — Synexus just shows you the risk first.",
   "Trade journal tracks entries, exits, and P/L so you see your habits.",
   "Live alerts when whales move or risk spikes — before the timeline screams.",
-  "Built for people who want one clear answer, not a wall of charts.",
 ];
 
 function pick(list: string[], offset: number) {
@@ -47,7 +50,7 @@ export function generateXPost(now: number): string {
   const hook = pick(HOOKS, dayOffset(now));
   const support = pick(SUPPORT, dayOffset(now) + 1);
   const origin = marketingAppOrigin() || "https://synexus.pro";
-  return [hook, "", support, "", `Try free → ${origin}`, PRO_PRICE_LINE, TAGS].join("\n");
+  return [hook, "", support, "", `Try free → ${origin}`, TRIAL_OFFER_SHORT, PRO_PRICE_LINE, TAGS].join("\n");
 }
 
 export function generateTikTokScript(now: number): string {
@@ -63,7 +66,7 @@ export function generateTikTokScript(now: number): string {
     `[0–3s] Show paste box + instant verdict card (Avoid / Watch / OK).`,
     `[3–7s] Flash scorecard: risk · whales · momentum · liquidity · rug warning.`,
     `[7–11s] One line: "Not financial advice — you still sign in your wallet."`,
-    `[11–15s] CTA on screen: Try free · ${origin} · ${PRO_PRICE_LINE}`,
+    `[11–15s] CTA on screen: 7-day free Pro trial · ${origin} · ${TRIAL_OFFER_SHORT}`,
     "",
     `Tags: ${TAGS}`,
   ].join("\n");
@@ -85,6 +88,7 @@ export function generateTelegramUpdate(now: number): string {
     "**Also inside** · trade journal · wallet stats · live alerts",
     "",
     `**Try free** → ${origin}`,
+    TRIAL_OFFER_SHORT,
     PRO_PRICE_LINE,
     "",
     "🐰 Syn · paste before you ape",
@@ -103,6 +107,7 @@ export function generateDiscordPost(now: number): string {
     "Plus: risk scorecard, whale read, trade journal, and Sentinel alerts.",
     "",
     `**Try free** · ${origin}`,
+    TRIAL_OFFER_SHORT,
     PRO_PRICE_LINE,
     "",
     "🐰 **Syn** says: paste before you ape.",
@@ -132,6 +137,7 @@ export function generateRedditPost(now: number): string {
     "",
     "Non-custodial — your wallet signs every swap. Not financial advice.",
     "",
+    TRIAL_OFFER_SHORT,
     PRO_PRICE_LINE,
     "",
     `Try it: ${origin}`,
@@ -152,6 +158,7 @@ export function generateReferralBlurb(now: number): string {
     "",
     "Send them Synexus — paste a token, get a clear answer, trade on their own terms.",
     "",
+    TRIAL_OFFER_SHORT,
     PRO_PRICE_LINE,
     "",
     origin,
@@ -160,18 +167,19 @@ export function generateReferralBlurb(now: number): string {
 
 export function growthMissionLine(date: Date): string {
   const missions = [
+    'Post a reel: on-screen text "7-day Pro free when you sign up" + paste → Avoid/Watch demo.',
     'Post a 15s clip: paste a trending ticker → show the "Avoid" or "Watch" verdict on screen.',
-    "Screen record: type BONK in Should I buy? — let the plain-English answer be the hook.",
-    'TikTok text overlay: "I paste every coin before I buy now." Show the scorecard.',
-    "X thread (3 tweets): the problem (aping blind) → the fix (paste → verdict) → link.",
-    "Telegram: ask \"What token should I scan live tomorrow?\" — engagement + demo.",
-    "Discord: share one real Avoid verdict (blur ticker if needed) — educational not hype.",
-    "Reddit comment helpfully: \"I use a paste-and-scan tool for risk — happy to show.\"",
+    "Screen record: sign up → show 7-day Pro trial banner → scan BONK in Should I buy?",
+    'TikTok text overlay: "7 days Pro free · $9.99/mo after · no card to start."',
+    "X thread (3 tweets): aping blind → paste verdict fix → 7-day free trial link.",
+    "Telegram: pin the offer — 7-day Pro trial, sign up free, $9.99/mo after.",
+    "Discord: share one Avoid verdict + trial offer in footer — educational not hype.",
+    "Reddit comment: mention free scan + 7-day Pro trial after sign-up — no spam.",
     "Film wallet journal stats — people love seeing their own win rate.",
     "Compare: influencer \"100x gem\" vs Synexus Danger band on the same token.",
     'Short: "3 seconds to paste. 5 seconds to know if you should touch it."',
     "Carousel: Avoid vs Watch vs OK — what each means in one sentence each.",
-    "Story/Reel: Oracle one-liner + Should I buy? demo — keep it under 20 seconds.",
+    "Story/Reel: Titan sign-up gate + Should I buy? demo — end card with trial offer.",
   ];
   const start = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
   const idx = Math.floor(start / 86_400_000) % missions.length;
@@ -188,6 +196,7 @@ export function generateTikTokCaption(now: number): string {
     "Risk · whales · rug flags · trade journal",
     "",
     `Free scan → ${origin}`,
+    TRIAL_OFFER_SHORT,
     PRO_PRICE_LINE,
     "",
     "🐰 Syn the bunny · paste before you ape",

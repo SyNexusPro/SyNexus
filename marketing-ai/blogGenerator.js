@@ -89,7 +89,7 @@ const TOPICS = [
       },
       {
         h2: "Cancel anytime",
-        body: "Pro is $19.99/month through Stripe. No lock-in. You control your subscription from checkout.",
+        body: "Sign up free for a 7-day full Pro trial — no credit card required. After the trial, Pro is $9.99/month through Stripe. No lock-in. You control your subscription from checkout.",
       },
     ],
   },
