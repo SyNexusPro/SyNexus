@@ -1,5 +1,6 @@
 import type { Token } from "../data/tokens";
 import type { SyntheticSentinel } from "../data/syntheticWatchers";
+import { AEGIS_STATUS_IDLE } from "../config/sentinelAegis";
 import {
   buildOracleSentinelDirective,
   buildSentinelReportToOracle,
@@ -102,10 +103,10 @@ export function buildSentinelLiveIntel({
 
   const aegisStatus =
     pool.length === 0
-      ? "Standing by — Aegis will scan your watchlist for rugs and liquidity traps."
+      ? AEGIS_STATUS_IDLE
       : aegisHits > 0
-        ? `${aegisHits} risk hit${aegisHits === 1 ? "" : "s"} · ${danger.length} danger · ${warning.length} warning${aegisFocus ? ` · focus ${aegisFocus.symbol}` : ""}`
-        : `All clear on ${pool.length} scanned pair${pool.length === 1 ? "" : "s"} — contract and liquidity lanes green.`;
+        ? `${aegisHits} security hit${aegisHits === 1 ? "" : "s"} · ${danger.length} danger · ${warning.length} warning${aegisFocus ? ` · focus ${aegisFocus.symbol}` : ""}`
+        : `Security lane clear on ${pool.length} pair${pool.length === 1 ? "" : "s"} — contracts, liquidity, and rug heuristics green.`;
 
   const pulseStatus =
     pool.length === 0

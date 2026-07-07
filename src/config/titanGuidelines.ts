@@ -50,9 +50,9 @@ export const TITAN_CAPABILITIES: readonly TitanCapability[] = [
   },
   {
     id: "scam_security",
-    title: "Scam & security analysis",
+    title: "Scam, security & privacy",
     summary:
-      "Titan analyzes new tokens, warns about suspicious contracts, identifies rug-pull signals, and explains why something looks risky.",
+      "Sentinel Aegis guards tokens and your operator account — suspicious contracts, rug signals, phishing awareness, and privacy-safe sign-in. Titan explains the read; Aegis runs the lane.",
     requiresPermission: false,
     status: "live",
   },

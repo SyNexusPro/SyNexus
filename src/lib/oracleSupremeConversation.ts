@@ -1,5 +1,6 @@
 import { resolveTitanBotName } from "./titanBotName";
 import { buildTitanIdentityLine } from "../config/titanGuidelines";
+import { answerAegisSecurityPrivacyQuestion } from "../config/sentinelAegis";
 import { hasTitanMemoryConsent, titanMemoryContextLine } from "./titanMemory";
 import { softenTitanResponse } from "./titanGuardrails";
 import { oracleRespondToMessage } from "./oracleCryptoBrain";
@@ -250,7 +251,7 @@ export function buildFollowUpAfterMood(mood: DayMoodReply, ctx: OracleConversati
   if (mood === "trading") {
     return alertCount > 0
       ? `Busy desk, ${name}. ${alertCount} alert${alertCount === 1 ? " is" : "s are"} live — I can walk you through them on Pulse when you want.`
-      : `Markets don't sleep, ${name}. I've got Aegis on risk and Pulse on momentum — tell me what you're hunting.`;
+      : `Markets don't sleep, ${name}. Aegis is on security & privacy; Pulse on momentum — tell me what you're hunting.`;
   }
 
   return alertCount > 0
@@ -285,7 +286,11 @@ export function reactToFreeText(text: string, ctx: OracleConversationContext): s
     return buildFollowUpAfterMood("long", ctx);
   }
 
-  if (/alert|warning|danger|rug|scam/.test(lower)) {
+  if (/alert|warning|danger|rug|scam|privacy|security|phish/.test(lower)) {
+    if (/privacy|security|phish|seed|private key|my data/.test(lower)) {
+      const aegis = answerAegisSecurityPrivacyQuestion(text);
+      if (aegis) return aegis;
+    }
     return ctx.alertCount > 0
       ? `I'm on it, ${ctx.operatorName}. You have ${ctx.alertCount} active alert${ctx.alertCount === 1 ? "" : "s"} — I'll break them down on Pulse.`
       : `No live alerts right now, ${ctx.operatorName}. I'll flag you the second something looks off.`;

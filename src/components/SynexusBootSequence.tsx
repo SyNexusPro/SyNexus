@@ -2,6 +2,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createOracleSupremeSpeaker, isOracleSupremeVoiceSupported } from "../lib/oracleSupremeVoice";
 import { resolveTitanBotName } from "../lib/titanBotName";
+import { AEGIS_ROLE, AEGIS_SENTINEL_NAME } from "../config/sentinelAegis";
 import {
   buildOracleIntroVoiceLine,
   markIntroWelcomeSpoken,
@@ -30,7 +31,7 @@ const PHASE_COPY: readonly string[] = [
 ] as const;
 
 const SENTINELS = [
-  { name: "Sentinel Aegis", role: "Hunts scams and rug pulls." },
+  { name: AEGIS_SENTINEL_NAME, role: `${AEGIS_ROLE} — scams, rugs, and operator privacy.` },
   { name: "Sentinel Pulse", role: "Reads momentum as it breaks." },
   { name: "Sentinel Leviathan", role: "Shadows the whale wallets." },
   { name: "Sentinel Cipher", role: "Decodes patterns with AI." },

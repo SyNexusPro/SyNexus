@@ -71,7 +71,8 @@ export function About() {
         </p>
         <ul className="about-page__bullets">
           <li>
-            <strong>Aegis</strong> — contract and liquidity integrity signals
+            <strong>Aegis</strong> — security &amp; privacy: scams, rugs, contracts, liquidity integrity, and
+            operator-safe accounts (no custody, verified sign-in)
           </li>
           <li>
             <strong>Pulse</strong> — volume, momentum, and volatility spikes

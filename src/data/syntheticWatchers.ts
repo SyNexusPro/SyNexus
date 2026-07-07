@@ -1,4 +1,9 @@
 import { DEFAULT_TITAN_BOT_NAME } from "../config/titanBot";
+import {
+  AEGIS_LESSON,
+  AEGIS_ROLE,
+  AEGIS_SENTINEL_NAME,
+} from "../config/sentinelAegis";
 
 export type SentinelRank = "Scout" | "Sentinel" | "Bulwark" | "Oracle" | "Synexus Core";
 
@@ -54,11 +59,12 @@ const sentinelSeeds = [
   },
   {
     id: "aegis",
-    name: "Sentinel Aegis",
-    role: "Scam & rug detection",
+    name: AEGIS_SENTINEL_NAME,
+    role: AEGIS_ROLE,
     baseXp: 48,
-    status: "Scanning contracts, liquidity, and early warning signs on your watchlist.",
-    lesson: "Every scam report you confirm makes Aegis faster on the next threat.",
+    status:
+      "Guarding tokens and operator privacy — scams, rugs, contracts, liquidity, and account-safe sign-in.",
+    lesson: AEGIS_LESSON,
     accent: "green" as const,
   },
   {

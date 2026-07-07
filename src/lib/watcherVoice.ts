@@ -25,9 +25,9 @@ const laneMessages: Record<
   { safe: string; warning: string; danger: string }
 > = {
   aegis: {
-    safe: "Aegis: contracts and liquidity look clean.",
-    warning: "Aegis: liquidity or contract flags need a closer look.",
-    danger: "Aegis: rug or scam signals — treat as high risk.",
+    safe: "Aegis: security lane clear — contracts, liquidity, and privacy posture look sound.",
+    warning: "Aegis: security flags — recheck contract, liquidity, or account hygiene.",
+    danger: "Aegis: high-risk security signals — treat as scam/rug until verified.",
   },
   pulse: {
     safe: "Pulse: no abnormal momentum spikes right now.",

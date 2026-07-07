@@ -204,7 +204,8 @@ export function HomeFeed() {
         <article className="landing-info-card">
           <h2>Detect risks. Track whales. Flag scams.</h2>
           <p>
-            The Synexus routes signals through four Sentinels—Aegis, Pulse, Titan, and Cipher—so you get one
+            The Synexus routes signals through four Sentinels—<strong>Aegis</strong> (security &amp; privacy), Pulse,
+            Leviathan, and Cipher—so you get one
             coherent read instead of noise.
           </p>
         </article>

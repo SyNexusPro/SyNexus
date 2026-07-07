@@ -28,8 +28,8 @@ export const TRUST_INDICATORS = [
   },
   {
     id: "risk-first",
-    label: "Risk-first design",
-    detail: "Sentinel scans and scores surface before you ape.",
+    label: "Aegis security lane",
+    detail: "Sentinel Aegis scans scams, rugs, and privacy-safe operator hygiene.",
   },
 ] as const;
 
@@ -95,6 +95,7 @@ export const HOW_SYNEXUS_WORKS = [
 ] as const;
 
 export const SECURITY_POINTS = [
+  "Sentinel Aegis is the security & privacy lane — scams, rugs, contracts, liquidity, and safe operator accounts.",
   "Synexus is a non-custodial intelligence layer — we do not execute trades or hold user assets.",
   "Wallet connections happen in third-party wallet apps; private keys never pass through Synexus servers.",
   "Operator accounts require email verification before Operator Link activates — unverified sign-ups cannot sync watchlists or Pro status.",

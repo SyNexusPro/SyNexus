@@ -1,6 +1,7 @@
 import type { Token } from "../data/tokens";
 import { synexusRiskBandLabel } from "../data/tokens";
 import { DEFAULT_TITAN_BOT_NAME } from "../config/titanBot";
+import { answerAegisSecurityPrivacyQuestion } from "../config/sentinelAegis";
 import type { SentinelLaneId } from "./sentinelIntel";
 import {
   appendTitanDecisionFooter,
@@ -114,7 +115,7 @@ export function buildOracleSentinelDirective(
 ): OracleSentinelDirective {
   if (!token) {
     const standby: Record<SentinelLaneId, string> = {
-      aegis: "Hold rug-and-liquidity watch — ping Oracle on first danger hit.",
+      aegis: "Hold security & privacy watch — token scams, contracts, and operator-safe posture.",
       pulse: "Hold momentum filter — ignore sub-8% moves until volume confirms.",
       titan: "Hold whale lane — report any top-wallet shift above 3 points.",
       cipher: "Hold pattern fusion — escalate when two lanes agree on one symbol.",
@@ -128,7 +129,7 @@ export function buildOracleSentinelDirective(
       return {
         lane,
         targetSymbol: sym,
-        order: `Lock scam scan on ${sym} — liquidity ${formatUsd(token.liquidityUsd)}, verify ${synexusRiskBandLabel(token.guardianRisk)} flags every cycle.`,
+        order: `Lock security scan on ${sym} — liquidity ${formatUsd(token.liquidityUsd)}, ${synexusRiskBandLabel(token.guardianRisk)} flags, privacy-safe read only.`,
       };
     case "pulse":
       return {
@@ -216,10 +217,10 @@ export function buildAllOracleDirectives(tokens: Token[]): Record<SentinelLaneId
 export function answerCryptoConcept(question: string, commanderName = DEFAULT_TITAN_BOT_NAME): string | null {
   const q = question.toLowerCase();
   if (/rug pull|rugpull/.test(q)) {
-    return "A rug pull is when developers drain liquidity or mint away value — Aegis watches liquidity depth, wallet concentration, and contract authority flags for exactly this.";
+    return "A rug pull is when developers drain liquidity or mint away value — Sentinel Aegis watches liquidity depth, wallet concentration, contract authority, and privacy-safe operator hygiene for exactly this.";
   }
   if (/liquidity/.test(q)) {
-    return "Liquidity is how much real money sits in the pool — thin liquidity means slippage and exit risk. Synexus tracks it on every pair Aegis scans.";
+    return "Liquidity is how much real money sits in the pool — thin liquidity means slippage and exit risk. Aegis tracks it on every pair and flags traps before you sign.";
   }
   if (/whale/.test(q)) {
     return "Whales are wallets holding large supply — Leviathan tracks top-holder percent and sudden concentration shifts before price reacts.";
@@ -231,8 +232,10 @@ export function answerCryptoConcept(question: string, commanderName = DEFAULT_TI
     return "Solana is the chain Synexus scans first — fast blocks, meme velocity, and rug risk. Sentinels watch SPL tokens, pools, and wallet flow in real time.";
   }
   if (/sentinel|aegis|pulse|leviathan|cipher/.test(q) && /what|who|do/.test(q)) {
-    return `Aegis hunts scams, Pulse reads momentum, Leviathan shadows whales, Cipher fuses weak signals. ${commanderName} commands each lane and reads their reports.`;
+    return `Aegis guards security & privacy (scams, rugs, accounts), Pulse reads momentum, Leviathan shadows whales, Cipher fuses weak signals. ${commanderName} commands each lane and reads their reports.`;
   }
+  const aegisBrief = answerAegisSecurityPrivacyQuestion(q);
+  if (aegisBrief) return aegisBrief;
   return null;
 }
 
@@ -253,6 +256,9 @@ export function oracleRespondToMessage(text: string, ctx: OracleMessageContext):
 
   const concept = answerCryptoConcept(text, titanBotName);
   if (concept) return softenTitanResponse(concept);
+
+  const securityPrivacy = answerAegisSecurityPrivacyQuestion(text);
+  if (securityPrivacy) return softenTitanResponse(securityPrivacy);
 
   if (/^(search|find|scan|look up|lookup)\b/.test(lower) || /\b(bonk|pepe|sol|btc|eth|syn|wif|jup)\b/i.test(text)) {
     const token = resolveOracleTokenQuery(text, tokens);

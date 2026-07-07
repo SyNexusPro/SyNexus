@@ -226,6 +226,13 @@ export function OracleSupremeChat({
             <button
               type="button"
               className="oracle-chat__chip oracle-chat__chip--coin"
+              onClick={() => submitQuery("Aegis security and privacy")}
+            >
+              Security &amp; privacy
+            </button>
+            <button
+              type="button"
+              className="oracle-chat__chip oracle-chat__chip--coin"
               onClick={() => submitQuery("sentinel status")}
             >
               Sentinel status
