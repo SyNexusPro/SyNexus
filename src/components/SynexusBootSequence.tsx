@@ -1,12 +1,10 @@
 import type { CSSProperties, ReactNode } from "react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createOracleSupremeSpeaker, isOracleSupremeVoiceSupported } from "../lib/oracleSupremeVoice";
-import { resolveTitanBotName } from "../lib/titanBotName";
 import { AEGIS_ROLE, AEGIS_SENTINEL_NAME } from "../config/sentinelAegis";
 import {
-  buildOracleIntroVoiceLine,
   markIntroWelcomeSpoken,
-  resolveIntroOperatorName,
+  ORACLE_INTRO_VOICE_LINE,
   wasIntroWelcomeSpoken,
 } from "../lib/oracleSupremeConversation";
 import {
@@ -160,17 +158,16 @@ export function SynexusBootSequence({ children }: Props) {
       return;
     }
     spokeWelcomeRef.current = true;
+    markIntroWelcomeSpoken();
     if (!isOracleSupremeVoiceSupported()) {
-      markIntroWelcomeSpoken();
       return;
     }
-    const introLine = buildOracleIntroVoiceLine(resolveIntroOperatorName(), resolveTitanBotName());
     speakerRef.current = createOracleSupremeSpeaker({
       variant: "intro",
-      onEnd: () => markIntroWelcomeSpoken(),
-      onError: () => markIntroWelcomeSpoken(),
+      onEnd: () => {},
+      onError: () => {},
     });
-    speakerRef.current.speak(introLine);
+    speakerRef.current.speak(ORACLE_INTRO_VOICE_LINE);
     // Do not stop voice when phase advances — only on unmount or explicit skip.
   }, [phase, profile, removed, exiting, skipEntirely]);
 
@@ -234,11 +231,6 @@ export function SynexusBootSequence({ children }: Props) {
                   <span aria-hidden>{visibleTitle}</span>
                   {typing ? <span className="synexus-boot__caret" aria-hidden /> : null}
                 </h1>
-                {phase === 1 ? (
-                  <p className="synexus-boot__subtitle" aria-hidden>
-                    {resolveTitanBotName()} · your intelligence commander
-                  </p>
-                ) : null}
               </div>
               <div className="synexus-boot__title-glow" aria-hidden />
             </div>

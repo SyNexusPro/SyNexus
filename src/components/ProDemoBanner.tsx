@@ -33,8 +33,8 @@ export function ProDemoBanner() {
       <div className="pro-demo-banner__text">
         <strong>{SYNEXUS_PRO_TRIAL_LABEL} active</strong>
         <span>
-          {remainingLabel} — {DEFAULT_TITAN_BOT_NAME}, Sentinels, and full Pulse unlocked. No card was required for your trial.
-          Subscribe to keep access after it ends.
+          {remainingLabel} — {DEFAULT_TITAN_BOT_NAME}, Sentinels, and full Pulse unlocked.
+          Add a card before trial ends to keep Pro access.
         </span>
       </div>
       <div className="pro-demo-banner__actions">

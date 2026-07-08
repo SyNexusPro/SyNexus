@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { fetchGuardianAlerts, fetchProfile, fetchWatchlistTokens, getCurrentUser } from "../lib/supabaseData";
 import { hasSupabaseEnv } from "../lib/supabaseClient";
-import { notifyTitanChatClosed, notifyTitanChatOpen, ORACLE_OPEN_CHAT_EVENT } from "../lib/openOracleLogin";
+import { useOpenTitanChat } from "../hooks/useOpenTitanChat";
+import { useTitanShell } from "../context/TitanShellContext";
 import { useTitanBotName } from "../hooks/useTitanBotName";
 import { DEFAULT_TITAN_BOT_NAME } from "../config/titanBot";
 import { resolveTitanBotName } from "../lib/titanBotName";
@@ -16,10 +17,10 @@ import {
 } from "../lib/oracleSupremeConversation";
 import { useOracleMarketFeed } from "../lib/useOracleMarketFeed";
 import { isSynexusBootComplete, subscribeSynexusBootComplete } from "../lib/synexusBootComplete";
-import { OracleSupremeChat } from "./OracleSupremeChat";
-import { SynexusSymbolMark } from "./SynexusSymbolMark";
-
 import { SYNEXUS_PLAN_CHANGED } from "../hooks/useSynexusPlan";
+import { OracleSupremeChat } from "./OracleSupremeChat";
+import { QuickOperatorLogin } from "./QuickOperatorLogin";
+import { SynexusSymbolMark } from "./SynexusSymbolMark";
 
 const PLAN_STORAGE_KEY = "hivemind_paid_plan";
 
@@ -27,11 +28,12 @@ function normalizePlan(raw: string | null | undefined): "FREE" | "PRO" {
   return raw === "PRO" ? "PRO" : "FREE";
 }
 
-export function OracleSupremePresence() {
+export function TitanSheet() {
+  const { sheetOpen, sheetMode, closeSheet } = useTitanShell();
+  const openTitanChat = useOpenTitanChat();
   const { name: titanBotName } = useTitanBotName();
   const commanderLabel = titanBotName || resolveTitanBotName() || DEFAULT_TITAN_BOT_NAME;
   const [bootReady, setBootReady] = useState(isSynexusBootComplete());
-  const [expanded, setExpanded] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [operatorName, setOperatorName] = useState("there");
   const [alertCount, setAlertCount] = useState(0);
@@ -44,32 +46,7 @@ export function OracleSupremePresence() {
   useEffect(() => subscribeSynexusBootComplete(() => setBootReady(true)), []);
 
   useEffect(() => {
-    function onOpenChat() {
-      setExpanded(true);
-    }
-    window.addEventListener(ORACLE_OPEN_CHAT_EVENT, onOpenChat);
-    return () => window.removeEventListener(ORACLE_OPEN_CHAT_EVENT, onOpenChat);
-  }, []);
-
-  function closeChat() {
-    setExpanded(false);
-    notifyTitanChatClosed();
-  }
-
-  function toggleChat() {
-    setExpanded((open) => {
-      if (open) {
-        notifyTitanChatClosed();
-        return false;
-      }
-      notifyTitanChatOpen();
-      return true;
-    });
-  }
-
-  useEffect(() => {
-    const sync = () =>
-      setPlan(normalizePlan(localStorage.getItem(PLAN_STORAGE_KEY)));
+    const sync = () => setPlan(normalizePlan(localStorage.getItem(PLAN_STORAGE_KEY)));
     window.addEventListener(SYNEXUS_PLAN_CHANGED, sync);
     window.addEventListener("synexus-pro-demo-changed", sync);
     return () => {
@@ -105,16 +82,15 @@ export function OracleSupremePresence() {
                 setWatchlistCount(watchlistRows.length);
               }
             } catch {
-              /* greeting still works without counts */
+              /* optional counts */
             }
           }
         }
       } catch {
-        /* greeting still works with defaults */
+        /* defaults ok */
       }
 
       if (cancelled) return;
-
       touchLastVisit();
       markGreetedThisSession();
     }
@@ -139,26 +115,68 @@ export function OracleSupremePresence() {
     [alertCount, feedSource, operatorName, plan, commanderLabel, tokens, watchlistCount],
   );
 
+  function handleFabToggle() {
+    openTitanChat();
+  }
+
   return (
     <>
-      {expanded ? (
-        <div className="oracle-presence-panel" role="dialog" aria-label={`Talk to ${commanderLabel}`}>
-          <OracleSupremeChat
-            context={context}
-            variant="widget"
-            onDismiss={closeChat}
-            onSpeakingChange={setSpeaking}
+      {sheetOpen ? (
+        <>
+          <button
+            type="button"
+            className="titan-sheet-backdrop"
+            aria-label="Close panel"
+            onClick={closeSheet}
           />
-        </div>
+          <div
+            className={`titan-sheet titan-sheet--${sheetMode}`}
+            role="dialog"
+            aria-modal="true"
+            aria-label={sheetMode === "login" ? "Sign in" : `Talk to ${commanderLabel}`}
+          >
+            <header className="titan-sheet__head">
+              <div className="titan-sheet__brand">
+                <SynexusSymbolMark size="chat" />
+                <div>
+                  <p className="titan-sheet__title">
+                    {sheetMode === "login" ? "Sign in" : commanderLabel}
+                  </p>
+                  {sheetMode === "login" ? (
+                    <p className="titan-sheet__subtitle">Access watchlists, alerts, and Pro.</p>
+                  ) : speaking ? (
+                    <p className="titan-sheet__subtitle">Speaking…</p>
+                  ) : null}
+                </div>
+              </div>
+              <button type="button" className="titan-sheet__close" onClick={closeSheet} aria-label="Close">
+                ×
+              </button>
+            </header>
+
+            <div className="titan-sheet__body">
+              {sheetMode === "login" ? (
+                <QuickOperatorLogin onSuccess={closeSheet} />
+              ) : (
+                <OracleSupremeChat
+                  context={context}
+                  variant="overlay"
+                  minimal
+                  onSpeakingChange={setSpeaking}
+                />
+              )}
+            </div>
+          </div>
+        </>
       ) : null}
 
       <button
         type="button"
-        className={`oracle-presence-fab${expanded ? " oracle-presence-fab--open" : ""}${speaking ? " oracle-presence-fab--speaking" : ""}`}
-        onClick={toggleChat}
-        aria-expanded={expanded}
+        className={`oracle-presence-fab${sheetOpen && sheetMode === "chat" ? " oracle-presence-fab--open" : ""}${speaking ? " oracle-presence-fab--speaking" : ""}`}
+        onClick={handleFabToggle}
+        aria-expanded={sheetOpen && sheetMode === "chat"}
         aria-label={
-          expanded
+          sheetOpen && sheetMode === "chat"
             ? `Minimize ${commanderLabel} chat`
             : speaking
               ? `${commanderLabel} is speaking`
@@ -170,7 +188,7 @@ export function OracleSupremePresence() {
         <span className="oracle-presence-fab__avatar" aria-hidden>
           <SynexusSymbolMark size="fab" />
         </span>
-        {!expanded ? (
+        {!sheetOpen || sheetMode !== "chat" ? (
           <span className="oracle-presence-fab__copy">
             <span className="oracle-presence-fab__label">{commanderLabel}</span>
           </span>

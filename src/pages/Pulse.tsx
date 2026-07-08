@@ -65,6 +65,7 @@ import {
 } from "../lib/pulseFormatting";
 import {
   resolveOperatorName,
+  resolveOperatorDisplayName,
   saveIntroOperatorName,
 } from "../lib/oracleSupremeConversation";
 import { hasSupabaseEnv, supabase } from "../lib/supabaseClient";
@@ -343,8 +344,8 @@ export function Pulse() {
       if (profile?.titan_bot_name) {
         saveTitanBotName(profile.titan_bot_name);
       }
-      setOperatorName(resolveOperatorName(profile, user.email));
-      saveIntroOperatorName(resolveOperatorName(profile, user.email));
+      setOperatorName(resolveOperatorDisplayName(profile, user.email));
+      saveIntroOperatorName(resolveOperatorName(profile));
       const rawPlan = profile?.paid_plan ?? localStorage.getItem(PLAN_STORAGE_KEY) ?? "FREE";
       if (hasStoredOwnerGrant()) {
         setPlan("PRO");
@@ -1063,52 +1064,14 @@ export function Pulse() {
 
   const operatorLinked = Boolean(userId && !userId.startsWith("demo-"));
 
-  const operatorLinkPanel = (
-    <PulseOperatorLink
-      variant="oracle"
-      userId={userId}
-      operatorName={operatorName}
-      userEmail={userEmail}
-      plan={plan}
-      email={email}
-      password={password}
-      authBusy={authBusy}
-      authBusyLabel={authBusyLabel}
-      authMessage={authMessage}
-      hasSupabaseEnv={hasSupabaseEnv}
-      biometricSupport={biometric.support}
-      biometricEnrolled={biometric.enrolled}
-      biometricEmailHint={biometric.emailHint}
-      recoveryMode={recoveryMode}
-      emailVerificationPending={emailVerificationPending}
-      pendingVerificationEmail={pendingVerificationEmail}
-      signupPasswordHint={signupPasswordHint}
-      onEmailChange={setEmail}
-      onPasswordChange={setPassword}
-      onSignUp={() => void handleSignUp()}
-      onSignIn={() => void handleSignIn()}
-      onSignOut={() => void handleSignOut()}
-      onOwnerUnlock={() => void handleOwnerUnlock()}
-      onBiometricSignIn={() => void handleBiometricSignIn()}
-      onEnableBiometric={() => void handleEnableBiometric()}
-      onDisableBiometric={() => void handleDisableBiometric()}
-      onMagicLink={() => void handleMagicLink()}
-      onForgotPassword={() => void handleForgotPassword()}
-      onUpdatePassword={(next) => void handleUpdatePassword(next)}
-      onResendVerification={() => void handleResendVerification()}
-      onContinueToSignIn={handleContinueToSignIn}
-      ownerUnlocked={hasStoredOwnerGrant()}
-    />
-  );
-
   return (
     <div className={`page${isSimple ? " page--easy" : ""}`}>
       <section className="page__intro">
         <h1 className="page__headline">{isSimple ? "Titan" : "Sentinels"}</h1>
         <p className="page__lede">
           {isSimple
-            ? `Tap Enter ${titanBotName} to sign up free — 7-day Pro trial included, no credit card required.`
-            : `Full command center — alerts, Sentinel grid, operator tools, and ${titanBotName}.`}
+            ? `Talk to ${titanBotName} from the bottom nav. Sign in to unlock your command center.`
+            : `Sentinel grid, alerts, and operator tools — sign in via Login in the nav.`}
         </p>
       </section>
 
@@ -1138,7 +1101,6 @@ export function Pulse() {
         alertCount={alerts.length + sentinelAlerts.length}
         checkoutBusy={checkoutBusy}
         loggedIn={operatorLinked}
-        authPanel={operatorLinkPanel}
         onRefreshReport={handleOracleSupremeReport}
         onUpgrade={() => void handleUpgradeTrigger()}
         onSpeakingChange={setOracleSpeaking}
@@ -1355,7 +1317,7 @@ export function Pulse() {
           <p className="pulse-synexus-pro-promo__price">{SYNEXUS_PRO_PRICE_LABEL}</p>
           <p className="pulse-synexus-pro-promo__headline">Unlimited trading intelligence. One simple price.</p>
           <p className="pulse-synexus-pro-promo__body">
-            Sign up free for a {SYNEXUS_PRO_TRIAL_DAYS}-day full Pro trial — no credit card. Then unlock the full
+            Sign up for a {SYNEXUS_PRO_TRIAL_DAYS}-day full Pro trial — add a card at checkout. Then unlock the full
             Synexus system with real-time Sentinel analysis, risk scanning, momentum tracking, whale activity
             signals, pattern detection, and unlimited trading intelligence tools.
           </p>

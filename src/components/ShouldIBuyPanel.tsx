@@ -6,7 +6,8 @@ import { guardTokenScan } from "../lib/securityBot";
 import { analyzeShouldIBuy, verdictBeginnerMeta, verdictTone } from "../lib/shouldIBuy";
 import { lookupTokenByQuery } from "../services/marketDataService";
 import { ShareScanButton } from "./ShareScanButton";
-import { TradeIntelligenceScorecard } from "./TradeIntelligenceScorecard";
+import { ScanHealthPanel } from "./ScanHealthPanel";
+import { TokenLogo } from "./TokenLogo";
 
 const EASY_EXAMPLES = ["BONK", "SYN", "SOL"] as const;
 
@@ -154,41 +155,45 @@ export function ShouldIBuyPanel({ poolTokens = [], initialScan = "" }: Props) {
       {error ? <p className="should-i-buy__error">{error}</p> : null}
       {result && beginner ? (
         <div className={`should-i-buy__result should-i-buy__result--${tone}${isSimple ? " should-i-buy__result--easy" : ""}`}>
-          {isSimple ? (
-            <div className="should-i-buy__result-easy-top">
-              <span className="should-i-buy__verdict-orb should-i-buy__verdict-orb--large" aria-hidden>
-                {beginner.icon}
-              </span>
-              <div>
-                <p className="should-i-buy__token">
-                  {result.token.name} ({result.token.symbol})
-                </p>
-                <p className={`should-i-buy__headline should-i-buy__headline--${tone}`}>{beginner.label}</p>
-                <p className="should-i-buy__beginner-hint">{beginner.hint}</p>
-              </div>
+          <div className={isSimple ? "should-i-buy__result-easy-top" : "should-i-buy__result-top should-i-buy__result-top--scan"}>
+            <TokenLogo token={result.token} size="md" className="should-i-buy__logo" />
+            <div className="should-i-buy__result-copy">
+              {isSimple ? (
+                <>
+                  <span className="should-i-buy__verdict-orb should-i-buy__verdict-orb--inline" aria-hidden>
+                    {beginner.icon}
+                  </span>
+                  <p className="should-i-buy__token">
+                    {result.token.name} ({result.token.symbol})
+                  </p>
+                  <p className={`should-i-buy__headline should-i-buy__headline--${tone}`}>{beginner.label}</p>
+                  <p className="should-i-buy__beginner-hint">{beginner.hint}</p>
+                </>
+              ) : (
+                <>
+                  <p className="should-i-buy__token">
+                    {result.token.name} ({result.token.symbol})
+                  </p>
+                  <p className={`should-i-buy__headline should-i-buy__headline--${tone}`}>{result.headline}</p>
+                  {result.token.id ? (
+                    <Link to={`/token/${result.token.id}`} className="should-i-buy__link">
+                      Open token →
+                    </Link>
+                  ) : null}
+                </>
+              )}
             </div>
-          ) : (
-            <div className="should-i-buy__result-top">
-              <div>
-                <p className="should-i-buy__token">
-                  {result.token.name} ({result.token.symbol})
-                </p>
-                <p className={`should-i-buy__headline should-i-buy__headline--${tone}`}>{result.headline}</p>
-              </div>
-              {result.token.id ? (
-                <Link to={`/token/${result.token.id}`} className="should-i-buy__link">
-                  Open token →
-                </Link>
-              ) : null}
-            </div>
-          )}
+          </div>
+
+          <ScanHealthPanel token={result.token} />
+
           <p className="should-i-buy__explanation">{result.explanation}</p>
+
           {isSimple && result.token.id ? (
             <Link to={`/token/${result.token.id}`} className="should-i-buy__easy-next">
               See full token page →
             </Link>
           ) : null}
-          {!isSimple ? <TradeIntelligenceScorecard token={result.token} compact /> : null}
           <ShareScanButton result={result} className="should-i-buy__share" />
         </div>
       ) : null}

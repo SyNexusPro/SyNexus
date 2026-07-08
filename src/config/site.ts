@@ -127,7 +127,7 @@ export const FAQ_ITEMS = [
   },
   {
     q: "What is Synexus Pro?",
-    a: "Synexus Pro ($9.99/month, cancel anytime) unlocks Oracle briefings, the full Sentinel grid, faster refresh, reduced trading fees (0.05% vs 0.10% free tier), and priority surfaces on Pulse. After you sign up, you get a 7-day free Pro trial — no credit card required.",
+    a: "Synexus Pro ($9.99/month, cancel anytime) unlocks Oracle briefings, the full Sentinel grid, faster refresh, reduced trading fees (0.05% vs 0.10% free tier), and priority surfaces on Pulse. After you sign up, you get a 7-day free Pro trial when you add a card at checkout.",
   },
   {
     q: "How do I cancel Synexus Pro?",

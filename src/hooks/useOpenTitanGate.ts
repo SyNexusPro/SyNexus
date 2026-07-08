@@ -1,22 +1,14 @@
 import { useCallback } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import {
-  markTitanGateOpenIntent,
-  openTitanGateInPlace,
-} from "../lib/openOracleLogin";
+import { useTitanShell } from "../context/TitanShellContext";
 
-/** SPA-safe navigation to the Pulse Titan login / command gate. */
+/** Opens login sheet, or closes it if login is already open. */
 export function useOpenTitanGate() {
-  const navigate = useNavigate();
-  const location = useLocation();
-
+  const { sheetOpen, sheetMode, openLogin, closeSheet } = useTitanShell();
   return useCallback(() => {
-    markTitanGateOpenIntent();
-    const onPulse = location.pathname === "/pulse";
-    if (!onPulse) {
-      navigate({ pathname: "/pulse", hash: "#oracle-admin" });
+    if (sheetOpen && sheetMode === "login") {
+      closeSheet();
       return;
     }
-    openTitanGateInPlace();
-  }, [location.pathname, navigate]);
+    openLogin();
+  }, [sheetOpen, sheetMode, openLogin, closeSheet]);
 }

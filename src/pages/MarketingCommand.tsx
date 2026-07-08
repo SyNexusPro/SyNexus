@@ -30,7 +30,7 @@ const CONTENT_CALENDAR = [
   { day: "Day 2", title: "Don’t get rugged", detail: "Sentinel Aegis framing on risk scans + pattern anomalies." },
   { day: "Day 3", title: "Sentinel Aegis risk scan", detail: "Walk through how risk overlays stay structured." },
   { day: "Day 4", title: "Whale tracking", detail: "Sentinel Leviathan cues + reading flow without guaranteeing moves." },
-  { day: "Day 5", title: "7-day free trial offer", detail: "Sign up free · full Pro for 7 days · no card · $9.99/mo after." },
+  { day: "Day 5", title: "7-day free trial offer", detail: "Sign up · full Pro for 7 days · card on file · $9.99/mo after." },
   { day: "Day 6", title: "Synexus Pro benefits", detail: "Titan briefings, Sentinel grid, faster refresh — what trial unlocks." },
   { day: "Day 7", title: "User feedback post", detail: "Amplify sober wins + trial-to-paid journey tone." },
 ] as const;

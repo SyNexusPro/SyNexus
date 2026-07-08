@@ -76,8 +76,6 @@ function buildPlainEnglish(
     parts.push(`Liquidity is thin for this volume — exits may slip.`);
   }
 
-  parts.push("Not financial advice. You sign every trade in your wallet.");
-
   return parts.join(" ");
 }
 

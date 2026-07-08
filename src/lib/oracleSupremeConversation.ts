@@ -1,11 +1,9 @@
-import { resolveTitanBotName } from "./titanBotName";
 import { buildTitanIdentityLine } from "../config/titanGuidelines";
 import { answerAegisSecurityPrivacyQuestion } from "../config/sentinelAegis";
 import { hasTitanMemoryConsent, titanMemoryContextLine } from "./titanMemory";
 import { softenTitanResponse } from "./titanGuardrails";
 import { oracleRespondToMessage } from "./oracleCryptoBrain";
 import type { Token } from "../data/tokens";
-import { loadRememberedEmail } from "./authRemember";
 
 export type TimeBand = "morning" | "afternoon" | "evening" | "night";
 
@@ -34,31 +32,65 @@ export const ORACLE_LAST_VISIT_KEY = "oracle_supreme_last_visit";
 export const ORACLE_SESSION_GREET_KEY = "oracle_supreme_greeted_session";
 export const SYNEXUS_INTRO_WELCOME_SPOKEN_KEY = "synexus_intro_welcome_spoken";
 
-/** Spoken by the commander on app open (boot intro + voice). Use buildOracleIntroVoiceLine for the full line. */
-export function buildOracleIntroVoiceLine(
-  operatorName?: string | null,
-  titanBotName = resolveTitanBotName(),
-): string {
-  const name = operatorName?.trim();
-  const named = Boolean(name && name !== "there");
-  if (named) {
-    return (
-      `Welcome to The Synexus, ${name}. ` +
-      `I'm ${titanBotName} — your intelligence commander. ` +
-      "Don't dig through menus — ask me. How may I be of service?"
-    );
+const INTRO_OPERATOR_NAME_KEY = "synexus_operator_voice_name";
+const LEGACY_INTRO_OPERATOR_NAME_KEY = "synexus_operator_display_name";
+
+type ProfileLike = {
+  display_name?: string | null;
+  username?: string | null;
+};
+
+export function operatorNameForSpeech(name?: string | null): string | null {
+  const trimmed = name?.trim();
+  if (!trimmed || trimmed === "there") return null;
+  return trimmed;
+}
+
+/** Titan chat / voice — display name or username from profile only (never email). */
+export function resolveOperatorName(profile: ProfileLike | null | undefined, _email?: string | null): string {
+  if (profile?.display_name?.trim()) return profile.display_name.trim();
+  if (profile?.username?.trim()) {
+    return profile.username
+      .trim()
+      .split("_")
+      .filter(Boolean)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
   }
-  return (
-    "Welcome to The Synexus. " +
-    `I'm ${titanBotName} — your intelligence commander for safer Solana trading. ` +
-    "Ask me about any coin, risk read, or market move. How may I be of service?"
-  );
+  return "there";
+}
+
+/** Operator Link UI label — may use email local-part; never spoken by Titan. */
+export function resolveOperatorDisplayName(
+  profile: ProfileLike | null | undefined,
+  email?: string | null,
+): string {
+  const fromProfile = resolveOperatorName(profile);
+  if (fromProfile !== "there") return fromProfile;
+  if (email?.includes("@")) {
+    const local = email.split("@")[0] ?? "";
+    const label = local
+      .replace(/[._-]+/g, " ")
+      .split(" ")
+      .filter(Boolean)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+      .join(" ")
+      .slice(0, 28);
+    if (label) return label;
+  }
+  return "Operator";
+}
+
+/** Spoken once at boot — single line only (no commander follow-up). */
+export function buildOracleIntroVoiceLine(
+  _operatorName?: string | null,
+  _titanBotName?: string,
+): string {
+  return "Welcome to the SyNexus.";
 }
 
 /** @deprecated Use buildOracleIntroVoiceLine() — kept for replay buttons that resolve name at call time. */
 export const ORACLE_INTRO_VOICE_LINE = buildOracleIntroVoiceLine();
-
-const INTRO_OPERATOR_NAME_KEY = "synexus_operator_display_name";
 
 export function saveIntroOperatorName(name: string): void {
   const trimmed = name.trim();
@@ -70,21 +102,18 @@ export function saveIntroOperatorName(name: string): void {
   }
 }
 
-/** Best-effort name for boot voice before async profile hydration. */
-export function resolveIntroOperatorName(): string {
+/** Profile display name saved for boot voice — never email. */
+export function resolveIntroOperatorName(): string | null {
   try {
     const stored = localStorage.getItem(INTRO_OPERATOR_NAME_KEY)?.trim();
-    if (stored) return stored;
+    if (stored && stored !== "there") return stored;
+    // Ignore legacy key — it may hold email-derived labels from older builds.
+    localStorage.removeItem(LEGACY_INTRO_OPERATOR_NAME_KEY);
   } catch {
     /* ignore */
   }
-  return resolveOperatorName(null, loadRememberedEmail() || null);
+  return null;
 }
-
-type ProfileLike = {
-  display_name?: string | null;
-  username?: string | null;
-};
 
 export function getTimeBand(date = new Date()): TimeBand {
   const hour = date.getHours();
@@ -101,27 +130,9 @@ export function getTimeGreeting(band: TimeBand): string {
   return "You're up late";
 }
 
-export function resolveOperatorName(profile: ProfileLike | null | undefined, email?: string | null): string {
-  if (profile?.display_name?.trim()) return profile.display_name.trim();
-  if (profile?.username?.trim()) {
-    return profile.username
-      .trim()
-      .split("_")
-      .filter(Boolean)
-      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-      .join(" ");
-  }
-  if (email?.includes("@")) {
-    const local = email.split("@")[0] ?? "";
-    return local
-      .replace(/[._-]+/g, " ")
-      .split(" ")
-      .filter(Boolean)
-      .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-      .join(" ")
-      .slice(0, 28);
-  }
-  return "there";
+function withOptionalName(name: string, namedLine: string, plainLine: string): string {
+  const spoken = operatorNameForSpeech(name);
+  return spoken ? namedLine.replace("{name}", spoken) : plainLine;
 }
 
 export function readDaysSinceLastVisit(): number {
@@ -196,13 +207,14 @@ export function wasIntroWelcomeSpoken(): boolean {
 }
 
 function oracleWelcomeLead(name: string, skipWelcomeLine?: boolean): string {
-  const named = name && name !== "there";
   if (skipWelcomeLine) {
-    return named ? `Hey ${name}. How may I be of service?` : "How may I be of service?";
+    return "I'm listening — ask about a coin or tell me what you need.";
   }
-  return named
-    ? `Welcome to The Synexus, ${name}. How may I be of service?`
-    : "Welcome to The Synexus. How may I be of service?";
+  return withOptionalName(
+    name,
+    "Welcome to The Synexus, {name}. How may I be of service?",
+    "Welcome to The Synexus. How may I be of service?",
+  );
 }
 
 export function buildOpeningGreeting(
@@ -238,25 +250,57 @@ export function buildFollowUpAfterMood(mood: DayMoodReply, ctx: OracleConversati
 
   if (mood === "good") {
     return plan === "PRO"
-      ? `That's what I like to hear, ${name}. I'll keep your Sentinels sharp — head to Pulse anytime for a full briefing from me.`
-      : `Good to hear, ${name}. I'll run the Sentinels while you're up — Synexus Pro lets me brief you personally when you're ready.`;
+      ? withOptionalName(
+          name,
+          "That's what I like to hear, {name}. I'll keep your Sentinels sharp — head to Pulse anytime for a full briefing from me.",
+          "That's what I like to hear. I'll keep your Sentinels sharp — head to Pulse anytime for a full briefing from me.",
+        )
+      : withOptionalName(
+          name,
+          "Good to hear, {name}. I'll run the Sentinels while you're up — Synexus Pro lets me brief you personally when you're ready.",
+          "Good to hear. I'll run the Sentinels while you're up — Synexus Pro lets me brief you personally when you're ready.",
+        );
   }
 
   if (mood === "long") {
     return alertCount > 0
-      ? `Long days hit different, ${name}. I've triaged your ${alertCount} alert${alertCount === 1 ? "" : "s"} — open Pulse when you want the short version from me.`
-      : `I get it, ${name}. Rest your eyes — I'll watch the lanes. Ping me on Pulse if anything moves.`;
+      ? withOptionalName(
+          name,
+          `Long days hit different, {name}. I've triaged your ${alertCount} alert${alertCount === 1 ? "" : "s"} — open Pulse when you want the short version from me.`,
+          `Long days hit different. I've triaged your ${alertCount} alert${alertCount === 1 ? "" : "s"} — open Pulse when you want the short version from me.`,
+        )
+      : withOptionalName(
+          name,
+          "I get it, {name}. Rest your eyes — I'll watch the lanes. Ping me on Pulse if anything moves.",
+          "I get it. Rest your eyes — I'll watch the lanes. Ping me on Pulse if anything moves.",
+        );
   }
 
   if (mood === "trading") {
     return alertCount > 0
-      ? `Busy desk, ${name}. ${alertCount} alert${alertCount === 1 ? " is" : "s are"} live — I can walk you through them on Pulse when you want.`
-      : `Markets don't sleep, ${name}. Aegis is on security & privacy; Pulse on momentum — tell me what you're hunting.`;
+      ? withOptionalName(
+          name,
+          `Busy desk, {name}. ${alertCount} alert${alertCount === 1 ? " is" : "s are"} live — I can walk you through them on Pulse when you want.`,
+          `Busy desk. ${alertCount} alert${alertCount === 1 ? " is" : "s are"} live — I can walk you through them on Pulse when you want.`,
+        )
+      : withOptionalName(
+          name,
+          "Markets don't sleep, {name}. Aegis is on security & privacy; Pulse on momentum — tell me what you're hunting.",
+          "Markets don't sleep. Aegis is on security & privacy; Pulse on momentum — tell me what you're hunting.",
+        );
   }
 
   return alertCount > 0
-    ? `Sorry it's been rough, ${name}. I'll keep it simple — ${alertCount} alert${alertCount === 1 ? "" : "s"} need your eyes when you're ready.`
-    : `I'm here, ${name}. Rough days happen. I'll filter the noise — you focus on what you can control.`;
+    ? withOptionalName(
+        name,
+        `Sorry it's been rough, {name}. I'll keep it simple — ${alertCount} alert${alertCount === 1 ? "" : "s"} need your eyes when you're ready.`,
+        `Sorry it's been rough. I'll keep it simple — ${alertCount} alert${alertCount === 1 ? "" : "s"} need your eyes when you're ready.`,
+      )
+    : withOptionalName(
+        name,
+        "I'm here, {name}. Rough days happen. I'll filter the noise — you focus on what you can control.",
+        "I'm here. Rough days happen. I'll filter the noise — you focus on what you can control.",
+      );
 }
 
 export function reactToFreeText(text: string, ctx: OracleConversationContext): string {
@@ -264,10 +308,17 @@ export function reactToFreeText(text: string, ctx: OracleConversationContext): s
   if (brain) return brain;
 
   const lower = text.toLowerCase().trim();
-  if (!lower) return `I'm listening, ${ctx.operatorName}. What's on your mind?`;
+  if (!lower) return "I'm listening. What's on your mind?";
 
   if (/^(hi|hello|hey|yo|sup)\b/.test(lower)) {
-    return `${getTimeGreeting(getTimeBand())}, ${ctx.operatorName}. Good to hear from you. How's your day going?`;
+    if (wasIntroWelcomeSpoken()) {
+      return "I'm here — what do you need?";
+    }
+    return withOptionalName(
+      ctx.operatorName,
+      `${getTimeGreeting(getTimeBand())}, {name}. Good to hear from you. How's your day going?`,
+      `${getTimeGreeting(getTimeBand())}. Good to hear from you. How's your day going?`,
+    );
   }
 
   if (/good|great|fine|solid|well|not bad|pretty good|alright|okay|ok\b/.test(lower)) {
@@ -292,12 +343,16 @@ export function reactToFreeText(text: string, ctx: OracleConversationContext): s
       if (aegis) return aegis;
     }
     return ctx.alertCount > 0
-      ? `I'm on it, ${ctx.operatorName}. You have ${ctx.alertCount} active alert${ctx.alertCount === 1 ? "" : "s"} — I'll break them down on Pulse.`
-      : `No live alerts right now, ${ctx.operatorName}. I'll flag you the second something looks off.`;
+      ? withOptionalName(
+          ctx.operatorName,
+          `I'm on it, {name}. You have ${ctx.alertCount} active alert${ctx.alertCount === 1 ? "" : "s"} — I'll break them down on Pulse.`,
+          `I'm on it. You have ${ctx.alertCount} active alert${ctx.alertCount === 1 ? "" : "s"} — I'll break them down on Pulse.`,
+        )
+      : "No live alerts right now. I'll flag you the second something looks off.";
   }
 
   if (/thank|thanks|ty\b/.test(lower)) {
-    return `Always, ${ctx.operatorName}. That's what I'm here for.`;
+    return withOptionalName(ctx.operatorName, "Always, {name}. That's what I'm here for.", "Always. That's what I'm here for.");
   }
 
   if (/who are you|what are you/.test(lower)) {
@@ -313,7 +368,11 @@ export function reactToFreeText(text: string, ctx: OracleConversationContext): s
     );
   }
 
-  return `I hear you, ${ctx.operatorName}. "${text}" — noted. Head to Pulse if you want a market read, or keep talking here.`;
+  return withOptionalName(
+    ctx.operatorName,
+    `I hear you, {name}. "${text}" — noted. Head to Pulse if you want a market read, or keep talking here.`,
+    `"${text}" — noted. Head to Pulse if you want a market read, or keep talking here.`,
+  );
 }
 
 export const DAY_MOOD_QUICK_REPLIES: { id: DayMoodReply; label: string }[] = [

@@ -329,8 +329,8 @@ export function PulseOperatorLink({
         <p className="operator-link__lede">
           {variant === "oracle" ? (
             <>
-              Sign up free to enter {titanBotName} and unlock a{" "}
-              <strong>{SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial</strong> — no credit card required. Already
+              Sign up to enter {titanBotName} and start a{" "}
+              <strong>{SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial</strong> — card required at signup. Already
               linked? Switch to Return.
             </>
           ) : (

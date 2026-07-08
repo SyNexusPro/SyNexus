@@ -18,13 +18,13 @@ import { SynCoinLaunchBanner } from "../components/SynCoinLaunchBanner";
 import { BeginnerQuickStart } from "../components/BeginnerQuickStart";
 import { SentinelAlertsHub } from "../components/SentinelAlertsHub";
 import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
-import { useOpenTitanGate } from "../hooks/useOpenTitanGate";
+import { useOpenTitanChat } from "../hooks/useOpenTitanChat";
 import { sampleTokens, type Token } from "../data/tokens";
 import { fetchMvpTokenFeed } from "../services/marketDataService";
 
 export function HomeFeed() {
   const { isSimple } = useSynexusUIMode();
-  const openTitanGate = useOpenTitanGate();
+  const openTitanChat = useOpenTitanChat();
   const [searchParams] = useSearchParams();
   const scanQuery = searchParams.get("scan")?.trim() ?? "";
   const [allTokens, setAllTokens] = useState<Token[]>(sampleTokens);
@@ -168,7 +168,7 @@ export function HomeFeed() {
               <h2>Wallet dashboard</h2>
               <p>See wins, losses, and habits — your trading stats in one place.</p>
             </Link>
-            <button type="button" className="simple-launch-links__card" onClick={openTitanGate}>
+            <button type="button" className="simple-launch-links__card" onClick={openTitanChat}>
               <p className="simple-launch-links__eyebrow">Bonus · Command</p>
               <h2>Titan tools</h2>
               <p>Ask questions and run Sentinels when you&apos;re ready to go deeper.</p>
@@ -385,7 +385,7 @@ export function HomeFeed() {
           <h3>Built for faster decisions</h3>
           <p>1) Search coins before you buy.</p>
           <p>2) Read Sentinel risk signals before you chase hype.</p>
-          <p>3) Sign up through Titan — {SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial, no card — then {SYNEXUS_PRO_PRICE_LABEL} if you keep it.</p>
+          <p>3) Sign up through Titan — {SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial with card on file — then {SYNEXUS_PRO_PRICE_LABEL} if you keep it.</p>
         </div>
       </section>
         </>

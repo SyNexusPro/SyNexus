@@ -3,7 +3,7 @@ import { dexScreenerTokenUrl, jupiterBuyWithSolUrl, jupiterSellForSolUrl } from 
 import { getTradingFeeBps } from "../lib/tradingFees";
 import { useSynexusPlan } from "../hooks/useSynexusPlan";
 import { TokenLogo } from "./TokenLogo";
-import { TradeIntelligenceScorecard } from "./TradeIntelligenceScorecard";
+import { ScanHealthPanel } from "./ScanHealthPanel";
 import { TradeIntelBuyLink } from "./TradeIntelBuyLink";
 import { type GuardianRisk, type Token, synexusRiskBandLabel } from "../data/tokens";
 
@@ -100,7 +100,7 @@ export function TokenCard({ token }: Props) {
         </div>
       </div>
       <p className="token-card__message">{token.guardianMessage}</p>
-      <TradeIntelligenceScorecard token={token} compact />
+      <ScanHealthPanel token={token} compact />
       {token.mintAddress ? (
         <p className="token-card__mint">
           Mint: <span>{token.mintAddress}</span>

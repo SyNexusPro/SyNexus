@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { TokenLogo } from "../components/TokenLogo";
-import { TradeIntelligenceScorecard } from "../components/TradeIntelligenceScorecard";
+import { ScanHealthPanel } from "../components/ScanHealthPanel";
 import { ShouldIBuyVerdict } from "../components/ShouldIBuyPanel";
 import { TradeIntelBuyLink } from "../components/TradeIntelBuyLink";
 import { submitSynexusReport } from "../lib/reportSubmission";
@@ -329,7 +329,7 @@ export function TokenDetail() {
         </article>
       </section>
 
-      <TradeIntelligenceScorecard token={token} />
+      <ScanHealthPanel token={token} />
       <ShouldIBuyVerdict token={token} />
 
       <section className="detail-trade-panel">

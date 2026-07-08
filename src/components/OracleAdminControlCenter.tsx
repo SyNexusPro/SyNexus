@@ -11,12 +11,8 @@ import {
 import { oracleSupremeMoodLabel } from "../data/syntheticWatchers";
 import { SYNEXUS_PRO_PRICE_LABEL } from "../config/proPricing";
 import { SYNEXUS_PRO_TRIAL_DAYS } from "../config/proTrial";
-import {
-  ORACLE_OPEN_LOGIN_EVENT,
-  consumeTitanGateOpenIntent,
-  hasTitanGateOpenIntent,
-  scrollTitanGateIntoView,
-} from "../lib/openOracleLogin";
+import { scrollTitanGateIntoView } from "../lib/openOracleLogin";
+import { useTitanShell } from "../context/TitanShellContext";
 import { OracleSupremeVoiceBar } from "./OracleSupremeVoiceBar";
 import { ProDemoButton } from "./ProDemoButton";
 import { SynexusSymbolMark } from "./SynexusSymbolMark";
@@ -51,7 +47,7 @@ export function OracleAdminControlCenter({
   alertCount,
   checkoutBusy,
   loggedIn,
-  authPanel,
+  authPanel: _authPanel,
   onRefreshReport,
   onUpgrade,
   onSpeakingChange,
@@ -59,51 +55,27 @@ export function OracleAdminControlCenter({
   compact = false,
 }: Props) {
   const location = useLocation();
+  const { openLogin } = useTitanShell();
   const { name: titanBotName } = useTitanBotName();
-  const [open, setOpen] = useState(
-    () => window.location.hash === "#oracle-admin" || hasTitanGateOpenIntent(),
-  );
+  const [open, setOpen] = useState(() => loggedIn && window.location.hash === "#oracle-admin");
   const lanes = syntheticSentinels.filter((s) => !s.isOracleSupreme);
   const briefingLine = pulseFormatSentinelNamesInText(briefing);
 
   useEffect(() => {
+    if (!loggedIn) {
+      setOpen(false);
+      return;
+    }
     if (location.hash === "#oracle-admin") {
       setOpen(true);
       scrollTitanGateIntoView();
-      return;
     }
-    if (consumeTitanGateOpenIntent()) {
-      setOpen(true);
-      window.location.hash = "#oracle-admin";
-      scrollTitanGateIntoView();
-    }
-  }, [location.pathname, location.hash]);
+  }, [location.pathname, location.hash, loggedIn]);
 
-  useEffect(() => {
-    function openFromEvent() {
-      setOpen(true);
-      window.location.hash = "#oracle-admin";
-      scrollTitanGateIntoView();
-    }
-    window.addEventListener(ORACLE_OPEN_LOGIN_EVENT, openFromEvent);
-    return () => window.removeEventListener(ORACLE_OPEN_LOGIN_EVENT, openFromEvent);
-  }, []);
-
-  useEffect(() => {
-    function onHashChange() {
-      if (window.location.hash === "#oracle-admin") {
-        setOpen(true);
-        scrollTitanGateIntoView();
-      }
-    }
-    window.addEventListener("hashchange", onHashChange);
-    return () => window.removeEventListener("hashchange", onHashChange);
-  }, []);
-
-  const toggleLabel = !loggedIn ? `Enter ${titanBotName}` : open ? "Close" : `Open ${titanBotName}`;
+  const toggleLabel = !loggedIn ? "Sign in" : open ? "Close" : `Open ${titanBotName}`;
   const dockMeta = !loggedIn
-    ? `${SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial after sign-up · no card required`
-    : `${alertCount} alert${alertCount === 1 ? "" : "s"} · ${marketTokenCount} pairs · Tap the orb to talk to ${titanBotName}`;
+    ? `Tap Login in the nav · Talk to ${titanBotName} anytime`
+    : `${alertCount} alert${alertCount === 1 ? "" : "s"} · ${marketTokenCount} pairs · Tap Titan to chat`;
 
   return (
     <section
@@ -122,35 +94,23 @@ export function OracleAdminControlCenter({
         <button
           type="button"
           className={`oracle-admin__toggle${!loggedIn ? " oracle-admin__toggle--gate" : ""}`}
-          onClick={() => setOpen((v) => !v)}
-          aria-expanded={open}
-          aria-controls="oracle-admin-panel"
+          onClick={() => {
+            if (!loggedIn) {
+              openLogin();
+              return;
+            }
+            setOpen((v) => !v);
+          }}
+          aria-expanded={loggedIn ? open : undefined}
+          aria-controls={loggedIn ? "oracle-admin-panel" : undefined}
         >
           {toggleLabel}
         </button>
       </div>
 
-      {open ? (
+      {open && loggedIn ? (
         <div className="oracle-admin__panel" id="oracle-admin-panel">
-          {!loggedIn ? (
-            <div className="oracle-admin__gate">
-              <div className="oracle-admin__gate-aura" aria-hidden />
-              <header className="oracle-admin__gate-head">
-                <SynexusSymbolMark className="oracle-admin__gate-logo" size="panel" />
-                <div>
-                  <p className="oracle-admin__eyebrow">Access gate · {titanBotName}</p>
-                  <h2 className="oracle-admin__title">Link your operator ID</h2>
-                  <p className="oracle-admin__lede">
-                    Sign up free to enter the command center. You&apos;ll get a{" "}
-                    <strong>{SYNEXUS_PRO_TRIAL_DAYS}-day full Pro trial</strong> — no credit card, cancel
-                    anytime before {SYNEXUS_PRO_PRICE_LABEL}.
-                  </p>
-                </div>
-              </header>
-              {authPanel}
-            </div>
-          ) : (
-            <>
+          <>
               <div className="oracle-admin__head">
                 <SynexusSymbolMark className="oracle-admin__logo" size="panel" />
                 <div>
@@ -224,7 +184,7 @@ export function OracleAdminControlCenter({
                 <div className="oracle-admin__unlock">
                   <p>
                     Unlock {titanBotName} briefings with Synexus Pro — {SYNEXUS_PRO_PRICE_LABEL}. Your{" "}
-                    {SYNEXUS_PRO_TRIAL_DAYS}-day trial starts when you sign up — no card required.
+                    {SYNEXUS_PRO_TRIAL_DAYS}-day trial starts when you add a card at checkout.
                   </p>
                   <ProDemoButton
                     className="oracle-admin__demo pulse-demo-button"
@@ -235,8 +195,7 @@ export function OracleAdminControlCenter({
                   </button>
                 </div>
               )}
-            </>
-          )}
+          </>
         </div>
       ) : null}
     </section>

@@ -72,7 +72,7 @@ export function ProTrialBanner() {
   }
 
   const detail = !linked
-    ? `${SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial after sign-up · no card required · then ${SYNEXUS_PRO_PRICE_LABEL}`
+    ? `${SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial · card required at signup · then ${SYNEXUS_PRO_PRICE_LABEL}`
     : error
       ? "Checkout couldn't open. Tap to retry."
       : `${SYNEXUS_PRO_TRIAL_LABEL} active or available · ${SYNEXUS_PRO_PRICE_LABEL} after trial · cancel anytime`;

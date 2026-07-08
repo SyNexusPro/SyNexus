@@ -18,8 +18,6 @@ export function buildShareScanPayload(result: ShouldIBuyResult): ShareScanPayloa
     `Should I buy $${token.symbol}? Synexus: ${headline} — ${label}`,
     "",
     `Scan any Solana token free → ${url}`,
-    "",
-    "Not financial advice.",
   ].join("\n");
 
   return {

@@ -1,4 +1,6 @@
 export const ORACLE_OPEN_LOGIN_EVENT = "synexus-oracle-open-login";
+export const ORACLE_OPEN_CHAT_EVENT = "synexus-oracle-open-chat";
+export const ORACLE_CLOSE_CHAT_EVENT = "synexus-oracle-close-chat";
 export const TITAN_GATE_OPEN_FLAG = "synexus_open_titan_gate";
 
 export function markTitanGateOpenIntent(): void {
@@ -33,6 +35,19 @@ export function scrollTitanGateIntoView(): void {
   });
 }
 
+/** Open the global Titan chat panel (AppShell OracleSupremePresence). */
+export function openTitanChat(): void {
+  window.dispatchEvent(new Event(ORACLE_OPEN_CHAT_EVENT));
+}
+
+export function notifyTitanChatClosed(): void {
+  window.dispatchEvent(new Event(ORACLE_CLOSE_CHAT_EVENT));
+}
+
+export function notifyTitanChatOpen(): void {
+  window.dispatchEvent(new Event(ORACLE_OPEN_CHAT_EVENT));
+}
+
 /** Open the Titan gate on the current Pulse page (hash + event + scroll). */
 export function openTitanGateInPlace(): void {
   window.location.hash = "#oracle-admin";
@@ -40,14 +55,7 @@ export function openTitanGateInPlace(): void {
   scrollTitanGateIntoView();
 }
 
-/** Navigate to Pulse Titan gate and open the login panel. */
+/** Open the global quick-login sheet from anywhere in the app. */
 export function openOracleLogin(): void {
-  markTitanGateOpenIntent();
-  const onPulse =
-    window.location.pathname === "/pulse" || window.location.pathname.endsWith("/pulse");
-  if (!onPulse) {
-    window.location.href = "/pulse#oracle-admin";
-    return;
-  }
-  openTitanGateInPlace();
+  window.dispatchEvent(new Event(ORACLE_OPEN_LOGIN_EVENT));
 }

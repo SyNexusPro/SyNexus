@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   buildFollowUpAfterMood,
-  buildOpeningGreeting,
   buildOracleIntroVoiceLine,
   createTurn,
   type ConversationTurn,
@@ -23,6 +22,8 @@ import { SynexusSymbolMark } from "./SynexusSymbolMark";
 type OracleSupremeChatProps = {
   context: OracleConversationContext;
   variant?: "overlay" | "inline" | "widget";
+  /** Titan sheet: thread + composer only — no chips, settings, or duplicate chrome. */
+  minimal?: boolean;
   showOpeningPrompt?: boolean;
   onDismiss?: () => void;
   onSpeakingChange?: (speaking: boolean) => void;
@@ -31,6 +32,7 @@ type OracleSupremeChatProps = {
 export function OracleSupremeChat({
   context,
   variant = "inline",
+  minimal = false,
   showOpeningPrompt = false,
   onDismiss,
   onSpeakingChange,
@@ -43,11 +45,6 @@ export function OracleSupremeChat({
   const speakerRef = useRef<ReturnType<typeof createOracleSupremeSpeaker> | null>(null);
   const autoSpokeRef = useRef(false);
   const voiceSupported = isOracleSupremeVoiceSupported();
-
-  const openingLine = useMemo(
-    () => buildOpeningGreeting(context, { skipWelcomeLine: wasIntroWelcomeSpoken() }),
-    [context],
-  );
 
   const coinQuickPicks = useMemo(() => {
     const trending = [...context.tokens]
@@ -70,7 +67,7 @@ export function OracleSupremeChat({
     setAwaitingDayReply(false);
     setLastUserTopic(trimmed);
     appendUser(trimmed);
-    appendOracle(reactToFreeText(trimmed, context), { speak: false });
+    appendOracle(reactToFreeText(trimmed, context), { speak: true });
   }
 
   useEffect(() => {
@@ -149,8 +146,12 @@ export function OracleSupremeChat({
 
   function handleCheckIn() {
     setAwaitingDayReply(false);
-    if (!wasIntroWelcomeSpoken()) markIntroWelcomeSpoken();
-    appendOracle(openingLine, { speak: true });
+    if (wasIntroWelcomeSpoken()) {
+      appendOracle("I'm listening. Ask about any coin or tell me what you need.", { speak: false });
+      return;
+    }
+    markIntroWelcomeSpoken();
+    appendOracle(buildOracleIntroVoiceLine(null, context.titanBotName), { speak: true });
   }
 
   function handleStopVoice() {
@@ -163,43 +164,49 @@ export function OracleSupremeChat({
 
   return (
     <div
-      className={`oracle-chat oracle-chat--${variant}${speaking ? " oracle-chat--speaking" : ""}`}
+      className={`oracle-chat oracle-chat--${variant}${minimal ? " oracle-chat--minimal" : ""}${speaking ? " oracle-chat--speaking" : ""}`}
       role="region"
       aria-label={`Conversation with ${context.titanBotName}`}
     >
-      <div className="oracle-chat__head">
-        <div className="oracle-chat__avatar" aria-hidden="true">
-          <span className="oracle-chat__avatar-ring" />
-          <SynexusSymbolMark size="chat" />
+      {!minimal ? (
+        <div className="oracle-chat__head">
+          <div className="oracle-chat__avatar" aria-hidden="true">
+            <span className="oracle-chat__avatar-ring" />
+            <SynexusSymbolMark size="chat" />
+          </div>
+          <div>
+            <p className="oracle-chat__name">{context.titanBotName}</p>
+            <p className="oracle-chat__status">
+              {speaking
+                ? "Speaking…"
+                : context.tokens.length
+                  ? `Live feed · ask ${context.titanBotName}, not the menus`
+                  : "Syncing market feed…"}
+            </p>
+          </div>
+          {variant === "widget" || variant === "overlay" ? (
+            onDismiss ? (
+              <button type="button" className="oracle-chat__close" onClick={onDismiss} aria-label="Minimize">
+                ×
+              </button>
+            ) : null
+          ) : null}
         </div>
-        <div>
-          <p className="oracle-chat__name">{context.titanBotName}</p>
-          <p className="oracle-chat__status">
-            {speaking
-              ? "Speaking…"
-              : context.tokens.length
-                ? `Live feed · ask ${context.titanBotName}, not the menus`
-                : "Syncing market feed…"}
-          </p>
-        </div>
-        {variant === "widget" || variant === "overlay" ? (
-          onDismiss ? (
-          <button type="button" className="oracle-chat__close" onClick={onDismiss} aria-label="Minimize">
-            ×
-          </button>
-          ) : null
-        ) : null}
-      </div>
+      ) : null}
 
       <div className="oracle-chat__thread" aria-live="polite">
         {visibleTurns.length === 0 ? (
           <div className="oracle-chat__empty-wrap">
             <p className="oracle-chat__empty">
-              Ask {context.titanBotName} — scans, risk reads, and coaching. Tap when you&apos;re ready.
+              {minimal
+                ? `Message ${context.titanBotName} below.`
+                : `Ask ${context.titanBotName} — scans, risk reads, and coaching. Tap when you're ready.`}
             </p>
-            <button type="button" className="oracle-chat__chip" onClick={handleCheckIn}>
-              How may I be of service?
-            </button>
+            {!minimal ? (
+              <button type="button" className="oracle-chat__chip" onClick={handleCheckIn}>
+                Start talking
+              </button>
+            ) : null}
           </div>
         ) : null}
         {visibleTurns.map((turn) => (
@@ -209,7 +216,7 @@ export function OracleSupremeChat({
         ))}
       </div>
 
-      {coinQuickPicks.length ? (
+      {!minimal && coinQuickPicks.length ? (
         <div className="oracle-chat__coin-row">
           <p className="oracle-chat__quick-label">Search coins</p>
           <div className="oracle-chat__chips">
@@ -248,7 +255,7 @@ export function OracleSupremeChat({
         </div>
       ) : null}
 
-      {awaitingDayReply ? (
+      {!minimal && awaitingDayReply ? (
         <div className="oracle-chat__quick">
           <p className="oracle-chat__quick-label">Quick reply</p>
           <div className="oracle-chat__chips">
@@ -276,7 +283,11 @@ export function OracleSupremeChat({
         <input
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
-          placeholder={`Ask ${context.titanBotName} — scan a coin, explain risk, coach a decision…`}
+          placeholder={
+            minimal
+              ? `Message ${context.titanBotName}…`
+              : `Ask ${context.titanBotName} — scan a coin, explain risk, coach a decision…`
+          }
           aria-label={`Message to ${context.titanBotName}`}
         />
         <button type="submit" disabled={!draft.trim()}>
@@ -284,17 +295,14 @@ export function OracleSupremeChat({
         </button>
       </form>
 
-      {voiceSupported ? (
+      {!minimal && voiceSupported ? (
         <div className="oracle-chat__voice-row">
           <button
             type="button"
             className="oracle-chat__voice-btn"
-            onClick={() => speak(buildOracleIntroVoiceLine(context.operatorName, context.titanBotName))}
+            onClick={() => speak(buildOracleIntroVoiceLine(null, context.titanBotName))}
           >
             Replay welcome
-          </button>
-          <button type="button" className="oracle-chat__voice-btn" onClick={() => speak(openingLine)}>
-            Replay greeting
           </button>
           {speaking ? (
             <button
@@ -308,7 +316,7 @@ export function OracleSupremeChat({
         </div>
       ) : null}
 
-      {visibleTurns.length > 0 && hasTitanFeedbackConsent() ? (
+      {!minimal && visibleTurns.length > 0 && hasTitanFeedbackConsent() ? (
         <div className="oracle-chat__feedback">
           <span className="oracle-chat__feedback-label">Was that helpful?</span>
           <button
@@ -328,7 +336,7 @@ export function OracleSupremeChat({
         </div>
       ) : null}
 
-      <TitanChatSettings titanBotName={context.titanBotName} />
+      {!minimal ? <TitanChatSettings titanBotName={context.titanBotName} /> : null}
     </div>
   );
 }

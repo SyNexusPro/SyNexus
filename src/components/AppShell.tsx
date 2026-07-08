@@ -1,8 +1,9 @@
 import { Link, Outlet } from "react-router-dom";
+import { TitanShellProvider } from "../context/TitanShellContext";
 import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
 import { BottomNav } from "./BottomNav";
 import { UIModeToggle } from "./UIModeToggle";
-import { OracleSupremePresence } from "./OracleSupremePresence";
+import { TitanSheet } from "./TitanSheet";
 import { ProDemoBanner } from "./ProDemoBanner";
 import { BeginnerModeCoach } from "./BeginnerModeCoach";
 
@@ -10,6 +11,7 @@ export function AppShell() {
   const { isSimple } = useSynexusUIMode();
 
   return (
+    <TitanShellProvider>
     <div className={`app-shell${isSimple ? " app-shell--easy" : " app-shell--advanced"}`}>
       <ProDemoBanner />
       <main className="app-main">
@@ -19,7 +21,7 @@ export function AppShell() {
         <BeginnerModeCoach />
         <Outlet />
       </main>
-      <OracleSupremePresence />
+      <TitanSheet />
       <footer className="app-footer">
         <Link className="app-footer__link" to="/about">
           About
@@ -85,5 +87,6 @@ export function AppShell() {
       </footer>
       <BottomNav />
     </div>
+    </TitanShellProvider>
   );
 }

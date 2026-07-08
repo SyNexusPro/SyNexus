@@ -27,7 +27,7 @@ const HOOKS = [
 ];
 
 const SUPPORT = [
-  "Sign up free → 7-day Pro trial, no card. Then $9.99/mo if you keep it.",
+  "Sign up → 7-day Pro trial with card on file. Then $9.99/mo if you keep it.",
   "Free scan on every token. Pro unlocks Titan briefings + full Sentinel grid.",
   "Your wallet signs every trade — Synexus just shows you the risk first.",
   "Trade journal tracks entries, exits, and P/L so you see your habits.",
@@ -170,7 +170,7 @@ export function growthMissionLine(date: Date): string {
     'Post a reel: on-screen text "7-day Pro free when you sign up" + paste → Avoid/Watch demo.',
     'Post a 15s clip: paste a trending ticker → show the "Avoid" or "Watch" verdict on screen.',
     "Screen record: sign up → show 7-day Pro trial banner → scan BONK in Should I buy?",
-    'TikTok text overlay: "7 days Pro free · $9.99/mo after · no card to start."',
+    'TikTok text overlay: "7 days Pro free · card on file · $9.99/mo after."',
     "X thread (3 tweets): aping blind → paste verdict fix → 7-day free trial link.",
     "Telegram: pin the offer — 7-day Pro trial, sign up free, $9.99/mo after.",
     "Discord: share one Avoid verdict + trial offer in footer — educational not hype.",
