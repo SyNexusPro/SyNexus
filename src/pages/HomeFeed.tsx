@@ -15,6 +15,7 @@ import {
 } from "../config/proPricing";
 import { SYNEXUS_PRO_TRIAL_DAYS } from "../config/proTrial";
 import { SynCoinLaunchBanner } from "../components/SynCoinLaunchBanner";
+import { BrainCircuitPulse } from "../components/BrainCircuitPulse";
 import { BeginnerQuickStart } from "../components/BeginnerQuickStart";
 import { SentinelAlertsHub } from "../components/SentinelAlertsHub";
 import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
@@ -84,11 +85,13 @@ export function HomeFeed() {
               <span className="neural-node neural-node--left" aria-hidden />
               <span className="neural-node neural-node--mid-left" aria-hidden />
               <div className="neural-hero-art__frame">
-                <img
-                  className="neural-brain-logo neural-brain-logo--art"
-                  src="/hivemind-brain.png"
-                  alt="Synexus"
-                />
+                <BrainCircuitPulse variant="hero" className="neural-brain-pulse-wrap">
+                  <img
+                    className="neural-brain-logo neural-brain-logo--art"
+                    src="/hivemind-brain.png"
+                    alt="Synexus"
+                  />
+                </BrainCircuitPulse>
                 <img
                   className="landing-hero__wordmark"
                   src="/synexus-wordmark.png"

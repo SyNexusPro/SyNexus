@@ -1,12 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { createOracleSupremeSpeaker, isOracleSupremeVoiceSupported } from "../lib/oracleSupremeVoice";
 import { AEGIS_ROLE, AEGIS_SENTINEL_NAME } from "../config/sentinelAegis";
-import {
-  markIntroWelcomeSpoken,
-  ORACLE_INTRO_VOICE_LINE,
-  wasIntroWelcomeSpoken,
-} from "../lib/oracleSupremeConversation";
 import {
   getBootDurations,
   getBootExitMs,
@@ -14,7 +8,6 @@ import {
   readPrefersReducedMotion,
   resolveBootProfile,
   shouldBootTypewriter,
-  shouldBootVoice,
   shouldShowBootSentinels,
   type BootProfile,
 } from "../lib/bootExperience";
@@ -66,8 +59,6 @@ export function SynexusBootSequence({ children }: Props) {
   const [reducedMotion] = useState(readPrefersReducedMotion);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const [typedCount, setTypedCount] = useState(0);
-  const spokeWelcomeRef = useRef(false);
-  const speakerRef = useRef<ReturnType<typeof createOracleSupremeSpeaker> | null>(null);
   const exitMs = getBootExitMs(profile);
 
   useLayoutEffect(() => {
@@ -79,7 +70,6 @@ export function SynexusBootSequence({ children }: Props) {
 
   const skip = () => {
     if (exiting || removed) return;
-    speakerRef.current?.stop();
     timersRef.current.forEach(clearTimeout);
     timersRef.current = [];
     setExiting(true);
@@ -144,38 +134,6 @@ export function SynexusBootSequence({ children }: Props) {
     }, 22);
     return () => clearInterval(interval);
   }, [phase, profile, removed, exiting, skipEntirely]);
-
-  useEffect(() => {
-    if (
-      removed ||
-      exiting ||
-      skipEntirely ||
-      phase !== 1 ||
-      spokeWelcomeRef.current ||
-      wasIntroWelcomeSpoken() ||
-      !shouldBootVoice(profile)
-    ) {
-      return;
-    }
-    spokeWelcomeRef.current = true;
-    markIntroWelcomeSpoken();
-    if (!isOracleSupremeVoiceSupported()) {
-      return;
-    }
-    speakerRef.current = createOracleSupremeSpeaker({
-      variant: "intro",
-      onEnd: () => {},
-      onError: () => {},
-    });
-    speakerRef.current.speak(ORACLE_INTRO_VOICE_LINE);
-    // Do not stop voice when phase advances — only on unmount or explicit skip.
-  }, [phase, profile, removed, exiting, skipEntirely]);
-
-  useEffect(() => {
-    return () => {
-      speakerRef.current?.stop();
-    };
-  }, []);
 
   useEffect(() => {
     if (!removed) {

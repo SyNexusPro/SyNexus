@@ -13,7 +13,6 @@ import { SYNEXUS_PRO_PRICE_LABEL } from "../config/proPricing";
 import { SYNEXUS_PRO_TRIAL_DAYS } from "../config/proTrial";
 import { scrollTitanGateIntoView } from "../lib/openOracleLogin";
 import { useTitanShell } from "../context/TitanShellContext";
-import { OracleSupremeVoiceBar } from "./OracleSupremeVoiceBar";
 import { ProDemoButton } from "./ProDemoButton";
 import { SynexusSymbolMark } from "./SynexusSymbolMark";
 import { TitanBotRename } from "./TitanBotRename";
@@ -21,7 +20,6 @@ import { useTitanBotName } from "../hooks/useTitanBotName";
 
 type Props = {
   plan: SynexusPlan;
-  briefing: string;
   dailyReport: OracleSupremeDailyReport;
   syntheticSentinels: SyntheticSentinel[];
   sentinelLiveIntel: Record<SentinelLaneId, SentinelLiveIntel>;
@@ -32,14 +30,11 @@ type Props = {
   authPanel?: ReactNode;
   onRefreshReport: () => void;
   onUpgrade: () => void;
-  onSpeakingChange: (speaking: boolean) => void;
-  speaking: boolean;
   compact?: boolean;
 };
 
 export function OracleAdminControlCenter({
   plan,
-  briefing,
   dailyReport,
   syntheticSentinels,
   sentinelLiveIntel,
@@ -50,8 +45,6 @@ export function OracleAdminControlCenter({
   authPanel: _authPanel,
   onRefreshReport,
   onUpgrade,
-  onSpeakingChange,
-  speaking,
   compact = false,
 }: Props) {
   const location = useLocation();
@@ -59,7 +52,6 @@ export function OracleAdminControlCenter({
   const { name: titanBotName } = useTitanBotName();
   const [open, setOpen] = useState(() => loggedIn && window.location.hash === "#oracle-admin");
   const lanes = syntheticSentinels.filter((s) => !s.isOracleSupreme);
-  const briefingLine = pulseFormatSentinelNamesInText(briefing);
 
   useEffect(() => {
     if (!loggedIn) {
@@ -79,7 +71,7 @@ export function OracleAdminControlCenter({
 
   return (
     <section
-      className={`oracle-admin${open ? " oracle-admin--open" : " oracle-admin--collapsed"}${compact ? " oracle-admin--compact" : ""}${speaking ? " oracle-admin--speaking" : ""}${!loggedIn ? " oracle-admin--gate" : ""}`}
+      className={`oracle-admin${open ? " oracle-admin--open" : " oracle-admin--collapsed"}${compact ? " oracle-admin--compact" : ""}${!loggedIn ? " oracle-admin--gate" : ""}`}
       id="oracle-admin"
       aria-labelledby="oracle-admin-title"
     >
@@ -147,14 +139,6 @@ export function OracleAdminControlCenter({
                   );
                 })}
               </div>
-
-              <OracleSupremeVoiceBar
-                plan={plan}
-                briefing={briefingLine}
-                report={plan === "PRO" ? dailyReport : undefined}
-                titanBotName={titanBotName}
-                onSpeakingChange={onSpeakingChange}
-              />
 
               {plan === "PRO" ? (
                 <div className="oracle-admin__report">

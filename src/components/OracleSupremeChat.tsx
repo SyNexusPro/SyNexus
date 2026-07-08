@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   buildFollowUpAfterMood,
-  buildOracleIntroVoiceLine,
   createTurn,
   type ConversationTurn,
   type DayMoodReply,
@@ -10,10 +9,8 @@ import {
   markIntroWelcomeSpoken,
   reactToFreeText,
   saveConversationHistory,
-  wasIntroWelcomeSpoken,
   DAY_MOOD_QUICK_REPLIES,
 } from "../lib/oracleSupremeConversation";
-import { createOracleSupremeSpeaker, isOracleSupremeVoiceSupported } from "../lib/oracleSupremeVoice";
 import { guardOracleChat } from "../lib/securityBot";
 import { recordTitanFeedback, hasTitanFeedbackConsent } from "../lib/titanFeedback";
 import { TitanChatSettings } from "./TitanChatSettings";
@@ -26,7 +23,6 @@ type OracleSupremeChatProps = {
   minimal?: boolean;
   showOpeningPrompt?: boolean;
   onDismiss?: () => void;
-  onSpeakingChange?: (speaking: boolean) => void;
 };
 
 export function OracleSupremeChat({
@@ -35,16 +31,12 @@ export function OracleSupremeChat({
   minimal = false,
   showOpeningPrompt = false,
   onDismiss,
-  onSpeakingChange,
 }: OracleSupremeChatProps) {
   const [turns, setTurns] = useState<ConversationTurn[]>(() => loadConversationHistory());
   const [draft, setDraft] = useState("");
   const [awaitingDayReply, setAwaitingDayReply] = useState(showOpeningPrompt);
-  const [speaking, setSpeaking] = useState(false);
   const [lastUserTopic, setLastUserTopic] = useState("");
-  const speakerRef = useRef<ReturnType<typeof createOracleSupremeSpeaker> | null>(null);
   const autoSpokeRef = useRef(false);
-  const voiceSupported = isOracleSupremeVoiceSupported();
 
   const coinQuickPicks = useMemo(() => {
     const trending = [...context.tokens]
@@ -53,60 +45,13 @@ export function OracleSupremeChat({
     return trending.map((t) => t.symbol);
   }, [context.tokens]);
 
-  function submitQuery(text: string) {
-    const trimmed = text.trim();
-    if (!trimmed) return;
-
-    const security = guardOracleChat(trimmed);
-    if (!security.allowed) {
-      appendOracle(security.message ?? "Message blocked by Synexus security.", { speak: false });
-      return;
-    }
-
-    setDraft("");
-    setAwaitingDayReply(false);
-    setLastUserTopic(trimmed);
-    appendUser(trimmed);
-    appendOracle(reactToFreeText(trimmed, context), { speak: true });
-  }
-
-  useEffect(() => {
-    speakerRef.current = createOracleSupremeSpeaker({
-      onStart: () => {
-        setSpeaking(true);
-        onSpeakingChange?.(true);
-      },
-      onEnd: () => {
-        setSpeaking(false);
-        onSpeakingChange?.(false);
-      },
-      onError: () => {
-        setSpeaking(false);
-        onSpeakingChange?.(false);
-      },
+  const appendOracle = useCallback((text: string) => {
+    setTurns((prev) => {
+      const next = [...prev, createTurn("oracle", text)];
+      saveConversationHistory(next);
+      return next;
     });
-    return () => speakerRef.current?.stop();
-  }, [onSpeakingChange]);
-
-  const speak = useCallback(
-    (text: string) => {
-      if (!voiceSupported) return;
-      speakerRef.current?.speak(text);
-    },
-    [voiceSupported],
-  );
-
-  const appendOracle = useCallback(
-    (text: string, options?: { speak?: boolean }) => {
-      setTurns((prev) => {
-        const next = [...prev, createTurn("oracle", text)];
-        saveConversationHistory(next);
-        return next;
-      });
-      if (options?.speak !== false) speak(text);
-    },
-    [speak],
-  );
+  }, []);
 
   const appendUser = useCallback((text: string) => {
     setTurns((prev) => {
@@ -115,6 +60,23 @@ export function OracleSupremeChat({
       return next;
     });
   }, []);
+
+  function submitQuery(text: string) {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+
+    const security = guardOracleChat(trimmed);
+    if (!security.allowed) {
+      appendOracle(security.message ?? "Message blocked by Synexus security.");
+      return;
+    }
+
+    setDraft("");
+    setAwaitingDayReply(false);
+    setLastUserTopic(trimmed);
+    appendUser(trimmed);
+    appendOracle(reactToFreeText(trimmed, context));
+  }
 
   useEffect(() => {
     if (!showOpeningPrompt || autoSpokeRef.current) return;
@@ -133,7 +95,7 @@ export function OracleSupremeChat({
   function handleMoodReply(mood: DayMoodReply, label: string) {
     appendUser(label);
     setAwaitingDayReply(false);
-    appendOracle(buildFollowUpAfterMood(mood, context), { speak: false });
+    appendOracle(buildFollowUpAfterMood(mood, context));
   }
 
   function handleSend() {
@@ -146,25 +108,15 @@ export function OracleSupremeChat({
 
   function handleCheckIn() {
     setAwaitingDayReply(false);
-    if (wasIntroWelcomeSpoken()) {
-      appendOracle("I'm listening. Ask about any coin or tell me what you need.", { speak: false });
-      return;
-    }
     markIntroWelcomeSpoken();
-    appendOracle(buildOracleIntroVoiceLine(null, context.titanBotName), { speak: true });
-  }
-
-  function handleStopVoice() {
-    speakerRef.current?.stop();
-    setSpeaking(false);
-    onSpeakingChange?.(false);
+    appendOracle("I'm listening. Ask about any coin or tell me what you need.");
   }
 
   const visibleTurns = turns;
 
   return (
     <div
-      className={`oracle-chat oracle-chat--${variant}${minimal ? " oracle-chat--minimal" : ""}${speaking ? " oracle-chat--speaking" : ""}`}
+      className={`oracle-chat oracle-chat--${variant}${minimal ? " oracle-chat--minimal" : ""}`}
       role="region"
       aria-label={`Conversation with ${context.titanBotName}`}
     >
@@ -177,11 +129,9 @@ export function OracleSupremeChat({
           <div>
             <p className="oracle-chat__name">{context.titanBotName}</p>
             <p className="oracle-chat__status">
-              {speaking
-                ? "Speaking…"
-                : context.tokens.length
-                  ? `Live feed · ask ${context.titanBotName}, not the menus`
-                  : "Syncing market feed…"}
+              {context.tokens.length
+                ? `Live feed · ask ${context.titanBotName}, not the menus`
+                : "Syncing market feed…"}
             </p>
           </div>
           {variant === "widget" || variant === "overlay" ? (
@@ -294,27 +244,6 @@ export function OracleSupremeChat({
           Send
         </button>
       </form>
-
-      {!minimal && voiceSupported ? (
-        <div className="oracle-chat__voice-row">
-          <button
-            type="button"
-            className="oracle-chat__voice-btn"
-            onClick={() => speak(buildOracleIntroVoiceLine(null, context.titanBotName))}
-          >
-            Replay welcome
-          </button>
-          {speaking ? (
-            <button
-              type="button"
-              className="oracle-chat__voice-btn oracle-chat__voice-btn--stop"
-              onClick={handleStopVoice}
-            >
-              Stop voice
-            </button>
-          ) : null}
-        </div>
-      ) : null}
 
       {!minimal && visibleTurns.length > 0 && hasTitanFeedbackConsent() ? (
         <div className="oracle-chat__feedback">

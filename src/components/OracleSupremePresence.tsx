@@ -32,7 +32,6 @@ export function OracleSupremePresence() {
   const commanderLabel = titanBotName || resolveTitanBotName() || DEFAULT_TITAN_BOT_NAME;
   const [bootReady, setBootReady] = useState(isSynexusBootComplete());
   const [expanded, setExpanded] = useState(false);
-  const [speaking, setSpeaking] = useState(false);
   const [operatorName, setOperatorName] = useState("there");
   const [alertCount, setAlertCount] = useState(0);
   const [watchlistCount, setWatchlistCount] = useState(0);
@@ -143,26 +142,17 @@ export function OracleSupremePresence() {
     <>
       {expanded ? (
         <div className="oracle-presence-panel" role="dialog" aria-label={`Talk to ${commanderLabel}`}>
-          <OracleSupremeChat
-            context={context}
-            variant="widget"
-            onDismiss={closeChat}
-            onSpeakingChange={setSpeaking}
-          />
+          <OracleSupremeChat context={context} variant="widget" onDismiss={closeChat} />
         </div>
       ) : null}
 
       <button
         type="button"
-        className={`oracle-presence-fab${expanded ? " oracle-presence-fab--open" : ""}${speaking ? " oracle-presence-fab--speaking" : ""}`}
+        className={`oracle-presence-fab${expanded ? " oracle-presence-fab--open" : ""}`}
         onClick={toggleChat}
         aria-expanded={expanded}
         aria-label={
-          expanded
-            ? `Minimize ${commanderLabel} chat`
-            : speaking
-              ? `${commanderLabel} is speaking`
-              : `Talk to ${commanderLabel}`
+          expanded ? `Minimize ${commanderLabel} chat` : `Talk to ${commanderLabel}`
         }
         title={commanderLabel}
       >

@@ -34,7 +34,6 @@ export function TitanSheet() {
   const { name: titanBotName } = useTitanBotName();
   const commanderLabel = titanBotName || resolveTitanBotName() || DEFAULT_TITAN_BOT_NAME;
   const [bootReady, setBootReady] = useState(isSynexusBootComplete());
-  const [speaking, setSpeaking] = useState(false);
   const [operatorName, setOperatorName] = useState("there");
   const [alertCount, setAlertCount] = useState(0);
   const [watchlistCount, setWatchlistCount] = useState(0);
@@ -144,8 +143,6 @@ export function TitanSheet() {
                   </p>
                   {sheetMode === "login" ? (
                     <p className="titan-sheet__subtitle">Access watchlists, alerts, and Pro.</p>
-                  ) : speaking ? (
-                    <p className="titan-sheet__subtitle">Speaking…</p>
                   ) : null}
                 </div>
               </div>
@@ -158,12 +155,7 @@ export function TitanSheet() {
               {sheetMode === "login" ? (
                 <QuickOperatorLogin onSuccess={closeSheet} />
               ) : (
-                <OracleSupremeChat
-                  context={context}
-                  variant="overlay"
-                  minimal
-                  onSpeakingChange={setSpeaking}
-                />
+                <OracleSupremeChat context={context} variant="overlay" minimal />
               )}
             </div>
           </div>
@@ -172,15 +164,13 @@ export function TitanSheet() {
 
       <button
         type="button"
-        className={`oracle-presence-fab${sheetOpen && sheetMode === "chat" ? " oracle-presence-fab--open" : ""}${speaking ? " oracle-presence-fab--speaking" : ""}`}
+        className={`oracle-presence-fab${sheetOpen && sheetMode === "chat" ? " oracle-presence-fab--open" : ""}`}
         onClick={handleFabToggle}
         aria-expanded={sheetOpen && sheetMode === "chat"}
         aria-label={
           sheetOpen && sheetMode === "chat"
             ? `Minimize ${commanderLabel} chat`
-            : speaking
-              ? `${commanderLabel} is speaking`
-              : `Talk to ${commanderLabel}`
+            : `Talk to ${commanderLabel}`
         }
         title={commanderLabel}
       >

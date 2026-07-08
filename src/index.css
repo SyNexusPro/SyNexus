@@ -4039,6 +4039,13 @@ a {
   object-fit: contain;
   object-position: center top;
   box-shadow: none;
+  transform: none;
+}
+
+.neural-brain-pulse-wrap {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
   transform: translateY(-24%) scale(1.16);
   transform-origin: center top;
 }
@@ -4169,6 +4176,10 @@ a {
   box-sizing: border-box;
 }
 
+.synexus-symbol-box--alive {
+  overflow: visible;
+}
+
 .synexus-symbol-box__img {
   display: block;
   flex: 0 0 auto;
@@ -4180,6 +4191,308 @@ a {
   object-position: center top;
   pointer-events: none;
   user-select: none;
+}
+
+/* ── Living brain: heartbeat + circuit surge ── */
+.brain-pulse {
+  --brain-beat: 2.35s;
+  --brain-glow: rgba(255, 200, 100, 0.55);
+  --brain-line: rgba(255, 210, 120, 0.92);
+  --brain-line-dim: rgba(255, 200, 100, 0.38);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.brain-pulse--hero {
+  --brain-beat: 2.5s;
+  --brain-glow: rgba(137, 255, 47, 0.65);
+  --brain-line: rgba(198, 255, 90, 0.95);
+  --brain-line-dim: rgba(137, 255, 47, 0.42);
+}
+
+.brain-pulse__content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  transform-origin: center center;
+}
+
+.brain-pulse__circuits {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  z-index: 0;
+  width: 220%;
+  height: 220%;
+  margin: -110% 0 0 -110%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.brain-pulse--hero .brain-pulse__circuits {
+  top: 42%;
+  width: 200%;
+  height: 200%;
+  margin: -100% 0 0 -100%;
+}
+
+.brain-pulse__main,
+.brain-pulse__branch {
+  fill: none;
+  stroke: var(--brain-line-dim);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 44;
+  stroke-dashoffset: 44;
+  animation: brain-circuit-surge var(--brain-beat) ease-in-out infinite;
+}
+
+.brain-pulse__main {
+  stroke-width: 1.8;
+}
+
+.brain-pulse__branch {
+  stroke-width: 1.1;
+  animation-delay: 0.04s;
+}
+
+.brain-pulse__branch--alt {
+  animation-delay: 0.08s;
+}
+
+.brain-pulse__node {
+  fill: var(--brain-line);
+  opacity: 0;
+  animation: brain-node-flash var(--brain-beat) ease-in-out infinite;
+}
+
+.brain-pulse__core {
+  fill: var(--brain-line);
+  opacity: 0.55;
+  animation: brain-core-glow var(--brain-beat) ease-in-out infinite;
+}
+
+.brain-pulse__trunk:nth-child(2) .brain-pulse__main,
+.brain-pulse__trunk:nth-child(2) .brain-pulse__branch,
+.brain-pulse__trunk:nth-child(2) .brain-pulse__node {
+  animation-delay: 0.03s;
+}
+
+.brain-pulse__trunk:nth-child(3) .brain-pulse__main,
+.brain-pulse__trunk:nth-child(3) .brain-pulse__branch,
+.brain-pulse__trunk:nth-child(3) .brain-pulse__node {
+  animation-delay: 0.06s;
+}
+
+.brain-pulse__trunk:nth-child(4) .brain-pulse__main,
+.brain-pulse__trunk:nth-child(4) .brain-pulse__branch,
+.brain-pulse__trunk:nth-child(4) .brain-pulse__node {
+  animation-delay: 0.09s;
+}
+
+.brain-pulse__trunk:nth-child(5) .brain-pulse__main,
+.brain-pulse__trunk:nth-child(5) .brain-pulse__branch,
+.brain-pulse__trunk:nth-child(5) .brain-pulse__node {
+  animation-delay: 0.12s;
+}
+
+.brain-pulse__trunk:nth-child(6) .brain-pulse__main,
+.brain-pulse__trunk:nth-child(6) .brain-pulse__branch,
+.brain-pulse__trunk:nth-child(6) .brain-pulse__node {
+  animation-delay: 0.15s;
+}
+
+.brain-pulse__trunk:nth-child(7) .brain-pulse__main,
+.brain-pulse__trunk:nth-child(7) .brain-pulse__branch,
+.brain-pulse__trunk:nth-child(7) .brain-pulse__node {
+  animation-delay: 0.18s;
+}
+
+.brain-pulse__trunk:nth-child(8) .brain-pulse__main,
+.brain-pulse__trunk:nth-child(8) .brain-pulse__branch,
+.brain-pulse__trunk:nth-child(8) .brain-pulse__node {
+  animation-delay: 0.21s;
+}
+
+.brain-pulse__ring {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  z-index: 1;
+  width: 72%;
+  height: 72%;
+  margin: -36% 0 0 -36%;
+  border-radius: 50%;
+  border: 1px solid var(--brain-glow);
+  opacity: 0;
+  pointer-events: none;
+  animation: brain-ring-burst var(--brain-beat) ease-out infinite;
+}
+
+.brain-pulse--hero .brain-pulse__ring {
+  top: 42%;
+}
+
+.brain-pulse__ring--echo {
+  animation-delay: calc(var(--brain-beat) * 0.11);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .brain-pulse__content,
+  .brain-pulse__content .synexus-symbol-box__img,
+  .brain-pulse__content .neural-brain-logo--art {
+    animation: brain-heartbeat var(--brain-beat) ease-in-out infinite;
+    transform-origin: center center;
+  }
+}
+
+@keyframes brain-heartbeat {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 12px var(--brain-glow));
+  }
+  9% {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 22px var(--brain-glow));
+  }
+  18% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 14px var(--brain-glow));
+  }
+  28% {
+    transform: scale(1.028);
+    filter: drop-shadow(0 0 18px var(--brain-glow));
+  }
+  38% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 12px var(--brain-glow));
+  }
+}
+
+@keyframes brain-circuit-surge {
+  0%,
+  100% {
+    stroke: var(--brain-line-dim);
+    stroke-dashoffset: 44;
+    opacity: 0.25;
+  }
+  9% {
+    stroke: var(--brain-line);
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  18% {
+    stroke: var(--brain-line-dim);
+    stroke-dashoffset: 8;
+    opacity: 0.45;
+  }
+  28% {
+    stroke: var(--brain-line);
+    stroke-dashoffset: 0;
+    opacity: 0.82;
+  }
+  38% {
+    stroke: var(--brain-line-dim);
+    stroke-dashoffset: 30;
+    opacity: 0.3;
+  }
+}
+
+@keyframes brain-node-flash {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  9% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+  18% {
+    opacity: 0.35;
+    transform: scale(0.85);
+  }
+  28% {
+    opacity: 0.75;
+    transform: scale(1);
+  }
+  38% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+
+@keyframes brain-core-glow {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(0.92);
+  }
+  9% {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+  18% {
+    opacity: 0.55;
+    transform: scale(0.96);
+  }
+  28% {
+    opacity: 0.88;
+    transform: scale(1.06);
+  }
+  38% {
+    opacity: 0.45;
+    transform: scale(0.92);
+  }
+}
+
+@keyframes brain-ring-burst {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.72);
+  }
+  9% {
+    opacity: 0.55;
+    transform: scale(0.98);
+  }
+  28% {
+    opacity: 0.32;
+    transform: scale(1.08);
+  }
+  45% {
+    opacity: 0;
+    transform: scale(1.22);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brain-pulse__content,
+  .brain-pulse__content .synexus-symbol-box__img,
+  .brain-pulse__content .neural-brain-logo--art,
+  .brain-pulse__main,
+  .brain-pulse__branch,
+  .brain-pulse__node,
+  .brain-pulse__core,
+  .brain-pulse__ring {
+    animation: none !important;
+  }
+
+  .brain-pulse__main,
+  .brain-pulse__branch {
+    stroke-dashoffset: 0;
+    opacity: 0.35;
+  }
 }
 
 .synexus-symbol-box--panel {

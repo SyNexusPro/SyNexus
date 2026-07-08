@@ -28,7 +28,6 @@ import {
 } from "../lib/emailVerification";
 import { loadRememberedEmail, saveRememberedEmail } from "../lib/authRemember";
 import {
-  buildOracleSupremeBriefing,
   buildOracleSupremeDailyReport,
   buildSyntheticSentinels,
 } from "../data/syntheticWatchers";
@@ -60,7 +59,6 @@ import {
   refreshBiometricVaultToken,
 } from "../lib/biometricLogin";
 import {
-  pulseFormatSentinelNamesInText,
   pulseSentinelDisplayName,
 } from "../lib/pulseFormatting";
 import {
@@ -200,7 +198,6 @@ export function Pulse() {
   });
   const [checkoutBusy, setCheckoutBusy] = useState(false);
   const [oracleSupremeReportStamp, setOracleSupremeReportStamp] = useState(() => Date.now());
-  const [oracleSpeaking, setOracleSpeaking] = useState(false);
   const { isSimple, isAdvanced } = useSynexusUIMode();
   const { name: titanBotName } = useTitanBotName();
   const biometric = useBiometricLogin();
@@ -1002,10 +999,6 @@ export function Pulse() {
   }
 
   function handleOracleSupremeReport() {
-    if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-    }
-    setOracleSpeaking(false);
     setOracleSupremeReportStamp(Date.now());
   }
 
@@ -1050,10 +1043,6 @@ export function Pulse() {
       }),
     [marketTokens, plan, sentinelAlerts, syntheticSentinels],
   );
-  const oracleSupremeBriefing = useMemo(
-    () => buildOracleSupremeBriefing(syntheticSentinels, sentinelSignals, titanBotName),
-    [syntheticSentinels, sentinelSignals, titanBotName],
-  );
   const oracleSupremeDailyReport = useMemo(
     () => buildOracleSupremeDailyReport(syntheticSentinels, sentinelSignals, titanBotName),
     [oracleSupremeReportStamp, syntheticSentinels, sentinelSignals, titanBotName],
@@ -1093,7 +1082,6 @@ export function Pulse() {
       <WalletPerformanceDashboard />
       <OracleAdminControlCenter
         plan={plan}
-        briefing={pulseFormatSentinelNamesInText(oracleSupremeBriefing)}
         dailyReport={oracleSupremeDailyReport}
         syntheticSentinels={syntheticSentinels}
         sentinelLiveIntel={sentinelLiveIntel}
@@ -1103,8 +1091,6 @@ export function Pulse() {
         loggedIn={operatorLinked}
         onRefreshReport={handleOracleSupremeReport}
         onUpgrade={() => void handleUpgradeTrigger()}
-        onSpeakingChange={setOracleSpeaking}
-        speaking={oracleSpeaking}
         compact={isSimple}
       />
 
