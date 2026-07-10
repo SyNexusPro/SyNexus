@@ -1,2 +1,5 @@
-/** @deprecated Import from ./stripe/webhook instead. Kept for Vite dev server compat. */
-export { configureStripeWebhookApi, default } from "./stripe/webhook";
+/** Creem Merchant-of-Record webhooks (Vercel + Vite dev). */
+export { configureCreemWebhookApi as configureWebhookApi, default, config } from "./creem/webhook";
+
+/** @deprecated Use configureWebhookApi */
+export { configureCreemWebhookApi as configureStripeWebhookApi } from "./creem/webhook";

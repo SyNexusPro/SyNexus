@@ -1,26 +1,9 @@
-import Stripe from "stripe";
 import type { ViteDevServer } from "vite";
-
-type PaidPlan = "PRO";
-
-type CheckoutEnv = {
-  STRIPE_SECRET_KEY?: string;
-  STRIPE_PRICE_ID_PRO?: string;
-  /** Optional Stripe-side trial days (0 = bill on subscribe; app trial is card-free after sign-up). */
-  STRIPE_TRIAL_DAYS_PRO?: string;
-  VITE_APP_URL?: string;
-};
-
-type CheckoutPayload = {
-  plan?: PaidPlan;
-  email?: string;
-  userId?: string;
-};
-
-type JsonResponse = {
-  statusCode: number;
-  body: { url?: string; error?: string };
-};
+import {
+  createCreemCheckoutResponse,
+  type CheckoutPayload,
+  type JsonResponse,
+} from "./creem/checkout";
 
 type ServerlessRequest = NodeJS.ReadableStream & {
   method?: string;
@@ -44,112 +27,7 @@ function readRequestBody(req: NodeJS.ReadableStream): Promise<string> {
   });
 }
 
-function getHeaderValue(value: string | string[] | undefined) {
-  return Array.isArray(value) ? value[0] : value;
-}
-
-function getCheckoutErrorMessage(error: unknown) {
-  if (!(error instanceof Error)) {
-    return "Checkout is temporarily unavailable. Please try again shortly.";
-  }
-
-  const message = error.message.toLowerCase();
-  if (message.includes("expired api key") || message.includes("invalid api key")) {
-    return "Payments are not configured correctly on the server. Please try again later.";
-  }
-  if (message.includes("no such price")) {
-    return "Subscription pricing is not set up yet. Please contact support.";
-  }
-
-  return "Checkout could not be started. Please try again in a moment.";
-}
-
-function trialDaysFromEnv(raw: string | undefined): number {
-  if (raw === undefined || raw.trim() === "") return 0;
-  const n = Number.parseInt(raw, 10);
-  if (!Number.isFinite(n) || n <= 0) return 0;
-  return Math.min(n, 730);
-}
-
-async function createCheckoutResponse(
-  payload: CheckoutPayload,
-  headers: Record<string, string | string[] | undefined>,
-  env: CheckoutEnv,
-): Promise<JsonResponse> {
-  const secretKey = env.STRIPE_SECRET_KEY;
-  const proPriceId = env.STRIPE_PRICE_ID_PRO;
-
-  if (!secretKey || !proPriceId) {
-    return {
-      statusCode: 500,
-      body: {
-        error: "Payments are not configured. Set STRIPE_SECRET_KEY and STRIPE_PRICE_ID_PRO.",
-      },
-    };
-  }
-
-  const plan = payload.plan;
-  if (plan !== "PRO") {
-    return { statusCode: 400, body: { error: "Invalid plan" } };
-  }
-
-  try {
-    const stripe = new Stripe(secretKey);
-    const requestOrigin = getHeaderValue(headers.origin);
-    const requestHost = getHeaderValue(headers.host);
-    const appUrl =
-      requestOrigin ||
-      env.VITE_APP_URL ||
-      (requestHost ? `https://${requestHost}` : "http://localhost:5173");
-    const userId = payload.userId?.trim();
-    const trialDays = trialDaysFromEnv(env.STRIPE_TRIAL_DAYS_PRO);
-
-    const sessionParams: Stripe.Checkout.SessionCreateParams = {
-      mode: "subscription",
-      line_items: [{ price: proPriceId, quantity: 1 }],
-      success_url: `${appUrl}/pulse?checkout=success&plan=PRO`,
-      cancel_url: `${appUrl}/pulse?checkout=cancel`,
-      customer_email: payload.email || undefined,
-      metadata: {
-        plan: "PRO",
-        userId: userId || "anonymous",
-      },
-    };
-
-    if (trialDays > 0) {
-      sessionParams.subscription_data = {
-        trial_period_days: trialDays,
-        metadata: {
-          plan: "PRO",
-          userId: userId || "anonymous",
-        },
-      };
-    } else {
-      sessionParams.subscription_data = {
-        metadata: {
-          plan: "PRO",
-          userId: userId || "anonymous",
-        },
-      };
-    }
-
-    if (userId) {
-      sessionParams.client_reference_id = userId;
-    }
-
-    const session = await stripe.checkout.sessions.create(sessionParams);
-    return { statusCode: 200, body: { url: session.url ?? undefined } };
-  } catch (error) {
-    return {
-      statusCode: 500,
-      body: {
-        error: getCheckoutErrorMessage(error),
-      },
-    };
-  }
-}
-
-export function configureStripeCheckoutApi(server: ViteDevServer, env: CheckoutEnv) {
+export function configureCheckoutApi(server: ViteDevServer, env: Record<string, string | undefined>) {
   server.middlewares.use("/api/checkout", async (req, res, next) => {
     if (req.method !== "POST") {
       next();
@@ -158,7 +36,7 @@ export function configureStripeCheckoutApi(server: ViteDevServer, env: CheckoutE
 
     try {
       const payload = JSON.parse(await readRequestBody(req)) as CheckoutPayload;
-      const result = await createCheckoutResponse(payload, req.headers, env);
+      const result = await createCreemCheckoutResponse(payload, req.headers, env);
       res.statusCode = result.statusCode;
       res.setHeader("Content-Type", "application/json");
       res.end(JSON.stringify(result.body));
@@ -174,6 +52,9 @@ export function configureStripeCheckoutApi(server: ViteDevServer, env: CheckoutE
   });
 }
 
+/** @deprecated Use configureCheckoutApi */
+export const configureStripeCheckoutApi = configureCheckoutApi;
+
 export default async function handler(req: ServerlessRequest, res: ServerlessResponse) {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
@@ -184,6 +65,6 @@ export default async function handler(req: ServerlessRequest, res: ServerlessRes
     typeof req.body === "string"
       ? (JSON.parse(req.body) as CheckoutPayload)
       : (req.body as CheckoutPayload | undefined) ?? {};
-  const result = await createCheckoutResponse(payload, req.headers, process.env);
+  const result: JsonResponse = await createCreemCheckoutResponse(payload, req.headers, process.env);
   res.status(result.statusCode).json(result.body);
 }

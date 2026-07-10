@@ -64,9 +64,10 @@ check(
 check(status(hasKey(mergedApp, "SUPABASE_SERVICE_ROLE_KEY"), "Service role (analytics API)", "Vercel server env"));
 check(status(hasKey(mergedApp, "VITE_APP_ORIGIN") || true, "App origin", mergedApp.VITE_APP_ORIGIN || "defaults to synexus.pro"));
 
-section("Payments");
-check(status(hasKey(mergedApp, "STRIPE_SECRET_KEY"), "Stripe secret"));
-check(status(hasKey(mergedApp, "STRIPE_WEBHOOK_SECRET"), "Stripe webhook secret"));
+section("Payments (Creem)");
+check(status(hasKey(mergedApp, "CREEM_API_KEY"), "Creem API key"));
+check(status(hasKey(mergedApp, "CREEM_PRODUCT_ID_PRO"), "Creem Pro product ID"));
+check(status(hasKey(mergedApp, "CREEM_WEBHOOK_SECRET"), "Creem webhook secret"));
 
 section("Owner / analytics dashboard");
 check(status(hasKey(mergedApp, "SYNEXUS_OWNER_EMAIL"), "Owner email"));

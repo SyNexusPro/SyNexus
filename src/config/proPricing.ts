@@ -1,4 +1,4 @@
-/** Synexus Pro subscription price (USD). Keep in sync with Stripe / Lemon Squeezy price. */
+/** Synexus Pro subscription price (USD). Keep in sync with Creem product price. */
 export const SYNEXUS_PRO_PRICE_USD = 9.99;
 
 export const SYNEXUS_PRO_PRICE_LABEL = `$${SYNEXUS_PRO_PRICE_USD.toFixed(2)}/month`;
