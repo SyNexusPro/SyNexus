@@ -34,6 +34,7 @@
     "growth:once": "npm run growth:once --prefix marketing-ai",
     "growth:watch": "npm run growth:watch --prefix marketing-ai",
     "go-live:check": "node scripts/go-live-check.mjs",
+    "supabase:health": "node scripts/supabase-health.mjs",
     "hype:queue": "npm run hype:queue --prefix marketing-ai",
     "blog:generate": "npm run blog:generate --prefix marketing-ai",
     "treasury:status": "npm run treasury:status --prefix marketing-ai",
