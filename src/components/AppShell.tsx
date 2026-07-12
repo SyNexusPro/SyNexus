@@ -53,6 +53,12 @@ export function AppShell() {
         <span className="app-footer__sep" aria-hidden>
           ·
         </span>
+        <Link className="app-footer__link" to="/pricing">
+          Pricing
+        </Link>
+        <span className="app-footer__sep" aria-hidden>
+          ·
+        </span>
         <Link className="app-footer__link" to="/blog">
           Journal
         </Link>
@@ -73,6 +79,12 @@ export function AppShell() {
         </span>
         <Link className="app-footer__link" to="/privacy">
           Privacy
+        </Link>
+        <span className="app-footer__sep" aria-hidden>
+          ·
+        </span>
+        <Link className="app-footer__link" to="/refund-policy">
+          Refunds
         </Link>
         <span className="app-footer__sep" aria-hidden>
           ·

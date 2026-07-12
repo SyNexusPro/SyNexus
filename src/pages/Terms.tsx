@@ -1,4 +1,7 @@
 import { Link } from "react-router-dom";
+import { SYNEXUS_PRO_PRICE_LABEL } from "../config/proPricing";
+import { SYNEXUS_PRO_TRIAL_DAYS } from "../config/proTrial";
+import { SYNEXUS_REFUND_POLICY_PATH } from "../config/refundPolicy";
 import { LEGAL_EFFECTIVE_DATE, OPERATOR_LABEL, SUPPORT_EMAIL } from "../config/site";
 
 const EFFECTIVE_LABEL = `Effective date: ${LEGAL_EFFECTIVE_DATE}`;
@@ -13,12 +16,15 @@ export function Terms() {
         (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) governing access to the Synexus mobile and web
         application, dashboards, AI features, subscriptions, and related services (collectively, the
         &quot;Service&quot;). By accessing or using the Service, creating an account, or
-        completing a purchase, you agree to these Terms and our{" "}
-        <Link to="/privacy">Privacy Policy</Link>. If you do not agree, do not use the Service.
+        completing a purchase, you agree to these Terms, our{" "}
+        <Link to="/privacy">Privacy Policy</Link>, and our{" "}
+        <Link to={SYNEXUS_REFUND_POLICY_PATH}>Refund Policy</Link>. If you do not agree, do not use the Service.
       </p>
 
       <p className="legal-page__summary legal-page__summary--compact">
         See also: <Link to="/disclaimer">Disclaimer</Link>
+        {" · "}
+        <Link to={SYNEXUS_REFUND_POLICY_PATH}>Refund Policy</Link>
         {" · "}
         <Link to="/faq">FAQ</Link>
         {" · "}
@@ -103,13 +109,15 @@ export function Terms() {
       <section className="legal-section marketing-panel">
         <h2>Subscriptions and billing</h2>
         <p>
-          Paid plans (including Synexus Pro at the price shown at checkout, currently $9.99/month where
-          applicable) include a <strong>7-day free trial</strong> of full Pro access after you create and
-          verify your account and add a payment method to start your free trial. After the trial, billing on a recurring
-          basis begins only when you subscribe through checkout. Payment is processed by third-party payment
-          processors (such as Stripe). By subscribing, you authorize us and our processors to charge your
-          payment method on a recurring basis until you cancel according to checkout and processor flows. Prices, taxes, and
-          features may change with notice where required by law. Unless mandatory law provides otherwise,{" "}
+          Paid plans (including Synexus Pro at the price shown at checkout, currently {SYNEXUS_PRO_PRICE_LABEL}{" "}
+          where applicable) include a <strong>{SYNEXUS_PRO_TRIAL_DAYS}-day free trial</strong> of full Pro access
+          after you create and verify your account and add a payment method to start your free trial. After the
+          trial, billing on a recurring basis begins only when you subscribe through checkout. Payment is
+          processed by Creem (Merchant of Record) and other third-party payment processors. By subscribing, you
+          authorize us and our processors to charge your payment method on a recurring basis until you cancel
+          according to checkout and processor flows. Prices, taxes, and features may change with notice where
+          required by law. Refunds are governed by our{" "}
+          <Link to={SYNEXUS_REFUND_POLICY_PATH}>Refund Policy</Link>. Unless mandatory law provides otherwise,{" "}
           <strong>fees are non-refundable</strong> once a billing period begins, including partial periods.
           Failed payments, disputed charges, or chargebacks may suspend paid features. Cancel before renewal to
           avoid future charges.
@@ -286,6 +294,8 @@ export function Terms() {
         <Link to="/">← Back to feed</Link>
         {" · "}
         <Link to="/privacy">Privacy Policy</Link>
+        {" · "}
+        <Link to={SYNEXUS_REFUND_POLICY_PATH}>Refund Policy</Link>
         {" · "}
         <Link to="/liquidity-treasury">Liquidity Treasury</Link>
         {" · "}

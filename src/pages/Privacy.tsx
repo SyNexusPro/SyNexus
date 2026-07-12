@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { SYNEXUS_REFUND_POLICY_PATH } from "../config/refundPolicy";
 import { LEGAL_EFFECTIVE_DATE, OPERATOR_LABEL, SUPPORT_EMAIL } from "../config/site";
 
 const EFFECTIVE_LABEL = `Effective date: ${LEGAL_EFFECTIVE_DATE}`;
@@ -28,9 +29,10 @@ export function Privacy() {
           the Service.
         </p>
         <p>
-          <strong>Payment data.</strong> Subscriptions are processed by third-party payment processors (for
-          example Stripe). We receive limited billing metadata (such as plan status and transaction IDs), not
-          full card numbers, which are handled by the processor under its privacy policy.
+          <strong>Payment data.</strong> Subscriptions are processed by Creem (Merchant of Record) and other
+          third-party payment processors. We receive limited billing metadata (such as plan status and
+          transaction IDs), not full card numbers, which are handled by the processor under its privacy policy.
+          See our <Link to={SYNEXUS_REFUND_POLICY_PATH}>Refund Policy</Link> for billing disputes and refunds.
         </p>
         <p>
           <strong>User content.</strong> If you submit token reports, messages to automated features, or
@@ -124,7 +126,7 @@ export function Privacy() {
 
       <p className="legal-page__note">
         This Privacy Policy is provided for transparency and app-store compliance. Have qualified counsel review
-        it alongside your data map (Supabase, Stripe, analytics, and API vendors) before publication.
+        it alongside your data map (Supabase, Creem, analytics, and API vendors) before publication.
       </p>
 
       <p className="legal-page__back">
@@ -137,6 +139,8 @@ export function Privacy() {
         <Link to="/disclaimer">Disclaimer</Link>
         {" · "}
         <Link to="/faq">FAQ</Link>
+        {" · "}
+        <Link to={SYNEXUS_REFUND_POLICY_PATH}>Refund Policy</Link>
         {" · "}
         <Link to="/terms">Terms of Service</Link>
       </p>

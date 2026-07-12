@@ -9,8 +9,22 @@
 export const TITAN_PRODUCT_TAGLINE = "Don't use Synexus — ask Titan.";
 
 export const TITAN_PRODUCT_VISION =
-  "Titan is the user's personal crypto intelligence commander: she explains live markets, " +
-  "surfaces risk, coaches decisions, and learns (with permission) — never replacing the user's judgment.";
+  "Titan is the operator's AI commander: she talks about anything you bring her — markets, decisions, " +
+  "strategy, life — while grounding crypto questions in live Synexus data. She coaches; you stay in control.";
+
+export function buildTitanIdentityLine(titanBotName: string): string {
+  return (
+    `I'm ${titanBotName} — your intelligence commander. ` +
+    `Talk to me about anything — coins, risk, plans, or what's on your mind. I analyze live data when it matters; you stay in control.`
+  );
+}
+
+export function buildTitanCapabilityBlurb(titanBotName: string): string {
+  return (
+    `${titanBotName} connects to live markets, flags scams, coaches your decisions, remembers your style when you opt in, ` +
+    `and holds real conversations — not just menus. ${TITAN_GUARDRAILS.disclaimer}`
+  );
+}
 
 export type TitanCapabilityStatus = "live" | "beta" | "planned";
 
@@ -36,7 +50,7 @@ export const TITAN_CAPABILITIES: readonly TitanCapability[] = [
     id: "realtime_markets",
     title: "Real-time market awareness",
     summary:
-      "Titan connects to live crypto market data to explain price moves, monitor trends, and answer using current information — not static knowledge.",
+      "Titan connects to live crypto market data and an LLM brain to explain price moves, monitor trends, and answer using current information — not static scripts.",
     requiresPermission: false,
     status: "live",
   },
@@ -103,21 +117,7 @@ export const TITAN_GUARDRAILS = {
 
 /** Short lines Titan may use when users ask for guaranteed picks. */
 export const TITAN_COACH_REDIRECTS = [
-  "I won't tell you exactly what to buy — I can break down risk, momentum, and wallet signals so you decide.",
-  "No guarantees here. I'll explain what the data shows and what could go wrong — your call from there.",
-  "I'm your coach, not a signal service. Ask me to scan a token, explain a rug flag, or walk through an indicator.",
+  "Here's my read — then you decide.",
+  "I'll give you a straight answer from the data.",
+  "Let me break down the risk and momentum — your call from there.",
 ] as const;
-
-export function buildTitanIdentityLine(titanBotName: string): string {
-  return (
-    `I'm ${titanBotName} — your intelligence commander. ` +
-    `Ask me about any coin, risk, or market read. I analyze live data and explain it — you stay in control.`
-  );
-}
-
-export function buildTitanCapabilityBlurb(titanBotName: string): string {
-  return (
-    `${titanBotName} scans live markets, flags scams, coaches your decisions, and learns your style when you opt in. ` +
-    TITAN_GUARDRAILS.disclaimer
-  );
-}

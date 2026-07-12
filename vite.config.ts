@@ -3,6 +3,7 @@ import { defineConfig, loadEnv } from "vite";
 import { configureCheckoutApi } from "./api/checkout";
 import { configureOwnerUnlockApi } from "./api/ownerUnlock";
 import { configureAnalyticsApi } from "./api/analytics";
+import { configureTitanChatApi } from "./api/titan/chat";
 import { configureCreemWebhookApi } from "./api/creem/webhook";
 
 /** Client bundle reads only VITE_* from import.meta.env; Vercel often sets SUPABASE_* without the prefix. */
@@ -57,6 +58,7 @@ export default defineConfig(({ mode }) => {
           configureCreemWebhookApi(server, env);
           configureOwnerUnlockApi(server, env);
           configureAnalyticsApi(server);
+          configureTitanChatApi(server, env);
         },
       },
     ],

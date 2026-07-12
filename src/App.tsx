@@ -37,6 +37,10 @@ const BlogPostView = lazy(() => import("./pages/Blog").then((m) => ({ default: m
 const SiteAnalytics = lazy(() =>
   import("./pages/SiteAnalytics").then((m) => ({ default: m.SiteAnalytics })),
 );
+const Pricing = lazy(() => import("./pages/Pricing").then((m) => ({ default: m.Pricing })));
+const RefundPolicy = lazy(() =>
+  import("./pages/RefundPolicy").then((m) => ({ default: m.RefundPolicy })),
+);
 
 function RouteFallback() {
   return (
@@ -61,6 +65,8 @@ export default function App() {
             <Route path="faq" element={<Faq />} />
             <Route path="disclaimer" element={<Disclaimer />} />
             <Route path="pulse" element={<Pulse />} />
+            <Route path="pricing" element={<Pricing />} />
+            <Route path="refund-policy" element={<RefundPolicy />} />
             <Route path="terms" element={<Terms />} />
             <Route path="privacy" element={<Privacy />} />
             <Route path="liquidity-treasury" element={<LiquidityTreasury />} />

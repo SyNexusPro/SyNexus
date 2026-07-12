@@ -5173,6 +5173,30 @@ a {
   filter: brightness(1.08);
 }
 
+.oracle-chat__bubble--streaming {
+  border-color: rgba(255, 196, 86, 0.35);
+}
+
+.oracle-chat__thinking {
+  display: inline-block;
+  letter-spacing: 0.2em;
+  animation: oracle-chat-pulse 1s ease-in-out infinite;
+}
+
+@keyframes oracle-chat-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.oracle-chat__composer input:disabled {
+  opacity: 0.65;
+}
+
 .oracle-chat__coin-row {
   margin-top: 10px;
 }

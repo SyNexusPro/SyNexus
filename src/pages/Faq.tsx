@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { SYNEXUS_REFUND_POLICY_PATH } from "../config/refundPolicy";
 import { FAQ_ITEMS, SUPPORT_EMAIL } from "../config/site";
 
 export function Faq() {
@@ -31,6 +32,8 @@ export function Faq() {
           <Link to="/terms">Terms of Service</Link>
           {" · "}
           <Link to="/privacy">Privacy Policy</Link>
+          {" · "}
+          <Link to={SYNEXUS_REFUND_POLICY_PATH}>Refund Policy</Link>
           {" · "}
           <Link to="/disclaimer">Disclaimer</Link>
           {" · "}

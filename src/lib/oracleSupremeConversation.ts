@@ -370,8 +370,8 @@ export function reactToFreeText(text: string, ctx: OracleConversationContext): s
 
   return withOptionalName(
     ctx.operatorName,
-    `I hear you, {name}. "${text}" — noted. Head to Pulse if you want a market read, or keep talking here.`,
-    `"${text}" — noted. Head to Pulse if you want a market read, or keep talking here.`,
+    `Got it, {name}. I'm here for whatever you need — markets, decisions, or just thinking out loud. What's the real question?`,
+    "Got it. I'm here for whatever you need — markets, decisions, or just thinking out loud. What's the real question?",
   );
 }
 

@@ -11,6 +11,9 @@ import {
   saveConversationHistory,
   DAY_MOOD_QUICK_REPLIES,
 } from "../lib/oracleSupremeConversation";
+import { respondToTitanMessage, warmTitanBrain } from "../lib/titanConversation";
+import { isInstantTitanPath } from "../lib/titanRouting";
+import { oracleRespondToMessage } from "../lib/oracleCryptoBrain";
 import { guardOracleChat } from "../lib/securityBot";
 import { recordTitanFeedback, hasTitanFeedbackConsent } from "../lib/titanFeedback";
 import { TitanChatSettings } from "./TitanChatSettings";
@@ -36,7 +39,11 @@ export function OracleSupremeChat({
   const [draft, setDraft] = useState("");
   const [awaitingDayReply, setAwaitingDayReply] = useState(showOpeningPrompt);
   const [lastUserTopic, setLastUserTopic] = useState("");
+  const [thinking, setThinking] = useState(false);
+  const [streamingTurnId, setStreamingTurnId] = useState<string | null>(null);
   const autoSpokeRef = useRef(false);
+  const threadRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   const coinQuickPicks = useMemo(() => {
     const trending = [...context.tokens]
@@ -53,6 +60,14 @@ export function OracleSupremeChat({
     });
   }, []);
 
+  const updateOracleTurn = useCallback((turnId: string, text: string) => {
+    setTurns((prev) => {
+      const next = prev.map((turn) => (turn.id === turnId ? { ...turn, text } : turn));
+      saveConversationHistory(next);
+      return next;
+    });
+  }, []);
+
   const appendUser = useCallback((text: string) => {
     setTurns((prev) => {
       const next = [...prev, createTurn("user", text)];
@@ -61,9 +76,17 @@ export function OracleSupremeChat({
     });
   }, []);
 
-  function submitQuery(text: string) {
+  useEffect(() => {
+    threadRef.current?.scrollTo({ top: threadRef.current.scrollHeight, behavior: "smooth" });
+  }, [turns, thinking, streamingTurnId]);
+
+  useEffect(() => {
+    warmTitanBrain();
+  }, []);
+
+  async function submitQuery(text: string) {
     const trimmed = text.trim();
-    if (!trimmed) return;
+    if (!trimmed || thinking) return;
 
     const security = guardOracleChat(trimmed);
     if (!security.allowed) {
@@ -75,7 +98,44 @@ export function OracleSupremeChat({
     setAwaitingDayReply(false);
     setLastUserTopic(trimmed);
     appendUser(trimmed);
-    appendOracle(reactToFreeText(trimmed, context));
+
+    if (isInstantTitanPath(trimmed)) {
+      const instant = oracleRespondToMessage(trimmed, context);
+      if (instant) {
+        appendOracle(instant);
+        return;
+      }
+    }
+
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    const streamTurn = createTurn("oracle", "");
+    const streamId = streamTurn.id;
+    setThinking(true);
+    setStreamingTurnId(streamId);
+    setTurns((prev) => {
+      const next = [...prev, streamTurn];
+      saveConversationHistory(next);
+      return next;
+    });
+
+    try {
+      const priorTurns = [...turns, createTurn("user", trimmed)];
+      const reply = await respondToTitanMessage(trimmed, context, priorTurns, {
+        signal: controller.signal,
+        onDelta: (partial) => updateOracleTurn(streamId, partial),
+      });
+      updateOracleTurn(streamId, reply);
+    } catch {
+      if (!controller.signal.aborted) {
+        updateOracleTurn(streamId, reactToFreeText(trimmed, context));
+      }
+    } finally {
+      setThinking(false);
+      setStreamingTurnId(null);
+    }
   }
 
   useEffect(() => {
@@ -109,7 +169,7 @@ export function OracleSupremeChat({
   function handleCheckIn() {
     setAwaitingDayReply(false);
     markIntroWelcomeSpoken();
-    appendOracle("I'm listening. Ask about any coin or tell me what you need.");
+    appendOracle("I'm here — markets, strategy, life, whatever you need. Talk to me.");
   }
 
   const visibleTurns = turns;
@@ -129,9 +189,11 @@ export function OracleSupremeChat({
           <div>
             <p className="oracle-chat__name">{context.titanBotName}</p>
             <p className="oracle-chat__status">
-              {context.tokens.length
-                ? `Live feed · ask ${context.titanBotName}, not the menus`
-                : "Syncing market feed…"}
+              {thinking
+                ? `${context.titanBotName} is thinking…`
+                : context.tokens.length
+                  ? `Synexus brain online · live markets · ask anything`
+                  : "Syncing market feed…"}
             </p>
           </div>
           {variant === "widget" || variant === "overlay" ? (
@@ -144,13 +206,13 @@ export function OracleSupremeChat({
         </div>
       ) : null}
 
-      <div className="oracle-chat__thread" aria-live="polite">
+      <div className="oracle-chat__thread" aria-live="polite" ref={threadRef}>
         {visibleTurns.length === 0 ? (
           <div className="oracle-chat__empty-wrap">
             <p className="oracle-chat__empty">
               {minimal
-                ? `Message ${context.titanBotName} below.`
-                : `Ask ${context.titanBotName} — scans, risk reads, and coaching. Tap when you're ready.`}
+                ? `Message ${context.titanBotName} — crypto, advice, or anything on your mind.`
+                : `Talk to ${context.titanBotName} about anything — markets, decisions, or what you're working through.`}
             </p>
             {!minimal ? (
               <button type="button" className="oracle-chat__chip" onClick={handleCheckIn}>
@@ -160,8 +222,18 @@ export function OracleSupremeChat({
           </div>
         ) : null}
         {visibleTurns.map((turn) => (
-          <div key={turn.id} className={`oracle-chat__bubble oracle-chat__bubble--${turn.role}`}>
-            {turn.text}
+          <div
+            key={turn.id}
+            className={`oracle-chat__bubble oracle-chat__bubble--${turn.role}${
+              turn.id === streamingTurnId ? " oracle-chat__bubble--streaming" : ""
+            }`}
+          >
+            {turn.text ||
+              (turn.id === streamingTurnId ? (
+                <span className="oracle-chat__thinking" aria-hidden>
+                  …
+                </span>
+              ) : null)}
           </div>
         ))}
       </div>
@@ -236,12 +308,13 @@ export function OracleSupremeChat({
           placeholder={
             minimal
               ? `Message ${context.titanBotName}…`
-              : `Ask ${context.titanBotName} — scan a coin, explain risk, coach a decision…`
+              : `Talk to ${context.titanBotName} — anything on your mind…`
           }
           aria-label={`Message to ${context.titanBotName}`}
+          disabled={thinking}
         />
-        <button type="submit" disabled={!draft.trim()}>
-          Send
+        <button type="submit" disabled={!draft.trim() || thinking}>
+          {thinking ? "…" : "Send"}
         </button>
       </form>
 
