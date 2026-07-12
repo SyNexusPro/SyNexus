@@ -29,8 +29,8 @@ export function Privacy() {
           the Service.
         </p>
         <p>
-          <strong>Payment data.</strong> Subscriptions are processed by Creem (Merchant of Record) and other
-          third-party payment processors. We receive limited billing metadata (such as plan status and
+          <strong>Payment data.</strong> Subscriptions are processed by third-party subscription and payment
+          processors (for example Stripe or another provider shown at checkout). We receive limited billing metadata (such as plan status and
           transaction IDs), not full card numbers, which are handled by the processor under its privacy policy.
           See our <Link to={SYNEXUS_REFUND_POLICY_PATH}>Refund Policy</Link> for billing disputes and refunds.
         </p>
@@ -126,7 +126,7 @@ export function Privacy() {
 
       <p className="legal-page__note">
         This Privacy Policy is provided for transparency and app-store compliance. Have qualified counsel review
-        it alongside your data map (Supabase, Creem, analytics, and API vendors) before publication.
+        it alongside your data map (Supabase, subscription billing, analytics, and API vendors) before publication.
       </p>
 
       <p className="legal-page__back">

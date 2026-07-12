@@ -4,7 +4,7 @@ import { configureCheckoutApi } from "./api/checkout";
 import { configureOwnerUnlockApi } from "./api/ownerUnlock";
 import { configureAnalyticsApi } from "./api/analytics";
 import { configureTitanChatApi } from "./api/titan/chat";
-import { configureCreemWebhookApi } from "./api/creem/webhook";
+import { configureSubscriptionWebhookApi } from "./api/subscription/webhook";
 
 /** Client bundle reads only VITE_* from import.meta.env; Vercel often sets SUPABASE_* without the prefix. */
 function resolveSupabaseForClientBuild(mode: string) {
@@ -55,7 +55,7 @@ export default defineConfig(({ mode }) => {
         name: "synexus-api",
         configureServer(server) {
           configureCheckoutApi(server, env);
-          configureCreemWebhookApi(server, env);
+          configureSubscriptionWebhookApi(server, env);
           configureOwnerUnlockApi(server, env);
           configureAnalyticsApi(server);
           configureTitanChatApi(server, env);

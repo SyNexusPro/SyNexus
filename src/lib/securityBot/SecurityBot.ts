@@ -16,7 +16,7 @@ import type {
 } from "./types";
 
 const PLAN_GRANT_KEY = "synexus_aegis_plan_grant";
-const TRUSTED_PLAN_SOURCES = ["creem_checkout", "stripe_checkout", "supabase_profile", "demo_session", "trial_7d", "admin", "owner"];
+const TRUSTED_PLAN_SOURCES = ["subscription_checkout", "creem_checkout", "stripe_checkout", "supabase_profile", "demo_session", "trial_7d", "admin", "owner"];
 
 type PlanGrant = { plan: "PRO" | "FREE"; source: string; at: number };
 

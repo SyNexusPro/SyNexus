@@ -1,9 +1,9 @@
 import type { ViteDevServer } from "vite";
 import {
-  createCreemCheckoutResponse,
+  createSubscriptionCheckoutResponse,
   type CheckoutPayload,
   type JsonResponse,
-} from "./creem/checkout";
+} from "./subscription/checkout";
 
 type ServerlessRequest = NodeJS.ReadableStream & {
   method?: string;
@@ -36,7 +36,7 @@ export function configureCheckoutApi(server: ViteDevServer, env: Record<string, 
 
     try {
       const payload = JSON.parse(await readRequestBody(req)) as CheckoutPayload;
-      const result = await createCreemCheckoutResponse(payload, req.headers, env);
+      const result = await createSubscriptionCheckoutResponse(payload, req.headers, env);
       res.statusCode = result.statusCode;
       res.setHeader("Content-Type", "application/json");
       res.end(JSON.stringify(result.body));
@@ -65,6 +65,6 @@ export default async function handler(req: ServerlessRequest, res: ServerlessRes
     typeof req.body === "string"
       ? (JSON.parse(req.body) as CheckoutPayload)
       : (req.body as CheckoutPayload | undefined) ?? {};
-  const result: JsonResponse = await createCreemCheckoutResponse(payload, req.headers, process.env);
+  const result: JsonResponse = await createSubscriptionCheckoutResponse(payload, req.headers, process.env);
   res.status(result.statusCode).json(result.body);
 }

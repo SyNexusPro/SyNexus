@@ -1,4 +1,4 @@
-/** Synexus Pro subscription price (USD). Keep in sync with Creem product price. */
+/** Synexus Pro subscription price (USD). Keep in sync with your subscription product. */
 export const SYNEXUS_PRO_PRICE_USD = 9.99;
 
 export const SYNEXUS_PRO_PRICE_LABEL = `$${SYNEXUS_PRO_PRICE_USD.toFixed(2)}/month`;
@@ -27,18 +27,21 @@ export const SYNEXUS_PRO_FEATURES = [
 export const SYNEXUS_PRICING_PATH = "/pricing";
 
 /**
- * Optional Creem-hosted pricing / checkout product page.
- * Set VITE_CREEM_PRICING_URL in .env (e.g. https://creem.io/test/product/prod_…).
+ * Optional external pricing / checkout page (your subscription platform).
+ * Set VITE_SUBSCRIPTION_PRICING_URL in .env when available.
  */
-export function getCreemPricingSheetUrl(): string | null {
-  const explicit = import.meta.env.VITE_CREEM_PRICING_URL?.trim();
+export function getExternalPricingUrl(): string | null {
+  const explicit = import.meta.env.VITE_SUBSCRIPTION_PRICING_URL?.trim();
   if (explicit) return explicit;
 
-  const productId = import.meta.env.VITE_CREEM_PRODUCT_ID_PRO?.trim();
-  if (!productId) return null;
+  // Legacy env aliases — remove once subscription platform is finalized
+  const legacyCreem = import.meta.env.VITE_CREEM_PRICING_URL?.trim();
+  if (legacyCreem) return legacyCreem;
 
-  const testMode = import.meta.env.VITE_CREEM_TEST_MODE === "1" || import.meta.env.DEV;
-  return testMode
-    ? `https://creem.io/test/product/${productId}`
-    : `https://creem.io/product/${productId}`;
+  return null;
+}
+
+/** @deprecated Use getExternalPricingUrl */
+export function getCreemPricingSheetUrl(): string | null {
+  return getExternalPricingUrl();
 }

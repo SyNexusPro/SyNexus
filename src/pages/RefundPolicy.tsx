@@ -23,9 +23,8 @@ export function RefundPolicy() {
         <p>
           Synexus Pro is a recurring subscription billed at{" "}
           <strong>{SYNEXUS_PRO_PRICE_LABEL}</strong> (plus applicable taxes where required). Checkout and
-          recurring billing are processed by <strong>Creem</strong>, our Merchant of Record and payment
-          processor. Creem may appear on your card or bank statement as the seller of record for your
-          subscription.
+          recurring billing are processed by our third-party subscription and payment platform (the provider
+          shown at checkout). That provider may appear on your card or bank statement for your subscription.
         </p>
       </section>
 
@@ -43,7 +42,7 @@ export function RefundPolicy() {
       <section className="legal-section marketing-panel">
         <h2>Cancellation</h2>
         <p>
-          You may cancel Synexus Pro at any time through the Creem customer portal or checkout tools linked
+          You may cancel Synexus Pro at any time through the billing portal or subscription tools linked
           from Pulse and your account settings. Cancellation stops future renewals; it does not automatically
           refund charges already processed. Paid access typically continues until the end of the current billing
           period unless otherwise stated at checkout or required by law.
@@ -63,7 +62,7 @@ export function RefundPolicy() {
           such as:
         </p>
         <ul>
-          <li>Duplicate or erroneous charges verified on our side or by Creem</li>
+          <li>Duplicate or erroneous charges verified on our side or by the payment processor</li>
           <li>Technical failure that prevented meaningful access to paid features for a sustained period</li>
           <li>Charges after a cancellation that was confirmed before the renewal date</li>
           <li>Other situations where applicable law grants you a refund right</li>
@@ -77,7 +76,7 @@ export function RefundPolicy() {
           <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a> from the address tied to your Synexus account
           within <strong>14 days</strong> of the charge. Include the date and amount charged, the email on your
           account, and a brief description of the issue. We will review your request and respond within a
-          reasonable time. Approved refunds are processed through Creem to the original payment method; timing
+          reasonable time. Approved refunds are processed through the original payment method; timing
           depends on your bank or card issuer.
         </p>
       </section>

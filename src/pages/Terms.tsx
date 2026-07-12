@@ -113,7 +113,7 @@ export function Terms() {
           where applicable) include a <strong>{SYNEXUS_PRO_TRIAL_DAYS}-day free trial</strong> of full Pro access
           after you create and verify your account and add a payment method to start your free trial. After the
           trial, billing on a recurring basis begins only when you subscribe through checkout. Payment is
-          processed by Creem (Merchant of Record) and other third-party payment processors. By subscribing, you
+          processed by third-party subscription and payment processors (shown at checkout). By subscribing, you
           authorize us and our processors to charge your payment method on a recurring basis until you cancel
           according to checkout and processor flows. Prices, taxes, and features may change with notice where
           required by law. Refunds are governed by our{" "}

@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { ProDemoButton } from "../components/ProDemoButton";
 import {
-  getCreemPricingSheetUrl,
+  getExternalPricingUrl,
   SYNEXUS_PRO_FEATURES,
   SYNEXUS_PRO_OFFER_TAGLINE,
   SYNEXUS_PRO_PRICE_LABEL,
@@ -12,7 +12,7 @@ import { SYNEXUS_PRO_TRIAL_DAYS, SYNEXUS_PRO_TRIAL_LABEL } from "../config/proTr
 import { SYNEXUS_REFUND_POLICY_PATH } from "../config/refundPolicy";
 
 export function Pricing() {
-  const creemSheetUrl = getCreemPricingSheetUrl();
+  const externalPricingUrl = getExternalPricingUrl();
 
   return (
     <div className="page">
@@ -31,8 +31,8 @@ export function Pricing() {
           <p className="pulse-synexus-pro-promo__headline">Unlimited trading intelligence. One simple price.</p>
           <p className="pulse-synexus-pro-promo__body">
             Sign up for a {SYNEXUS_PRO_TRIAL_DAYS}-day full Pro trial — add a card at checkout. After the trial,
-            billing continues at {SYNEXUS_PRO_PRICE_LABEL} unless you cancel. Payments are processed by Creem
-            (Merchant of Record).
+            billing continues at {SYNEXUS_PRO_PRICE_LABEL} unless you cancel. Payments are processed by our
+            third-party subscription platform (shown at checkout).
           </p>
           <ul className="pulse-synexus-pro-promo__bullets">
             {SYNEXUS_PRO_FEATURES.map((item) => (
@@ -50,15 +50,15 @@ export function Pricing() {
               {SYNEXUS_PRO_SUBSCRIBE_LABEL}
             </Link>
           </div>
-          {creemSheetUrl ? (
-            <p className="pricing-page__creem">
-              <a href={creemSheetUrl} target="_blank" rel="noopener noreferrer">
-                Open Creem pricing sheet ↗
+          {externalPricingUrl ? (
+            <p className="pricing-page__external">
+              <a href={externalPricingUrl} target="_blank" rel="noopener noreferrer">
+                View subscription details ↗
               </a>
             </p>
           ) : null}
           <p className="pulse-synexus-pro-promo__disclaimer">
-            Not financial advice. Sentinel scores are informational. Cancel anytime from your Creem customer portal.
+            Not financial advice. Sentinel scores are informational. Cancel anytime from the billing portal linked at checkout.
           </p>
         </div>
       </div>

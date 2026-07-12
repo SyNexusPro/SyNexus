@@ -509,7 +509,7 @@ export function Pulse() {
     updatePaidPlan(userId, "PRO")
       .then(() => {
         setPlan("PRO");
-        recordTrustedPlanGrant("PRO", "creem_checkout");
+        recordTrustedPlanGrant("PRO", "subscription_checkout");
         localStorage.setItem(PLAN_STORAGE_KEY, "PRO");
         notifySynexusPlanChanged();
         setAuthMessage({

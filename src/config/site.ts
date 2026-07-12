@@ -107,7 +107,7 @@ export const SECURITY_POINTS = [
 
 export const PRIVACY_HIGHLIGHTS = [
   "We collect account email and usage logs to operate Pulse, Pro, and Operator Link.",
-  "Payment metadata comes from Creem; we do not store full card numbers.",
+  "Payment metadata comes from our subscription platform; we do not store full card numbers.",
   "Some preferences and chat history may stay on your device via local storage.",
   "We do not sell personal information. See the full Privacy Policy for retention and your rights.",
 ] as const;
@@ -131,7 +131,7 @@ export const FAQ_ITEMS = [
   },
   {
     q: "How do I cancel Synexus Pro?",
-    a: "Cancel through the Creem customer portal or checkout tools linked from Pulse. Access continues until the end of the paid billing period. See our Refund Policy for refund eligibility.",
+    a: "Cancel through the billing portal or subscription tools linked from Pulse (the provider shown at checkout). Access continues until the end of the paid billing period. See our Refund Policy for refund eligibility.",
   },
   {
     q: "What is Synexus's refund policy?",
