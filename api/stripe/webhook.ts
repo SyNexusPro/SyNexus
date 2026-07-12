@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import Stripe from "stripe";
 import type { ViteDevServer } from "vite";
-import { processStripeTreasuryEvent } from "../treasuryRevenue";
+import { processStripeTreasuryEvent } from "../../server/treasuryRevenue";
 
 type PaidPlan = "PRO";
 

@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import type { ViteDevServer } from "vite";
-import { readCreemConfig, type CreemEnv } from "./config";
+import { readCreemConfig, type CreemEnv } from "../../server/creem/config";
 
 type PaidPlan = "PRO";
 

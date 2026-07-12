@@ -40,7 +40,7 @@ As `synexus`:
 ```bash
 sudo -u synexus -i
 cd /opt/synexus
-git clone https://github.com/YOUR_GITHUB_REPO/hivemind-app.git app
+git clone https://github.com/YOUR_GITHUB_REPO/SyNexus-app.git app
 cd app
 npm install
 npm install --prefix marketing-ai

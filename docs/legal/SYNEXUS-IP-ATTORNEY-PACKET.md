@@ -6,7 +6,7 @@
 **Primary domain:** https://synexus.pro  
 **Bundle ID:** `com.synexus.app`  
 **Document date:** June 2026  
-**Codebase location:** `hivemind-app` repository (legacy folder name — do not use in filings)
+**Codebase location:** `SyNexus-app` repository
 
 > **Disclaimer:** This packet is a technical and business inventory prepared to assist legal counsel. It is not legal advice. All filings should be reviewed and submitted by a licensed attorney.
 
@@ -512,7 +512,7 @@ Automatic copyright exists in original works. Optional registration ([copyright.
 | Legacy term | Where it appears | Action |
 |-------------|------------------|--------|
 | HiveMind | Old docs, iOS bundle HTML, some images | Do not trademark; migrate UI to Synexus assets |
-| hivemind-app | Repo folder name | Cosmetic; not public brand |
+| SyNexus-app | Repo folder name | Internal only; public brand is Synexus |
 | hivemind-sol | Internal token ID for $SYN | Internal only |
 | hivemind-supabase-auth | localStorage key | Internal only |
 | hivemindtoken.ai | `ecosystem.ts` | Legacy domain — deprecate |

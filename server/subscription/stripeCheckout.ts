@@ -1,6 +1,5 @@
 import Stripe from "stripe";
-import type { JsonResponse } from "../creem/checkout";
-import type { CheckoutPayload } from "../creem/checkout";
+import type { CheckoutPayload, JsonResponse } from "../creem/checkout";
 
 type StripeCheckoutEnv = {
   STRIPE_SECRET_KEY?: string;
