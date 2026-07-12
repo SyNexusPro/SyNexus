@@ -83,6 +83,11 @@ function validateBody(raw: unknown): TitanChatRequestBody | null {
       ? body.tokenIntel.trim().slice(0, 2000)
       : null;
 
+  const operatorBrief =
+    typeof body.operatorBrief === "string" && body.operatorBrief.trim()
+      ? body.operatorBrief.trim().slice(0, 800)
+      : null;
+
   let memory: TitanPromptInput["memory"] = null;
   if (body.memory && typeof body.memory === "object") {
     const m = body.memory as Record<string, unknown>;
@@ -122,6 +127,7 @@ function validateBody(raw: unknown): TitanChatRequestBody | null {
     watchlistCount,
     feedSource,
     marketBrief,
+    operatorBrief,
     tokenIntel,
     memory,
     history,

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  buildFollowUpAfterMood,
   createTurn,
   type ConversationTurn,
   type DayMoodReply,
@@ -16,6 +15,13 @@ import { isInstantTitanPath } from "../lib/titanRouting";
 import { oracleRespondToMessage } from "../lib/oracleCryptoBrain";
 import { guardOracleChat } from "../lib/securityBot";
 import { recordTitanFeedback, hasTitanFeedbackConsent } from "../lib/titanFeedback";
+import {
+  hasTitanVoiceEnabled,
+  isTitanSpeaking,
+  isTitanVoiceSupported,
+  speakTitan,
+  stopTitanSpeech,
+} from "../lib/titanVoice";
 import { TitanChatSettings } from "./TitanChatSettings";
 import { SynexusSymbolMark } from "./SynexusSymbolMark";
 
@@ -41,6 +47,7 @@ export function OracleSupremeChat({
   const [lastUserTopic, setLastUserTopic] = useState("");
   const [thinking, setThinking] = useState(false);
   const [streamingTurnId, setStreamingTurnId] = useState<string | null>(null);
+  const [speaking, setSpeaking] = useState(false);
   const autoSpokeRef = useRef(false);
   const threadRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -84,9 +91,21 @@ export function OracleSupremeChat({
     warmTitanBrain();
   }, []);
 
+  function speakReply(text: string) {
+    if (!hasTitanVoiceEnabled() || !text.trim()) return;
+    speakTitan(text, {
+      onStart: () => setSpeaking(true),
+      onEnd: () => setSpeaking(false),
+      onError: () => setSpeaking(false),
+    });
+  }
+
   async function submitQuery(text: string) {
     const trimmed = text.trim();
     if (!trimmed || thinking) return;
+
+    stopTitanSpeech();
+    setSpeaking(false);
 
     const security = guardOracleChat(trimmed);
     if (!security.allowed) {
@@ -103,6 +122,7 @@ export function OracleSupremeChat({
       const instant = oracleRespondToMessage(trimmed, context);
       if (instant) {
         appendOracle(instant);
+        speakReply(instant);
         return;
       }
     }
@@ -128,9 +148,12 @@ export function OracleSupremeChat({
         onDelta: (partial) => updateOracleTurn(streamId, partial),
       });
       updateOracleTurn(streamId, reply);
+      speakReply(reply);
     } catch {
       if (!controller.signal.aborted) {
-        updateOracleTurn(streamId, reactToFreeText(trimmed, context));
+        const fallback = reactToFreeText(trimmed, context);
+        updateOracleTurn(streamId, fallback);
+        speakReply(fallback);
       }
     } finally {
       setThinking(false);
@@ -153,9 +176,7 @@ export function OracleSupremeChat({
   }, [showOpeningPrompt]);
 
   function handleMoodReply(mood: DayMoodReply, label: string) {
-    appendUser(label);
-    setAwaitingDayReply(false);
-    appendOracle(buildFollowUpAfterMood(mood, context));
+    void submitQuery(`${label} — ${mood === "rough" ? "having a rough day" : mood === "trading" ? "busy trading" : mood === "long" ? "long day" : "feeling good"}`);
   }
 
   function handleSend() {
@@ -176,7 +197,7 @@ export function OracleSupremeChat({
 
   return (
     <div
-      className={`oracle-chat oracle-chat--${variant}${minimal ? " oracle-chat--minimal" : ""}`}
+      className={`oracle-chat oracle-chat--${variant}${minimal ? " oracle-chat--minimal" : ""}${speaking ? " oracle-chat--speaking" : ""}`}
       role="region"
       aria-label={`Conversation with ${context.titanBotName}`}
     >
@@ -318,6 +339,29 @@ export function OracleSupremeChat({
         </button>
       </form>
 
+      {isTitanVoiceSupported() ? (
+        <div className="oracle-chat__voice-row">
+          <button
+            type="button"
+            className={`oracle-chat__voice-btn${speaking || isTitanSpeaking() ? " oracle-chat__voice-btn--stop" : ""}`}
+            onClick={() => {
+              if (speaking || isTitanSpeaking()) {
+                stopTitanSpeech();
+                setSpeaking(false);
+                return;
+              }
+              const lastOracle = [...visibleTurns].reverse().find((t) => t.role === "oracle" && t.text.trim());
+              if (lastOracle) speakReply(lastOracle.text);
+            }}
+          >
+            {speaking || isTitanSpeaking() ? "Stop voice" : "Hear Titan"}
+          </button>
+          {!hasTitanVoiceEnabled() ? (
+            <span className="oracle-chat__voice-hint">Enable voice in settings for auto-speak</span>
+          ) : null}
+        </div>
+      ) : null}
+
       {!minimal && visibleTurns.length > 0 && hasTitanFeedbackConsent() ? (
         <div className="oracle-chat__feedback">
           <span className="oracle-chat__feedback-label">Was that helpful?</span>
@@ -338,7 +382,11 @@ export function OracleSupremeChat({
         </div>
       ) : null}
 
-      {!minimal ? <TitanChatSettings titanBotName={context.titanBotName} /> : null}
+      {minimal ? (
+        <TitanChatSettings titanBotName={context.titanBotName} voiceOnly />
+      ) : (
+        <TitanChatSettings titanBotName={context.titanBotName} />
+      )}
     </div>
   );
 }

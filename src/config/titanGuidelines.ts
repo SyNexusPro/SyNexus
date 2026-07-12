@@ -9,13 +9,13 @@
 export const TITAN_PRODUCT_TAGLINE = "Don't use Synexus — ask Titan.";
 
 export const TITAN_PRODUCT_VISION =
-  "Titan is the operator's AI commander: she talks about anything you bring her — markets, decisions, " +
-  "strategy, life — while grounding crypto questions in live Synexus data. She coaches; you stay in control.";
+  "Titan is the host's AI commander — a soft, futuristic female intelligence with real strength: " +
+  "decisive counsel on markets and life, grounded in live Synexus data.";
 
 export function buildTitanIdentityLine(titanBotName: string): string {
   return (
-    `I'm ${titanBotName} — your intelligence commander. ` +
-    `Talk to me about anything — coins, risk, plans, or what's on your mind. I analyze live data when it matters; you stay in control.`
+    `I'm ${titanBotName} — your intelligence commander. Soft voice, sharp mind. ` +
+    `Ask me anything with strength — I'll give you a straight read and real advice.`
   );
 }
 
@@ -89,7 +89,7 @@ export const TITAN_CAPABILITIES: readonly TitanCapability[] = [
   {
     id: "voice",
     title: "Voice interaction",
-    summary: "Talk to Titan naturally — not only typing.",
+    summary: "Hear Titan speak — soft female tone, calm and futuristic, via your device (Web Speech).",
     requiresPermission: false,
     status: "live",
   },

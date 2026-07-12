@@ -3,6 +3,7 @@ import { synexusRiskBandLabel } from "../data/tokens";
 import type { TitanMemoryProfile } from "./titanMemory";
 import type { OracleConversationContext } from "./oracleSupremeConversation";
 import { buildAllOracleDirectives, buildTokenIntelBrief, resolveOracleTokenQuery } from "./oracleCryptoBrain";
+import { buildOperatorStrengthBrief } from "./titanOperatorBrief";
 
 function formatUsd(value: number | undefined): string {
   if (value == null || !Number.isFinite(value)) return "—";
@@ -57,6 +58,7 @@ export type TitanChatPayload = {
   watchlistCount: number;
   feedSource: "live" | "mock";
   marketBrief: string;
+  operatorBrief?: string | null;
   tokenIntel?: string | null;
   memory?: Pick<TitanMemoryProfile, "favoriteSymbols" | "riskTolerance" | "tradingNotes"> | null;
   history: TitanChatHistoryMessage[];
@@ -77,6 +79,7 @@ export function buildTitanChatPayload(
     watchlistCount: ctx.watchlistCount,
     feedSource: ctx.feedSource,
     marketBrief: buildTitanMarketBrief(ctx.tokens),
+    operatorBrief: buildOperatorStrengthBrief(ctx),
     tokenIntel: resolveTitanTokenIntel(message, ctx.tokens),
     memory: memory
       ? {

@@ -5264,6 +5264,12 @@ a {
   color: rgba(255, 200, 190, 0.95);
 }
 
+.oracle-chat__voice-hint {
+  font-size: 0.68rem;
+  color: rgba(200, 220, 200, 0.55);
+  align-self: center;
+}
+
 .oracle-chat__feedback {
   display: flex;
   flex-wrap: wrap;
