@@ -1,7 +1,22 @@
 {
   "functions": {
-    "api/**/*.ts": {
-      "includeFiles": "server/**"
+    "api/checkout.ts": {
+      "includeFiles": "lib/server/**"
+    },
+    "api/analytics.ts": {
+      "includeFiles": "lib/server/**"
+    },
+    "api/titan/chat.ts": {
+      "includeFiles": "lib/server/**"
+    },
+    "api/subscription/webhook.ts": {
+      "includeFiles": "lib/**"
+    },
+    "api/webhook.ts": {
+      "includeFiles": "lib/**"
+    },
+    "api/square/webhook.ts": {
+      "includeFiles": "lib/**"
     }
   },
   "rewrites": [

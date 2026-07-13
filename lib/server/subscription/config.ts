@@ -1,4 +1,4 @@
-import { isSquareConfigured, type SquareEnv } from "../square/config";
+import { isSquareConfigured, type SquareEnv } from "../square/config.js";
 
 export type SubscriptionEnv = SquareEnv;
 
