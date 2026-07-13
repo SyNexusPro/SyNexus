@@ -35,6 +35,8 @@
     "growth:watch": "npm run growth:watch --prefix marketing-ai",
     "go-live:check": "node scripts/go-live-check.mjs",
     "supabase:health": "node scripts/supabase-health.mjs",
+    "supabase:migrate": "node scripts/supabase-migrate.mjs",
+    "square:test-checkout": "node scripts/square-test-checkout.mjs",
     "hype:queue": "npm run hype:queue --prefix marketing-ai",
     "blog:generate": "npm run blog:generate --prefix marketing-ai",
     "treasury:status": "npm run treasury:status --prefix marketing-ai",
@@ -60,13 +62,13 @@
     "capacitor-secure-storage-plugin": "^0.13.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-router-dom": "^7.6.0",
-    "stripe": "^22.0.2"
+    "react-router-dom": "^7.6.0"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^6.0.2",
+    "postgres": "^3.4.9",
     "sharp": "^0.35.1",
     "typescript": "~5.8.0",
     "vite": "^8.0.16"

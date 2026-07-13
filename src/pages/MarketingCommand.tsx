@@ -22,7 +22,7 @@ const CHECK_ITEMS: readonly CheckDef[] = [
   { id: "reply5", label: "Reply thoughtfully to 5 crypto posts (value, not spam)" },
   { id: "share", label: "Share live Synexus app link responsibly" },
   { id: "trial-promo", label: "Promote 7-day free Pro trial · $9.99/mo after (X, TikTok, Telegram)" },
-  { id: "stripe", label: "Check Stripe subscriptions (dashboard audit)" },
+  { id: "square", label: "Check Square subscriptions (dashboard audit)" },
 ] as const;
 
 const CONTENT_CALENDAR = [
@@ -174,14 +174,14 @@ export function MarketingCommand() {
           ))}
         </ul>
         <p className="marketing-cmd-stripe-hint">
-          Stripe audit:{" "}
+          Square audit:{" "}
           <a
-            href="https://dashboard.stripe.com/subscriptions"
+            href="https://squareup.com/dashboard/subscriptions"
             target="_blank"
             rel="noopener noreferrer"
             className="marketing-cmd-inline-link"
           >
-            dashboard.stripe.com/subscriptions ↗
+            squareup.com/dashboard/subscriptions ↗
           </a>
         </p>
         {origin ? (

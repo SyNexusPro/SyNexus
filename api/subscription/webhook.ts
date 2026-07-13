@@ -1,6 +1,5 @@
 import type { ViteDevServer } from "vite";
-import { handleCreemWebhookRequest } from "../creem/webhook";
-import { handleStripeWebhookRequest } from "../stripe/webhook";
+import { handleSquareWebhookRequest } from "../../server/square/webhook";
 
 type WebhookEnv = Record<string, string | undefined>;
 
@@ -17,24 +16,6 @@ function getHeaderValue(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
 }
 
-async function dispatchWebhook(
-  rawBody: Buffer,
-  headers: Record<string, string | string[] | undefined>,
-  env: WebhookEnv,
-) {
-  const stripeSignature = getHeaderValue(headers["stripe-signature"]);
-  if (stripeSignature) {
-    return handleStripeWebhookRequest(rawBody, stripeSignature, env);
-  }
-
-  const creemSignature = getHeaderValue(headers["creem-signature"]);
-  if (creemSignature) {
-    return handleCreemWebhookRequest(rawBody, creemSignature, env);
-  }
-
-  return { statusCode: 400, body: { error: "Unknown webhook provider" } };
-}
-
 function registerWebhookRoute(server: ViteDevServer, path: string, env: WebhookEnv) {
   server.middlewares.use(path, async (req, res, next) => {
     if (req.method !== "POST") {
@@ -44,7 +25,8 @@ function registerWebhookRoute(server: ViteDevServer, path: string, env: WebhookE
 
     try {
       const rawBody = await readRawBody(req);
-      const result = await dispatchWebhook(rawBody, req.headers, env);
+      const signature = getHeaderValue(req.headers["x-square-hmacsha256-signature"]);
+      const result = await handleSquareWebhookRequest(rawBody, signature, env);
       res.statusCode = result.statusCode;
       res.setHeader("Content-Type", "application/json");
       res.end(JSON.stringify(result.body));
@@ -60,9 +42,9 @@ function registerWebhookRoute(server: ViteDevServer, path: string, env: WebhookE
   });
 }
 
-/** Registers /api/webhook plus legacy provider paths for dev. */
+/** Registers /api/webhook and /api/square/webhook for dev. */
 export function configureSubscriptionWebhookApi(server: ViteDevServer, env: WebhookEnv) {
-  for (const path of ["/api/webhook", "/api/stripe/webhook", "/api/creem/webhook"]) {
+  for (const path of ["/api/webhook", "/api/square/webhook"]) {
     registerWebhookRoute(server, path, env);
   }
 }
@@ -92,7 +74,8 @@ export default async function handler(req: ServerlessRequest, res: ServerlessRes
           ? req.body
           : await readRawBody(req);
 
-    const result = await dispatchWebhook(rawBody, req.headers, process.env);
+    const signature = getHeaderValue(req.headers["x-square-hmacsha256-signature"]);
+    const result = await handleSquareWebhookRequest(rawBody, signature, process.env);
     res.status(result.statusCode).json(result.body);
   } catch (error) {
     res.status(500).json({

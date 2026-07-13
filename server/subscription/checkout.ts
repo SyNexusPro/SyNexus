@@ -1,10 +1,10 @@
-import { createCreemCheckoutResponse, type CheckoutPayload, type JsonResponse } from "../creem/checkout";
+import { createSquareCheckoutResponse } from "../square/checkout";
 import {
-  resolveSubscriptionProvider,
+  isSubscriptionConfigured,
   SUBSCRIPTION_NOT_CONFIGURED_MESSAGE,
   type SubscriptionEnv,
 } from "./config";
-import { createStripeCheckoutResponse } from "./stripeCheckout";
+import type { CheckoutPayload, JsonResponse } from "./types";
 
 export type { CheckoutPayload, JsonResponse };
 
@@ -13,18 +13,12 @@ export async function createSubscriptionCheckoutResponse(
   headers: Record<string, string | string[] | undefined>,
   env: SubscriptionEnv,
 ): Promise<JsonResponse> {
-  const provider = resolveSubscriptionProvider(env);
-
-  if (provider === "stripe") {
-    return createStripeCheckoutResponse(payload, headers, env);
+  if (!isSubscriptionConfigured(env)) {
+    return {
+      statusCode: 503,
+      body: { error: SUBSCRIPTION_NOT_CONFIGURED_MESSAGE },
+    };
   }
 
-  if (provider === "creem") {
-    return createCreemCheckoutResponse(payload, headers, env);
-  }
-
-  return {
-    statusCode: 503,
-    body: { error: SUBSCRIPTION_NOT_CONFIGURED_MESSAGE },
-  };
+  return createSquareCheckoutResponse(payload, headers, env);
 }

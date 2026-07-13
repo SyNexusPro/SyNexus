@@ -30,7 +30,7 @@ export function Privacy() {
         </p>
         <p>
           <strong>Payment data.</strong> Subscriptions are processed by third-party subscription and payment
-          processors (for example Stripe or another provider shown at checkout). We receive limited billing metadata (such as plan status and
+          processors (for example Square, shown at checkout). We receive limited billing metadata (such as plan status and
           transaction IDs), not full card numbers, which are handled by the processor under its privacy policy.
           See our <Link to={SYNEXUS_REFUND_POLICY_PATH}>Refund Policy</Link> for billing disputes and refunds.
         </p>

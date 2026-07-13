@@ -52,9 +52,6 @@ export function configureCheckoutApi(server: ViteDevServer, env: Record<string, 
   });
 }
 
-/** @deprecated Use configureCheckoutApi */
-export const configureStripeCheckoutApi = configureCheckoutApi;
-
 export default async function handler(req: ServerlessRequest, res: ServerlessResponse) {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });

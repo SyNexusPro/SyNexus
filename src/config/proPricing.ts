@@ -32,16 +32,5 @@ export const SYNEXUS_PRICING_PATH = "/pricing";
  */
 export function getExternalPricingUrl(): string | null {
   const explicit = import.meta.env.VITE_SUBSCRIPTION_PRICING_URL?.trim();
-  if (explicit) return explicit;
-
-  // Legacy env aliases — remove once subscription platform is finalized
-  const legacyCreem = import.meta.env.VITE_CREEM_PRICING_URL?.trim();
-  if (legacyCreem) return legacyCreem;
-
-  return null;
-}
-
-/** @deprecated Use getExternalPricingUrl */
-export function getCreemPricingSheetUrl(): string | null {
-  return getExternalPricingUrl();
+  return explicit || null;
 }

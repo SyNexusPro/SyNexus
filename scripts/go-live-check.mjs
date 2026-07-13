@@ -64,10 +64,12 @@ check(
 check(status(hasKey(mergedApp, "SUPABASE_SERVICE_ROLE_KEY"), "Service role (analytics API)", "Vercel server env"));
 check(status(hasKey(mergedApp, "VITE_APP_ORIGIN") || true, "App origin", mergedApp.VITE_APP_ORIGIN || "defaults to synexus.pro"));
 
-section("Payments (Creem)");
-check(status(hasKey(mergedApp, "CREEM_API_KEY"), "Creem API key"));
-check(status(hasKey(mergedApp, "CREEM_PRODUCT_ID_PRO"), "Creem Pro product ID"));
-check(status(hasKey(mergedApp, "CREEM_WEBHOOK_SECRET"), "Creem webhook secret"));
+section("Payments (Square)");
+check(status(hasKey(mergedApp, "SQUARE_ACCESS_TOKEN"), "Square access token"));
+check(status(hasKey(mergedApp, "SQUARE_LOCATION_ID"), "Square location ID"));
+check(status(hasKey(mergedApp, "SQUARE_PLAN_VARIATION_ID_PRO"), "Square Pro plan variation ID"));
+check(status(hasKey(mergedApp, "SQUARE_WEBHOOK_SIGNATURE_KEY"), "Square webhook signature key"));
+check(status(hasKey(mergedApp, "SQUARE_WEBHOOK_NOTIFICATION_URL"), "Square webhook notification URL"));
 
 section("Owner / analytics dashboard");
 check(status(hasKey(mergedApp, "SYNEXUS_OWNER_EMAIL"), "Owner email"));
