@@ -4,6 +4,8 @@ import { DEFAULT_TITAN_BOT_NAME } from "../config/titanBot";
 import { SYNEXUS_PRO_PRICE_LABEL } from "../config/proPricing";
 import { hasStoredOwnerGrant } from "../lib/ownerAccess";
 import { isProTrialActive } from "../lib/proDemo";
+import { getCurrentUser } from "../lib/supabaseData";
+import { redirectToProCheckout, startProCheckout } from "../lib/squareCheckout";
 import { useOperatorAuth } from "../hooks/useOperatorAuth";
 import { useOpenTitanGate } from "../hooks/useOpenTitanGate";
 import { ProDemoButton } from "./ProDemoButton";
@@ -57,14 +59,13 @@ export function ProTrialBanner() {
     setError(false);
     try {
       setBusy(true);
-      const response = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: "PRO" }),
+      const user = await getCurrentUser().catch(() => null);
+      const checkout = await startProCheckout({
+        userId: user?.id,
+        email: user?.email,
       });
-      const data = (await response.json().catch(() => ({}))) as { url?: string };
-      if (!response.ok || !data.url) throw new Error("checkout failed");
-      window.location.href = data.url;
+      if (!checkout.ok) throw new Error(checkout.error);
+      redirectToProCheckout(checkout.url);
     } catch {
       setError(true);
       setBusy(false);

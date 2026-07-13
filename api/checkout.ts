@@ -58,10 +58,21 @@ export default async function handler(req: ServerlessRequest, res: ServerlessRes
     return;
   }
 
-  const payload =
-    typeof req.body === "string"
-      ? (JSON.parse(req.body) as CheckoutPayload)
-      : (req.body as CheckoutPayload | undefined) ?? {};
-  const result: JsonResponse = await createSubscriptionCheckoutResponse(payload, req.headers, process.env);
-  res.status(result.statusCode).json(result.body);
+  try {
+    const payload =
+      typeof req.body === "string"
+        ? (JSON.parse(req.body) as CheckoutPayload)
+        : (req.body as CheckoutPayload | undefined) ?? {};
+    const result: JsonResponse = await createSubscriptionCheckoutResponse(
+      payload,
+      req.headers,
+      process.env,
+    );
+    res.status(result.statusCode).json(result.body);
+  } catch (error) {
+    console.error("[checkout]", error);
+    res.status(500).json({
+      error: "Checkout is temporarily unavailable. Please try again shortly.",
+    });
+  }
 }

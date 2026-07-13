@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { SYNEXUS_PRO_PRICE_USD } from "../../src/config/proPricing";
+import { SYNEXUS_PRO_PRICE_USD } from "../subscription/pricing";
 import { readSquareConfig, type SquareEnv } from "./config";
 import { resolvePlanVariationId } from "./resolvePlanVariation";
 import type { CheckoutPayload, JsonResponse } from "../subscription/types";

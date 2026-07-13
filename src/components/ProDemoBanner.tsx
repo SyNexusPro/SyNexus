@@ -3,27 +3,31 @@ import { Link } from "react-router-dom";
 import { SYNEXUS_PRO_PRICE_SHORT } from "../config/proPricing";
 import { SYNEXUS_PRO_TRIAL_LABEL } from "../config/proTrial";
 import { DEFAULT_TITAN_BOT_NAME } from "../config/titanBot";
+import { getCurrentUser } from "../lib/supabaseData";
+import { redirectToProCheckout, startProCheckout } from "../lib/squareCheckout";
 import { useProDemo } from "../hooks/useProDemo";
 
 export function ProDemoBanner() {
   const { active, remainingLabel } = useProDemo();
   const [checkoutBusy, setCheckoutBusy] = useState(false);
+  const [checkoutError, setCheckoutError] = useState(false);
 
   if (!active) return null;
 
   async function subscribe() {
     if (checkoutBusy) return;
+    setCheckoutError(false);
     try {
       setCheckoutBusy(true);
-      const response = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: "PRO" }),
+      const user = await getCurrentUser().catch(() => null);
+      const checkout = await startProCheckout({
+        userId: user?.id,
+        email: user?.email,
       });
-      const data = (await response.json().catch(() => ({}))) as { url?: string };
-      if (!response.ok || !data.url) throw new Error("checkout failed");
-      window.location.href = data.url;
+      if (!checkout.ok) throw new Error(checkout.error);
+      redirectToProCheckout(checkout.url);
     } catch {
+      setCheckoutError(true);
       setCheckoutBusy(false);
     }
   }
@@ -34,7 +38,7 @@ export function ProDemoBanner() {
         <strong>{SYNEXUS_PRO_TRIAL_LABEL} active</strong>
         <span>
           {remainingLabel} — {DEFAULT_TITAN_BOT_NAME}, Sentinels, and full Pulse unlocked.
-          Add a card before trial ends to keep Pro access.
+          {checkoutError ? " Checkout couldn't open — tap Subscribe to retry." : " Add a card before trial ends to keep Pro access."}
         </span>
       </div>
       <div className="pro-demo-banner__actions">

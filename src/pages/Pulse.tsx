@@ -72,10 +72,10 @@ import { useTitanBotName } from "../hooks/useTitanBotName";
 import {
   isProDemoActive,
   clearExpiredProDemo,
-  ensureProTrialAfterSignup,
   formatProDemoRemaining,
   getProDemoRemainingMs,
 } from "../lib/proDemo";
+import { redirectToProCheckout, startProCheckout } from "../lib/squareCheckout";
 import { SYNEXUS_PRO_PRICE_LABEL, SYNEXUS_PRO_SUBSCRIBE_LABEL } from "../config/proPricing";
 import { SYNEXUS_PRO_TRIAL_DAYS, SYNEXUS_PRO_TRIAL_LABEL } from "../config/proTrial";
 import { getSentinelIdleMessage, getSentinelMessage } from "../lib/watcherVoice";
@@ -349,9 +349,6 @@ export function Pulse() {
       } else {
         const normalizedPlan = enforceStoredPlan(rawPlan, profile?.paid_plan === "PRO");
         setPlan(normalizedPlan);
-      }
-      if (profile?.paid_plan !== "PRO") {
-        ensureProTrialAfterSignup(user.id);
       }
       notifySynexusPlanChanged();
 
@@ -650,7 +647,21 @@ export function Pulse() {
       const message = "Welcome to The Synexus. You are signed in.";
       if (result.session && signupUser) {
         void loadData(signupUser);
+        setAuthMessage({ tone: "info", text: "Account created — opening secure checkout…" });
+        const checkout = await startProCheckout({ userId: signupUser.id, email: signupEmail });
+        if (checkout.ok) {
+          redirectToProCheckout(checkout.url);
+          return;
+        }
         await completeAuthWithBiometricOffer(result.session, signupEmail, message);
+        setAuthMessage({
+          tone: "success",
+          text: `${message} ${checkout.error}`,
+        });
+        pendingAuthMethod.current = null;
+        trackSiteEvent("sign_up", { path: "/pulse" });
+        void refreshMarketSignals();
+        return;
       } else {
         setAuthMessage({ tone: "success", text: message });
         pendingAuthMethod.current = null;
@@ -974,25 +985,23 @@ export function Pulse() {
 
   async function handleUpgradeTrigger() {
     if (checkoutBusy) return;
-    const checkoutError = USER_FRIENDLY_ERROR;
+    if (!userId || userId.startsWith("demo-")) {
+      setAuthMessage({
+        tone: "info",
+        text: "Create an account or sign in first — we'll open Square checkout next.",
+      });
+      document.getElementById("pulse-operator-link")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
     try {
       setCheckoutBusy(true);
       setAuthMessage({ tone: "info", text: "Opening secure checkout…" });
-      const response = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: "PRO" }),
-      });
-      const data = (await response.json().catch(() => ({}))) as {
-        url?: string;
-        error?: string;
-      };
-      if (!response.ok || !data.url) {
-        throw new Error(data.error ?? checkoutError);
+      const checkout = await startProCheckout({ userId, email: userEmail });
+      if (!checkout.ok) {
+        setAuthMessage({ tone: "error", text: checkout.error });
+        return;
       }
-      window.location.href = data.url;
-    } catch {
-      setAuthMessage({ tone: "error", text: checkoutError });
+      redirectToProCheckout(checkout.url);
     } finally {
       setCheckoutBusy(false);
     }
@@ -1176,8 +1185,8 @@ export function Pulse() {
         </div>
       </section>
 
-      {operatorLinked ? (
-      <PulseOperatorLink
+      <div id="pulse-operator-link">
+        <PulseOperatorLink
         userId={userId}
         operatorName={operatorName}
         userEmail={userEmail}
@@ -1210,8 +1219,8 @@ export function Pulse() {
         onResendVerification={() => void handleResendVerification()}
         onContinueToSignIn={handleContinueToSignIn}
         ownerUnlocked={hasStoredOwnerGrant()}
-      />
-      ) : null}
+        />
+      </div>
 
       <div className="pulse-card">
         <p className="pulse-card__title">Saved watchlist tokens</p>
