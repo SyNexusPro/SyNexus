@@ -19,7 +19,7 @@ export type TitanStreamHandlers = {
 
 function turnsToHistory(turns: ConversationTurn[]): TitanChatHistoryMessage[] {
   return turns
-    .slice(-6)
+    .slice(-10)
     .map((turn) => ({
       role: turn.role === "user" ? ("user" as const) : ("assistant" as const),
       content: turn.text,

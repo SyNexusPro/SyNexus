@@ -61,14 +61,20 @@ export function resolveOracleTokenQuery(text: string, pool: Token[]): Token | nu
 export function buildTokenIntelBrief(token: Token): string {
   const lines = [
     `${token.symbol} (${token.name}) · ${synexusRiskBandLabel(token.guardianRisk)} band`,
-    `Price ${formatUsd(token.priceUsd)} · 24h ${formatPct(token.change24hPct)}`,
-    `Liquidity ${formatUsd(token.liquidityUsd)} · Volume 24h ${formatUsd(token.volume24hUsd)}`,
+    `Price ${formatUsd(token.priceUsd)} · 24h ${formatPct(token.change24hPct)}${token.priceMove1hPct != null ? ` · 1h ${formatPct(token.priceMove1hPct)}` : ""}`,
+    `Liquidity ${formatUsd(token.liquidityUsd)} · Volume 24h ${formatUsd(token.volume24hUsd)}${token.marketCapUsd != null ? ` · MCap ${formatUsd(token.marketCapUsd)}` : ""}`,
   ];
 
   if (token.riskScore != null) lines.push(`Risk score ${token.riskScore}/100 · confidence ${token.confidence ?? "—"}%`);
-  if (token.topWalletPct != null) lines.push(`Top wallet ${token.topWalletPct}% · age ${token.tokenAgeHours ?? "?"}h`);
-  if (token.riskReasons?.length) lines.push(`Flags: ${token.riskReasons.slice(0, 3).join("; ")}`);
-  lines.push(token.guardianMessage);
+  if (token.topWalletPct != null) {
+    lines.push(
+      `Holders: top ${token.topWalletPct}%${token.top5WalletsPct != null ? ` · top5 ${token.top5WalletsPct}%` : ""}${token.tokenAgeHours != null ? ` · age ${token.tokenAgeHours}h` : ""}`,
+    );
+  }
+  if (token.riskReasons?.length) lines.push(`Flags: ${token.riskReasons.slice(0, 4).join("; ")}`);
+  if (token.sharpPumpThenDump) lines.push("Pattern: sharp pump-then-dump signal");
+  if (token.highVolumeLowLiquidity) lines.push("Pattern: high volume vs thin liquidity");
+  lines.push(`Sentinel read: ${token.guardianMessage}`);
 
   return lines.join("\n");
 }

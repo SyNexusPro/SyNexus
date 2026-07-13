@@ -29,14 +29,27 @@ function formatUsd(n: number): string {
 
 function formatChartTime(timestamp: number, range: PriceHistoryRange) {
   const date = new Date(timestamp);
-  if (range === "1D") {
+  if (range === "1H") {
     return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
   }
-  if (range === "1W") {
-    return date.toLocaleDateString("en-US", { weekday: "short", hour: "numeric" });
+  if (range === "24H") {
+    return date.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
   }
-  return date.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
+
+const CHART_RANGE_META: Record<PriceHistoryRange, { button: string; refreshMs: number }> = {
+  "1H": { button: "1 hr", refreshMs: 15_000 },
+  "24H": { button: "24 hr", refreshMs: 60_000 },
+  "1MO": { button: "1 mo", refreshMs: 60_000 },
+};
+
+const chartRanges: PriceHistoryRange[] = ["1H", "24H", "1MO"];
 
 function getChartGeometry(points: PriceHistoryResult["points"]) {
   const width = 1000;
@@ -67,8 +80,6 @@ function getChartGeometry(points: PriceHistoryResult["points"]) {
   };
 }
 
-const chartRanges: PriceHistoryRange[] = ["1D", "1W", "1Y"];
-
 export function TokenDetail() {
   const { tokenId } = useParams();
   const plan = useSynexusPlan();
@@ -79,7 +90,7 @@ export function TokenDetail() {
   const [reportDetails, setReportDetails] = useState("");
   const [reportBusy, setReportBusy] = useState(false);
   const [reportNote, setReportNote] = useState<string | null>(null);
-  const [chartRange, setChartRange] = useState<PriceHistoryRange>("1D");
+  const [chartRange, setChartRange] = useState<PriceHistoryRange>("24H");
   const [priceHistory, setPriceHistory] = useState<PriceHistoryResult | null>(null);
   const [chartState, setChartState] = useState<"loading" | "ready" | "error">("loading");
   const [chartTick, setChartTick] = useState(() => Date.now());
@@ -127,7 +138,7 @@ export function TokenDetail() {
     }
 
     void loadChart();
-    const intervalId = window.setInterval(() => void loadChart(), 60_000);
+    const intervalId = window.setInterval(() => void loadChart(), CHART_RANGE_META[chartRange].refreshMs);
 
     return () => {
       cancelled = true;
@@ -243,7 +254,7 @@ export function TokenDetail() {
             <h2>Live price graph</h2>
             <p>
               {priceHistory?.source === "live"
-                ? `${priceHistory.intervalLabel} trading value`
+                ? `${priceHistory.intervalLabel} candles · ${priceHistory.windowLabel}`
                 : "Preview line until live history is available"}
             </p>
           </div>
@@ -257,7 +268,7 @@ export function TokenDetail() {
               key={range}
               onClick={() => setChartRange(range)}
             >
-              {range}
+              {CHART_RANGE_META[range].button}
             </button>
           ))}
         </div>

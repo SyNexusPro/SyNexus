@@ -14,6 +14,8 @@ export type OracleConversationContext = {
   titanBotName: string;
   alertCount: number;
   watchlistCount: number;
+  /** Uppercase symbols from the operator watchlist — powers personalized Titan intel. */
+  watchlistSymbols?: string[];
   plan: "FREE" | "PRO";
   daysSinceLastVisit: number;
   tokens: Token[];

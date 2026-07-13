@@ -37,6 +37,7 @@ export function TitanSheet() {
   const [operatorName, setOperatorName] = useState("there");
   const [alertCount, setAlertCount] = useState(0);
   const [watchlistCount, setWatchlistCount] = useState(0);
+  const [watchlistSymbols, setWatchlistSymbols] = useState<string[]>([]);
   const [plan, setPlan] = useState<"FREE" | "PRO">(() =>
     normalizePlan(localStorage.getItem(PLAN_STORAGE_KEY)),
   );
@@ -79,6 +80,9 @@ export function TitanSheet() {
               if (!cancelled) {
                 setAlertCount(alertRows.length);
                 setWatchlistCount(watchlistRows.length);
+                setWatchlistSymbols(
+                  watchlistRows.map((row) => row.token_symbol?.trim().toUpperCase()).filter(Boolean),
+                );
               }
             } catch {
               /* optional counts */
@@ -106,12 +110,13 @@ export function TitanSheet() {
       titanBotName: commanderLabel,
       alertCount,
       watchlistCount,
+      watchlistSymbols,
       plan,
       daysSinceLastVisit: readDaysSinceLastVisit(),
       tokens,
       feedSource,
     }),
-    [alertCount, feedSource, operatorName, plan, commanderLabel, tokens, watchlistCount],
+    [alertCount, feedSource, operatorName, plan, commanderLabel, tokens, watchlistCount, watchlistSymbols],
   );
 
   function handleFabToggle() {

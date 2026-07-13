@@ -48,7 +48,7 @@ const MOVER_LIST_SIZE = 5;
 
 type FeedSource = "live" | "mock";
 
-export type PriceHistoryRange = "1D" | "1W" | "1Y";
+export type PriceHistoryRange = "1H" | "24H" | "1MO";
 
 export type PriceHistoryPoint = {
   timestamp: number;
@@ -60,16 +60,35 @@ export type PriceHistoryResult = {
   points: PriceHistoryPoint[];
   source: FeedSource;
   intervalLabel: string;
+  windowLabel: string;
   updatedAt: number;
 };
 
 const HISTORY_CONFIG: Record<
   PriceHistoryRange,
-  { seconds: number; type: string; intervalLabel: string; fallbackPoints: number }
+  { seconds: number; type: string; intervalLabel: string; windowLabel: string; fallbackPoints: number }
 > = {
-  "1D": { seconds: 24 * 60 * 60, type: "1m", intervalLabel: "1-minute", fallbackPoints: 48 },
-  "1W": { seconds: 7 * 24 * 60 * 60, type: "1H", intervalLabel: "1-hour", fallbackPoints: 56 },
-  "1Y": { seconds: 365 * 24 * 60 * 60, type: "1D", intervalLabel: "1-day", fallbackPoints: 52 },
+  "1H": {
+    seconds: 60 * 60,
+    type: "1m",
+    intervalLabel: "1-minute",
+    windowLabel: "last hour",
+    fallbackPoints: 60,
+  },
+  "24H": {
+    seconds: 24 * 60 * 60,
+    type: "5m",
+    intervalLabel: "5-minute",
+    windowLabel: "last 24 hours",
+    fallbackPoints: 96,
+  },
+  "1MO": {
+    seconds: 30 * 24 * 60 * 60,
+    type: "1H",
+    intervalLabel: "1-hour",
+    windowLabel: "last 30 days",
+    fallbackPoints: 90,
+  },
 };
 
 function toFiniteNumber(value: number | string | undefined): number | undefined {
@@ -315,6 +334,7 @@ export async function fetchTokenPriceHistory(
           points,
           source: "live",
           intervalLabel: config.intervalLabel,
+          windowLabel: config.windowLabel,
           updatedAt: now,
         };
       }
@@ -328,6 +348,7 @@ export async function fetchTokenPriceHistory(
     points: generateFallbackHistory(token, range),
     source: "mock",
     intervalLabel: config.intervalLabel,
+    windowLabel: config.windowLabel,
     updatedAt: now,
   };
 }

@@ -44,16 +44,32 @@ function checkRateLimit(ip: string, plan: "FREE" | "PRO"): { ok: true } | { ok: 
 
 function resolveLlmConfig(env: TitanEnv, plan: "FREE" | "PRO" = "FREE") {
   const apiKey = env.TITAN_API_KEY?.trim() || env.OPENAI_API_KEY?.trim();
-  const baseUrl = (env.TITAN_API_BASE?.trim() || "https://api.openai.com/v1").replace(/\/$/, "");
+  const baseUrl = (
+    env.TITAN_API_BASE?.trim() ||
+    env.OPENAI_API_BASE?.trim() ||
+    "https://api.openai.com/v1"
+  ).replace(/\/$/, "");
   const model =
     plan === "PRO"
-      ? env.TITAN_MODEL_PRO?.trim() || env.TITAN_MODEL?.trim() || "gpt-4o"
-      : env.TITAN_MODEL_FREE?.trim() || env.TITAN_MODEL?.trim() || "gpt-4o-mini";
+      ? env.TITAN_MODEL_PRO?.trim() ||
+        env.OPENAI_MODEL_PRO?.trim() ||
+        env.TITAN_MODEL?.trim() ||
+        env.OPENAI_MODEL?.trim() ||
+        "gpt-4o"
+      : env.TITAN_MODEL_FREE?.trim() ||
+        env.OPENAI_MODEL_FREE?.trim() ||
+        env.TITAN_MODEL?.trim() ||
+        env.OPENAI_MODEL?.trim() ||
+        "gpt-4o-mini";
   const maxTokens = Math.min(
-    1600,
-    Math.max(200, Number(plan === "PRO" ? env.TITAN_MAX_TOKENS_PRO ?? env.TITAN_MAX_TOKENS ?? 1100 : env.TITAN_MAX_TOKENS ?? 800) || 800),
+    2000,
+    Math.max(200, Number(plan === "PRO" ? env.TITAN_MAX_TOKENS_PRO ?? env.TITAN_MAX_TOKENS ?? 1400 : env.TITAN_MAX_TOKENS ?? 1000) || 1000),
   );
   return { apiKey, baseUrl, model, maxTokens };
+}
+
+function resolveTemperature(plan: "FREE" | "PRO"): number {
+  return plan === "PRO" ? 0.42 : 0.48;
 }
 
 function sanitizeMessage(text: string): string {
@@ -86,6 +102,30 @@ function validateBody(raw: unknown): TitanChatRequestBody | null {
   const operatorBrief =
     typeof body.operatorBrief === "string" && body.operatorBrief.trim()
       ? body.operatorBrief.trim().slice(0, 800)
+      : null;
+
+  const sentinelBrief =
+    typeof body.sentinelBrief === "string" && body.sentinelBrief.trim()
+      ? body.sentinelBrief.trim().slice(0, 2000)
+      : null;
+
+  const watchlistBrief =
+    typeof body.watchlistBrief === "string" && body.watchlistBrief.trim()
+      ? body.watchlistBrief.trim().slice(0, 1200)
+      : null;
+
+  const intentValues = new Set([
+    "trade_decision",
+    "comparison",
+    "token_lookup",
+    "strategy",
+    "life_counsel",
+    "explain",
+    "general",
+  ]);
+  const intentHint =
+    typeof body.intentHint === "string" && intentValues.has(body.intentHint)
+      ? (body.intentHint as TitanPromptInput["intentHint"])
       : null;
 
   let memory: TitanPromptInput["memory"] = null;
@@ -128,6 +168,9 @@ function validateBody(raw: unknown): TitanChatRequestBody | null {
     feedSource,
     marketBrief,
     operatorBrief,
+    sentinelBrief,
+    watchlistBrief,
+    intentHint,
     tokenIntel,
     memory,
     history,
@@ -159,8 +202,9 @@ async function* streamOpenAiChat(
       messages,
       stream: true,
       max_tokens: maxTokens,
-      temperature: 0.55,
-      presence_penalty: 0.1,
+      temperature: resolveTemperature(body.plan),
+      presence_penalty: 0.08,
+      frequency_penalty: 0.05,
     }),
   });
 
