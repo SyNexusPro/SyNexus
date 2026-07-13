@@ -1,4 +1,4 @@
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import { TitanShellProvider } from "../context/TitanShellContext";
 import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
 import { BottomNav } from "./BottomNav";
@@ -9,16 +9,21 @@ import { BeginnerModeCoach } from "./BeginnerModeCoach";
 
 export function AppShell() {
   const { isSimple } = useSynexusUIMode();
+  const isHome = useLocation().pathname === "/";
 
   return (
     <TitanShellProvider>
-    <div className={`app-shell${isSimple ? " app-shell--easy" : " app-shell--advanced"}`}>
-      <ProDemoBanner />
+    <div className={`app-shell${isSimple ? " app-shell--easy" : " app-shell--advanced"}${isHome ? " app-shell--home" : ""}`}>
+      {!isHome ? <ProDemoBanner /> : null}
       <main className="app-main">
-        <div className="app-mode-bar">
-          <UIModeToggle />
-        </div>
-        <BeginnerModeCoach />
+        {!isHome ? (
+          <>
+            <div className="app-mode-bar">
+              <UIModeToggle />
+            </div>
+            <BeginnerModeCoach />
+          </>
+        ) : null}
         <Outlet />
       </main>
       <TitanSheet />

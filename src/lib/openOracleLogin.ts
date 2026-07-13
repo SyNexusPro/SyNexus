@@ -35,6 +35,13 @@ export function scrollTitanGateIntoView(): void {
   });
 }
 
+/** Scroll to inline sign-in on the home hero (below the brain art). */
+export function scrollHomeSignInIntoView(): void {
+  requestAnimationFrame(() => {
+    document.getElementById("home-sign-in")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  });
+}
+
 /** Open the global Titan chat panel (AppShell OracleSupremePresence). */
 export function openTitanChat(): void {
   window.dispatchEvent(new Event(ORACLE_OPEN_CHAT_EVENT));

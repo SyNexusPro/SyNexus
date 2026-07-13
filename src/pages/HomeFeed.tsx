@@ -16,8 +16,13 @@ import {
 } from "../config/proPricing";
 import { SYNEXUS_PRO_TRIAL_DAYS } from "../config/proTrial";
 import { SynCoinLaunchBanner } from "../components/SynCoinLaunchBanner";
+import { QuickOperatorLogin } from "../components/QuickOperatorLogin";
+import { useOperatorAuth } from "../hooks/useOperatorAuth";
 import { BrainCircuitPulse } from "../components/BrainCircuitPulse";
 import { BeginnerQuickStart } from "../components/BeginnerQuickStart";
+import { BeginnerModeCoach } from "../components/BeginnerModeCoach";
+import { UIModeToggle } from "../components/UIModeToggle";
+import { ProDemoBanner } from "../components/ProDemoBanner";
 import { SentinelAlertsHub } from "../components/SentinelAlertsHub";
 import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
 import { useOpenTitanChat } from "../hooks/useOpenTitanChat";
@@ -26,6 +31,7 @@ import { fetchMvpTokenFeed } from "../services/marketDataService";
 
 export function HomeFeed() {
   const { isSimple } = useSynexusUIMode();
+  const { linked } = useOperatorAuth();
   const openTitanChat = useOpenTitanChat();
   const [searchParams] = useSearchParams();
   const scanQuery = searchParams.get("scan")?.trim() ?? "";
@@ -78,7 +84,6 @@ export function HomeFeed() {
 
   return (
     <div className={`page${isSimple ? " page--easy" : ""}`}>
-      <SynCoinLaunchBanner />
       <section className={`landing-hero${isSimple ? " landing-hero--easy" : ""}`}>
         <div className="landing-hero__inner">
           <div className="landing-hero__masthead">
@@ -135,8 +140,23 @@ export function HomeFeed() {
               />
             )}
           </div>
+          {!linked ? (
+            <div id="home-sign-in" className="landing-hero__signin">
+              <QuickOperatorLogin compact />
+            </div>
+          ) : null}
         </div>
       </section>
+
+      <div className="home-below-hero">
+        <div className="app-mode-bar">
+          <UIModeToggle />
+        </div>
+        <BeginnerModeCoach />
+        <ProDemoBanner />
+      </div>
+
+      <SynCoinLaunchBanner />
 
       {isSimple ? null : (
         <section className="home-trust-strip marketing-panel">
