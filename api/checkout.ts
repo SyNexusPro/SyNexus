@@ -1,4 +1,4 @@
-import type { ViteDevServer } from "vite";
+import type { ViteDevServer } from "./viteDevServer";
 import {
   createSubscriptionCheckoutResponse,
   type CheckoutPayload,

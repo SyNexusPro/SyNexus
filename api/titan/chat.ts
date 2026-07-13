@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { ViteDevServer } from "vite";
+import type { ViteDevServer } from "../viteDevServer";
 import { buildTitanSystemPrompt, type TitanPromptInput } from "../../server/titan/prompt";
 
 export type TitanChatRequestBody = TitanPromptInput & {

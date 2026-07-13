@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import type { ViteDevServer } from "vite";
+import type { ViteDevServer } from "./viteDevServer";
 
 type OwnerEnv = {
   SYNEXUS_OWNER_EMAIL?: string;
