@@ -985,18 +985,10 @@ export function Pulse() {
 
   async function handleUpgradeTrigger() {
     if (checkoutBusy) return;
-    if (!userId || userId.startsWith("demo-")) {
-      setAuthMessage({
-        tone: "info",
-        text: "Create an account or sign in first — we'll open Square checkout next.",
-      });
-      document.getElementById("pulse-operator-link")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      return;
-    }
     try {
       setCheckoutBusy(true);
       setAuthMessage({ tone: "info", text: "Opening secure checkout…" });
-      const checkout = await startProCheckout({ userId, email: userEmail });
+      const checkout = await startProCheckout({ userId: userId ?? undefined, email: userEmail ?? undefined });
       if (!checkout.ok) {
         setAuthMessage({ tone: "error", text: checkout.error });
         return;

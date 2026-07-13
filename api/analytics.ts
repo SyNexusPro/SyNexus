@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import type { ViteDevServer } from "./viteDevServer";
-import { verifyOwnerGrant } from "../lib/server/ownerGrant.js";
+import { verifyOwnerGrant } from "../lib/server/ownerGrant";
 
 type AnalyticsPayload = {
   grant?: string;

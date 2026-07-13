@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { ProDemoButton } from "../components/ProDemoButton";
+import { SynexusSubscribeButton } from "../components/SynexusSubscribeButton";
 import {
   getExternalPricingUrl,
   SYNEXUS_PRO_FEATURES,
@@ -46,9 +47,10 @@ export function Pricing() {
               goToPulse
               pulseHash="#synexus-pro"
             />
-            <Link to="/pulse#synexus-pro" className="pulse-button--pro pulse-synexus-pro-promo__cta">
-              {SYNEXUS_PRO_SUBSCRIBE_LABEL}
-            </Link>
+            <SynexusSubscribeButton
+              className="pulse-button--pro pulse-synexus-pro-promo__cta"
+              label={SYNEXUS_PRO_SUBSCRIBE_LABEL}
+            />
           </div>
           {externalPricingUrl ? (
             <p className="pricing-page__external">

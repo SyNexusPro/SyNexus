@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
-import { SYNEXUS_PRO_PRICE_USD } from "../subscription/pricing.js";
-import { readSquareConfig, type SquareEnv } from "./config.js";
-import { resolvePlanVariationId } from "./resolvePlanVariation.js";
-import type { CheckoutPayload, JsonResponse } from "../subscription/types.js";
+import { SYNEXUS_PRO_PRICE_USD } from "../subscription/pricing";
+import { readSquareConfig, type SquareEnv } from "./config";
+import { resolvePlanVariationId } from "./resolvePlanVariation";
+import type { CheckoutPayload, JsonResponse } from "../subscription/types";
 
 type SquarePaymentLinkResponse = {
   payment_link?: {
@@ -34,7 +34,7 @@ export async function createSquareCheckoutResponse(
     };
   }
 
-  if (payload.plan !== "PRO") {
+  if (String(payload.plan ?? "").trim().toUpperCase() !== "PRO") {
     return { statusCode: 400, body: { error: "Invalid plan" } };
   }
 

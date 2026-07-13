@@ -9,6 +9,7 @@ import { SynexusLiveScanner } from "../components/SynexusLiveScanner";
 import { ShouldIBuyPanel } from "../components/ShouldIBuyPanel";
 import { TopMoversPanel } from "../components/TopMoversPanel";
 import { ProDemoButton } from "../components/ProDemoButton";
+import { SynexusSubscribeButton } from "../components/SynexusSubscribeButton";
 import {
   SYNEXUS_PRO_OFFER_SHORT,
   SYNEXUS_PRO_PRICE_LABEL,
@@ -122,9 +123,10 @@ export function HomeFeed() {
               {isSimple ? "Wallet & tools" : "Sentinel alerts"}
             </Link>
             {!isSimple ? (
-              <Link to="/pulse#synexus-pro" className="landing-hero__actions--pro">
-                Synexus Pro
-              </Link>
+              <SynexusSubscribeButton
+                className="landing-hero__actions--pro"
+                label="Synexus Pro"
+              />
             ) : (
               <ProDemoButton
                 className="landing-hero__actions--demo"

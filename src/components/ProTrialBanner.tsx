@@ -7,7 +7,6 @@ import { isProTrialActive } from "../lib/proDemo";
 import { getCurrentUser } from "../lib/supabaseData";
 import { redirectToProCheckout, startProCheckout } from "../lib/squareCheckout";
 import { useOperatorAuth } from "../hooks/useOperatorAuth";
-import { useOpenTitanGate } from "../hooks/useOpenTitanGate";
 import { ProDemoButton } from "./ProDemoButton";
 
 const PLAN_STORAGE_KEY = "hivemind_paid_plan";
@@ -34,7 +33,6 @@ function isBannerDismissed(): boolean {
 
 export function ProTrialBanner() {
   const { linked } = useOperatorAuth();
-  const openTitanGate = useOpenTitanGate();
   const [hidden, setHidden] = useState(() => isSynexusProPlan() || isBannerDismissed());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
@@ -52,10 +50,6 @@ export function ProTrialBanner() {
 
   async function startCheckout() {
     if (busy) return;
-    if (!linked) {
-      openTitanGate();
-      return;
-    }
     setError(false);
     try {
       setBusy(true);
@@ -72,10 +66,10 @@ export function ProTrialBanner() {
     }
   }
 
-  const detail = !linked
-    ? `${SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial · card required at signup · then ${SYNEXUS_PRO_PRICE_LABEL}`
-    : error
-      ? "Checkout couldn't open. Tap to retry."
+  const detail = error
+    ? "Checkout couldn't open. Tap Subscribe to retry."
+    : !linked
+      ? `${SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial · card at checkout · then ${SYNEXUS_PRO_PRICE_LABEL}`
       : `${SYNEXUS_PRO_TRIAL_LABEL} active or available · ${SYNEXUS_PRO_PRICE_LABEL} after trial · cancel anytime`;
 
   return (
@@ -88,16 +82,14 @@ export function ProTrialBanner() {
         className="pro-trial-banner__demo"
         label={linked ? `Open ${SYNEXUS_PRO_TRIAL_LABEL}` : `Enter ${DEFAULT_TITAN_BOT_NAME} · sign up free`}
       />
-      {linked ? (
-        <button
-          type="button"
-          className="pro-trial-banner__cta"
-          disabled={busy}
-          onClick={() => void startCheckout()}
-        >
-          {busy ? "Opening…" : "Subscribe"}
-        </button>
-      ) : null}
+      <button
+        type="button"
+        className="pro-trial-banner__cta"
+        disabled={busy}
+        onClick={() => void startCheckout()}
+      >
+        {busy ? "Opening…" : "Subscribe"}
+      </button>
       <button type="button" className="pro-trial-banner__close" onClick={dismiss} aria-label="Dismiss offer">
         ×
       </button>

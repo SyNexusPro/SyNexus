@@ -3,7 +3,7 @@ import {
   createSubscriptionCheckoutResponse,
   type CheckoutPayload,
   type JsonResponse,
-} from "../lib/server/subscription/checkout.js";
+} from "../lib/server/subscription/checkout";
 
 type ServerlessRequest = NodeJS.ReadableStream & {
   method?: string;

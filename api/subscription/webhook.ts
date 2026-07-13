@@ -1,5 +1,5 @@
 import type { ViteDevServer } from "../viteDevServer";
-import { handleSquareWebhookRequest } from "../../lib/server/square/webhook.js";
+import { handleSquareWebhookRequest } from "../../lib/server/square/webhook";
 
 type WebhookEnv = Record<string, string | undefined>;
 
