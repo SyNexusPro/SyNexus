@@ -95,15 +95,16 @@ export function HomeFeed() {
                   <img
                     className="neural-brain-logo neural-brain-logo--art"
                     src="/hivemind-brain.png"
-                    alt="Synexus"
+                    alt=""
+                    aria-hidden
                   />
                 </BrainCircuitPulse>
-                <img
-                  className="landing-hero__wordmark"
-                  src="/synexus-wordmark.png"
-                  alt="Synexus"
-                />
               </div>
+              <img
+                className="landing-hero__wordmark"
+                src="/synexus-wordmark.png"
+                alt="Synexus"
+              />
               <span className="neural-node neural-node--mid-right" aria-hidden />
               <span className="neural-node neural-node--right" aria-hidden />
             </div>

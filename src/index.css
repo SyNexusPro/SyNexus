@@ -4022,6 +4022,7 @@ a {
   height: auto;
   padding: 6px 0 8px;
   align-self: stretch;
+  flex-direction: column;
 }
 
 .neural-hero-art--masthead::before,
@@ -4038,9 +4039,9 @@ a {
   width: 100%;
   max-width: min(540px, 94vw);
   margin: 0 auto;
-  min-height: clamp(296px, 64vw, 448px);
-  max-height: min(472px, 66vh);
-  padding-bottom: clamp(80px, 18vw, 104px);
+  min-height: clamp(260px, 58vw, 400px);
+  max-height: min(420px, 58vh);
+  padding-bottom: clamp(16px, 4vw, 24px);
   background: #020702;
   border: 1px solid rgba(137, 255, 47, 0.52);
   border-radius: 26px;
@@ -4077,17 +4078,15 @@ a {
 }
 
 .landing-hero__wordmark {
-  position: absolute;
-  z-index: 2;
-  bottom: clamp(12px, 4vw, 20px);
-  left: 50%;
-  translate: -50% 0;
-  width: min(86%, 400px);
+  position: relative;
+  z-index: 3;
+  display: block;
+  width: min(92%, 420px);
   height: auto;
+  margin: 12px auto 0;
   background: #000;
   border-radius: 8px;
   filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.8));
-  pointer-events: none;
 }
 
 .neural-hero-art::before,
