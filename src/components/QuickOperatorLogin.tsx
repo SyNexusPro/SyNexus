@@ -8,12 +8,19 @@ import {
   signUpWithEmail,
   upsertSignupProfile,
 } from "../lib/supabaseData";
+import { isEmailVerified } from "../lib/emailVerification";
 import { useOperatorAuth } from "../hooks/useOperatorAuth";
 
 const DEMO_SESSION_KEY = "hivemind_demo_session";
 
+export type QuickOperatorAuthResult = {
+  mode: "signin" | "signup";
+  userId?: string;
+  email?: string;
+};
+
 type Props = {
-  onSuccess?: () => void;
+  onSuccess?: (result?: QuickOperatorAuthResult) => void;
   compact?: boolean;
   initialMode?: "signin" | "signup";
   showTabs?: boolean;
@@ -111,17 +118,29 @@ export function QuickOperatorLogin({
             ? "Welcome — you're signed in."
             : `Check ${trimmedEmail} to verify your email, then sign in.`,
         });
-        if (user && result.session) {
-          onSuccess?.();
+        if (user && result.session && isEmailVerified(user)) {
+          onSuccess?.({ mode: "signup", userId: user.id, email: trimmedEmail });
         }
         return;
       }
 
-      await signInWithEmail(trimmedEmail, password);
+      const signInResult = await signInWithEmail(trimmedEmail, password);
+      const signedInUser = signInResult.user ?? signInResult.session?.user ?? null;
+      if (signedInUser && !isEmailVerified(signedInUser)) {
+        if (hasSupabaseEnv && supabase) {
+          await signOut();
+        }
+        setMessage({ tone: "info", text: "Confirm your email before signing in." });
+        return;
+      }
       saveRememberedEmail(trimmedEmail);
       setPassword("");
       setMessage({ tone: "success", text: "Signed in." });
-      onSuccess?.();
+      onSuccess?.({
+        mode: "signin",
+        userId: signedInUser?.id,
+        email: trimmedEmail,
+      });
     } catch (err) {
       setMessage({ tone: "error", text: describeAuthError(err) });
     } finally {
@@ -133,7 +152,7 @@ export function QuickOperatorLogin({
     return (
       <div className="quick-login quick-login--linked">
         <p className="quick-login__linked">You&apos;re signed in.</p>
-        <button type="button" className="quick-login__submit" onClick={onSuccess}>
+        <button type="button" className="quick-login__submit" onClick={() => onSuccess?.()}>
           Close
         </button>
         <button

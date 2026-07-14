@@ -74,6 +74,7 @@ import {
   clearExpiredProDemo,
   formatProDemoRemaining,
   getProDemoRemainingMs,
+  syncProTrialForUser,
 } from "../lib/proDemo";
 import { redirectToProCheckout, startProCheckout } from "../lib/squareCheckout";
 import { SYNEXUS_PRO_PRICE_LABEL, SYNEXUS_PRO_SUBSCRIBE_LABEL } from "../config/proPricing";
@@ -336,6 +337,7 @@ export function Pulse() {
       }
 
       clearEmailVerificationPending();
+      syncProTrialForUser(user.id);
 
       const profile = await fetchProfile(user.id);
       if (profile?.titan_bot_name) {
@@ -343,11 +345,16 @@ export function Pulse() {
       }
       setOperatorName(resolveOperatorDisplayName(profile, user.email));
       saveIntroOperatorName(resolveOperatorName(profile));
-      const rawPlan = profile?.paid_plan ?? localStorage.getItem(PLAN_STORAGE_KEY) ?? "FREE";
+      const hasPaidProfile = profile?.paid_plan === "PRO";
+      const trialActive = isProDemoActive();
+      const rawPlan =
+        hasPaidProfile || trialActive
+          ? "PRO"
+          : (profile?.paid_plan ?? localStorage.getItem(PLAN_STORAGE_KEY) ?? "FREE");
       if (hasStoredOwnerGrant()) {
         setPlan("PRO");
       } else {
-        const normalizedPlan = enforceStoredPlan(rawPlan, profile?.paid_plan === "PRO");
+        const normalizedPlan = enforceStoredPlan(rawPlan, hasPaidProfile);
         setPlan(normalizedPlan);
       }
       notifySynexusPlanChanged();
@@ -646,8 +653,18 @@ export function Pulse() {
       }
       const message = "Welcome to The Synexus. You are signed in.";
       if (result.session && signupUser) {
+        const trialStarted = syncProTrialForUser(signupUser.id);
+        if (trialStarted) {
+          setPlan("PRO");
+          notifySynexusPlanChanged();
+        }
         void loadData(signupUser);
-        setAuthMessage({ tone: "info", text: "Account created — opening secure checkout…" });
+        setAuthMessage({
+          tone: "info",
+          text: trialStarted
+            ? `${SYNEXUS_PRO_TRIAL_LABEL} started — opening secure checkout…`
+            : "Account created — opening secure checkout…",
+        });
         const checkout = await startProCheckout({ userId: signupUser.id, email: signupEmail });
         if (checkout.ok) {
           redirectToProCheckout(checkout.url);
@@ -656,7 +673,9 @@ export function Pulse() {
         await completeAuthWithBiometricOffer(result.session, signupEmail, message);
         setAuthMessage({
           tone: "success",
-          text: `${message} ${checkout.error}`,
+          text: trialStarted
+            ? `${message} Your ${SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial is active. ${checkout.error}`
+            : `${message} ${checkout.error}`,
         });
         pendingAuthMethod.current = null;
         trackSiteEvent("sign_up", { path: "/pulse" });

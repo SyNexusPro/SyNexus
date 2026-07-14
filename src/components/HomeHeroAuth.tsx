@@ -5,7 +5,8 @@ import { useOperatorAuth } from "../hooks/useOperatorAuth";
 import { useTitanBotName } from "../hooks/useTitanBotName";
 import { ORACLE_OPEN_LOGIN_EVENT } from "../lib/openOracleLogin";
 import { attemptBiometricQuickSignIn } from "../lib/quickOperatorSignIn";
-import { QuickOperatorLogin } from "./QuickOperatorLogin";
+import { syncProTrialForUser } from "../lib/proDemo";
+import { QuickOperatorLogin, type QuickOperatorAuthResult } from "./QuickOperatorLogin";
 import { SynexusSubscribeButton } from "./SynexusSubscribeButton";
 
 type AuthPanel = null | "signup" | "signin";
@@ -81,8 +82,11 @@ export function HomeHeroAuth({ isSimple = false }: Props) {
     }
   }
 
-  function handleAuthSuccess() {
+  function handleAuthSuccess(result?: QuickOperatorAuthResult) {
     closePanel();
+    if (result?.userId) {
+      syncProTrialForUser(result.userId);
+    }
     navigate("/pulse");
   }
 

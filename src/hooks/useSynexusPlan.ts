@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { normalizeSynexusPlan, PLAN_STORAGE_KEY, type SynexusPlan } from "../lib/tradingFees";
-import { clearExpiredProDemo } from "../lib/proDemo";
+import { clearExpiredProDemo, restoreActiveProTrialGrant } from "../lib/proDemo";
 
 export const SYNEXUS_PLAN_CHANGED = "synexus-plan-changed";
 
@@ -12,12 +12,14 @@ export function notifySynexusPlanChanged(): void {
 export function useSynexusPlan(): SynexusPlan {
   const [plan, setPlan] = useState<SynexusPlan>(() => {
     clearExpiredProDemo();
+    restoreActiveProTrialGrant();
     return normalizeSynexusPlan(localStorage.getItem(PLAN_STORAGE_KEY));
   });
 
   useEffect(() => {
     const sync = () => {
       clearExpiredProDemo();
+      restoreActiveProTrialGrant();
       setPlan(normalizeSynexusPlan(localStorage.getItem(PLAN_STORAGE_KEY)));
     };
     window.addEventListener("storage", sync);

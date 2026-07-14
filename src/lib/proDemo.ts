@@ -155,9 +155,38 @@ export function startProTrial(userId: string, now = Date.now()): number {
   return startProDemo(userId, now);
 }
 
+/** Re-apply trusted trial grant after reload (sessionStorage grant is lost on restart). */
+export function restoreProTrialGrant(userId: string, now = Date.now()): boolean {
+  if (!userId || userId.startsWith("demo-")) return false;
+  clearExpiredProDemo(now);
+  if (hasPaidProGrant()) return false;
+
+  const trialUserId = localStorage.getItem(PRO_TRIAL_USER_ID_KEY);
+  if (!trialUserId || trialUserId !== userId || !isProTrialActive(now)) return false;
+
+  recordTrustedPlanGrant("PRO", "trial_7d");
+  try {
+    if (localStorage.getItem(PLAN_STORAGE_KEY) !== "PRO") {
+      localStorage.setItem(PLAN_STORAGE_KEY, "PRO");
+    }
+  } catch {
+    /* ignore */
+  }
+  notifySynexusPlanChanged();
+  notifyDemoChanged();
+  return true;
+}
+
+/** Restore an active device trial before auth hydrates (same browser session). */
+export function restoreActiveProTrialGrant(now = Date.now()): boolean {
+  const trialUserId = localStorage.getItem(PRO_TRIAL_USER_ID_KEY);
+  if (!trialUserId) return false;
+  return restoreProTrialGrant(trialUserId, now);
+}
+
 /**
  * Start the 7-day Pro trial after a verified sign-up / sign-in.
- * No credit card — app-granted access only.
+ * One trial per user; paid Square checkout overrides trial access.
  */
 export function ensureProTrialAfterSignup(userId: string, now = Date.now()): boolean {
   if (!userId || userId.startsWith("demo-")) return false;
@@ -166,13 +195,22 @@ export function ensureProTrialAfterSignup(userId: string, now = Date.now()): boo
 
   const trialUserId = localStorage.getItem(PRO_TRIAL_USER_ID_KEY);
   if (isProTrialActive(now)) {
-    return trialUserId === userId;
+    if (trialUserId === userId) {
+      restoreProTrialGrant(userId, now);
+      return true;
+    }
+    return false;
   }
 
   if (hasProTrialBeenUsed(userId)) return false;
 
   startProDemo(userId, now);
   return true;
+}
+
+/** Restore or start trial for a verified operator after auth. */
+export function syncProTrialForUser(userId: string, now = Date.now()): boolean {
+  return restoreProTrialGrant(userId, now) || ensureProTrialAfterSignup(userId, now);
 }
 
 /** @deprecated Use ensureProTrialAfterSignup after verified sign-in. */
