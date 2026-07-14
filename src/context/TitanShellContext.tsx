@@ -12,7 +12,6 @@ import {
   ORACLE_CLOSE_CHAT_EVENT,
   ORACLE_OPEN_CHAT_EVENT,
   ORACLE_OPEN_LOGIN_EVENT,
-  scrollHomeSignInIntoView,
 } from "../lib/openOracleLogin";
 
 export type TitanSheetMode = "chat" | "login";
@@ -39,7 +38,7 @@ export function TitanShellProvider({ children }: { children: ReactNode }) {
 
   const openLogin = useCallback(() => {
     if (location.pathname === "/") {
-      scrollHomeSignInIntoView();
+      window.dispatchEvent(new Event(ORACLE_OPEN_LOGIN_EVENT));
       return;
     }
     setSheetMode("login");
@@ -57,10 +56,7 @@ export function TitanShellProvider({ children }: { children: ReactNode }) {
       setSheetOpen(true);
     }
     function onOpenLogin() {
-      if (location.pathname === "/") {
-        scrollHomeSignInIntoView();
-        return;
-      }
+      if (location.pathname === "/") return;
       setSheetMode("login");
       setSheetOpen(true);
     }

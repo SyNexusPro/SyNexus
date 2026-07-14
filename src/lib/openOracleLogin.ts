@@ -35,10 +35,10 @@ export function scrollTitanGateIntoView(): void {
   });
 }
 
-/** Scroll to inline sign-in on the home hero (below the brain art). */
+/** Scroll to inline auth panel on the home hero. */
 export function scrollHomeSignInIntoView(): void {
   requestAnimationFrame(() => {
-    document.getElementById("home-sign-in")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    document.getElementById("home-auth-panel")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   });
 }
 

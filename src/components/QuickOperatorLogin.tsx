@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { passwordStrengthLabel, validateSignupPassword } from "../lib/authCredentials";
 import { loadRememberedEmail, saveRememberedEmail } from "../lib/authRemember";
 import { hasSupabaseEnv, supabase } from "../lib/supabaseClient";
@@ -15,6 +15,8 @@ const DEMO_SESSION_KEY = "hivemind_demo_session";
 type Props = {
   onSuccess?: () => void;
   compact?: boolean;
+  initialMode?: "signin" | "signup";
+  showTabs?: boolean;
 };
 
 function describeAuthError(err: unknown): string {
@@ -35,9 +37,14 @@ function describeAuthError(err: unknown): string {
   return msg || "Something went wrong. Try again.";
 }
 
-export function QuickOperatorLogin({ onSuccess, compact = false }: Props) {
+export function QuickOperatorLogin({
+  onSuccess,
+  compact = false,
+  initialMode = "signin",
+  showTabs = true,
+}: Props) {
   const { linked } = useOperatorAuth();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup">(initialMode);
   const [email, setEmail] = useState(() => loadRememberedEmail() ?? "");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -52,6 +59,11 @@ export function QuickOperatorLogin({ onSuccess, compact = false }: Props) {
     if (!check.ok) return check.message ?? null;
     return passwordStrengthLabel(check.score);
   }, [mode, password]);
+
+  useEffect(() => {
+    setMode(initialMode);
+    setMessage(null);
+  }, [initialMode]);
 
   async function handleSubmit() {
     const trimmedEmail = email.trim();
@@ -152,27 +164,33 @@ export function QuickOperatorLogin({ onSuccess, compact = false }: Props) {
   }
 
   return (
-    <section className={`quick-login${compact ? " quick-login--compact" : ""}`} aria-label="Sign in">
-      <div className="quick-login__tabs" role="tablist" aria-label="Account mode">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mode === "signin"}
-          className={`quick-login__tab${mode === "signin" ? " quick-login__tab--active" : ""}`}
-          onClick={() => setMode("signin")}
-        >
-          Sign in
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mode === "signup"}
-          className={`quick-login__tab${mode === "signup" ? " quick-login__tab--active" : ""}`}
-          onClick={() => setMode("signup")}
-        >
-          Create account
-        </button>
-      </div>
+    <section className={`quick-login${compact ? " quick-login--compact" : ""}`} aria-label="Account access">
+      {showTabs ? (
+        <div className="quick-login__tabs" role="tablist" aria-label="Account mode">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === "signin"}
+            className={`quick-login__tab${mode === "signin" ? " quick-login__tab--active" : ""}`}
+            onClick={() => setMode("signin")}
+          >
+            Sign in
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === "signup"}
+            className={`quick-login__tab${mode === "signup" ? " quick-login__tab--active" : ""}`}
+            onClick={() => setMode("signup")}
+          >
+            Create account
+          </button>
+        </div>
+      ) : (
+        <p className="quick-login__mode-label">
+          {mode === "signup" ? "Create your Synexus account" : "Sign in to Synexus"}
+        </p>
+      )}
 
       {message ? (
         <p className={`quick-login__message quick-login__message--${message.tone}`} role="status">

@@ -8,16 +8,13 @@ import { SupportedWallets } from "../components/SupportedWallets";
 import { SynexusLiveScanner } from "../components/SynexusLiveScanner";
 import { ShouldIBuyPanel } from "../components/ShouldIBuyPanel";
 import { TopMoversPanel } from "../components/TopMoversPanel";
-import { ProDemoButton } from "../components/ProDemoButton";
-import { SynexusSubscribeButton } from "../components/SynexusSubscribeButton";
+import { HomeHeroAuth } from "../components/HomeHeroAuth";
 import {
   SYNEXUS_PRO_OFFER_SHORT,
   SYNEXUS_PRO_PRICE_LABEL,
 } from "../config/proPricing";
 import { SYNEXUS_PRO_TRIAL_DAYS } from "../config/proTrial";
 import { SynCoinLaunchBanner } from "../components/SynCoinLaunchBanner";
-import { QuickOperatorLogin } from "../components/QuickOperatorLogin";
-import { useOperatorAuth } from "../hooks/useOperatorAuth";
 import { BrainCircuitPulse } from "../components/BrainCircuitPulse";
 import { BeginnerQuickStart } from "../components/BeginnerQuickStart";
 import { BeginnerModeCoach } from "../components/BeginnerModeCoach";
@@ -31,7 +28,6 @@ import { fetchMvpTokenFeed } from "../services/marketDataService";
 
 export function HomeFeed() {
   const { isSimple } = useSynexusUIMode();
-  const { linked } = useOperatorAuth();
   const openTitanChat = useOpenTitanChat();
   const [searchParams] = useSearchParams();
   const scanQuery = searchParams.get("scan")?.trim() ?? "";
@@ -117,35 +113,7 @@ export function HomeFeed() {
               ? `Don't dig through menus. Paste any token and ask Titan — ${SYNEXUS_PRO_OFFER_SHORT}`
               : "Detect scams, track whales, monitor momentum, and trade smarter."}
           </p>
-          <div className="landing-hero__actions">
-            {isSimple ? null : (
-              <ProDemoButton
-                className="landing-hero__actions--demo"
-                goToPulse
-                pulseHash="#synexus-pro"
-              />
-            )}
-            <Link to="/pulse" className="landing-hero__actions--secondary">
-              {isSimple ? "Wallet & tools" : "Sentinel alerts"}
-            </Link>
-            {!isSimple ? (
-              <SynexusSubscribeButton
-                className="landing-hero__actions--pro"
-                label="Synexus Pro"
-              />
-            ) : (
-              <ProDemoButton
-                className="landing-hero__actions--demo"
-                goToPulse
-                pulseHash="#synexus-pro"
-              />
-            )}
-          </div>
-          {!linked ? (
-            <div id="home-sign-in" className="landing-hero__signin">
-              <QuickOperatorLogin compact />
-            </div>
-          ) : null}
+          <HomeHeroAuth isSimple={isSimple} />
         </div>
       </section>
 
