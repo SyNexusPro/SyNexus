@@ -4106,6 +4106,10 @@ a {
     inset 0 1px rgba(255, 255, 255, 0.06);
 }
 
+.neural-hero-art--masthead .neural-hero-art__frame {
+  background: transparent;
+}
+
 .neural-hero-art--masthead .neural-brain-logo--art {
   display: block;
   width: 100%;
@@ -4317,10 +4321,28 @@ a {
 }
 
 .brain-pulse--hero .brain-pulse__circuits {
-  top: 42%;
-  width: 200%;
-  height: 200%;
-  margin: -100% 0 0 -100%;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  margin: -50% 0 0 -50%;
+}
+
+.brain-pulse--hero .brain-pulse__main,
+.brain-pulse--hero .brain-pulse__branch {
+  animation: none;
+  stroke-dasharray: none;
+  stroke-dashoffset: 0;
+  stroke: var(--brain-line-dim);
+  opacity: 0.42;
+}
+
+.brain-pulse--hero .brain-pulse__node {
+  display: none;
+}
+
+.brain-pulse--hero .brain-pulse__ring {
+  display: none;
 }
 
 .brain-pulse__main,
@@ -4426,7 +4448,6 @@ a {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .brain-pulse__content,
   .brain-pulse__content .synexus-symbol-box__img,
   .brain-pulse__content .neural-brain-logo--art {
     animation: brain-heartbeat var(--brain-beat) ease-in-out infinite;
@@ -4556,7 +4577,6 @@ a {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .brain-pulse__content,
   .brain-pulse__content .synexus-symbol-box__img,
   .brain-pulse__content .neural-brain-logo--art,
   .brain-pulse__main,

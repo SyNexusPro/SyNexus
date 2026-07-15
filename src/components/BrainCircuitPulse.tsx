@@ -28,25 +28,29 @@ export function BrainCircuitPulse({
     <div
       className={`brain-pulse brain-pulse--${variant}${circuits ? " brain-pulse--circuits" : ""}${className ? ` ${className}` : ""}`}
     >
-      {circuits ? (
+      {circuits && variant !== "hero" ? (
         <svg className="brain-pulse__circuits" viewBox="-50 -50 100 100" focusable="false">
           {TRUNK_ANGLES.map((deg) => (
             <g key={deg} className="brain-pulse__trunk" transform={`rotate(${deg})`}>
-              <path className="brain-pulse__main" d="M 0 6 L 0 42" vectorEffect="non-scaling-stroke" />
-              <path className="brain-pulse__branch" d="M 0 20 L 9 14" vectorEffect="non-scaling-stroke" />
+              <path className="brain-pulse__main" d="M 0 6 L 0 48" vectorEffect="non-scaling-stroke" />
+              <path className="brain-pulse__branch" d="M 0 22 L 10 16" vectorEffect="non-scaling-stroke" />
               <path
                 className="brain-pulse__branch brain-pulse__branch--alt"
-                d="M 0 28 L -8 22"
+                d="M 0 32 L -9 26"
                 vectorEffect="non-scaling-stroke"
               />
-              <circle className="brain-pulse__node" cx="0" cy="42" r="2.2" />
+              <circle className="brain-pulse__node" cx="0" cy="48" r="2.2" />
             </g>
           ))}
           <circle className="brain-pulse__core" cx="0" cy="0" r="3.5" />
         </svg>
       ) : null}
-      <span className="brain-pulse__ring" />
-      <span className="brain-pulse__ring brain-pulse__ring--echo" />
+      {variant !== "hero" ? (
+        <>
+          <span className="brain-pulse__ring" />
+          <span className="brain-pulse__ring brain-pulse__ring--echo" />
+        </>
+      ) : null}
       <div className="brain-pulse__content">{children}</div>
     </div>
   );

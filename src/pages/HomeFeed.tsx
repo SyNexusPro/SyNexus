@@ -84,8 +84,6 @@ export function HomeFeed() {
         <div className="landing-hero__inner">
           <div className="landing-hero__masthead">
             <div className="neural-hero-art neural-hero-art--masthead">
-              <span className="neural-node neural-node--left" aria-hidden />
-              <span className="neural-node neural-node--mid-left" aria-hidden />
               <div className="neural-hero-art__frame">
                 <BrainCircuitPulse variant="hero" className="neural-brain-pulse-wrap">
                   <img
@@ -101,8 +99,6 @@ export function HomeFeed() {
                 src="/synexus-wordmark.png"
                 alt="Synexus"
               />
-              <span className="neural-node neural-node--mid-right" aria-hidden />
-              <span className="neural-node neural-node--right" aria-hidden />
             </div>
           </div>
           <h1 className="landing-hero__headline">
