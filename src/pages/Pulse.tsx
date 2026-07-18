@@ -168,6 +168,7 @@ function describeAuthError(err: unknown): string {
 export function Pulse() {
   const [searchParams] = useSearchParams();
   const scanQuery = searchParams.get("scan")?.trim() ?? "";
+  const godModeEntry = searchParams.get("god") === "1" || searchParams.get("mode") === "god";
   const [email, setEmail] = useState(() => loadRememberedEmail());
   const [password, setPassword] = useState("");
   const [recoveryMode, setRecoveryMode] = useState(
@@ -373,6 +374,13 @@ export function Pulse() {
   }
 
   useEffect(() => {
+    if (!godModeEntry) return;
+    requestAnimationFrame(() => {
+      document.getElementById("pulse-operator-link")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, [godModeEntry]);
+
+  useEffect(() => {
     const demoSession = localStorage.getItem(DEMO_SESSION_KEY);
     if (demoSession) {
       setUserId(demoSession);
@@ -530,12 +538,12 @@ export function Pulse() {
   async function handleOwnerUnlock() {
     if (authBusy) return;
     if (!email || !password) {
-      setAuthMessage({ tone: "error", text: "Enter your command ID and key." });
+      setAuthMessage({ tone: "error", text: "Enter your god mode ID and key." });
       return;
     }
     try {
       setAuthBusy(true);
-      setAuthMessage({ tone: "info", text: "Verifying command code…" });
+      setAuthMessage({ tone: "info", text: "Verifying god mode credentials…" });
       const result = await unlockOwnerAccess(email, password);
       if (!result.ok) {
         setAuthMessage({ tone: "error", text: result.message });
@@ -1230,6 +1238,7 @@ export function Pulse() {
         onResendVerification={() => void handleResendVerification()}
         onContinueToSignIn={handleContinueToSignIn}
         ownerUnlocked={hasStoredOwnerGrant()}
+        initialMode={godModeEntry ? "command" : undefined}
         />
       </div>
 

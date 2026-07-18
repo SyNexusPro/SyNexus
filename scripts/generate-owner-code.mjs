@@ -52,7 +52,7 @@ SYNEXUS_OWNER_SIGNING_KEY=${signingKey}
   console.log(`Command key: ${password}`);
   console.log("═".repeat(44));
   console.log("\nSaved to .env (gitignored). Also add these to Vercel env vars for production.");
-  console.log("Use on Pulse → Operator link → Command code tab.\n");
+  console.log("Use on /god or Pulse → Operator link → God mode tab.\n");
 }
 
 main().catch((err) => {

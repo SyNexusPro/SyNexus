@@ -37,6 +37,7 @@ const BlogPostView = lazy(() => import("./pages/Blog").then((m) => ({ default: m
 const SiteAnalytics = lazy(() =>
   import("./pages/SiteAnalytics").then((m) => ({ default: m.SiteAnalytics })),
 );
+const GodMode = lazy(() => import("./pages/GodMode").then((m) => ({ default: m.GodMode })));
 const Pricing = lazy(() => import("./pages/Pricing").then((m) => ({ default: m.Pricing })));
 const RefundPolicy = lazy(() =>
   import("./pages/RefundPolicy").then((m) => ({ default: m.RefundPolicy })),
@@ -65,6 +66,7 @@ export default function App() {
             <Route path="faq" element={<Faq />} />
             <Route path="disclaimer" element={<Disclaimer />} />
             <Route path="pulse" element={<Pulse />} />
+            <Route path="god" element={<GodMode />} />
             <Route path="pricing" element={<Pricing />} />
             <Route path="refund-policy" element={<RefundPolicy />} />
             <Route path="terms" element={<Terms />} />

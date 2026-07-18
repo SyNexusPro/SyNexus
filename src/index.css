@@ -3604,6 +3604,174 @@ a {
   color: rgba(160, 180, 165, 0.78);
 }
 
+/* ----- God mode login (/god) ----- */
+.page--god-mode {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: min(72vh, 640px);
+  padding: 24px 16px 48px;
+}
+
+.god-mode-login {
+  width: 100%;
+  max-width: min(440px, 94vw);
+  padding: 22px 20px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(137, 255, 47, 0.42);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(137, 255, 47, 0.16), transparent 55%),
+    linear-gradient(165deg, rgba(6, 18, 8, 0.98), rgba(2, 6, 2, 0.99));
+  box-shadow:
+    var(--shadow),
+    0 0 48px rgba(137, 255, 47, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.god-mode-login__eyebrow {
+  margin: 0;
+  color: rgba(137, 255, 47, 0.88);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.god-mode-login__title {
+  margin: 8px 0 0;
+  font-size: clamp(1.6rem, 5vw, 2rem);
+  letter-spacing: 0.02em;
+}
+
+.god-mode-login__lede {
+  margin: 10px 0 0;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.god-mode-login__badge {
+  margin: 0;
+  color: #baff2f;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.god-mode-login__message {
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.god-mode-login__message--info {
+  background: rgba(94, 231, 255, 0.1);
+  border: 1px solid rgba(94, 231, 255, 0.24);
+}
+
+.god-mode-login__message--success {
+  background: rgba(137, 255, 47, 0.12);
+  border: 1px solid rgba(137, 255, 47, 0.32);
+  color: #dfff9a;
+}
+
+.god-mode-login__message--error {
+  background: rgba(255, 96, 96, 0.1);
+  border: 1px solid rgba(255, 96, 96, 0.28);
+}
+
+.god-mode-login__fields {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.god-mode-login__field {
+  display: grid;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: rgba(188, 230, 200, 0.86);
+}
+
+.god-mode-login__field input {
+  width: 100%;
+  border: 1px solid rgba(137, 255, 47, 0.28);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: rgba(0, 0, 0, 0.45);
+  color: var(--text-primary);
+  font: inherit;
+}
+
+.god-mode-login__field input:focus {
+  outline: none;
+  border-color: rgba(137, 255, 47, 0.62);
+  box-shadow: 0 0 0 2px rgba(137, 255, 47, 0.18);
+}
+
+.god-mode-login__submit {
+  width: 100%;
+  margin-top: 14px;
+  border: 1px solid rgba(137, 255, 47, 0.55);
+  border-radius: 14px;
+  padding: 13px 16px;
+  background: linear-gradient(135deg, rgba(137, 255, 47, 0.28), rgba(94, 231, 255, 0.14));
+  color: #ecffd2;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.god-mode-login__submit:hover:not(:disabled) {
+  border-color: rgba(186, 255, 47, 0.85);
+}
+
+.god-mode-login__submit:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.god-mode-login__footnote {
+  margin: 12px 0 0;
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  line-height: 1.45;
+}
+
+.god-mode-login__code {
+  font-size: 0.72rem;
+  color: rgba(188, 230, 200, 0.9);
+}
+
+.god-mode-login__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.god-mode-login__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(137, 255, 47, 0.45);
+  background: rgba(137, 255, 47, 0.14);
+  color: #ecffd2;
+  text-decoration: none;
+  font-size: 0.84rem;
+  font-weight: 650;
+}
+
+.god-mode-login__cta--secondary {
+  border-color: rgba(94, 231, 255, 0.35);
+  background: rgba(94, 231, 255, 0.1);
+}
+
 .operator-link__profile {
   display: grid;
   grid-template-columns: auto 1fr auto;

@@ -58,8 +58,7 @@ export function SiteAnalytics() {
           <p className="analytics-page__eyebrow">Owner only</p>
           <h1>Site analytics</h1>
           <p>
-            Unlock your command code on <Link to="/pulse">Pulse</Link> (Command code tab) to view live traffic,
-            sign-ins, and sign-outs.
+            Sign in with god mode at <Link to="/god">/god</Link> to view live traffic, sign-ins, and sign-outs.
           </p>
         </header>
       </div>

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import type { BiometricSupport } from "../lib/biometricLogin";
 import { SYNEXUS_PRO_TRIAL_DAYS } from "../config/proTrial";
 import { useTitanBotName } from "../hooks/useTitanBotName";
@@ -40,6 +41,7 @@ type PulseOperatorLinkProps = {
   onContinueToSignIn: () => void;
   ownerUnlocked?: boolean;
   variant?: "default" | "oracle";
+  initialMode?: "return" | "link" | "command";
 };
 
 function maskEmail(email: string): string {
@@ -95,9 +97,12 @@ export function PulseOperatorLink({
   onContinueToSignIn,
   ownerUnlocked = false,
   variant = "default",
+  initialMode,
 }: PulseOperatorLinkProps) {
   const { name: titanBotName } = useTitanBotName();
-  const [mode, setMode] = useState<"return" | "link" | "command">(variant === "oracle" ? "link" : "return");
+  const [mode, setMode] = useState<"return" | "link" | "command">(
+    initialMode ?? (variant === "oracle" ? "link" : "return"),
+  );
   const [signInMethod, setSignInMethod] = useState<SignInMethod>("magic");
   const [showPassword, setShowPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -239,7 +244,7 @@ export function PulseOperatorLink({
               <p className="operator-link__email">{displayEmail}</p>
             </div>
             <span className={`operator-link__plan operator-link__plan--${plan.toLowerCase()}`}>
-              {ownerUnlocked ? "Owner · full access" : plan === "PRO" ? "Synexus Pro" : "Free tier"}
+              {ownerUnlocked ? "God mode · full access" : plan === "PRO" ? "Synexus Pro" : "Free tier"}
             </span>
           </div>
         </header>
@@ -303,10 +308,11 @@ export function PulseOperatorLink({
     );
   }
 
-  const showPasswordField = mode !== "command" && (mode === "link" || signInMethod === "password");
+  const showPasswordField =
+    mode === "command" || mode === "link" || (mode === "return" && signInMethod === "password");
   const submitLabel =
     mode === "command"
-      ? "Unlock full access"
+      ? "Enter god mode"
       : mode === "link"
         ? "Establish operator link"
         : signInMethod === "magic"
@@ -393,7 +399,7 @@ export function PulseOperatorLink({
           className={`operator-link__tab${mode === "command" ? " operator-link__tab--active" : ""}`}
           onClick={() => setMode("command")}
         >
-          Command code
+          God mode
         </button>
       </div>
 
@@ -430,20 +436,22 @@ export function PulseOperatorLink({
 
       <div className="operator-link__fields">
         <label className="operator-link__field">
-          <span>{mode === "command" ? "Command ID" : "Operator email"}</span>
+          <span>{mode === "command" ? "God mode ID" : "Operator email"}</span>
           <input
             type={mode === "command" ? "text" : "email"}
             autoComplete={mode === "command" ? "username" : "email"}
             inputMode={mode === "command" ? "text" : "email"}
             value={email}
             disabled={authBusy}
-            placeholder={mode === "command" ? "your-secret-id" : "you@email.com"}
+            placeholder={mode === "command" ? "owner-id@synexus.local" : "you@email.com"}
             onChange={(event) => onEmailChange(event.target.value)}
           />
         </label>
         {showPasswordField ? (
           <label className="operator-link__field">
-            <span>{mode === "link" ? "Choose access key" : "Access key"}</span>
+            <span>
+              {mode === "command" ? "God mode key" : mode === "link" ? "Choose access key" : "Access key"}
+            </span>
             <div className="operator-link__password-wrap">
               <input
                 type={showPassword ? "text" : "password"}
@@ -504,7 +512,8 @@ export function PulseOperatorLink({
 
       {mode === "command" ? (
         <p className="operator-link__footnote">
-          Your private command code unlocks everything — no subscription required on this device.
+          God mode unlocks everything on this device — no subscription. Or use{" "}
+          <Link to="/god">/god</Link> for a dedicated login.
         </p>
       ) : !hasSupabaseEnv ? (
         <p className="operator-link__footnote">Demo mode — server keys unlock permanent operator links.</p>

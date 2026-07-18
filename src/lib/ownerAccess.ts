@@ -67,7 +67,7 @@ export async function unlockOwnerAccess(
 
     writeStoredGrant({ grant: data.grant, expiresAt: data.expiresAt });
     applyOwnerProAccess();
-    return { ok: true, message: "Command code accepted — full Synexus access unlocked." };
+    return { ok: true, message: "God mode active — full Synexus access unlocked." };
   } catch {
     return { ok: false, message: "Could not reach owner unlock service." };
   }
