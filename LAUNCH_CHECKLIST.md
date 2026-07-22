@@ -91,4 +91,4 @@ npm run android:bundle
 
 **Short:** Safer token discovery with Sentinels, Oracle Supreme briefings, and live risk scans.
 
-**Full (excerpt):** Synexus helps you explore tokens with AI-powered Sentinels (Aegis, Pulse, Titan, Cipher), Oracle Supreme daily briefings, watchlists, and community reports. Not financial advice. Synexus Pro unlocks deeper lanes and voice briefings. Subscriptions billed through Google Play or web per your purchase path.
+**Full (excerpt):** SyNexus helps you explore tokens with AI-powered Sentinels (Aegis, Pulse, Titan, Cipher), Oracle Supreme daily briefings, watchlists, and community reports. Not financial advice. SyNexusPro unlocks deeper lanes and voice briefings. Subscriptions billed through Google Play or web per your purchase path.
