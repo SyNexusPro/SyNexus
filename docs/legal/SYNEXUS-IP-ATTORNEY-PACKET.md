@@ -541,7 +541,7 @@ Automatic copyright exists in original works. Optional registration ([copyright.
 | **Applicant (planned)** | SyNexus LLC |
 | **Goods/Services (draft)** | Downloadable software and SaaS for cryptocurrency token risk analysis and non-custodial trading decision support |
 | **Website** | https://synexus.pro |
-| **Support email** | support@synexus.pro |
+| **Support email** | thesynexus@synexuspro.com |
 | **App name** | SyNexus |
 | **Bundle ID** | com.synexus.app |
 | **Platform** | Web, Android, iOS |

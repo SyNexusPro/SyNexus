@@ -8,7 +8,8 @@ export const OPERATOR_LABEL = "SyNexus and its operator(s)";
 export const LEGAL_EFFECTIVE_DATE = "June 12, 2026";
 
 export const SUPPORT_EMAIL =
-  (import.meta.env.VITE_SUPPORT_EMAIL as string | undefined)?.trim() || "support@synexus.pro";
+  (import.meta.env.VITE_SUPPORT_EMAIL as string | undefined)?.trim() ||
+  "thesynexus@synexuspro.com";
 
 export const TRUST_INDICATORS = [
   {
