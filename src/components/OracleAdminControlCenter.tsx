@@ -167,7 +167,7 @@ export function OracleAdminControlCenter({
               ) : (
                 <div className="oracle-admin__unlock">
                   <p>
-                    Unlock {titanBotName} briefings with Synexus Pro — {SYNEXUS_PRO_PRICE_LABEL}. Your{" "}
+                    Unlock {titanBotName} briefings with SyNexusPro — {SYNEXUS_PRO_PRICE_LABEL}. Your{" "}
                     {SYNEXUS_PRO_TRIAL_DAYS}-day trial starts when you add a card at checkout.
                   </p>
                   <ProDemoButton

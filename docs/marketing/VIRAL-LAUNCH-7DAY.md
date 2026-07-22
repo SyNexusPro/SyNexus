@@ -1,6 +1,6 @@
-# Synexus 7-Day Viral Launch — Operator Guide
+# SyNexus 7-Day Viral Launch — Operator Guide
 
-Automated content system aligned with the viral launch plan. **Brand: Synexus only.** Telegram = home base.
+Automated content system aligned with the viral launch plan. **Brand: SyNexus only.** Telegram = home base.
 
 ## Quick start
 
@@ -85,7 +85,7 @@ Auto-rendered videos already include circuit-board art, fake Sentinel dashboard,
 ## Telegram Day 1 launch post
 
 ```
-🚀 Synexus AI is now live
+🚀 SyNexus AI is now live
 
 Should I buy this? Paste any Solana token → Avoid · Watch · OK
 

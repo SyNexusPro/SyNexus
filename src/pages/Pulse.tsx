@@ -130,9 +130,9 @@ function normalizeStoredPlan(plan: string | null | undefined): AppPlan {
 
 function formatPlanName(plan: AppPlan) {
   if (plan === "PRO" && isProDemoActive()) {
-    return `Synexus Pro trial · ${formatProDemoRemaining(getProDemoRemainingMs())}`;
+    return `SyNexusPro trial · ${formatProDemoRemaining(getProDemoRemainingMs())}`;
   }
-  if (plan === "PRO") return "Synexus Pro";
+  if (plan === "PRO") return "SyNexusPro";
   return "Free";
 }
 
@@ -195,7 +195,7 @@ export function Pulse() {
   const [authMessage, setAuthMessage] = useState<AuthMessage>({
     tone: "info",
     text: hasSupabaseEnv
-      ? "Secure operator channel ready — link below to save your Synexus data."
+      ? "Secure operator channel ready — link below to save your SyNexus data."
       : "Demo mode active — link below for a local session.",
   });
   const [checkoutBusy, setCheckoutBusy] = useState(false);
@@ -444,7 +444,7 @@ export function Pulse() {
         window.history.replaceState(null, "", window.location.pathname);
         const verifiedMessage = signedInUser.email
           ? `Welcome back — ${signedInUser.email}.`
-          : "Synchronized with The Synexus.";
+          : "Synchronized with The SyNexus.";
         setAuthMessage({
           tone: "success",
           text: verifiedMessage,
@@ -505,7 +505,7 @@ export function Pulse() {
     if (!userId) {
       setAuthMessage({
         tone: "success",
-        text: "Checkout succeeded. Sign in so Synexus can remember your subscription.",
+        text: "Checkout succeeded. Sign in so SyNexus can remember your subscription.",
       });
       return;
     }
@@ -513,7 +513,7 @@ export function Pulse() {
     if (userId.startsWith("demo-")) {
       setAuthMessage({
         tone: "success",
-        text: "Checkout succeeded. Sign in with a real account to link Synexus Pro.",
+        text: "Checkout succeeded. Sign in with a real account to link SyNexusPro.",
       });
       return;
     }
@@ -526,7 +526,7 @@ export function Pulse() {
         notifySynexusPlanChanged();
         setAuthMessage({
           tone: "success",
-          text: `${formatPlanName("PRO")} saved to your Synexus profile.`,
+          text: `${formatPlanName("PRO")} saved to your SyNexus profile.`,
         });
         window.history.replaceState(null, "", window.location.pathname);
       })
@@ -614,7 +614,7 @@ export function Pulse() {
     }
     try {
       setAuthBusy(true);
-      setAuthMessage({ tone: "info", text: "Connecting to Synexus..." });
+      setAuthMessage({ tone: "info", text: "Connecting to SyNexus..." });
       if (!hasSupabaseEnv) {
         const demoId = `demo-${Date.now()}`;
         localStorage.setItem(DEMO_SESSION_KEY, demoId);
@@ -659,7 +659,7 @@ export function Pulse() {
           /* profile row may already exist */
         }
       }
-      const message = "Welcome to The Synexus. You are signed in.";
+      const message = "Welcome to The SyNexus. You are signed in.";
       if (result.session && signupUser) {
         const trialStarted = syncProTrialForUser(signupUser.id);
         if (trialStarted) {
@@ -715,7 +715,7 @@ export function Pulse() {
     }
     try {
       setAuthBusy(true);
-      setAuthMessage({ tone: "info", text: "Connecting to Synexus..." });
+      setAuthMessage({ tone: "info", text: "Connecting to SyNexus..." });
       if (!hasSupabaseEnv) {
         const demoId = localStorage.getItem(DEMO_SESSION_KEY) ?? `demo-${Date.now()}`;
         localStorage.setItem(DEMO_SESSION_KEY, demoId);
@@ -752,7 +752,7 @@ export function Pulse() {
       setPassword("");
       const message = signedIn.email
         ? `Synchronized as ${signedIn.email}.`
-        : "Synchronized with The Synexus.";
+        : "Synchronized with The SyNexus.";
       void loadData(signedIn);
       await completeAuthWithBiometricOffer(result.session, signedIn.email ?? email, message);
     } catch (err) {
@@ -807,7 +807,7 @@ export function Pulse() {
         tone: "success",
         text: signedIn.email
           ? `Welcome back — ${signedIn.email}.`
-          : "Welcome back to The Synexus.",
+          : "Welcome back to The SyNexus.",
       });
       if (session?.refresh_token) {
         void refreshBiometricVaultToken(signedIn.email ?? vault.email, session.refresh_token);
@@ -1077,7 +1077,7 @@ export function Pulse() {
   );
 
   const authBusyLabel =
-    authLoadPhrase === "synexus" ? "Connecting to Synexus..." : "Synchronizing Sentinels...";
+    authLoadPhrase === "synexus" ? "Connecting to SyNexus..." : "Synchronizing Sentinels...";
 
   const operatorLinked = Boolean(userId && !userId.startsWith("demo-"));
 
@@ -1254,7 +1254,7 @@ export function Pulse() {
             {warningCalls.map((token) => (
               <li key={`warning-${token.token_symbol}`}>
                 <span>{token.token_symbol ?? "UNKNOWN"}</span>
-                <strong>The Synexus · {synexusRiskBandLabel("WARNING")}</strong>
+                <strong>The SyNexus · {synexusRiskBandLabel("WARNING")}</strong>
               </li>
             ))}
           </ul>
@@ -1271,7 +1271,7 @@ export function Pulse() {
               <li key={`safe-${token.token_symbol}`}>
                 <span>{token.token_symbol ?? "UNKNOWN"}</span>
                 <strong>
-                  The Synexus · {synexusRiskBandLabel(token.guardian_status ?? "SAFE")}
+                  The SyNexus · {synexusRiskBandLabel(token.guardian_status ?? "SAFE")}
                   {typeof token.guardian_score === "number"
                     ? ` (${token.guardian_score}/100)`
                     : ""}
@@ -1328,16 +1328,16 @@ export function Pulse() {
       <div className="pulse-card pulse-synexus-pro-wrap" id="synexus-pro">
         <div className="pulse-synexus-pro-promo">
           <div className="pulse-synexus-pro-promo__honeycomb" aria-hidden />
-          <p className="pulse-synexus-pro-promo__label">Synexus Pro</p>
+          <p className="pulse-synexus-pro-promo__label">SyNexusPro</p>
           <p className="pulse-synexus-pro-promo__price">{SYNEXUS_PRO_PRICE_LABEL}</p>
           <p className="pulse-synexus-pro-promo__headline">Unlimited trading intelligence. One simple price.</p>
           <p className="pulse-synexus-pro-promo__body">
             Sign up for a {SYNEXUS_PRO_TRIAL_DAYS}-day full Pro trial — add a card at checkout. Then unlock the full
-            Synexus system with real-time Sentinel analysis, risk scanning, momentum tracking, whale activity
+            SyNexus system with real-time Sentinel analysis, risk scanning, momentum tracking, whale activity
             signals, pattern detection, and unlimited trading intelligence tools.
           </p>
           <ul className="pulse-synexus-pro-promo__bullets">
-            <li>Unlimited Synexus access</li>
+            <li>Unlimited SyNexus access</li>
             <li>Real-time Sentinel signals</li>
             <li>Scam and risk alerts</li>
             <li>Whale activity tracking</li>
@@ -1377,7 +1377,7 @@ export function Pulse() {
                 </button>
               </>
             ) : (
-              <p className="pulse-synexus-pro-promo__active">Synexus Pro is active on your account.</p>
+              <p className="pulse-synexus-pro-promo__active">SyNexusPro is active on your account.</p>
             )}
           </div>
           <p className="pulse-synexus-pro-promo__disclaimer">
@@ -1393,7 +1393,7 @@ export function Pulse() {
                   {signal.title} — {signal.detail}
                 </span>
                 {signal.isLocked ? (
-                  <strong>Included in Synexus Pro</strong>
+                  <strong>Included in SyNexusPro</strong>
                 ) : (
                   <strong>Unlocked</strong>
                 )}
@@ -1401,7 +1401,7 @@ export function Pulse() {
             ))}
           </ul>
         ) : (
-          <p className="pulse-card__body">Sentinels are scanning for Synexus Pro signal candidates.</p>
+          <p className="pulse-card__body">Sentinels are scanning for SyNexusPro signal candidates.</p>
         )}
       </div>
         </>

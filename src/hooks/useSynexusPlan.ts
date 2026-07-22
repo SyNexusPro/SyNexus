@@ -8,7 +8,7 @@ export function notifySynexusPlanChanged(): void {
   window.dispatchEvent(new Event(SYNEXUS_PLAN_CHANGED));
 }
 
-/** Reads the active Synexus plan from local storage (Pro discount applies on this device). */
+/** Reads the active SyNexus plan from local storage (Pro discount applies on this device). */
 export function useSynexusPlan(): SynexusPlan {
   const [plan, setPlan] = useState<SynexusPlan>(() => {
     clearExpiredProDemo();

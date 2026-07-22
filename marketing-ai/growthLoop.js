@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Synexus Growth Loop — self-funding engine (6-month reinvest-only phase).
+ * SyNexus Growth Loop — self-funding engine (6-month reinvest-only phase).
  *
  *   npm run growth:status   Treasury + phase + what to run
  *   npm run growth:once     Today: blog → Telegram teaser → video blast

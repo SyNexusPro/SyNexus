@@ -1,4 +1,5 @@
-/** Synexus Pro subscription price (USD). Keep in sync with your subscription product. */
+/** SyNexusPro subscription price (USD). Keep in sync with Square catalog. */
+export { SYNEXUS_BRAND_NAME, SYNEXUS_PRO_PRODUCT_NAME, SYNEXUS_PRO_SKU } from "./brand";
 export const SYNEXUS_PRO_PRICE_USD = 9.99;
 
 export const SYNEXUS_PRO_PRICE_LABEL = `$${SYNEXUS_PRO_PRICE_USD.toFixed(2)}/month`;
@@ -13,7 +14,7 @@ export const SYNEXUS_PRO_OFFER_TAGLINE = `7-day Pro trial · card on file · ${S
 export const SYNEXUS_PRO_OFFER_SHORT = `7-day free trial · card on file · ${SYNEXUS_PRO_PRICE_SHORT} after`;
 
 export const SYNEXUS_PRO_FEATURES = [
-  "Unlimited Synexus access",
+  "Unlimited SyNexus access",
   "Real-time Sentinel signals",
   "Scam and risk alerts",
   "Whale activity tracking",

@@ -109,7 +109,7 @@ export function OracleSupremeChat({
 
     const security = guardOracleChat(trimmed);
     if (!security.allowed) {
-      appendOracle(security.message ?? "Message blocked by Synexus security.");
+      appendOracle(security.message ?? "Message blocked by SyNexus security.");
       return;
     }
 
@@ -213,7 +213,7 @@ export function OracleSupremeChat({
               {thinking
                 ? `${context.titanBotName} is thinking…`
                 : context.tokens.length
-                  ? `Synexus brain online · live markets · ask anything`
+                  ? `SyNexus brain online · live markets · ask anything`
                   : "Syncing market feed…"}
             </p>
           </div>

@@ -40,7 +40,7 @@ export async function submitBugReport(
 
   const security = guardBugReport({ subject, details, email: input.email });
   if (!security.allowed) {
-    return { ok: false, message: security.message ?? "Report blocked by Synexus security." };
+    return { ok: false, message: security.message ?? "Report blocked by SyNexus security." };
   }
 
   saveLocalBugReport({
@@ -60,7 +60,7 @@ export async function submitBugReport(
     ]
       .filter(Boolean)
       .join("\n");
-    const mailto = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(`[Synexus Bug] ${subject}`)}&body=${encodeURIComponent(body)}`;
+    const mailto = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(`[SyNexus Bug] ${subject}`)}&body=${encodeURIComponent(body)}`;
     window.location.href = mailto;
     return { ok: true, channel: "mailto" };
   }

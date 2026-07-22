@@ -1,16 +1,16 @@
 /**
  * Titan product guidelines — the experience goal:
- * "I don't use Synexus. I ask Titan."
+ * "I don't use SyNexus. I ask Titan."
  *
- * Synexus is the platform; Titan is the commander users talk to.
+ * SyNexus is the platform; Titan is the commander users talk to.
  * These rules govern copy, behavior, and future feature work.
  */
 
-export const TITAN_PRODUCT_TAGLINE = "Don't use Synexus — ask Titan.";
+export const TITAN_PRODUCT_TAGLINE = "Don't use SyNexus — ask Titan.";
 
 export const TITAN_PRODUCT_VISION =
   "Titan is the host's AI commander — a soft, futuristic female intelligence with real strength: " +
-  "decisive counsel on markets and life, grounded in live Synexus data.";
+  "decisive counsel on markets and life, grounded in live SyNexus data.";
 
 export function buildTitanIdentityLine(titanBotName: string): string {
   return (

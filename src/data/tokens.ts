@@ -10,7 +10,7 @@ import { SYN_MINT } from "../config/synToken";
 
 export type GuardianRisk = GuardianStatus;
 
-/** User-facing Synexus risk band (internal values remain SAFE | WARNING | DANGER). */
+/** User-facing SyNexus risk band (internal values remain SAFE | WARNING | DANGER). */
 export function synexusRiskBandLabel(risk: GuardianRisk): string {
   switch (risk) {
     case "SAFE":
@@ -108,7 +108,7 @@ const tokenSeeds: TokenSeed[] = [
   {
     id: "hivemind-sol",
     symbol: "SYN",
-    name: "Synexus",
+    name: "SyNexus",
     priceUsd: 0.00432,
     change24hPct: 5.92,
     mintAddress: SYN_MINT,

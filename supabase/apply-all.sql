@@ -1,9 +1,9 @@
--- Synexus apply-all (SQL Editor)
+-- SyNexus apply-all (SQL Editor)
 -- https://supabase.com/dashboard/project/zyroyqcyjmcgdcywnjxn/sql/new
 
 -- >>> schema.sql
 -- =============================================================================
--- HiveMind — complete Supabase schema (HiveMind web app + Stripe webhook)
+-- SyNexus — complete Supabase schema (SyNexus web app + payment webhooks)
 -- Run in Supabase SQL Editor (requires auth schema). Safe to re-run: uses
 -- IF NOT EXISTS / DROP POLICY IF EXISTS where appropriate.
 -- =============================================================================
@@ -186,7 +186,7 @@ begin
 
     dname := trim(both from replace(replace(local_part, '.', ' '), '_', ' '));
     if dname = '' or dname is null then
-      dname := 'HiveMind member';
+      dname := 'SyNexus member';
     end if;
   end if;
 
@@ -361,11 +361,11 @@ create index if not exists treasury_revenue_created_at_idx on public.treasury_re
 
 alter table public.treasury_revenue enable row level security;
 
-comment on table public.treasury_revenue is 'Synexus growth-phase revenue ledger. Stripe webhook inserts via service role; 100% reinvest allocation.';
+comment on table public.treasury_revenue is 'SyNexus growth-phase revenue ledger. Stripe webhook inserts via service role; 100% reinvest allocation.';
 
 
 -- >>> site_analytics.sql
--- Synexus site analytics — page views, auth events, token views
+-- SyNexus site analytics — page views, auth events, token views
 -- Run in Supabase SQL editor after main schema.
 
 create table if not exists public.site_analytics_events (
@@ -411,11 +411,11 @@ create policy "Public insert analytics events"
   with check (user_id is null or auth.uid() = user_id);
 
 comment on table public.site_analytics_events is
-  'Synexus client analytics — inserts only from app; reads via service role / owner API';
+  'SyNexus client analytics — inserts only from app; reads via service role / owner API';
 
 
 -- >>> security_events.sql
--- Synexus Aegis — security event log (optional server-side audit trail)
+-- SyNexus Aegis — security event log (optional server-side audit trail)
 -- Run in Supabase SQL editor after main schema.
 
 create table if not exists public.security_events (
@@ -449,4 +449,4 @@ create policy "Users read own security events"
   to authenticated
   using (auth.uid() = user_id);
 
-comment on table public.security_events is 'Synexus Aegis — client-reported abuse and block events';
+comment on table public.security_events is 'SyNexus Aegis — client-reported abuse and block events';

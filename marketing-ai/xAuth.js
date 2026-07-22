@@ -126,7 +126,7 @@ Then run: npm run x:auth
   }
 
   const authUrl = `${AUTHORIZE_URL}?oauth_token=${encodeURIComponent(requestToken.oauth_token)}`;
-  console.log("\nStep 2 — open this URL and authorize Synexus:\n");
+  console.log("\nStep 2 — open this URL and authorize SyNexus:\n");
   console.log(authUrl);
   console.log("\nAfter approving, copy the 7-digit PIN shown on X.\n");
 

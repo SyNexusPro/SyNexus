@@ -168,7 +168,7 @@ async function runWatch() {
 }
 
 function printHelp() {
-  console.log(`Synexus TikTok Scheduler
+  console.log(`SyNexus TikTok Scheduler
 
   npm run tiktok:watch       Auto-post at TIKTOK_POST_HOURS (default 9, 14, 20)
   npm run tiktok:post        Post due slots now

@@ -7,10 +7,10 @@ export function About() {
   return (
     <div className="page about-page">
       <section className="about-page__hero marketing-panel">
-        <p className="about-page__eyebrow">About Synexus</p>
+        <p className="about-page__eyebrow">About SyNexus</p>
         <h1 className="about-page__title">Safer Solana trading starts with intelligence, not hype.</h1>
         <p className="about-page__lede">
-          Synexus is an AI-powered command center for Solana traders — built to surface scams, whale moves, and
+          SyNexus is an AI-powered command center for Solana traders — built to surface scams, whale moves, and
           momentum shifts before you connect a wallet. We are non-custodial: you keep your keys; we deliver the
           read.
         </p>
@@ -20,18 +20,18 @@ export function About() {
         <h2>Our mission</h2>
         <p>
           Retail traders on Solana move faster than most tools can warn them. Rugs, thin liquidity, and whale
-          exits often hit before a chart update. Synexus exists to close that gap: combine Sentinel automation,
+          exits often hit before a chart update. SyNexus exists to close that gap: combine Sentinel automation,
           community reports, and Titan AI into one feed so you can scan first and execute when you are
           ready — always on your own terms.
         </p>
         <p>
-          We are not a broker, exchange, or custodian. Synexus organizes data, risk heuristics, and third-party
+          We are not a broker, exchange, or custodian. SyNexus organizes data, risk heuristics, and third-party
           swap shortcuts. Nothing we show is a recommendation to buy or sell any asset.
         </p>
       </section>
 
       <section className="about-page__section marketing-panel">
-        <h2>How Synexus works</h2>
+        <h2>How SyNexus works</h2>
         <ol className="about-page__steps">
           {HOW_SYNEXUS_WORKS.map((step) => (
             <li key={step.step}>
@@ -51,7 +51,7 @@ export function About() {
       <section className="about-page__section marketing-panel">
         <h2>Titan</h2>
         <p>
-          Titan is Synexus&apos;s conversational AI commander — your synthetic bot and the strategic voice of
+          Titan is SyNexus&apos;s conversational AI commander — your synthetic bot and the strategic voice of
           the network. You can rename Titan to whatever you want; the four Sentinels keep their fixed names.
           Titan synthesizes Sentinel intel, token metadata, and market context into briefings you can read or
           hear. Ask about a coin, request a risk summary, or get a plain-language explanation of why a token
@@ -64,7 +64,7 @@ export function About() {
       </section>
 
       <section className="about-page__section marketing-panel">
-        <h2>The Synexus Sentinels</h2>
+        <h2>The SyNexus Sentinels</h2>
         <p>
           Four Sentinel lanes — <strong>Aegis</strong>, <strong>Pulse</strong>, <strong>Leviathan</strong>, and{" "}
           <strong>Cipher</strong> — run parallel scans on every tracked token:
@@ -85,7 +85,7 @@ export function About() {
           </li>
         </ul>
         <p>
-          Sentinels feed the risk score, alert cards on Pulse, and Titan directives. Synexus Pro
+          Sentinels feed the risk score, alert cards on Pulse, and Titan directives. SyNexusPro
           subscribers get faster refresh and deeper precision on these surfaces.
         </p>
       </section>
@@ -94,7 +94,7 @@ export function About() {
         <p className="about-page__eyebrow">Community token</p>
         <h2>$SyN community is live on pump.fun</h2>
         <p>
-          The Synexus community token ({SYN_SYMBOL}) has a home on pump.fun. Paste the mint in{" "}
+          The SyNexus community token ({SYN_SYMBOL}) has a home on pump.fun. Paste the mint in{" "}
           <strong>Should I buy this?</strong> for a Sentinel read before you ape — then buy only through your
           own wallet.
         </p>
@@ -111,7 +111,7 @@ export function About() {
             Open $SyN community
           </a>
           <Link className="about-page__link" to="/token/hivemind-sol">
-            Scan {SYN_SYMBOL} in Synexus →
+            Scan {SYN_SYMBOL} in SyNexus →
           </Link>
         </div>
       </section>
@@ -138,7 +138,7 @@ export function About() {
           ))}
         </div>
         <Link className="about-page__link" to="/liquidity-treasury">
-          Synexus Coin Liquidity Treasury →
+          SyNexus Coin Liquidity Treasury →
         </Link>
       </section>
 

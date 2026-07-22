@@ -1,4 +1,4 @@
--- Synexus site analytics — page views, auth events, token views
+-- SyNexus site analytics — page views, auth events, token views
 -- Run in Supabase SQL editor after main schema.
 
 create table if not exists public.site_analytics_events (
@@ -44,4 +44,4 @@ create policy "Public insert analytics events"
   with check (user_id is null or auth.uid() = user_id);
 
 comment on table public.site_analytics_events is
-  'Synexus client analytics — inserts only from app; reads via service role / owner API';
+  'SyNexus client analytics — inserts only from app; reads via service role / owner API';

@@ -304,7 +304,7 @@ class SecurityBotCore {
 
     if (import.meta.env.DEV) {
       const tag = opts.blocked ? "BLOCKED" : "LOG";
-      console.warn(`[Synexus Aegis] ${tag} ${opts.code}: ${opts.message}`);
+      console.warn(`[SyNexus Aegis] ${tag} ${opts.code}: ${opts.message}`);
     }
   }
 
@@ -363,6 +363,6 @@ export function initSecurityBot() {
 
 export function guardOrThrow(verdict: SecurityVerdict): void {
   if (!verdict.allowed) {
-    throw new Error(verdict.message ?? "Action blocked by Synexus security.");
+    throw new Error(verdict.message ?? "Action blocked by SyNexus security.");
   }
 }

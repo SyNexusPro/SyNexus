@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Synexus go-live readiness report (local — does not hit production).
+ * SyNexus go-live readiness report (local — does not hit production).
  *   npm run go-live:check
  */
 

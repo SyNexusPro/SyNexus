@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Verify Synexus marketing platform connections (no posts unless --test-post).
+ * Verify SyNexus marketing platform connections (no posts unless --test-post).
  *
  *   npm run platform:check
  *   node platformCheck.js --test-post   # send a tiny Telegram test (optional)
@@ -140,7 +140,7 @@ async function checkTelegram({ testPost = false } = {}) {
   if (testPost) {
     try {
       await postTelegram(
-        "**Synexus test** — platform check OK. Daily campaign posts will appear here.",
+        "**SyNexus test** — platform check OK. Daily campaign posts will appear here.",
         { quiet: true },
       );
     } catch (err) {

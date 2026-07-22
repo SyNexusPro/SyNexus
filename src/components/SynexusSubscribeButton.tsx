@@ -8,7 +8,7 @@ type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
   onCheckoutError?: (message: string) => void;
 };
 
-/** One-click Synexus Pro subscribe — opens Square checkout (sign-in optional). */
+/** One-click SyNexusPro subscribe — opens Square checkout (sign-in optional). */
 export function SynexusSubscribeButton({
   label,
   busyLabel = "Opening…",

@@ -145,7 +145,7 @@ async function resolveSkuToSubscriptionVariation(
 
 /**
  * Square Payment Links expect a catalog subscription plan variation ID.
- * SKU (e.g. SyNexus-Pro-001) may live on the item — we map to the matching subscription plan.
+ * SKU (e.g. SyNexusPro) may live on the item — we map to the matching subscription plan.
  */
 export async function resolvePlanVariationId(
   apiBase: string,

@@ -83,7 +83,7 @@ export async function signUpWithEmail(
 ) {
   const authGuard = guardAuthAttempt("sign_up", email, password);
   if (!authGuard.allowed) {
-    throw new Error(authGuard.message ?? "Sign-up blocked by Synexus security.");
+    throw new Error(authGuard.message ?? "Sign-up blocked by SyNexus security.");
   }
   const passwordCheck = validateSignupPassword(password);
   if (!passwordCheck.ok) {
@@ -105,7 +105,7 @@ export async function signUpWithEmail(
 export async function resendSignupVerificationEmail(email: string) {
   const authGuard = guardAuthAttempt("sign_in", email);
   if (!authGuard.allowed) {
-    throw new Error(authGuard.message ?? "Verification resend blocked by Synexus security.");
+    throw new Error(authGuard.message ?? "Verification resend blocked by SyNexus security.");
   }
   if (!supabase) throw new Error("Supabase env vars are missing.");
   const { data, error } = await supabase.auth.resend({
@@ -122,7 +122,7 @@ export async function resendSignupVerificationEmail(email: string) {
 export async function signInWithEmail(email: string, password: string) {
   const authGuard = guardAuthAttempt("sign_in", email, password);
   if (!authGuard.allowed) {
-    throw new Error(authGuard.message ?? "Sign-in blocked by Synexus security.");
+    throw new Error(authGuard.message ?? "Sign-in blocked by SyNexus security.");
   }
   if (!supabase) throw new Error("Supabase env vars are missing.");
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -140,7 +140,7 @@ export async function signInWithEmail(email: string, password: string) {
 export async function signInWithMagicLink(email: string) {
   const authGuard = guardAuthAttempt("sign_in", email);
   if (!authGuard.allowed) {
-    throw new Error(authGuard.message ?? "Sign-in blocked by Synexus security.");
+    throw new Error(authGuard.message ?? "Sign-in blocked by SyNexus security.");
   }
   if (!supabase) throw new Error("Supabase env vars are missing.");
   const { data, error } = await supabase.auth.signInWithOtp({
@@ -157,7 +157,7 @@ export async function signInWithMagicLink(email: string) {
 export async function requestPasswordReset(email: string) {
   const authGuard = guardAuthAttempt("sign_in", email);
   if (!authGuard.allowed) {
-    throw new Error(authGuard.message ?? "Reset blocked by Synexus security.");
+    throw new Error(authGuard.message ?? "Reset blocked by SyNexus security.");
   }
   if (!supabase) throw new Error("Supabase env vars are missing.");
   const { data, error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
@@ -211,7 +211,7 @@ export function normalizeSignupUsername(raw: string): string {
 
 function displayNameFromUsernameSlug(slug: string): string {
   const words = slug.split("_").filter(Boolean);
-  if (!words.length) return "Synexus member";
+  if (!words.length) return "SyNexus member";
   return words
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
     .join(" ");
@@ -242,7 +242,7 @@ export function buildFallbackProfileFields(
   slug = slug.slice(0, 24);
   const username = `${slug}_${shortId}`;
   const displayName =
-    local.replace(/\./g, " ").replace(/_/g, " ").trim() || "Synexus member";
+    local.replace(/\./g, " ").replace(/_/g, " ").trim() || "SyNexus member";
   return { username, displayName };
 }
 

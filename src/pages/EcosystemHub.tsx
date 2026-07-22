@@ -41,7 +41,7 @@ export function EcosystemHub() {
   return (
     <div className="page ecosystem-hub">
       <section className="ecosystem-hub__hero marketing-panel">
-        <p className="ecosystem-hub__eyebrow">Synexus ecosystem</p>
+        <p className="ecosystem-hub__eyebrow">SyNexus ecosystem</p>
         <h1 className="ecosystem-hub__title">Content hub · Affiliates · Token utility · Staking</h1>
         <p className="ecosystem-hub__lede">
           One home for market discovery, partner growth, and planned on-chain staking with transparent protocol
@@ -66,15 +66,15 @@ export function EcosystemHub() {
       <section id="hub-content" className="ecosystem-hub__section marketing-panel">
         <h2>Content hub</h2>
         <p>
-          Centralize discovery with The Synexus: live token feed, search, risk snapshots, and Pulse for accounts and
-          Synexus Pro.
+          Centralize discovery with The SyNexus: live token feed, search, risk snapshots, and Pulse for accounts and
+          SyNexusPro.
         </p>
         <ul className="ecosystem-hub__links">
           <li>
             <Link to="/">Token feed &amp; search</Link>
           </li>
           <li>
-            <Link to="/pulse">Pulse · accounts &amp; Synexus Pro</Link>
+            <Link to="/pulse">Pulse · accounts &amp; SyNexusPro</Link>
           </li>
         </ul>
       </section>
@@ -82,7 +82,7 @@ export function EcosystemHub() {
       <section id="hub-affiliate" className="ecosystem-hub__section marketing-panel">
         <h2>Affiliate ecosystem</h2>
         <p>
-          Share Synexus with your audience. Final commission rules, cookie windows, and payout rails ship with the
+          Share SyNexus with your audience. Final commission rules, cookie windows, and payout rails ship with the
           affiliate program launch. Example tiers below are illustrative only.
         </p>
         <div className="ecosystem-hub__tiers">
@@ -147,18 +147,18 @@ export function EcosystemHub() {
         <h2>Token utility platform</h2>
         {SYN_IS_LIVE ? (
           <p className="ecosystem-hub__syn-live">
-            <strong>${SYN_SYMBOL}</strong> community is live on pump.fun — scan it in Synexus before you buy, then trade in
+            <strong>${SYN_SYMBOL}</strong> community is live on pump.fun — scan it in SyNexus before you buy, then trade in
             your own wallet.
           </p>
         ) : null}
         <p>
-          Synexus token utility is designed around access, incentives, and alignment: unlock deeper feeds from
-          The Synexus Sentinels,
+          SyNexus token utility is designed around access, incentives, and alignment: unlock deeper feeds from
+          The SyNexus Sentinels,
           fee discounts, partner campaigns, and staking participation. See the About page for the full utility
           roadmap.
         </p>
         <ul className="ecosystem-hub__bullets">
-          <li>Synexus Pro intelligence surfaces in-app</li>
+          <li>SyNexusPro intelligence surfaces in-app</li>
           <li>Partnership tooling via this hub</li>
           <li>Governance placeholders as the community matures</li>
         </ul>
@@ -182,7 +182,7 @@ export function EcosystemHub() {
       <section id="hub-staking" className="ecosystem-hub__section marketing-panel ecosystem-hub__section--stakes">
         <h2>Staking &amp; protocol fees</h2>
         <p>
-          Planned staking pools let users lock eligible assets to support Synexus liquidity or emissions programs while
+          Planned staking pools let users lock eligible assets to support SyNexus liquidity or emissions programs while
           the protocol collects transparent fees—not financial advice; smart-contract risk applies.
         </p>
         <p className="ecosystem-hub__status">

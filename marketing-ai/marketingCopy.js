@@ -1,5 +1,5 @@
 /**
- * Synexus marketing voice — SyNexus Viral Content System v1.0
+ * SyNexus marketing voice — SyNexus Viral Content System v1.0
  * Curiosity titles · natural VO · purple brand
  */
 
@@ -126,7 +126,7 @@ export function buildTelegramCaption({ hook, build, payoff, loop, id = "" }) {
 
   const tail = stripTelegramMeta(loop);
   const lines = [
-    `**Synexus Sentinel** · ${headline}`,
+    `**SyNexus Sentinel** · ${headline}`,
     "",
     body,
     tail && tail !== headline ? `\n_${tail}_` : "",
@@ -150,7 +150,7 @@ export function buildXCaption({ hook, build, payoff, id = "" }) {
     insight,
     `${pickCta(seed)} ${origin}`,
     TRIAL_OFFER_SHORT,
-    "#Synexus #Solana",
+    "#SyNexus #Solana",
   ].filter(Boolean);
   const text = lines.join("\n\n");
   return text.length <= 280 ? text : `${text.slice(0, 277)}…`;
@@ -169,7 +169,7 @@ export function buildTikTokCaption({ hook, build, payoff, id = "" }) {
     "",
     TRIAL_OFFER_SHORT,
     "",
-    "#Synexus #Solana #ShouldIBuyThis #Crypto #Shorts",
+    "#SyNexus #Solana #ShouldIBuyThis #Crypto #Shorts",
   ]
     .filter(Boolean)
     .join("\n");
@@ -179,7 +179,7 @@ export function buildYouTubeMeta({ hook, build, payoff, id = "", titleBase = "" 
   const origin = appOrigin();
   const title = buildYouTubeTitle({ hook, id, titleBase });
   const description = [
-    "Synexus Sentinel — Solana risk reads before you sign.",
+    "SyNexus Sentinel — Solana risk reads before you sign.",
     "",
     hook,
     "",
@@ -195,13 +195,13 @@ export function buildYouTubeMeta({ hook, build, payoff, id = "", titleBase = "" 
     "",
     TRUST_LINE,
     "",
-    "#Synexus #Solana #ShouldIBuyThis #Crypto #Shorts #Trading",
+    "#SyNexus #Solana #ShouldIBuyThis #Crypto #Shorts #Trading",
   ].join("\n");
 
   return {
     title,
     description,
-    tags: "Synexus, Should I buy this, Solana, crypto, token scanner, Sentinel, rug pull, memecoin",
+    tags: "SyNexus, Should I buy this, Solana, crypto, token scanner, Sentinel, rug pull, memecoin",
   };
 }
 
@@ -225,7 +225,7 @@ export function buildDailyTelegramBrief({ hook, slot = 0 }) {
   const frame = frames[slot % frames.length];
 
   return [
-    `**${frame.label}** · Synexus`,
+    `**${frame.label}** · SyNexus`,
     "",
     hook,
     "",
@@ -246,7 +246,7 @@ export function buildDailyVoiceover(hook) {
   return [
     hookLine.endsWith(".") || hookLine.endsWith("!") || hookLine.endsWith("?") ? hookLine : `${hookLine}.`,
     "Here's the problem — most traders never scan the mint before they ape.",
-    "Synexus answers should I buy this in seconds: Avoid, Watch, or OK.",
+    "SyNexus answers should I buy this in seconds: Avoid, Watch, or OK.",
     pickCta(seed),
     "Not financial advice.",
   ]
@@ -259,8 +259,8 @@ export function buildSocialCaption({ hook, platform = "facebook" }) {
   const origin = appOrigin();
   const tags =
     platform === "instagram"
-      ? "#Synexus #Solana #Crypto #Trading #ShouldIBuyThis #Reels"
-      : "#Synexus #Solana #Crypto #ShouldIBuyThis";
+      ? "#SyNexus #Solana #Crypto #Trading #ShouldIBuyThis #Reels"
+      : "#SyNexus #Solana #Crypto #ShouldIBuyThis";
 
   return [
     hook,
@@ -279,7 +279,7 @@ export function buildSocialCaption({ hook, platform = "facebook" }) {
 export function buildDiscordPost({ hook, build, payoff }) {
   const origin = appOrigin();
   return [
-    `**Synexus Sentinel** — ${hook}`,
+    `**SyNexus Sentinel** — ${hook}`,
     "",
     stripTelegramMeta(build),
     "",

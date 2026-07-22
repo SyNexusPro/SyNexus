@@ -15,13 +15,13 @@ export function buildShareScanPayload(result: ShouldIBuyResult): ShareScanPayloa
   const url = `${PUBLIC_SITE_URL.replace(/\/$/, "")}/?scan=${encodeURIComponent(scanKey)}`;
   const label = beginner.label;
   const text = [
-    `Should I buy $${token.symbol}? Synexus: ${headline} — ${label}`,
+    `Should I buy $${token.symbol}? SyNexus: ${headline} — ${label}`,
     "",
     `Scan any Solana token free → ${url}`,
   ].join("\n");
 
   return {
-    title: `Synexus scan · ${token.symbol}`,
+    title: `SyNexus scan · ${token.symbol}`,
     url,
     text,
   };

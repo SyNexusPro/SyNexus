@@ -29,7 +29,7 @@ export function SupportedWallets({ className = "" }: Props) {
         ))}
       </ul>
       <p className="supported-wallets__note">
-        Any Solana wallet compatible with Jupiter swap flows works with Synexus trade shortcuts.
+        Any Solana wallet compatible with Jupiter swap flows works with SyNexus trade shortcuts.
       </p>
     </div>
   );

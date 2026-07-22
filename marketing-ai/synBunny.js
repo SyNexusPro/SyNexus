@@ -1,5 +1,5 @@
 /**
- * Syn — tiny floating Synexus bunny mascot (SYN badge on chest).
+ * Syn — tiny floating SyNexus bunny mascot (SYN badge on chest).
  * Inline SVG for video scenes + standalone PNG for Telegram/social.
  */
 

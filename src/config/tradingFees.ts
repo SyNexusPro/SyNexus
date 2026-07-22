@@ -1,4 +1,4 @@
-/** Synexus trading fee tiers (100 bps = 1%). */
+/** SyNexus trading fee tiers (100 bps = 1%). */
 export const TRADING_FEE_BPS = {
   FREE: 10,
   PRO: 5,

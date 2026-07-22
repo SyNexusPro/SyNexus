@@ -20,14 +20,14 @@ export function Pricing() {
       <section className="page__intro">
         <h1 className="page__headline">Pricing</h1>
         <p className="page__lede">
-          One plan — full Synexus Pro intelligence. {SYNEXUS_PRO_OFFER_TAGLINE}.
+          One plan — full SyNexusPro intelligence. {SYNEXUS_PRO_OFFER_TAGLINE}.
         </p>
       </section>
 
       <div className="pulse-card pulse-synexus-pro-wrap pricing-page__sheet" id="synexus-pro">
         <div className="pulse-synexus-pro-promo">
           <div className="pulse-synexus-pro-promo__honeycomb" aria-hidden />
-          <p className="pulse-synexus-pro-promo__label">Synexus Pro</p>
+          <p className="pulse-synexus-pro-promo__label">SyNexusPro</p>
           <p className="pulse-synexus-pro-promo__price">{SYNEXUS_PRO_PRICE_LABEL}</p>
           <p className="pulse-synexus-pro-promo__headline">Unlimited trading intelligence. One simple price.</p>
           <p className="pulse-synexus-pro-promo__body">

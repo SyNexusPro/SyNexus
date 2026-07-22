@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Synexus 7-Day Viral Launch — content automation
+ * SyNexus 7-Day Viral Launch — content automation
  *
  *   npm run launch:plan              # print 7-day plan
  *   npm run launch:write -- --day 1    # export scripts + captions

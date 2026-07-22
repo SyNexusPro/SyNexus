@@ -513,7 +513,7 @@ function mockSolana5mMovers(): Solana5mMoversResult {
     { id: "wif-m5", symbol: "WIF", name: "dogwifhat", mintAddress: "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm", priceUsd: 2.41, change5mPct: 3.15 },
     { id: "popcat-m5", symbol: "POPCAT", name: "Popcat", mintAddress: "7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr", priceUsd: 1.12, change5mPct: 2.44 },
     { id: "mew-m5", symbol: "MEW", name: "cat in a dogs world", mintAddress: "MEW1gQWJ3nEXg2qgERiKu7FAFj79PHvVUB6kiqq9p6p", priceUsd: 0.0089, change5mPct: 1.98 },
-    { id: "syn-m5", symbol: "SYN", name: "Synexus", mintAddress: SYN_MINT, priceUsd: 0.00432, change5mPct: 1.21 },
+    { id: "syn-m5", symbol: "SYN", name: "SyNexus", mintAddress: SYN_MINT, priceUsd: 0.00432, change5mPct: 1.21 },
   ];
   const losers: TokenMover5m[] = [
     { id: "pepe-m5", symbol: "PEPE", name: "Pepe", mintAddress: "pepe-mint", priceUsd: 0.0000107, change5mPct: -3.44 },

@@ -31,7 +31,7 @@ export async function exportAdCreatives({ dayDir, slot = 0, captions = {}, quiet
 
   const bunny = join(dayDir, "syn-bunny.png");
   const checklist = [
-    "Synexus daily ad bundle",
+    "SyNexus daily ad bundle",
     `Slot: ${slot + 1}`,
     "",
     "Videos (vertical 9:16):",

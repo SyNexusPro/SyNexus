@@ -78,7 +78,7 @@ Quick path: Graph API Explorer → generate Page token with pages_manage_posts
       response_type: "code",
     }).toString();
 
-  console.log("\nAuthorize Synexus for Facebook Page + Instagram Reels:\n");
+  console.log("\nAuthorize SyNexus for Facebook Page + Instagram Reels:\n");
   console.log(url);
   console.log("\nPaste redirect URL or code after allowing.\n");
 

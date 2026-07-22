@@ -51,7 +51,7 @@ export async function getBiometricSupport(): Promise<BiometricSupport> {
       label: "Biometrics",
       biometryType: BiometryType.none,
       native: false,
-      reason: "Use the Synexus mobile app for Face ID or fingerprint sign-in.",
+      reason: "Use the SyNexus mobile app for Face ID or fingerprint sign-in.",
     };
   }
 
@@ -80,7 +80,7 @@ export async function promptBiometric(reason: string): Promise<void> {
     await BiometricAuth.authenticate({
       reason,
       cancelTitle: "Cancel",
-      androidTitle: "Synexus",
+      androidTitle: "SyNexus",
       androidSubtitle: reason,
       allowDeviceCredential: true,
     });
@@ -135,13 +135,13 @@ export async function getBiometricLoginEmailHint(): Promise<string | null> {
 
 export async function enableBiometricLogin(email: string, refreshToken: string): Promise<void> {
   if (!Capacitor.isNativePlatform()) {
-    throw new Error("Biometric login is available in the Synexus mobile app.");
+    throw new Error("Biometric login is available in the SyNexus mobile app.");
   }
   const support = await getBiometricSupport();
   if (!support.available) {
     throw new Error(`${support.label} is not set up on this device.`);
   }
-  await promptBiometric(`Enable ${support.label} sign-in for Synexus`);
+  await promptBiometric(`Enable ${support.label} sign-in for SyNexus`);
   await saveVault({
     email: email.trim().toLowerCase(),
     refreshToken,
@@ -154,7 +154,7 @@ export async function loadBiometricRefreshToken(): Promise<BiometricVault | null
   if (!support.available) {
     throw new Error(`${support.label} is not available on this device.`);
   }
-  await promptBiometric(`Sign in to Synexus with ${support.label}`);
+  await promptBiometric(`Sign in to SyNexus with ${support.label}`);
   return loadVault();
 }
 

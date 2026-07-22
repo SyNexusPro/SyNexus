@@ -81,7 +81,7 @@ export async function postFacebookVideo({ videoPath, caption, quiet = false }) {
   const form = new FormData();
   form.append("access_token", pageToken());
   form.append("description", caption.slice(0, 63206));
-  form.append("title", "Synexus — Should I buy this?");
+  form.append("title", "SyNexus — Should I buy this?");
   form.append("source", new Blob([buf], { type: "video/mp4" }), "synexus-daily.mp4");
 
   const res = await fetch(`${GRAPH_VIDEO}/${pageId()}/videos`, {

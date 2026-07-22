@@ -1,4 +1,4 @@
-# Synexus Growth Engine — VPS Runbook
+# SyNexus Growth Engine — VPS Runbook
 
 Run the autonomous growth loop 24/7 on a cheap VPS (~$5–7/mo). Stripe Pro payments auto-log to Supabase via the Vercel webhook; the VPS runs content (blog + video blast).
 

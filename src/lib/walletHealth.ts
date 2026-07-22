@@ -68,7 +68,7 @@ export function buildWalletHealthReport(): WalletHealthReport {
   const suggestions: string[] = [];
 
   if (summary.total === 0) {
-    riskHabits.push("No trades logged yet — Synexus auto-tracks when you tap Buy or Sell.");
+    riskHabits.push("No trades logged yet — SyNexus auto-tracks when you tap Buy or Sell.");
     suggestions.push("Run Should I buy? before your next entry, then trade from a token page.");
   } else {
     if (dangerTradePct >= 40) {
@@ -87,7 +87,7 @@ export function buildWalletHealthReport(): WalletHealthReport {
 
     if (summary.open > 0 && summary.closed === 0) {
       riskHabits.push(`${summary.open} open position${summary.open > 1 ? "s" : ""} — no exits logged yet.`);
-      suggestions.push("Tap Sell when you exit so Synexus can calculate profit and loss.");
+      suggestions.push("Tap Sell when you exit so SyNexus can calculate profit and loss.");
     }
 
     if (summary.wins + summary.losses >= 3 && summary.winRatePct < 45) {

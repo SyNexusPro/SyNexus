@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Synexus Marketing Blast — 3× daily across every video platform.
+ * SyNexus Marketing Blast — 3× daily across every video platform.
  *
  *   npm run blast:watch     # auto-post forever (9am · 2pm · 8pm)
  *   npm run blast:now       # post due slots now
@@ -279,7 +279,7 @@ async function runWatch() {
       console.log(`\n[${new Date().toLocaleString()}] ${label}`);
       await runDueBlast({ quiet: false });
     } catch (err) {
-      console.error("[Synexus blast]", err.message || err);
+      console.error("[SyNexus blast]", err.message || err);
     }
   };
 
@@ -300,7 +300,7 @@ async function runWatch() {
 }
 
 function printHelp() {
-  console.log(`Synexus Marketing Blast — push Synexus everywhere
+  console.log(`SyNexus Marketing Blast — push SyNexus everywhere
 
   npm run blast:watch       Auto-post 3× daily (all platforms)
   npm run blast:now         Post due slots now

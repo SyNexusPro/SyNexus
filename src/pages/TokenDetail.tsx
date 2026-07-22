@@ -169,7 +169,7 @@ export function TokenDetail() {
       if (result.ok) {
         setReportNote(
           result.channel === "supabase"
-            ? "Report submitted to Synexus."
+            ? "Report submitted to SyNexus."
             : "Report saved on this device.",
         );
       setReportDetails("");
@@ -379,7 +379,7 @@ export function TokenDetail() {
       </section>
 
       <section className="detail-guardian">
-        <h2>The Synexus</h2>
+        <h2>The SyNexus</h2>
         <p className="detail-guardian__lede">Sentinel intelligence for this token</p>
         <p>{token.guardianMessage}</p>
       </section>

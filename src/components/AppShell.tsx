@@ -97,7 +97,7 @@ export function AppShell() {
         <Link
           className="app-footer__link"
           to="/liquidity-treasury"
-          title="Synexus Coin Liquidity Treasury"
+          title="SyNexus Coin Liquidity Treasury"
         >
           Liquidity Treasury
         </Link>

@@ -53,7 +53,7 @@ async function main() {
     `&response_type=code&state=${state}&redirect_uri=${encodeURIComponent(redirectUri)}` +
     `&duration=permanent&scope=${encodeURIComponent(scopes)}`;
 
-  console.log("\nAuthorize Synexus Reddit posting:\n");
+  console.log("\nAuthorize SyNexus Reddit posting:\n");
   console.log(url);
   console.log("\nAfter allowing, paste the full redirect URL or the code.\n");
 

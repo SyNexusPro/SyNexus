@@ -3,7 +3,7 @@ import { hasSupabaseEnv } from "./supabaseClient";
 import { guardTokenReport } from "./securityBot";
 
 const LOCAL_KEY = "hivemind_pending_reports";
-const DEFAULT_REASON = "User reported from Synexus";
+const DEFAULT_REASON = "User reported from SyNexus";
 
 export type SubmitReportInput = {
   tokenSymbol: string;
@@ -39,7 +39,7 @@ export async function submitSynexusReport(input: SubmitReportInput): Promise<Sub
 
   const security = guardTokenReport({ reason, details, tokenSymbol: input.tokenSymbol });
   if (!security.allowed) {
-    return { ok: false, message: security.message ?? "Report blocked by Synexus security." };
+    return { ok: false, message: security.message ?? "Report blocked by SyNexus security." };
   }
 
   if (hasSupabaseEnv) {

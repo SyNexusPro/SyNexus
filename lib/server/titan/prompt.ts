@@ -68,7 +68,7 @@ export function buildTitanSystemPrompt(input: TitanPromptInput): string {
   const intent = input.intentHint && INTENT_GUIDANCE[input.intentHint] ? input.intentHint : "general";
 
   return [
-    `You are ${input.titanBotName} — the central intelligence of Synexus and personal advisor to the host (${operator}).`,
+    `You are ${input.titanBotName} — the central intelligence of SyNexus and personal advisor to the host (${operator}).`,
     "",
     `Voice & presence: ${TITAN_VOICE_PERSONA}`,
     "",
@@ -90,7 +90,7 @@ export function buildTitanSystemPrompt(input: TitanPromptInput): string {
     "",
     `Active mode: ${INTENT_GUIDANCE[intent]}`,
     "",
-    "Synexus control plane:",
+    "SyNexus control plane:",
     `- Plan: ${input.plan}${input.plan === "FREE" ? " (Pro = stronger Sentinel lanes + deeper analysis)" : " (full Sentinel precision)"}`,
     `- Alerts: ${input.alertCount} · Watchlist: ${input.watchlistCount} tokens`,
     `- Feed: ${input.feedSource === "live" ? "live DexScreener" : "demo/mock — note uncertainty"}`,

@@ -51,7 +51,7 @@ export function GodModeLogin({ redirectTo = "/pulse", compact = false }: Props) 
       <section className={`god-mode-login${compact ? " god-mode-login--compact" : ""}`} aria-label="God mode">
         <p className="god-mode-login__badge">God mode active</p>
         <p className="god-mode-login__lede">
-          Full Synexus Pro access is unlocked on this device — analytics, Sentinels, and Titan without billing.
+          Full SyNexusPro access is unlocked on this device — analytics, Sentinels, and Titan without billing.
         </p>
         <div className="god-mode-login__actions">
           <Link to="/pulse" className="god-mode-login__cta">
@@ -67,7 +67,7 @@ export function GodModeLogin({ redirectTo = "/pulse", compact = false }: Props) 
 
   return (
     <section className={`god-mode-login${compact ? " god-mode-login--compact" : ""}`} aria-label="God mode sign-in">
-      <p className="god-mode-login__eyebrow">Synexus · operator override</p>
+      <p className="god-mode-login__eyebrow">SyNexus · operator override</p>
       <h1 className="god-mode-login__title">God mode</h1>
       <p className="god-mode-login__lede">
         Server-verified owner login. Unlocks full Pro, analytics, and command center access without a subscription.
@@ -109,7 +109,7 @@ export function GodModeLogin({ redirectTo = "/pulse", compact = false }: Props) 
       </button>
 
       <p className="god-mode-login__footnote">
-        Use your server-configured god mode ID and key — not your regular Synexus sign-in email unless
+        Use your server-configured god mode ID and key — not your regular SyNexus sign-in email unless
         you set <code className="god-mode-login__code">SYNEXUS_OWNER_EMAIL</code> to match. Restart{" "}
         <code className="god-mode-login__code">npm run dev</code> after changing <code className="god-mode-login__code">.env</code>.
       </p>

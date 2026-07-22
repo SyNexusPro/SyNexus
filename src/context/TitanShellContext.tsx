@@ -37,13 +37,9 @@ export function TitanShellProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const openLogin = useCallback(() => {
-    if (location.pathname === "/") {
-      window.dispatchEvent(new Event(ORACLE_OPEN_LOGIN_EVENT));
-      return;
-    }
     setSheetMode("login");
     setSheetOpen(true);
-  }, [location.pathname]);
+  }, []);
 
   const closeSheet = useCallback(() => {
     setSheetOpen(false);
@@ -56,7 +52,6 @@ export function TitanShellProvider({ children }: { children: ReactNode }) {
       setSheetOpen(true);
     }
     function onOpenLogin() {
-      if (location.pathname === "/") return;
       setSheetMode("login");
       setSheetOpen(true);
     }
@@ -66,7 +61,7 @@ export function TitanShellProvider({ children }: { children: ReactNode }) {
       window.removeEventListener(ORACLE_OPEN_CHAT_EVENT, onOpenChat);
       window.removeEventListener(ORACLE_OPEN_LOGIN_EVENT, onOpenLogin);
     };
-  }, [location.pathname]);
+  }, []);
 
   useEffect(() => {
     setSheetOpen(false);

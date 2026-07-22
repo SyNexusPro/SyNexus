@@ -34,7 +34,7 @@ async function main() {
   }
 
   const block = `
-# Synexus owner command code (server-only — add same vars on Vercel for production)
+# SyNexus owner command code (server-only — add same vars on Vercel for production)
 SYNEXUS_OWNER_EMAIL=${email}
 SYNEXUS_OWNER_PASSWORD=${password}
 SYNEXUS_OWNER_SIGNING_KEY=${signingKey}

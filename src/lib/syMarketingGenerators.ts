@@ -1,11 +1,11 @@
 /**
- * Synexus Marketing Command Center — copy templates only (no outbound posting).
+ * SyNexus Marketing Command Center — copy templates only (no outbound posting).
  * Voice: simple, grabby, plain English. Lead with "Should I buy this?"
  */
 
 import { SYNEXUS_PRO_OFFER_SHORT, SYNEXUS_PRO_PRICE_SHORT } from "../config/proPricing";
 
-const TAGS = "#Synexus #Solana #Crypto #ShouldIBuyThis";
+const TAGS = "#SyNexus #Solana #Crypto #ShouldIBuyThis";
 
 export function marketingAppOrigin(): string {
   if (typeof window !== "undefined" && window.location?.origin) {
@@ -14,14 +14,14 @@ export function marketingAppOrigin(): string {
   return "";
 }
 
-const PRO_PRICE_LINE = `Synexus Pro · ${SYNEXUS_PRO_PRICE_SHORT} · cancel anytime.`;
+const PRO_PRICE_LINE = `SyNexusPro · ${SYNEXUS_PRO_PRICE_SHORT} · cancel anytime.`;
 const TRIAL_OFFER_SHORT = SYNEXUS_PRO_OFFER_SHORT;
 
 const HOOKS = [
-  "Should I buy this? Paste any Solana token. Synexus answers in seconds.",
+  "Should I buy this? Paste any Solana token. SyNexus answers in seconds.",
   "About to ape? Paste the mint first. Avoid · Watch · OK — in plain English.",
   "One paste. One verdict. Risk, whales, and rug flags before you sign.",
-  "Stop guessing. Paste a token — Synexus tells you if it's worth the click.",
+  "Stop guessing. Paste a token — SyNexus tells you if it's worth the click.",
   "Memecoin moving? Freeze. Paste it. Read Avoid or Watch before you buy.",
   "Trading Solana? Paste any coin. Get a simple scorecard + plain-English read.",
 ];
@@ -29,7 +29,7 @@ const HOOKS = [
 const SUPPORT = [
   "Sign up → 7-day Pro trial with card on file. Then $9.99/mo if you keep it.",
   "Free scan on every token. Pro unlocks Titan briefings + full Sentinel grid.",
-  "Your wallet signs every trade — Synexus just shows you the risk first.",
+  "Your wallet signs every trade — SyNexus just shows you the risk first.",
   "Trade journal tracks entries, exits, and P/L so you see your habits.",
   "Live alerts when whales move or risk spikes — before the timeline screams.",
 ];
@@ -61,7 +61,7 @@ export function generateTikTokScript(now: number): string {
   const origin = marketingAppOrigin() || "https://synexus.pro";
 
   return [
-    `Synexus — Hook: Big text "${onScreen}" — VO: ${hook}`,
+    `SyNexus — Hook: Big text "${onScreen}" — VO: ${hook}`,
     "",
     `[0–3s] Show paste box + instant verdict card (Avoid / Watch / OK).`,
     `[3–7s] Flash scorecard: risk · whales · momentum · liquidity · rug warning.`,
@@ -99,7 +99,7 @@ export function generateDiscordPost(now: number): string {
   const origin = marketingAppOrigin() || "https://synexus.pro";
   const hook = pick(HOOKS, dayOffset(now));
   return [
-    "**Should I buy this? — Synexus**",
+    "**Should I buy this? — SyNexus**",
     "",
     hook,
     "",
@@ -119,7 +119,7 @@ export function generateRedditPost(now: number): string {
   const seed = dayOffset(now);
   const titles = [
     "I built a free \"Should I buy this?\" scanner for Solana — paste a mint, get Avoid/Watch/OK in plain English",
-    "Before you ape: paste any SOL token and get a risk score + plain-English read (Synexus)",
+    "Before you ape: paste any SOL token and get a risk score + plain-English read (SyNexus)",
     "Anyone else tired of TG hype? Made a simple Solana token scanner — paste → verdict → you decide",
   ];
   const title = pick(titles, seed);
@@ -156,7 +156,7 @@ export function generateReferralBlurb(now: number): string {
     "",
     hook,
     "",
-    "Send them Synexus — paste a token, get a clear answer, trade on their own terms.",
+    "Send them SyNexus — paste a token, get a clear answer, trade on their own terms.",
     "",
     TRIAL_OFFER_SHORT,
     PRO_PRICE_LINE,
@@ -176,7 +176,7 @@ export function growthMissionLine(date: Date): string {
     "Discord: share one Avoid verdict + trial offer in footer — educational not hype.",
     "Reddit comment: mention free scan + 7-day Pro trial after sign-up — no spam.",
     "Film wallet journal stats — people love seeing their own win rate.",
-    "Compare: influencer \"100x gem\" vs Synexus Danger band on the same token.",
+    "Compare: influencer \"100x gem\" vs SyNexus Danger band on the same token.",
     'Short: "3 seconds to paste. 5 seconds to know if you should touch it."',
     "Carousel: Avoid vs Watch vs OK — what each means in one sentence each.",
     "Story/Reel: Titan sign-up gate + Should I buy? demo — end card with trial offer.",
@@ -200,6 +200,6 @@ export function generateTikTokCaption(now: number): string {
     PRO_PRICE_LINE,
     "",
     "🐰 Syn the bunny · paste before you ape",
-    "#Synexus #Solana #Crypto #Trading #Memecoin #ShouldIBuyThis #DeFi",
+    "#SyNexus #Solana #Crypto #Trading #Memecoin #ShouldIBuyThis #DeFi",
   ].join("\n");
 }

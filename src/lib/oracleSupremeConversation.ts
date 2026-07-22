@@ -214,8 +214,8 @@ function oracleWelcomeLead(name: string, skipWelcomeLine?: boolean): string {
   }
   return withOptionalName(
     name,
-    "Welcome to The Synexus, {name}. How may I be of service?",
-    "Welcome to The Synexus. How may I be of service?",
+    "Welcome to The SyNexus, {name}. How may I be of service?",
+    "Welcome to The SyNexus. How may I be of service?",
   );
 }
 
@@ -259,8 +259,8 @@ export function buildFollowUpAfterMood(mood: DayMoodReply, ctx: OracleConversati
         )
       : withOptionalName(
           name,
-          "Good to hear, {name}. I'll run the Sentinels while you're up — Synexus Pro lets me brief you personally when you're ready.",
-          "Good to hear. I'll run the Sentinels while you're up — Synexus Pro lets me brief you personally when you're ready.",
+          "Good to hear, {name}. I'll run the Sentinels while you're up — SyNexusPro lets me brief you personally when you're ready.",
+          "Good to hear. I'll run the Sentinels while you're up — SyNexusPro lets me brief you personally when you're ready.",
         );
   }
 

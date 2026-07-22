@@ -83,7 +83,7 @@ export function TokenCard({ token }: Props) {
             className="token-card__risk-dot"
             style={{ background: risk.dot }}
           />
-          The Synexus · {synexusRiskBandLabel(token.guardianRisk)}
+          The SyNexus · {synexusRiskBandLabel(token.guardianRisk)}
         </div>
       </div>
       <div className="token-card__bottom">

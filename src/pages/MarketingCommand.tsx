@@ -20,18 +20,18 @@ const CHECK_ITEMS: readonly CheckDef[] = [
   { id: "telegram", label: "Post Telegram update" },
   { id: "discord", label: "Post Discord update" },
   { id: "reply5", label: "Reply thoughtfully to 5 crypto posts (value, not spam)" },
-  { id: "share", label: "Share live Synexus app link responsibly" },
+  { id: "share", label: "Share live SyNexus app link responsibly" },
   { id: "trial-promo", label: "Promote 7-day free Pro trial · $9.99/mo after (X, TikTok, Telegram)" },
   { id: "square", label: "Check Square subscriptions (dashboard audit)" },
 ] as const;
 
 const CONTENT_CALENDAR = [
-  { day: "Day 1", title: "Launch announcement", detail: "Tease Synexus + 7-day free Pro trial when you sign up." },
+  { day: "Day 1", title: "Launch announcement", detail: "Tease SyNexus + 7-day free Pro trial when you sign up." },
   { day: "Day 2", title: "Don’t get rugged", detail: "Sentinel Aegis framing on risk scans + pattern anomalies." },
   { day: "Day 3", title: "Sentinel Aegis risk scan", detail: "Walk through how risk overlays stay structured." },
   { day: "Day 4", title: "Whale tracking", detail: "Sentinel Leviathan cues + reading flow without guaranteeing moves." },
   { day: "Day 5", title: "7-day free trial offer", detail: "Sign up · full Pro for 7 days · card on file · $9.99/mo after." },
-  { day: "Day 6", title: "Synexus Pro benefits", detail: "Titan briefings, Sentinel grid, faster refresh — what trial unlocks." },
+  { day: "Day 6", title: "SyNexusPro benefits", detail: "Titan briefings, Sentinel grid, faster refresh — what trial unlocks." },
   { day: "Day 7", title: "User feedback post", detail: "Amplify sober wins + trial-to-paid journey tone." },
 ] as const;
 
@@ -121,7 +121,7 @@ export function MarketingCommand() {
         <p className="marketing-cmd__badge">INTERNAL · MARKETING</p>
         <h1 className="marketing-cmd__title">Marketing Command Center</h1>
         <p className="marketing-cmd__sub">
-          Synexus outbound studio — futuristic, restrained, trader-native. Generates copy only; you approve and post manually.
+          SyNexus outbound studio — futuristic, restrained, trader-native. Generates copy only; you approve and post manually.
           <strong>No auto-posting</strong> to X, TikTok, Reddit, Discord, or Telegram.
         </p>
       </header>
@@ -186,7 +186,7 @@ export function MarketingCommand() {
         </p>
         {origin ? (
           <p className="marketing-cmd-linkbox">
-            <span className="marketing-cmd-linkbox__label">Live Synexus app (this tab origin)</span>
+            <span className="marketing-cmd-linkbox__label">Live SyNexus app (this tab origin)</span>
             <code className="marketing-cmd-code">{origin}</code>
             <button
               type="button"
@@ -208,7 +208,7 @@ export function MarketingCommand() {
           </h2>
         </div>
         <p className="marketing-cmd-card__muted">
-          Brand pillars: Synexus · The Synexus · Titan · Sentinels · Synexus Pro · $9.99/month ·
+          Brand pillars: SyNexus · The SyNexus · Titan · Sentinels · SyNexusPro · $9.99/month ·
           AI intelligence · Sentinel analysis · whales · momentum · risk scanning.
         </p>
 
@@ -254,7 +254,7 @@ export function MarketingCommand() {
             Warm invitations only — conversational, respectful, no brigading.
           </p>
           <GeneratorBlock
-            label="Invite traders to try Synexus"
+            label="Invite traders to try SyNexus"
             value={referral}
             copied={copiedField === "referral"}
             onRegen={() => setReferral(generateReferralBlurb(Date.now()))}

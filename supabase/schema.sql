@@ -1,5 +1,5 @@
 -- =============================================================================
--- HiveMind — complete Supabase schema (HiveMind web app + Stripe webhook)
+-- SyNexus — complete Supabase schema (SyNexus web app + payment webhooks)
 -- Run in Supabase SQL Editor (requires auth schema). Safe to re-run: uses
 -- IF NOT EXISTS / DROP POLICY IF EXISTS where appropriate.
 -- =============================================================================
@@ -182,7 +182,7 @@ begin
 
     dname := trim(both from replace(replace(local_part, '.', ' '), '_', ' '));
     if dname = '' or dname is null then
-      dname := 'HiveMind member';
+      dname := 'SyNexus member';
     end if;
   end if;
 
@@ -357,4 +357,4 @@ create index if not exists treasury_revenue_created_at_idx on public.treasury_re
 
 alter table public.treasury_revenue enable row level security;
 
-comment on table public.treasury_revenue is 'Synexus growth-phase revenue ledger. Stripe webhook inserts via service role; 100% reinvest allocation.';
+comment on table public.treasury_revenue is 'SyNexus growth-phase revenue ledger. Stripe webhook inserts via service role; 100% reinvest allocation.';

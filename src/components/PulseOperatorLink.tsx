@@ -244,14 +244,14 @@ export function PulseOperatorLink({
               <p className="operator-link__email">{displayEmail}</p>
             </div>
             <span className={`operator-link__plan operator-link__plan--${plan.toLowerCase()}`}>
-              {ownerUnlocked ? "God mode · full access" : plan === "PRO" ? "Synexus Pro" : "Free tier"}
+              {ownerUnlocked ? "God mode · full access" : plan === "PRO" ? "SyNexusPro" : "Free tier"}
             </span>
           </div>
         </header>
 
         <div className="operator-link__sync" role="status">
           <span className="operator-link__sync-dot" aria-hidden="true" />
-          Synchronized with The Synexus
+          Synchronized with The SyNexus
         </div>
 
         {canUseBiometric ? (
@@ -317,7 +317,7 @@ export function PulseOperatorLink({
         ? "Establish operator link"
         : signInMethod === "magic"
           ? "Email me a sign-in link"
-          : "Reconnect to Synexus";
+          : "Reconnect to SyNexus";
 
   return (
     <section
@@ -330,7 +330,7 @@ export function PulseOperatorLink({
           {variant === "oracle" ? `${titanBotName} · access gate` : "Operator link"}
         </p>
         <h2 className="operator-link__title">
-          {variant === "oracle" ? "Create your operator link" : "Save your Synexus command center"}
+          {variant === "oracle" ? "Create your operator link" : "Save your SyNexus command center"}
         </h2>
         <p className="operator-link__lede">
           {variant === "oracle" ? (
@@ -342,7 +342,7 @@ export function PulseOperatorLink({
           ) : (
             <>
               Sign in with a secure email link — no password to remember — or use an access key. After your
-              first sign-in, Synexus can save {biometricLabel} on mobile.
+              first sign-in, SyNexus can save {biometricLabel} on mobile.
             </>
           )}
         </p>
@@ -519,7 +519,7 @@ export function PulseOperatorLink({
         <p className="operator-link__footnote">Demo mode — server keys unlock permanent operator links.</p>
       ) : !canUseBiometric && biometricSupport?.native === false ? (
         <p className="operator-link__footnote">
-          Face ID and fingerprint sign-in are available in the Synexus Android and iOS app.
+          Face ID and fingerprint sign-in are available in the SyNexus Android and iOS app.
         </p>
       ) : mode === "return" && signInMethod === "magic" ? (
         <p className="operator-link__footnote">

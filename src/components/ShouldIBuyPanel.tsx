@@ -117,8 +117,8 @@ export function ShouldIBuyPanel({ poolTokens = [], initialScan = "" }: Props) {
         </h2>
         <p className="should-i-buy__lede">
           {isSimple
-            ? "Paste any Solana token below. Synexus answers in plain English — no charts required."
-            : "Paste a token mint or symbol. Synexus answers in plain English — watch, high risk, or avoid."}
+            ? "Paste any Solana token below. SyNexus answers in plain English — no charts required."
+            : "Paste a token mint or symbol. SyNexus answers in plain English — watch, high risk, or avoid."}
         </p>
       </div>
       {isSimple ? (

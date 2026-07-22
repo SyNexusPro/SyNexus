@@ -1,5 +1,5 @@
 -- =============================================================================
--- HiveMind — Complete Supabase schema (paste into SQL Editor)
+-- SyNexus — Complete Supabase schema (paste into SQL Editor)
 --
 -- Trouble signing in / sign up shows Postgres "does not exist" or "guardian_…"?
 -- Usually the project schema is incomplete or points at the wrong DB. Apply this
@@ -251,7 +251,7 @@ begin
 
     dname := trim(both from replace(replace(local_part, '.', ' '), '_', ' '));
     if dname = '' or dname is null then
-      dname := 'HiveMind member';
+      dname := 'SyNexus member';
     end if;
   end if;
 

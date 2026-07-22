@@ -1,4 +1,4 @@
-/** Synexus Aegis — security bot event taxonomy. */
+/** SyNexus Aegis — security bot event taxonomy. */
 
 export type SecuritySeverity = "low" | "medium" | "high" | "critical";
 

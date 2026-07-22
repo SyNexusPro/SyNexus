@@ -48,10 +48,10 @@ export function BlogIndex() {
   return (
     <div className="page blog-page">
       <section className="blog-page__hero marketing-panel">
-        <p className="blog-page__eyebrow">Synexus Journal</p>
+        <p className="blog-page__eyebrow">SyNexus Journal</p>
         <h1 className="blog-page__title">Sentinel intelligence, in writing</h1>
         <p className="blog-page__lede">
-          Daily articles on Solana risk reads, exit liquidity, and how Synexus helps operators decide before they
+          Daily articles on Solana risk reads, exit liquidity, and how SyNexus helps operators decide before they
           sign. Auto-published by the growth engine — trust-first, no hype.
         </p>
       </section>

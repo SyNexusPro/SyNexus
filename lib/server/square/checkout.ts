@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { SYNEXUS_PRO_PRICE_USD } from "../subscription/pricing";
+import { SYNEXUS_PRO_PRODUCT_NAME } from "../subscription/brand";
 import { readSquareConfig, type SquareEnv } from "./config";
 import { resolvePlanVariationId } from "./resolvePlanVariation";
 import type { CheckoutPayload, JsonResponse } from "../subscription/types";
@@ -77,9 +78,9 @@ export async function createSquareCheckoutResponse(
       },
       body: JSON.stringify({
         idempotency_key: randomUUID(),
-        description: "Synexus Pro subscription",
+        description: `${SYNEXUS_PRO_PRODUCT_NAME} subscription`,
         quick_pay: {
-          name: "Synexus Pro",
+          name: SYNEXUS_PRO_PRODUCT_NAME,
           price_money: { amount: amountCents, currency: "USD" },
           location_id: locationId,
         },

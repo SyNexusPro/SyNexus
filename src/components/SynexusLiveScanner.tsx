@@ -122,7 +122,7 @@ export function SynexusLiveScanner({ tokens, feedSource, dexLiveCount, loading, 
             : "Preview mode — connect live feed in production"}
         </p>
         <Link className="synexus-scanner__pro-cta" to="/pulse#synexus-pro">
-          Full Sentinel scans on Synexus Pro →
+          Full Sentinel scans on SyNexusPro →
         </Link>
         {error ? <p className="synexus-scanner__error">{error}</p> : null}
       </footer>

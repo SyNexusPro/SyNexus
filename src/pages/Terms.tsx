@@ -13,7 +13,7 @@ export function Terms() {
       <h1 className="legal-page__title">Terms of Service</h1>
       <p className="legal-page__summary">
         These Terms of Service (&quot;Terms&quot;) are a binding agreement between you and {OPERATOR_LABEL}{" "}
-        (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) governing access to the Synexus mobile and web
+        (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) governing access to the SyNexus mobile and web
         application, dashboards, AI features, subscriptions, and related services (collectively, the
         &quot;Service&quot;). By accessing or using the Service, creating an account, or
         completing a purchase, you agree to these Terms, our{" "}
@@ -34,7 +34,7 @@ export function Terms() {
       <section className="legal-section marketing-panel">
         <h2>1 · Who we are</h2>
         <p>
-          Synexus is an informational technology platform. We are not a broker-dealer, exchange, custodian,
+          SyNexus is an informational technology platform. We are not a broker-dealer, exchange, custodian,
           wallet provider, investment adviser, commodity trading adviser, money transmitter, or bank. We do not
           execute trades, hold customer funds or digital assets, or provide personalized investment
           recommendations. The Service aggregates, organizes, and presents data and software features for your
@@ -57,7 +57,7 @@ export function Terms() {
       <section className="legal-section marketing-panel">
         <h2>Not financial, legal, or tax advice</h2>
         <p>
-          Synexus provides informational tooling, dashboards, summaries, alerts, rankings, scores, synthetic
+          SyNexusProvides informational tooling, dashboards, summaries, alerts, rankings, scores, synthetic
           agent outputs, voice briefings, AI-generated text, and links to third-party sites.{" "}
           <strong>Nothing on the Service is investment, trading, legal, tax, accounting, or other professional
           advice.</strong> We do not recommend, endorse, or solicit buying, selling, holding, staking,
@@ -87,7 +87,7 @@ export function Terms() {
         <p>
           Digital assets and trading involve substantial risk of total loss. Prices are volatile; projects may
           fail, liquidity may disappear, and smart-contract, bridge, oracle, or chain-level failures may occur.
-          You use Synexus <strong>entirely at your own risk</strong>. You assume all risks associated with
+          You use SyNexus <strong>entirely at your own risk</strong>. You assume all risks associated with
           digital assets and any decision you make before, during, or after using the Service. Past or simulated
           patterns do not predict future results. To the fullest extent permitted by law, you release us from
           claims arising from trading losses or reliance on Service content, except where such release is
@@ -109,7 +109,7 @@ export function Terms() {
       <section className="legal-section marketing-panel">
         <h2>Subscriptions and billing</h2>
         <p>
-          Paid plans (including Synexus Pro at the price shown at checkout, currently {SYNEXUS_PRO_PRICE_LABEL}{" "}
+          Paid plans (including SyNexusPro at the price shown at checkout, currently {SYNEXUS_PRO_PRICE_LABEL}{" "}
           where applicable) include a <strong>{SYNEXUS_PRO_TRIAL_DAYS}-day free trial</strong> of full Pro access
           after you create and verify your account and add a payment method to start your free trial. After the
           trial, billing on a recurring basis begins only when you subscribe through checkout. Payment is
@@ -151,7 +151,7 @@ export function Terms() {
       <section className="legal-section marketing-panel">
         <h2>Intellectual property</h2>
         <p>
-          The Service, including software, design, logos, Synexus and Sentinel branding, and our content, is
+          The Service, including software, design, logos, SyNexus and Sentinel branding, and our content, is
           owned by us or our licensors and protected by intellectual-property laws. We grant you a limited,
           revocable, non-exclusive, non-transferable license to use the Service for personal, non-commercial
           purposes in accordance with these Terms. You may not copy, resell, sublicense, or create derivative
@@ -162,13 +162,13 @@ export function Terms() {
       <section className="legal-section marketing-panel">
         <h2>Trading fees</h2>
         <p>
-          When you initiate a swap through Synexus shortcuts (for example, links to Jupiter with Synexus platform
+          When you initiate a swap through SyNexus shortcuts (for example, links to Jupiter with SyNexus platform
           fees enabled), a <strong>platform trading fee</strong> may apply based on your plan:{" "}
-          <strong>0.10%</strong> for free accounts and <strong>0.05%</strong> for Synexus Pro subscribers, calculated
+          <strong>0.10%</strong> for free accounts and <strong>0.05%</strong> for SyNexusPro subscribers, calculated
           on the notional value of the swap. This fee is in addition to third-party costs such as blockchain network
           fees, DEX spreads, slippage, and any fees charged by Jupiter or other aggregators. Fee rates, eligibility
           for discounts, and revenue allocation policies are described in the{" "}
-          <Link to="/liquidity-treasury">Synexus Coin Liquidity Treasury</Link> and may change with notice where
+          <Link to="/liquidity-treasury">SyNexus Coin Liquidity Treasury</Link> and may change with notice where
           required. You authorize applicable platform fees when you confirm a qualifying swap in your connected
           wallet. We do not guarantee that every trade path will collect fees until on-chain integration is fully
           live.
@@ -282,7 +282,7 @@ export function Terms() {
       </section>
 
       <p className="legal-page__note">
-        This document summarizes key legal terms for users of Synexus. It is not legal advice. Have qualified
+        This document summarizes key legal terms for users of SyNexus. It is not legal advice. Have qualified
         counsel review these Terms for your entity, jurisdiction, and product before relying on them for
         compliance. Questions:{" "}
         <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>

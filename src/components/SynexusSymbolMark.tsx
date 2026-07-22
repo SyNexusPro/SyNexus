@@ -7,7 +7,7 @@ type SynexusSymbolMarkProps = {
   alive?: boolean;
 };
 
-/** Synexus emblem only — cropped from the full logo asset, scaled to fit the box. */
+/** SyNexus emblem only — cropped from the full logo asset, scaled to fit the box. */
 export function SynexusSymbolMark({ className = "", size = "panel", alive = true }: SynexusSymbolMarkProps) {
   const showCircuits = alive && size === "panel";
 

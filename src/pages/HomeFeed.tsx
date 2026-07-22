@@ -97,7 +97,7 @@ export function HomeFeed() {
               <img
                 className="landing-hero__wordmark"
                 src="/synexus-wordmark.png"
-                alt="Synexus"
+                alt="SyNexus"
               />
             </div>
           </div>
@@ -143,7 +143,7 @@ export function HomeFeed() {
 
       {isSimple ? (
         <p className="easy-trust-note">
-          Non-custodial — Synexus never holds your keys.{" "}
+          Non-custodial — SyNexus never holds your keys.{" "}
           <Link to="/trust">How we keep you safe →</Link>
         </p>
       ) : (
@@ -187,14 +187,14 @@ export function HomeFeed() {
         <article className="landing-info-card landing-info-card--spotlight">
           <h2>One flash of intel before the candles catch up.</h2>
           <p>
-            The Synexus Sentinels slam liquidity drift, whale-sized moves, violent volume, and swarm reports into a
+            The SyNexus Sentinels slam liquidity drift, whale-sized moves, violent volume, and swarm reports into a
             single hit—you feel the shift before the feed goes loud.
           </p>
         </article>
         <article className="landing-info-card">
           <h2>Detect risks. Track whales. Flag scams.</h2>
           <p>
-            The Synexus routes signals through four Sentinels—<strong>Aegis</strong> (security &amp; privacy), Pulse,
+            The SyNexus routes signals through four Sentinels—<strong>Aegis</strong> (security &amp; privacy), Pulse,
             Leviathan, and Cipher—so you get one
             coherent read instead of noise.
           </p>
@@ -203,7 +203,7 @@ export function HomeFeed() {
           <h2>Bad tokens move fast.</h2>
           <p>
             Scam launches, rug pulls, sudden dumps, and whale exits can hit before most traders see
-            the warning. Synexus is built to surface those signals early.
+            the warning. SyNexus is built to surface those signals early.
           </p>
         </article>
       </section>
@@ -237,7 +237,7 @@ export function HomeFeed() {
             </ul>
           ) : (
             <p className="coin-search-panel__empty">
-              No matching tokens in the Synexus feed. Try SOL, SYN, BONK, or PEPE.
+              No matching tokens in the SyNexus feed. Try SOL, SYN, BONK, or PEPE.
             </p>
           )
         ) : null}
@@ -245,11 +245,11 @@ export function HomeFeed() {
 
       <section className="synexus-trade-panel">
         <div className="synexus-trade-panel__body">
-          <p className="synexus-trade-panel__eyebrow">Trade on Synexus</p>
+          <p className="synexus-trade-panel__eyebrow">Trade on SyNexus</p>
           <h2 className="synexus-trade-panel__title">Scan first. Execute when you&apos;re ready.</h2>
           <p className="synexus-trade-panel__copy">
             Sentinel-checked tokens from your feed — open any coin, review the risk read, then buy or sell
-            from Synexus. Your wallet only signs; Synexus runs the flow.
+            from SyNexus. Your wallet only signs; SyNexus runs the flow.
           </p>
         </div>
         <p className="synexus-trade-panel__wallet">
@@ -266,10 +266,10 @@ export function HomeFeed() {
 
       <section className="hive-vision">
         <div className="hive-vision__head">
-          <p className="hive-vision__eyebrow">Synexus Security Grid</p>
+          <p className="hive-vision__eyebrow">SyNexus Security Grid</p>
           <h2 className="hive-vision__title">Built to be the safest Solana trading command center.</h2>
           <p className="hive-vision__copy">
-            AI risk modeling, crowd intelligence, and real-time signals from The Synexus work as one system.
+            AI risk modeling, crowd intelligence, and real-time signals from The SyNexus work as one system.
           </p>
         </div>
         <div className="hive-vision__grid">
@@ -284,7 +284,7 @@ export function HomeFeed() {
             <p className="hive-vision-card__icon">COM</p>
             <p className="hive-vision-card__title">Community Protection</p>
             <p className="hive-vision-card__body">
-              Reports from traders feed into The Synexus scoring so risky tokens are flagged faster.
+              Reports from traders feed into The SyNexus scoring so risky tokens are flagged faster.
             </p>
           </article>
           <article className="hive-vision-card">
@@ -300,7 +300,7 @@ export function HomeFeed() {
       <section className="token-section">
         <div className="token-section__head">
           <h2 className="token-section__title">Trending Tokens</h2>
-          <p className="token-section__lede">Fast movers across the Synexus feed</p>
+          <p className="token-section__lede">Fast movers across the SyNexus feed</p>
         </div>
         <ul className="token-list">
           {trendingTokens.map((token) => (
@@ -313,7 +313,7 @@ export function HomeFeed() {
 
       <section className="token-section">
         <div className="token-section__head">
-          <h2 className="token-section__title">Synexus risk alerts</h2>
+          <h2 className="token-section__title">SyNexus risk alerts</h2>
           <p className="token-section__lede">
             Warning and danger bands that need attention
           </p>
@@ -331,7 +331,7 @@ export function HomeFeed() {
         <div className="token-section__head">
           <h2 className="token-section__title">Verified / Safer Tokens</h2>
           <p className="token-section__lede">
-            Tokens currently classified in the Synexus Safe band
+            Tokens currently classified in the SyNexus Safe band
           </p>
         </div>
         <ul className="token-list">
@@ -345,7 +345,7 @@ export function HomeFeed() {
 
       <section className="home-screenshots marketing-panel">
         <div className="home-screenshots__head">
-          <p className="home-screenshots__eyebrow">Inside Synexus</p>
+          <p className="home-screenshots__eyebrow">Inside SyNexus</p>
           <h2 className="home-screenshots__title">Token scanner · Whale tracker · Risk score · Alerts · AI</h2>
           <p className="home-screenshots__copy">
             Preview the core surfaces — export device captures for Google Play when you ship Android.
@@ -365,7 +365,7 @@ export function HomeFeed() {
 
       <section className="monetization-panel">
         <div className="token-section__head">
-          <h2 className="token-section__title">Why Synexus matters</h2>
+          <h2 className="token-section__title">Why SyNexus matters</h2>
           <p className="token-section__lede">
             Crypto traders need warnings before momentum turns into damage.
           </p>

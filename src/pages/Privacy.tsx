@@ -11,7 +11,7 @@ export function Privacy() {
       <h1 className="legal-page__title">Privacy Policy</h1>
       <p className="legal-page__summary">
         This Privacy Policy describes how {OPERATOR_LABEL} (&quot;we,&quot; &quot;us&quot;) collects, uses, and
-        shares information when you use the Synexus mobile and web application and related services (the
+        shares information when you use the SyNexus mobile and web application and related services (the
         &quot;Service&quot;). It should be read with our{" "}
         <Link to="/terms">Terms of Service</Link>.
       </p>

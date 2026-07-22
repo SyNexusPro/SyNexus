@@ -12,7 +12,7 @@ type BrainCircuitPulseProps = {
 
 const TRUNK_ANGLES = [0, 45, 90, 135, 180, 225, 270, 315] as const;
 
-/** Wraps the Synexus brain with a heartbeat scale and radiating circuit lines. */
+/** Wraps the SyNexus brain with a heartbeat scale and radiating circuit lines. */
 export function BrainCircuitPulse({
   children,
   className = "",

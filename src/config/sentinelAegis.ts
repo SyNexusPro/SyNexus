@@ -19,7 +19,7 @@ export const AEGIS_LESSON =
   "Every scam report you confirm and every privacy setting you tighten makes Aegis sharper on the next threat.";
 
 export const AEGIS_PRIVACY_POINTS = [
-  "Non-custodial — Synexus never holds your SOL, tokens, or seed phrases.",
+  "Non-custodial — SyNexus never holds your SOL, tokens, or seed phrases.",
   "Wallet keys stay in Phantom, Solflare, or your hardware wallet — not on our servers.",
   "Operator Link uses verified email sign-in; we don't ask for seed phrases or private keys.",
   "Titan personalized memory and feedback are opt-in only — off by default.",
@@ -30,7 +30,7 @@ export const AEGIS_SECURITY_POINTS = [
   "Contract authority, liquidity depth, and wallet concentration on every scanned token.",
   "Rug-pull heuristics, honeypot patterns, and community abuse reports fused into risk bands.",
   "In-app SecurityBot blocks suspicious chat patterns and validates Pro grant sources.",
-  "Verify mint addresses and URLs — Synexus support will never DM you for a seed phrase.",
+  "Verify mint addresses and URLs — SyNexus support will never DM you for a seed phrase.",
 ] as const;
 
 export function buildAegisSecurityPrivacyBrief(): string {
@@ -49,7 +49,7 @@ export function answerAegisSecurityPrivacyQuestion(question: string): string | n
 
   if (/privacy|personal data|my data|what (data|info) do you|gdpr|delete my data/.test(q)) {
     return [
-      `${AEGIS_SHORT_NAME} (security & privacy): Synexus does not sell your personal information.`,
+      `${AEGIS_SHORT_NAME} (security & privacy): SyNexus does not sell your personal information.`,
       "We use email and profile data to run Operator Link and Pro — not to move your crypto.",
       "Titan memory and feedback stay opt-in. Device storage may hold chat history locally.",
       "Read /privacy for retention, cookies, and your rights.",
@@ -57,15 +57,15 @@ export function answerAegisSecurityPrivacyQuestion(question: string): string | n
   }
 
   if (/seed phrase|private key|recovery phrase|12 words|24 words/.test(q)) {
-    return `${AEGIS_SHORT_NAME}: Never share your seed phrase — with Synexus, Titan, or anyone in DMs. We will never ask for it. That's a phishing scam, not support.`;
+    return `${AEGIS_SHORT_NAME}: Never share your seed phrase — with SyNexus, Titan, or anyone in DMs. We will never ask for it. That's a phishing scam, not support.`;
   }
 
   if (/phish|fake support|scam dm|telegram scam|discord scam/.test(q)) {
-    return `${AEGIS_SHORT_NAME}: Real Synexus support won't ask for keys or "verify" your wallet in a link. Use /contact and /trust only — paste suspicious mints here for a rug read first.`;
+    return `${AEGIS_SHORT_NAME}: Real SyNexus support won't ask for keys or "verify" your wallet in a link. Use /contact and /trust only — paste suspicious mints here for a rug read first.`;
   }
 
   if (/non-?custodial|hold my (crypto|funds|sol)|custody/.test(q)) {
-    return `${AEGIS_SHORT_NAME}: Synexus is non-custodial intelligence. You sign every swap in your wallet app — we route reads and Jupiter shortcuts, not your keys.`;
+    return `${AEGIS_SHORT_NAME}: SyNexus is non-custodial intelligence. You sign every swap in your wallet app — we route reads and Jupiter shortcuts, not your keys.`;
   }
 
   if (/security|safe|trust|hack|compromised/.test(q) && /account|app|synexus|operator/.test(q)) {

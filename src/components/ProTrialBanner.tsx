@@ -73,9 +73,9 @@ export function ProTrialBanner() {
       : `${SYNEXUS_PRO_TRIAL_LABEL} active or available · ${SYNEXUS_PRO_PRICE_LABEL} after trial · cancel anytime`;
 
   return (
-    <div className="pro-trial-banner" role="region" aria-label="Synexus Pro subscription">
+    <div className="pro-trial-banner" role="region" aria-label="SyNexusPro subscription">
       <div className="pro-trial-banner__text">
-        <span className="pro-trial-banner__headline">Synexus Pro</span>
+        <span className="pro-trial-banner__headline">SyNexusPro</span>
         <span className="pro-trial-banner__detail">{detail}</span>
       </div>
       <ProDemoButton

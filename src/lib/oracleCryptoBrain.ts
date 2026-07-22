@@ -228,10 +228,10 @@ export function answerCryptoConcept(question: string, commanderName = DEFAULT_TI
     return "Whales are wallets holding large supply — Leviathan tracks top-holder percent and sudden concentration shifts before price reacts.";
   }
   if (/market cap|mcap|fdv/.test(q)) {
-    return "Market cap is price × supply — FDV includes locked tokens. Synexus uses both with volume and liquidity so your commander doesn't chase inflated numbers.";
+    return "Market cap is price × supply — FDV includes locked tokens. SyNexus uses both with volume and liquidity so your commander doesn't chase inflated numbers.";
   }
   if (/solana|sol\b/.test(q) && /what|explain|how/.test(q)) {
-    return "Solana is the chain Synexus scans first — fast blocks, meme velocity, and rug risk. Sentinels watch SPL tokens, pools, and wallet flow in real time.";
+    return "Solana is the chain SyNexus scans first — fast blocks, meme velocity, and rug risk. Sentinels watch SPL tokens, pools, and wallet flow in real time.";
   }
   if (/sentinel|aegis|pulse|leviathan|cipher/.test(q) && /what|who|do/.test(q)) {
     return `Aegis guards security & privacy (scams, rugs, accounts), Pulse reads momentum, Leviathan shadows whales, Cipher fuses weak signals. ${commanderName} commands each lane and reads their reports.`;

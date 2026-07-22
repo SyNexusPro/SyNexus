@@ -1,4 +1,4 @@
-# Go live now — Synexus action plan
+# Go live now — SyNexus action plan
 
 Do these in order. Each step unlocks the next.
 

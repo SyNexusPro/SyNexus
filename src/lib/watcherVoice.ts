@@ -1,11 +1,11 @@
 const sentinelIdleMessages = [
   "Sentinels are analyzing the market.",
-  "The Synexus is scanning risk, momentum, whales, and patterns.",
-  "Sentinels are observing liquidity flow across The Synexus.",
+  "The SyNexus is scanning risk, momentum, whales, and patterns.",
+  "Sentinels are observing liquidity flow across The SyNexus.",
   "Sentinels are tracking volume spikes in real time.",
 ];
 
-/** User-facing risk copy for Sentinel / Synexus intelligence. */
+/** User-facing risk copy for Sentinel / SyNexus intelligence. */
 export function getSentinelMessage(status: string): string {
   const normalized = status.toLowerCase();
   if (normalized === "safe") {

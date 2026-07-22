@@ -7,14 +7,14 @@ export function Disclaimer() {
       <p className="legal-page__eyebrow">Effective date: {LEGAL_EFFECTIVE_DATE}</p>
       <h1 className="legal-page__title">Disclaimer</h1>
       <p className="legal-page__summary">
-        Please read this disclaimer carefully before using Synexus ({PUBLIC_SITE_URL}). By using the Service,
+        Please read this disclaimer carefully before using SyNexus ({PUBLIC_SITE_URL}). By using the Service,
         you acknowledge the following.
       </p>
 
       <section className="legal-section marketing-panel legal-section--risk">
         <h2>Not financial, legal, or tax advice</h2>
         <p>
-          Synexus is an <strong>informational technology platform</strong>. Nothing on the Service — including
+          SyNexus is an <strong>informational technology platform</strong>. Nothing on the Service — including
           &quot;Should I buy this?&quot; verdicts (Avoid · Watch · OK), risk scores, Sentinel alerts, whale
           reads, trade journal stats, Titan chat, voice briefings, or marketing content — is
           investment, trading, legal, tax, or accounting advice. We do not recommend buying, selling, or
@@ -27,7 +27,7 @@ export function Disclaimer() {
         <p>
           {OPERATOR_LABEL} is <strong>not</strong> a broker, exchange, custodian, or wallet provider. We never
           hold your SOL, tokens, or seed phrase. Swaps and transfers are initiated by you and signed in your
-          own wallet app (Phantom, Solflare, Backpack, etc.). Synexus cannot reverse blockchain transactions or
+          own wallet app (Phantom, Solflare, Backpack, etc.). SyNexus cannot reverse blockchain transactions or
           recover lost keys.
         </p>
       </section>
@@ -37,7 +37,7 @@ export function Disclaimer() {
         <p>
           Digital assets and memecoins are highly volatile. You may lose some or all of your investment.
           Smart-contract bugs, rug pulls, liquidity drains, bridge failures, hacks, and regulatory actions can
-          cause total loss. <strong>You use Synexus entirely at your own risk.</strong>
+          cause total loss. <strong>You use SyNexus entirely at your own risk.</strong>
         </p>
       </section>
 

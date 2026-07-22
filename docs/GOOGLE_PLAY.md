@@ -1,4 +1,4 @@
-# Google Play submission (HiveMind / Capacitor)
+# Google Play submission (SyNexus / Capacitor)
 
 ## What you ship
 
@@ -50,7 +50,7 @@ npm run android:apk
 - **Target audience** & declarations (ads, COVID‑19 apps, news, etc.) as applicable.
 - **Privacy policy URL** — required if you collect or process user data (e.g. auth, subscriptions).
 - **Data safety** section — disclose data collected (e.g. account, diagnostics, Stripe usage as relevant).
-- **Subscriptions** — if Synexus Pro sells via Stripe in-app web view, clarify policy compliance with Play Billing rules ([Google Play Payments](https://support.google.com/googleplay/android-developer/answer/9858738)).
+- **Subscriptions** — if SyNexusPro sells via Stripe in-app web view, clarify policy compliance with Play Billing rules ([Google Play Payments](https://support.google.com/googleplay/android-developer/answer/9858738)).
 
 ## QA before release
 

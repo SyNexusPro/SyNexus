@@ -1,5 +1,5 @@
 /**
- * Records a mobile walkthrough of the Synexus app and adds acquisition voiceover.
+ * Records a mobile walkthrough of the SyNexus app and adds acquisition voiceover.
  *
  *   npm run dev          # root — port 5173
  *   npm run acquisition:demo --prefix marketing-ai

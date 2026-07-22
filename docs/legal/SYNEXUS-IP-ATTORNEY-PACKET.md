@@ -1,7 +1,7 @@
-# Synexus IP Attorney Packet
+# SyNexus IP Attorney Packet
 
-**Prepared for:** Founder forming **Synexus LLC** (pending)  
-**Brand (strict):** **Synexus** only — not HiveMind  
+**Prepared for:** Founder forming **SyNexus LLC** (pending)  
+**Brand (strict):** **SyNexus** only — not SyNexus  
 **Product:** Non-custodial Solana token intelligence platform (web + Android/iOS via Capacitor)  
 **Primary domain:** https://synexus.pro  
 **Bundle ID:** `com.synexus.app`  
@@ -16,7 +16,7 @@
 
 1. [Executive summary](#1-executive-summary)
 2. [LLC formation checklist (before filing IP)](#2-llc-formation-checklist-before-filing-ip)
-3. [Trademark inventory — Synexus brand](#3-trademark-inventory--synexus-brand)
+3. [Trademark inventory — SyNexus brand](#3-trademark-inventory--synexus-brand)
 4. [Brand assets for USPTO specimens](#4-brand-assets-for-uspto-specimens)
 5. [Invention disclosures (provisional patent candidates)](#5-invention-disclosures-provisional-patent-candidates)
 6. [Draft patent claim themes (attorney to refine)](#6-draft-patent-claim-themes-attorney-to-refine)
@@ -33,7 +33,7 @@
 
 ## 1. Executive summary
 
-Synexus is an AI-assisted, **non-custodial** command center for Solana traders. Users paste a token mint or symbol and receive a plain-English **“Should I buy this?”** verdict (Avoid / High risk / Watch / OK). Behind that verdict runs a **Guardian Engine** (weighted risk scoring), four specialized **Sentinels** (Aegis, Pulse, Titan, Cipher), and **Oracle Supreme** (synthetic commander layer for briefings and chat).
+SyNexus is an AI-assisted, **non-custodial** command center for Solana traders. Users paste a token mint or symbol and receive a plain-English **“Should I buy this?”** verdict (Avoid / High risk / Watch / OK). Behind that verdict runs a **Guardian Engine** (weighted risk scoring), four specialized **Sentinels** (Aegis, Pulse, Titan, Cipher), and **Oracle Supreme** (synthetic commander layer for briefings and chat).
 
 Differentiators counsel should evaluate:
 
@@ -55,29 +55,29 @@ Complete **LLC formation first** (or in parallel), then file trademarks/patents 
 | Step | Action |
 |------|--------|
 | 1 | Choose state (often founder’s home state or Wyoming/Delaware — attorney/advisor choice) |
-| 2 | File Articles of Organization as **Synexus LLC** (exact name TBD with secretary of state availability) |
+| 2 | File Articles of Organization as **SyNexus LLC** (exact name TBD with secretary of state availability) |
 | 3 | Obtain EIN from IRS |
 | 4 | Open business bank account |
 | 5 | Adopt **Operating Agreement** |
-| 6 | Execute **IP Assignment Agreement** — founder assigns all pre-LLC code, marks, domains, and inventions to **Synexus LLC** |
+| 6 | Execute **IP Assignment Agreement** — founder assigns all pre-LLC code, marks, domains, and inventions to **SyNexus LLC** |
 | 7 | Register domain **synexus.pro** in LLC name (or assign from individual) |
 | 8 | Update app store developer accounts to LLC entity |
-| 9 | Re-file USPTO applications with **Synexus LLC** as applicant after assignment |
+| 9 | Re-file USPTO applications with **SyNexus LLC** as applicant after assignment |
 
 **Critical:** Do not file federal TM/patents in a personal name if the intent is LLC ownership — assignment gaps create ownership disputes.
 
 ---
 
-## 3. Trademark inventory — Synexus brand
+## 3. Trademark inventory — SyNexus brand
 
 ### Primary marks (recommended federal filings)
 
 | Priority | Mark | Type | Notes |
 |----------|------|------|-------|
 | **P1** | **SYNEXUS** | Standard character mark | Primary brand name |
-| **P1** | **Synexus** (same, stylized if used consistently) | Word mark | Matches UI copy |
-| **P2** | Synexus logo / wordmark | Design mark | Specimen: `public/synexus-wordmark.png` |
-| **P2** | Synexus symbol / emblem | Design mark | Specimen: `public/synexus-symbol.png` |
+| **P1** | **SyNexus** (same, stylized if used consistently) | Word mark | Matches UI copy |
+| **P2** | SyNexus logo / wordmark | Design mark | Specimen: `public/synexus-wordmark.png` |
+| **P2** | SyNexus symbol / emblem | Design mark | Specimen: `public/synexus-symbol.png` |
 | **P3** | **SHOULD I BUY THIS?** | Word/slogan mark | Only if used consistently as source identifier (hero headline, marketing) — counsel to advise on descriptiveness |
 | **P3** | Syn-Bunny mascot | Design mark | `public/syn-bunny.svg` — if used in commerce |
 
@@ -85,15 +85,15 @@ Complete **LLC formation first** (or in parallel), then file trademarks/patents 
 
 | Mark | Consider? | Notes |
 |------|-----------|-------|
-| **Sentinels** / **The Synexus Sentinels** | Maybe | Descriptive of function; may need acquired distinctiveness argument |
+| **Sentinels** / **The SyNexus Sentinels** | Maybe | Descriptive of function; may need acquired distinctiveness argument |
 | **Oracle Supreme** | Maybe | Character name for AI layer |
 | **Aegis** | Maybe | Security subsystem name; check conflicts in software/security |
-| **Synexus Pro** | Yes (with P1) | Subscription tier name |
+| **SyNexusPro** | Yes (with P1) | Subscription tier name |
 | **$SyN / SyN** | Separate | Community token on pump.fun — likely **Class 36** or separate goods; distinct from app brand |
 
 ### Do **not** register as primary brand
 
-- HiveMind, Hive Mind, hivemind-*  
+- SyNexus, Hive Mind, hivemind-*  
 - hivemindtoken.ai (legacy domain in `src/config/ecosystem.ts`)  
 - Internal IDs: `hivemind-sol`, `hivemind-supabase-auth`
 
@@ -111,7 +111,7 @@ Document and provide screenshots for:
 
 - [ ] **synexus.pro** live site (earliest deploy date)  
 - [ ] Google Play / App Store listing (when published)  
-- [ ] Marketing posts (Telegram, YouTube, etc.) showing **Synexus** mark  
+- [ ] Marketing posts (Telegram, YouTube, etc.) showing **SyNexus** mark  
 - [ ] In-app Operator Link / Should I Buy UI with mark visible  
 
 ### USPTO filing notes (2025 fee structure)
@@ -122,7 +122,7 @@ Document and provide screenshots for:
 
 ### Immediate use before registration
 
-You may use **Synexus™** on website, app, and marketing now. Use **®** only after federal registration.
+You may use **SyNexus™** on website, app, and marketing now. Use **®** only after federal registration.
 
 ---
 
@@ -213,7 +213,7 @@ Each section follows a standard invention disclosure format: **Problem → Solut
 
 **Problem:** Client-side apps are vulnerable to abuse (scan spam, credential stuffing, XSS in chat, localStorage Pro tampering).
 
-**Solution:** Embedded **Aegis** security bot enforces rate limits, threat pattern matching (injection, phishing, drainer language, fake Synexus hosts), device fingerprinting, clipboard guards, and **trusted Pro grant verification** with cross-tab tamper watch and optional remote audit to Supabase.
+**Solution:** Embedded **Aegis** security bot enforces rate limits, threat pattern matching (injection, phishing, drainer language, fake SyNexus hosts), device fingerprinting, clipboard guards, and **trusted Pro grant verification** with cross-tab tamper watch and optional remote audit to Supabase.
 
 **Novel elements:**
 - `recordTrustedPlanGrant()` with enumerated sources and max age per source  
@@ -287,7 +287,7 @@ Each section follows a standard invention disclosure format: **Problem → Solut
 
 **Problem:** Solo founders cannot manually post video content 3× daily across platforms.
 
-**Solution:** Node pipeline generates daily copy packs, TTS voiceover (Edge TTS), SVG circuit-board video art with Synexus watermark, and posts to YouTube, Telegram, Discord, Reddit, TikTok, Meta, X.
+**Solution:** Node pipeline generates daily copy packs, TTS voiceover (Edge TTS), SVG circuit-board video art with SyNexus watermark, and posts to YouTube, Telegram, Discord, Reddit, TikTok, Meta, X.
 
 **Key files:**
 - `marketing-ai/synexusMarketingBot.js`
@@ -324,7 +324,7 @@ These are **starting points** for independent claims — not filed claims.
 
 ```mermaid
 flowchart TB
-  subgraph Client["Synexus Client (Web / Capacitor)"]
+  subgraph Client["SyNexus Client (Web / Capacitor)"]
     UI[HomeFeed / Pulse / TokenDetail]
     Easy[Easy / Advanced UI Mode]
     SIB[Should I Buy Panel]
@@ -464,15 +464,15 @@ Keep confidential under NDA; **do not** include in open-source or marketing:
 
 Counsel should search and distinguish:
 
-| Category | Examples | Synexus differentiation angle |
+| Category | Examples | SyNexus differentiation angle |
 |----------|----------|--------------------------------|
 | Token scanners | RugCheck, Token Sniffer, GoPlus | Plain-English **Should I buy?** verdict + Easy mode + Sentinel narrative |
 | Analytics | DexScreener, Birdeye, Bubblemaps | **Non-custodial** decision layer before swap; integrated Aegis abuse protection |
-| Wallets | Phantom, Solflare | Synexus does not custody or sign; deep-links to Jupiter |
+| Wallets | Phantom, Solflare | SyNexus does not custody or sign; deep-links to Jupiter |
 | AI crypto tools | Various Telegram bots | Multi-lane Sentinel + Oracle commander + in-app Operator Link account |
 | Security | Generic WAF | **Client-side** Aegis with Pro grant tamper detection |
 
-**Important:** Synexus **uses** DexScreener/Birdeye/Jupiter — patents should focus on **novel combination and methods**, not API usage alone.
+**Important:** SyNexus **uses** DexScreener/Birdeye/Jupiter — patents should focus on **novel combination and methods**, not API usage alone.
 
 ---
 
@@ -485,10 +485,10 @@ Automatic copyright exists in original works. Optional registration ([copyright.
 | Application source code | Full TypeScript/React codebase |
 | Marketing videos | `marketing-ai/output/` generated MP4s |
 | Syn-Bunny mascot art | SVG/PNG |
-| Synexus wordmark & logo | PNG assets |
+| SyNexus wordmark & logo | PNG assets |
 | Video art templates | `videoArt.js`, `synexus-frame.svg` |
 
-**Author / owner after assignment:** Synexus LLC
+**Author / owner after assignment:** SyNexus LLC
 
 ---
 
@@ -497,10 +497,10 @@ Automatic copyright exists in original works. Optional registration ([copyright.
 - [ ] This packet (printed or PDF)  
 - [ ] Government ID  
 - [ ] LLC formation documents (once filed)  
-- [ ] IP Assignment Agreement (founder → Synexus LLC)  
+- [ ] IP Assignment Agreement (founder → SyNexus LLC)  
 - [ ] Domain registration proof for **synexus.pro**  
 - [ ] Screenshots: homepage, Should I Buy, Pulse Operator Link, app store listing  
-- [ ] Date of first public use of **Synexus** mark  
+- [ ] Date of first public use of **SyNexus** mark  
 - [ ] List of contractors who contributed (work-for-hire / assignment status)  
 - [ ] Git log export or signed tag showing early commit dates (optional, for priority)  
 - [ ] `.env.example` redacted — shows integrations without secrets  
@@ -511,8 +511,8 @@ Automatic copyright exists in original works. Optional registration ([copyright.
 
 | Legacy term | Where it appears | Action |
 |-------------|------------------|--------|
-| HiveMind | Old docs, iOS bundle HTML, some images | Do not trademark; migrate UI to Synexus assets |
-| SyNexus-app | Repo folder name | Internal only; public brand is Synexus |
+| SyNexus | Old docs, iOS bundle HTML, some images | Do not trademark; migrate UI to SyNexus assets |
+| SyNexus-app | Repo folder name | Internal only; public brand is SyNexus |
 | hivemind-sol | Internal token ID for $SYN | Internal only |
 | hivemind-supabase-auth | localStorage key | Internal only |
 | hivemindtoken.ai | `ecosystem.ts` | Legacy domain — deprecate |
@@ -524,7 +524,7 @@ Automatic copyright exists in original works. Optional registration ([copyright.
 
 | Order | Filing | Est. cost (USD) | Timeline |
 |-------|--------|-----------------|----------|
-| 1 | Form **Synexus LLC** + IP assignment | $50–$500 + attorney | 1–4 weeks |
+| 1 | Form **SyNexus LLC** + IP assignment | $50–$500 + attorney | 1–4 weeks |
 | 2 | TM **SYNEXUS** word mark (Classes 9 + 42) | ~$700 USPTO + $1k–2k attorney | 8–14+ months |
 | 3 | TM design mark (logo) | ~$350+ per class | parallel or after word mark |
 | 4 | **Provisional patent** (Claim sets A + B or C + D) | ~$70 USPTO + $3k–8k attorney | 12-month priority window |
@@ -538,14 +538,14 @@ Automatic copyright exists in original works. Optional registration ([copyright.
 | Field | Value |
 |-------|-------|
 | **Mark** | SYNEXUS |
-| **Applicant (planned)** | Synexus LLC |
+| **Applicant (planned)** | SyNexus LLC |
 | **Goods/Services (draft)** | Downloadable software and SaaS for cryptocurrency token risk analysis and non-custodial trading decision support |
 | **Website** | https://synexus.pro |
 | **Support email** | support@synexus.pro |
-| **App name** | Synexus |
+| **App name** | SyNexus |
 | **Bundle ID** | com.synexus.app |
 | **Platform** | Web, Android, iOS |
-| **Subscription** | Synexus Pro — $9.99/month (7-day free trial after sign-up) |
+| **Subscription** | SyNexusPro — $9.99/month (7-day free trial after sign-up) |
 | **Community token** | $SyN (pump.fun) — separate from app TM counsel |
 
 ---
@@ -574,10 +574,10 @@ public/synexus-*.png             — Brand assets
 
 ## Appendix C — Founder action items (this week)
 
-1. **File Synexus LLC** in chosen state  
+1. **File SyNexus LLC** in chosen state  
 2. **Sign IP assignment** to LLC immediately after formation  
 3. **Book trademark attorney** — bring this packet + specimens from `public/synexus-wordmark.png`  
-4. **Replace hivemind-brain.png** in HomeFeed with Synexus symbol before TM specimens  
+4. **Replace hivemind-brain.png** in HomeFeed with SyNexus symbol before TM specimens  
 5. **Screenshot** synexus.pro + Pulse Operator Link for first-use evidence  
 6. **Book patent attorney** — ask: “Provisional for Claim sets A + C + D?”  
 7. **Keep repo private** until counsel advises otherwise  

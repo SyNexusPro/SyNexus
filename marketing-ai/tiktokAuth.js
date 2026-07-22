@@ -80,7 +80,7 @@ For local auth, use ngrok:
 
   const url = `https://www.tiktok.com/v2/auth/authorize/?${params.toString()}`;
 
-  console.log("\nAuthorize Synexus TikTok posting (video.publish):\n");
+  console.log("\nAuthorize SyNexus TikTok posting (video.publish):\n");
   console.log(url);
   console.log("\nAfter allowing, paste the full redirect URL or the code.\n");
 

@@ -21,7 +21,7 @@ async function main() {
   const help = args.includes("--help") || args.includes("-h");
 
   if (help) {
-    console.log(`Synexus X tools
+    console.log(`SyNexus X tools
 
   npm run x:check              Verify @account + API keys
   npm run x:post -- [video]    Post one MP4 to X (default: launch day-1 slot 0)
@@ -48,7 +48,7 @@ async function main() {
   const videoPath = videoArg || defaultVideo;
   const caption =
     captionArg ||
-    "Should I buy this? Synexus scans any Solana token — Avoid, Watch, or OK.\n\nTry free → https://synexus.pro\n\n#Synexus #Solana #Crypto";
+    "Should I buy this? SyNexus scans any Solana token — Avoid, Watch, or OK.\n\nTry free → https://synexus.pro\n\n#SyNexus #Solana #Crypto";
 
   if (!(await fileExists(videoPath))) {
     console.error(`Video not found: ${videoPath}`);

@@ -40,8 +40,8 @@ export function Contact() {
         <p className="contact-page__eyebrow">Contact</p>
         <h1 className="contact-page__title">Support, FAQ, and bug reports</h1>
         <p className="contact-page__lede">
-          Questions about Synexus Pro, Sentinel reads, or wallet flows? Reach us below. For urgent wallet or
-          seed-phrase issues, contact your wallet provider — Synexus cannot recover lost keys.
+          Questions about SyNexusPro, Sentinel reads, or wallet flows? Reach us below. For urgent wallet or
+          seed-phrase issues, contact your wallet provider — SyNexus cannot recover lost keys.
         </p>
       </section>
 
@@ -53,7 +53,7 @@ export function Contact() {
           </a>
         </p>
         <p className="contact-page__hint">
-          Include your device (web / Android), Synexus version, and steps to reproduce for faster help.
+          Include your device (web / Android), SyNexus version, and steps to reproduce for faster help.
         </p>
       </section>
 
@@ -135,7 +135,7 @@ export function Contact() {
         {" · "}
         <Link to="/disclaimer">Disclaimer</Link>
         {" · "}
-        <Link to="/about">About Synexus</Link>
+        <Link to="/about">About SyNexus</Link>
         {" · "}
         <Link to="/trust">Trust &amp; safety</Link>
         {" · "}

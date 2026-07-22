@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
-  "description": "Synexus daily marketing — copy, video, and multi-platform publish.",
+  "description": "SyNexus daily marketing — copy, video, and multi-platform publish.",
   "scripts": {
     "start": "node synexusMarketingBot.js",
     "dev": "node dailyCampaign.js --watch",

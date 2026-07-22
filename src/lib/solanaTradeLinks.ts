@@ -5,7 +5,7 @@
 export const JUPITER_SOL_MINT = "So11111111111111111111111111111111111111112";
 
 export type JupiterSwapOptions = {
-  /** Platform fee in basis points (Synexus tier). Applied when VITE_JUPITER_FEE_ACCOUNT is configured. */
+  /** Platform fee in basis points (SyNexus tier). Applied when VITE_JUPITER_FEE_ACCOUNT is configured. */
   feeBps?: number;
 };
 

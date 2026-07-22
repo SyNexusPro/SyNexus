@@ -1,5 +1,5 @@
 /**
- * Generates Synexus launcher icons from public/synexus-symbol.png into android/app/src/main/res/mipmap-*.
+ * Generates SyNexus launcher icons from public/synexus-symbol.png into android/app/src/main/res/mipmap-*.
  * Run: node scripts/generate-android-icons.mjs
  */
 import sharp from "sharp";
@@ -41,4 +41,4 @@ const backgroundXml = `<?xml version="1.0" encoding="utf-8"?>
 `;
 await writeFile(path.join(resRoot, "values", "ic_launcher_background.xml"), backgroundXml, "utf8");
 
-console.log("Synexus Android launcher icons updated.");
+console.log("SyNexus Android launcher icons updated.");

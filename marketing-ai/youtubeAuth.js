@@ -83,7 +83,7 @@ async function exchangeCode(oauth2, code, redirectUriUsed) {
   const { tokens } = await oauth2.getToken(cleaned);
   if (!tokens.refresh_token) {
     throw new Error(
-      "No refresh token returned. Revoke Synexus in Google Account → Security → Third-party access, then run auth again.",
+      "No refresh token returned. Revoke SyNexus in Google Account → Security → Third-party access, then run auth again.",
     );
   }
 
@@ -102,19 +102,19 @@ async function exchangeCode(oauth2, code, redirectUriUsed) {
 
 function successHtml() {
   return `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>Synexus · YouTube connected</title>
+<html><head><meta charset="utf-8"><title>SyNexus · YouTube connected</title>
 <style>body{font-family:system-ui;background:#0a0a0f;color:#e8e8f0;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0}
 .card{max-width:420px;padding:2rem;border:1px solid #7c3aed55;border-radius:16px;background:#12121a;text-align:center}
 h1{color:#a855f7;font-size:1.4rem}p{color:#aaa;line-height:1.5}</style></head>
 <body><div class="card"><h1>YouTube connected</h1>
-<p>Synexus saved your refresh token. You can close this tab and return to the terminal.</p>
+<p>SyNexus saved your refresh token. You can close this tab and return to the terminal.</p>
 <p>Run: <code>npm run youtube:daily</code> or <code>npm run hype:post -- --force</code></p>
 </div></body></html>`;
 }
 
 function errorHtml(message) {
   return `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>Synexus · Auth failed</title></head>
+<html><head><meta charset="utf-8"><title>SyNexus · Auth failed</title></head>
 <body style="font-family:system-ui;background:#1a0a0a;color:#fcc;padding:2rem">
 <h1>YouTube auth failed</h1><pre>${message}</pre>
 <p>Close this tab and check the terminal.</p></body></html>`;
@@ -237,7 +237,7 @@ async function main() {
     return;
   }
 
-  console.log("\nAuthorize Synexus YouTube upload:\n");
+  console.log("\nAuthorize SyNexus YouTube upload:\n");
   console.log(url);
   console.log(`\nRedirect URI in use: ${redirectUri}`);
   console.log("\nRecommended: npm run youtube:oauth  (local /oauth2callback server)");

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Synexus Daily Campaign — one command, all platforms.
+ * SyNexus Daily Campaign — one command, all platforms.
  *
  *   node dailyCampaign.js              # today: copy + video + post everywhere configured
  *   node dailyCampaign.js --watch      # run at startup + every local midnight
@@ -163,7 +163,7 @@ function summarize(state) {
 }
 
 function printHelp() {
-  console.log(`Synexus Daily Campaign
+  console.log(`SyNexus Daily Campaign
 
   npm run campaign:daily          Run once (all configured platforms)
   npm run campaign:watch          Every day at midnight + now
@@ -193,7 +193,7 @@ async function runWatch() {
       console.log(`\n[${new Date().toLocaleString()}] ${label}`);
       await runDailyCampaign({ quiet: false });
     } catch (err) {
-      console.error("[Synexus campaign]", err.message || err);
+      console.error("[SyNexus campaign]", err.message || err);
     }
   };
 

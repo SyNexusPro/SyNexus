@@ -9,6 +9,7 @@ import {
   upsertSignupProfile,
 } from "../lib/supabaseData";
 import { isEmailVerified } from "../lib/emailVerification";
+import { SYNEXUS_BRAND_NAME } from "../config/brand";
 import { useOperatorAuth } from "../hooks/useOperatorAuth";
 
 const DEMO_SESSION_KEY = "hivemind_demo_session";
@@ -207,7 +208,7 @@ export function QuickOperatorLogin({
         </div>
       ) : (
         <p className="quick-login__mode-label">
-          {mode === "signup" ? "Create your Synexus account" : "Sign in to Synexus"}
+          {mode === "signup" ? `Create your ${SYNEXUS_BRAND_NAME} account` : `Sign in to ${SYNEXUS_BRAND_NAME}`}
         </p>
       )}
 

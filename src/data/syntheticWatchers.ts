@@ -5,7 +5,7 @@ import {
   AEGIS_SENTINEL_NAME,
 } from "../config/sentinelAegis";
 
-export type SentinelRank = "Scout" | "Sentinel" | "Bulwark" | "Oracle" | "Synexus Core";
+export type SentinelRank = "Scout" | "Sentinel" | "Bulwark" | "Oracle" | "SyNexus Core";
 
 export type SyntheticSentinel = {
   id: string;
@@ -41,7 +41,7 @@ export type OracleSupremeDailyReport = {
   closingNote: string;
 };
 
-const RANKS: SentinelRank[] = ["Scout", "Sentinel", "Bulwark", "Oracle", "Synexus Core"];
+const RANKS: SentinelRank[] = ["Scout", "Sentinel", "Bulwark", "Oracle", "SyNexus Core"];
 const XP_PER_LEVEL = 140;
 
 const sentinelSeeds = [
@@ -53,7 +53,7 @@ const sentinelSeeds = [
     status:
       "Titan commands Aegis, Pulse, Leviathan, and Cipher — then tells you what matters in plain English.",
     lesson:
-      "Titan is synthetic: your bot learns from every alert and report you feed Synexus, and makes calls in seconds.",
+      "Titan is synthetic: your bot learns from every alert and report you feed SyNexus, and makes calls in seconds.",
     accent: "gold" as const,
     isOracleSupreme: true,
   },
@@ -204,7 +204,7 @@ export function buildOracleSupremeDailyReport(
     daySummary:
       watchedAssets > 0
         ? `${commanderName} pulled together ${watchedAssets} watched token${watchedAssets === 1 ? "" : "s"}, ${activeAlerts} alert${activeAlerts === 1 ? "" : "s"}, and ${signals.reportCount} community report${signals.reportCount === 1 ? "" : "s"}. This briefing is for you only — the Sentinels don't see ${commanderName}'s full notes.`
-        : `Synexus Pro gives you ${commanderName}'s private commander briefings: what ${commanderName} sees, what ${commanderName} recommends, and which Sentinel ${commanderName} sends first.`,
+        : `SyNexusPro gives you ${commanderName}'s private commander briefings: what ${commanderName} sees, what ${commanderName} recommends, and which Sentinel ${commanderName} sends first.`,
     priorities: [
       activeAlerts > 0
         ? `Review ${activeAlerts} live alert${activeAlerts === 1 ? "" : "s"} — ${commanderName} flagged them for you, not for the public feed.`
