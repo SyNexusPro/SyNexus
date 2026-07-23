@@ -41,7 +41,7 @@ function projectRefFromUrl(url) {
 }
 
 const env = readEnvFile(join(root, ".env"));
-const dbUrl = env.SUPABASE_DB_URL || env.DATABASE_URL || "";
+const dbUrl = process.env.SUPABASE_DB_URL || env.SUPABASE_DB_URL || env.DATABASE_URL || "";
 const supabaseUrl = env.VITE_SUPABASE_URL || env.SUPABASE_URL || "";
 const projectRef = projectRefFromUrl(supabaseUrl);
 
