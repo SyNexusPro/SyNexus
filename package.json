@@ -59,6 +59,7 @@
     "@capacitor/ios": "^8.3.4",
     "@capacitor/preferences": "^8.0.1",
     "@supabase/supabase-js": "^2.104.0",
+    "@vercel/analytics": "^2.0.1",
     "capacitor-secure-storage-plugin": "^0.13.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
