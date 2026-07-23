@@ -9,7 +9,7 @@ export const LEGAL_EFFECTIVE_DATE = "June 12, 2026";
 
 export const SUPPORT_EMAIL =
   (import.meta.env.VITE_SUPPORT_EMAIL as string | undefined)?.trim() ||
-  "thesynexus@synexuspro.com";
+  "thesynexus@synexus.pro";
 
 export const TRUST_INDICATORS = [
   {
