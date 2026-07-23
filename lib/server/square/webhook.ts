@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { logRevenue } from "../../treasury/treasuryCore.mjs";
-import { readSquareConfig, type SquareEnv } from "./config";
+import { readSquareConfig, type SquareEnv } from "./config.js";
 
 type PaidPlan = "PRO";
 
