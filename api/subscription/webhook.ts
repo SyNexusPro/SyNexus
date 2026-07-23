@@ -18,6 +18,12 @@ function getHeaderValue(value: string | string[] | undefined) {
 
 function registerWebhookRoute(server: ViteDevServer, path: string, env: WebhookEnv) {
   server.middlewares.use(path, async (req, res, next) => {
+    if (req.method === "GET" || req.method === "HEAD") {
+      res.statusCode = 200;
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ ok: true, service: "SyNexus Square webhook" }));
+      return;
+    }
     if (req.method !== "POST") {
       next();
       return;
@@ -61,6 +67,11 @@ type ServerlessResponse = {
 };
 
 export default async function handler(req: ServerlessRequest, res: ServerlessResponse) {
+  if (req.method === "GET" || req.method === "HEAD") {
+    res.status(200).json({ ok: true, service: "SyNexus Square webhook" });
+    return;
+  }
+
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
