@@ -1,0 +1,41 @@
+{
+  "slug": "avoid-watch-ok-verdicts-explained",
+  "title": "Avoid, Watch, OK: What SyNexus Verdicts Really Mean",
+  "excerpt": "Plain-English definitions — and common misconceptions that get traders rekt.",
+  "date": "2026-07-14",
+  "author": "SyNexus Editorial",
+  "origin": "https://www.synexus.pro",
+  "trustLine": "Non-custodial · You sign every trade · Not financial advice.",
+  "blocks": [
+    {
+      "type": "h2",
+      "text": "Avoid"
+    },
+    {
+      "type": "p",
+      "text": "Multiple lanes flag elevated harm: thin liquidity, dangerous concentration, or pattern matches tied to prior rugs. Avoid is not a personal insult to the token — it is a structured harm read for the current dataset."
+    },
+    {
+      "type": "h2",
+      "text": "Watch"
+    },
+    {
+      "type": "p",
+      "text": "Mixed signals worth monitoring before you connect a wallet. Many legitimate early tokens land here. Size down, verify mints, and re-scan as data refreshes."
+    },
+    {
+      "type": "h2",
+      "text": "OK"
+    },
+    {
+      "type": "p",
+      "text": "Lanes are within normal bounds for available data. OK is not a buy signal — it means fewer structural red flags surfaced in this pass. Markets move; re-scan when volatility spikes."
+    }
+  ],
+  "cta": "Run a free Sentinel scan → https://www.synexus.pro",
+  "tags": [
+    "Sentinel",
+    "verdicts",
+    "beginners"
+  ]
+}

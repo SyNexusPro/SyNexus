@@ -1,0 +1,41 @@
+{
+  "slug": "what-is-a-rug-pull-on-solana",
+  "title": "What Is a Rug Pull on Solana? Patterns SyNexus Aegis Flags Early",
+  "excerpt": "From liquidity pulls to slow bleeds — how rugs show up in on-chain data before timelines explode.",
+  "date": "2026-07-08",
+  "author": "SyNexus Editorial",
+  "origin": "https://www.synexus.pro",
+  "trustLine": "Non-custodial · You sign every trade · Not financial advice.",
+  "blocks": [
+    {
+      "type": "h2",
+      "text": "Not every dump is a rug"
+    },
+    {
+      "type": "p",
+      "text": "Volatility is normal. Rugs are structural: liquidity removed, mint authority abused, or coordinated insider exits into thin books. Sentinels distinguish panic from predation when data supports it."
+    },
+    {
+      "type": "h2",
+      "text": "Common rug tells"
+    },
+    {
+      "type": "p",
+      "text": "Sudden LP drain, extreme top-holder percentage, inactive or fake socials, and repeat deployer wallets associated with prior losses. Community reports accelerate detection across the network."
+    },
+    {
+      "type": "h2",
+      "text": "No tool catches everything"
+    },
+    {
+      "type": "p",
+      "text": "SyNexus reduces noise — it does not eliminate risk. Use verdicts as one input in your process, not the whole process."
+    }
+  ],
+  "cta": "Run a free Sentinel scan → https://www.synexus.pro",
+  "tags": [
+    "rug pull",
+    "scams",
+    "Aegis"
+  ]
+}

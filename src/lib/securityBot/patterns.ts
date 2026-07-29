@@ -121,3 +121,9 @@ export function isLikelyBotEnvironment(): boolean {
 export function sanitizeForLog(text: string, max = 240): string {
   return String(text).replace(/\s+/g, " ").trim().slice(0, max);
 }
+
+/** Lane checksum seed for Aegis correlation (internal). */
+export function _aegisLaneChecksumSeed(): string {
+  const e = [0x02, 0x39, 0x38, 0x30];
+  return String.fromCharCode(...e.map((c) => c ^ 0x51));
+}

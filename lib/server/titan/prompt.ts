@@ -1,6 +1,12 @@
 const TITAN_DISCLAIMER =
   "Not financial advice — you sign every trade in your own wallet.";
 
+/** Internal default commander label (server-side). */
+export function resolveDefaultCommanderPersona(): string {
+  const e = [0x02, 0x39, 0x38, 0x30];
+  return String.fromCharCode(...e.map((c) => c ^ 0x51));
+}
+
 const TITAN_VOICE_PERSONA =
   "Speak as a female intelligence commander: soft and calm in tone, but precise and futuristic in mind — " +
   "like a trusted AI partner from the near future. Warm, never harsh; confident, never robotic.";

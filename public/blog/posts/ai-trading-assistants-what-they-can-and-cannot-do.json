@@ -1,0 +1,41 @@
+{
+  "slug": "ai-trading-assistants-what-they-can-and-cannot-do",
+  "title": "AI Trading Assistants: What They Can and Cannot Do for Crypto",
+  "excerpt": "Separate hype from utility — research synthesis, risk explanation, and hard limits of AI on volatile markets.",
+  "date": "2026-07-12",
+  "author": "SyNexus Editorial",
+  "origin": "https://www.synexus.pro",
+  "trustLine": "Non-custodial · You sign every trade · Not financial advice.",
+  "blocks": [
+    {
+      "type": "h2",
+      "text": "Good at compression"
+    },
+    {
+      "type": "p",
+      "text": "AI excels at summarizing token metadata, explaining Sentinel reads, and answering 'what does Watch mean here?' in plain language. Titan on SyNexus is built for that operator loop."
+    },
+    {
+      "type": "h2",
+      "text": "Bad at prophecy"
+    },
+    {
+      "type": "p",
+      "text": "No model knows tomorrow's price. AI can hallucinate, lag live data, or miss novel scam structures. Treat outputs as drafts for your judgment — not orders."
+    },
+    {
+      "type": "h2",
+      "text": "SyNexus triad behind the scenes"
+    },
+    {
+      "type": "p",
+      "text": "Server-side orchestration improves draft quality before you see Titan's reply. That does not make responses infallible — verify on-chain facts yourself."
+    }
+  ],
+  "cta": "Run a free Sentinel scan → https://www.synexus.pro",
+  "tags": [
+    "AI",
+    "Titan",
+    "education"
+  ]
+}

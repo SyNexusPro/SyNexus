@@ -1,0 +1,33 @@
+{
+  "slug": "solana-momentum-trading-risks",
+  "title": "Solana Momentum Trading Risks Pulse Lane Surfaces",
+  "excerpt": "Volume spikes, fake velocity, and why momentum without liquidity support is fragile.",
+  "date": "2026-07-15",
+  "author": "SyNexus Editorial",
+  "origin": "https://www.synexus.pro",
+  "trustLine": "Non-custodial · You sign every trade · Not financial advice.",
+  "blocks": [
+    {
+      "type": "h2",
+      "text": "Momentum is not proof"
+    },
+    {
+      "type": "p",
+      "text": "Green candles attract attention. Pulse lane checks whether volume and volatility look organic or manufactured — wash patterns and bot bursts show up in lane metadata."
+    },
+    {
+      "type": "h2",
+      "text": "Fast markets need fast reads"
+    },
+    {
+      "type": "p",
+      "text": "SyNexusPro subscribers get faster Sentinel refresh for operators who paste dozens of tokens per session. Free tier still covers core scans for casual research."
+    }
+  ],
+  "cta": "Run a free Sentinel scan → https://www.synexus.pro",
+  "tags": [
+    "Pulse",
+    "trading",
+    "momentum"
+  ]
+}

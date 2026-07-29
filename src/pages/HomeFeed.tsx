@@ -6,6 +6,7 @@ import { NonCustodialDisclaimer } from "../components/NonCustodialDisclaimer";
 import { AppScreenshotGallery } from "../components/AppScreenshotGallery";
 import { SupportedWallets } from "../components/SupportedWallets";
 import { SynexusLiveScanner } from "../components/SynexusLiveScanner";
+import { HomeAdSense } from "../components/HomeAdSense";
 import { ShouldIBuyPanel } from "../components/ShouldIBuyPanel";
 import { TopMoversPanel } from "../components/TopMoversPanel";
 import { HomeHeroAuth } from "../components/HomeHeroAuth";
@@ -21,6 +22,7 @@ import { BeginnerModeCoach } from "../components/BeginnerModeCoach";
 import { UIModeToggle } from "../components/UIModeToggle";
 import { ProDemoBanner } from "../components/ProDemoBanner";
 import { SentinelAlertsHub } from "../components/SentinelAlertsHub";
+import { HomeEducationalHub } from "../components/HomeEducationalHub";
 import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
 import { useOpenTitanChat } from "../hooks/useOpenTitanChat";
 import { sampleTokens, type Token } from "../data/tokens";
@@ -140,6 +142,7 @@ export function HomeFeed() {
 
       <ShouldIBuyPanel poolTokens={allTokens} initialScan={scanQuery} />
       <TopMoversPanel />
+      <HomeAdSense />
 
       {isSimple ? (
         <p className="easy-trust-note">
@@ -178,6 +181,8 @@ export function HomeFeed() {
               ))}
             </ul>
           </section>
+
+          <HomeEducationalHub />
         </>
       ) : (
         <>
@@ -362,6 +367,8 @@ export function HomeFeed() {
         <p className="home-wallets__copy">Connect Phantom, Solflare, Backpack, and other Solana wallets — you sign every swap.</p>
         <SupportedWallets />
       </section>
+
+      <HomeEducationalHub />
 
       <section className="monetization-panel">
         <div className="token-section__head">

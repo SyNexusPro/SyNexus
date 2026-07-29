@@ -1,0 +1,41 @@
+{
+  "slug": "memecoin-season-survival-guide",
+  "title": "Memecoin Season Survival Guide for Solana Traders",
+  "excerpt": "Position sizing, scan discipline, and emotional traps during high-velocity launch weeks.",
+  "date": "2026-07-17",
+  "author": "SyNexus Editorial",
+  "origin": "https://www.synexus.pro",
+  "trustLine": "Non-custodial · You sign every trade · Not financial advice.",
+  "blocks": [
+    {
+      "type": "h2",
+      "text": "Rules beat vibes"
+    },
+    {
+      "type": "p",
+      "text": "Define max loss per trade before you open Phantom. If a token is Avoid on SyNexus and you cannot articulate why you are ignoring that, skip it."
+    },
+    {
+      "type": "h2",
+      "text": "Re-scan the same mint"
+    },
+    {
+      "type": "p",
+      "text": "Conditions change in minutes. Re-scanning the same token does not burn another free deep scan slot — use that to track deteriorating liquidity or whale exits."
+    },
+    {
+      "type": "h2",
+      "text": "Take breaks"
+    },
+    {
+      "type": "p",
+      "text": "Fatigue causes mis-clicks and sloppy approvals. The chain does not undo mistakes because you were tired."
+    }
+  ],
+  "cta": "Run a free Sentinel scan → https://www.synexus.pro",
+  "tags": [
+    "memecoins",
+    "trading",
+    "psychology"
+  ]
+}

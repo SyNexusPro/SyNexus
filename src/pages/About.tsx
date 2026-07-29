@@ -143,6 +143,32 @@ export function About() {
       </section>
 
       <section className="about-page__section marketing-panel">
+        <h2>Learn with SyNexus Journal</h2>
+        <p>
+          We publish original education for Solana traders — scam prevention, wallet safety, token research,
+          AI-assisted analysis, and weekly market context. Every article is written for operators who use SyNexus
+          today, not generic crypto copy.
+        </p>
+        <ul className="about-page__bullets">
+          <li>
+            <Link to="/blog/how-to-spot-crypto-scams-on-solana">How to spot crypto scams on Solana</Link>
+          </li>
+          <li>
+            <Link to="/blog/solana-wallet-security-basics">Solana wallet security basics</Link>
+          </li>
+          <li>
+            <Link to="/blog/token-research-guide-should-i-buy-this">Token research guide</Link>
+          </li>
+          <li>
+            <Link to="/blog/ai-trading-assistants-what-they-can-and-cannot-do">AI trading assistants — limits and uses</Link>
+          </li>
+        </ul>
+        <Link className="about-page__link" to="/blog">
+          Browse all journal articles →
+        </Link>
+      </section>
+
+      <section className="about-page__section marketing-panel">
         <h2>See it in action</h2>
         <p>Core surfaces traders use every session — token scanner, whale tracker, risk score, alerts, and AI.</p>
         <AppScreenshotGallery showPlayHint />

@@ -34,11 +34,13 @@
     "growth:once": "npm run growth:once --prefix marketing-ai",
     "growth:watch": "npm run growth:watch --prefix marketing-ai",
     "go-live:check": "node scripts/go-live-check.mjs",
+    "setup:optional": "node scripts/setup-optional-services.mjs",
     "supabase:health": "node scripts/supabase-health.mjs",
     "supabase:migrate": "node scripts/supabase-migrate.mjs",
     "square:test-checkout": "node scripts/square-test-checkout.mjs",
     "hype:queue": "npm run hype:queue --prefix marketing-ai",
     "blog:generate": "npm run blog:generate --prefix marketing-ai",
+    "blog:seed": "node scripts/seed-blog-content.mjs",
     "treasury:status": "npm run treasury:status --prefix marketing-ai",
     "treasury:log": "npm run treasury:log --prefix marketing-ai",
     "treasury:sync": "npm run treasury:sync --prefix marketing-ai",
@@ -49,6 +51,7 @@
     "hype:post": "npm run hype:post --prefix marketing-ai",
     "hype:retract": "npm run hype:retract --prefix marketing-ai",
     "aegis:check": "node scripts/aegis-check.mjs",
+    "ga4:check": "npm run build && node scripts/smoke-ga4.mjs",
     "owner:generate": "node scripts/generate-owner-code.mjs"
   },
   "dependencies": {

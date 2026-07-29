@@ -1,8 +1,267 @@
 [
   {
+    "slug": "how-to-verify-a-token-before-swapping",
+    "title": "How to Verify a Token Before Swapping on Jupiter or Any DEX",
+    "excerpt": "A five-minute verification ritual that pairs perfectly with a SyNexus scan.",
+    "date": "2026-07-23",
+    "tags": [
+      "research",
+      "checklist",
+      "swaps"
+    ]
+  },
+  {
+    "slug": "solana-smart-contract-risks-for-traders",
+    "title": "Smart Contract Risks on Solana Every Trader Should Understand",
+    "excerpt": "Token programs, authorities, and upgradeability — without needing to be a developer.",
+    "date": "2026-07-22",
+    "tags": [
+      "contracts",
+      "security",
+      "Solana"
+    ]
+  },
+  {
+    "slug": "non-custodial-trading-why-it-matters",
+    "title": "Non-Custodial Trading: Why SyNexus Never Holds Your Keys",
+    "excerpt": "Custody models, swap routing, and what operators should expect from a research-first app.",
+    "date": "2026-07-21",
+    "tags": [
+      "non-custodial",
+      "trust",
+      "SyNexus"
+    ]
+  },
+  {
+    "slug": "synexus-pro-features-deep-dive",
+    "title": "SyNexusPro Features Deep Dive: Who Benefits and Why",
+    "excerpt": "Oracle briefings, faster refresh, fee tiers, and the seven-day trial explained honestly.",
+    "date": "2026-07-20",
+    "tags": [
+      "SyNexusPro",
+      "pricing",
+      "features"
+    ]
+  },
+  {
+    "slug": "community-reports-crowd-intelligence",
+    "title": "Community Reports and Crowd Intelligence on SyNexus",
+    "excerpt": "How operator reports improve Sentinel awareness — without replacing your own verification.",
+    "date": "2026-07-19",
+    "tags": [
+      "community",
+      "Sentinel",
+      "reports"
+    ]
+  },
+  {
+    "slug": "dex-scanner-vs-sentinel-read",
+    "title": "DEX Scanners vs SyNexus Sentinel Reads: What's Different?",
+    "excerpt": "Charts show price; Sentinels show structure — why both matter and neither is enough alone.",
+    "date": "2026-07-18",
+    "tags": [
+      "research",
+      "SyNexus",
+      "comparison"
+    ]
+  },
+  {
+    "slug": "memecoin-season-survival-guide",
+    "title": "Memecoin Season Survival Guide for Solana Traders",
+    "excerpt": "Position sizing, scan discipline, and emotional traps during high-velocity launch weeks.",
+    "date": "2026-07-17",
+    "tags": [
+      "memecoins",
+      "trading",
+      "psychology"
+    ]
+  },
+  {
+    "slug": "weekly-solana-market-outlook-july-2026",
+    "title": "Weekly Solana Market Outlook — July 2026",
+    "excerpt": "Macro context, memecoin season rhythms, and how to use Sentinel reads in choppy weeks.",
+    "date": "2026-07-16",
+    "tags": [
+      "market analysis",
+      "Solana",
+      "weekly"
+    ]
+  },
+  {
+    "slug": "solana-momentum-trading-risks",
+    "title": "Solana Momentum Trading Risks Pulse Lane Surfaces",
+    "excerpt": "Volume spikes, fake velocity, and why momentum without liquidity support is fragile.",
+    "date": "2026-07-15",
+    "tags": [
+      "Pulse",
+      "trading",
+      "momentum"
+    ]
+  },
+  {
+    "slug": "avoid-watch-ok-verdicts-explained",
+    "title": "Avoid, Watch, OK: What SyNexus Verdicts Really Mean",
+    "excerpt": "Plain-English definitions — and common misconceptions that get traders rekt.",
+    "date": "2026-07-14",
+    "tags": [
+      "Sentinel",
+      "verdicts",
+      "beginners"
+    ]
+  },
+  {
+    "slug": "using-titan-ai-for-crypto-research",
+    "title": "Using Titan AI for Crypto Research Without Over-Trusting It",
+    "excerpt": "Prompt patterns, Sentinel context, and when to stop chatting and open a block explorer.",
+    "date": "2026-07-13",
+    "tags": [
+      "Titan",
+      "AI",
+      "research"
+    ]
+  },
+  {
+    "slug": "ai-trading-assistants-what-they-can-and-cannot-do",
+    "title": "AI Trading Assistants: What They Can and Cannot Do for Crypto",
+    "excerpt": "Separate hype from utility — research synthesis, risk explanation, and hard limits of AI on volatile markets.",
+    "date": "2026-07-12",
+    "tags": [
+      "AI",
+      "Titan",
+      "education"
+    ]
+  },
+  {
+    "slug": "token-research-guide-should-i-buy-this",
+    "title": "Token Research Guide: How to Use Should I Buy This?",
+    "excerpt": "A step-by-step walkthrough of SyNexus's fastest research tool — paste, scan, read, share.",
+    "date": "2026-07-11",
+    "tags": [
+      "research",
+      "tutorial",
+      "SyNexus"
+    ]
+  },
+  {
+    "slug": "how-synexus-sentinel-scoring-works",
+    "title": "How SyNexus Sentinel Scoring Works: Four Lanes, One Verdict",
+    "excerpt": "Aegis, Pulse, Leviathan, and Cipher — what each lane measures and how scores become Avoid, Watch, or OK.",
+    "date": "2026-07-10",
+    "tags": [
+      "Sentinel",
+      "SyNexus",
+      "methodology"
+    ]
+  },
+  {
+    "slug": "whale-wallets-and-exit-liquidity",
+    "title": "Whale Wallets and Exit Liquidity: Reading Leviathan Lane",
+    "excerpt": "Why your green candle might fund someone else's exit — and how to scan holder concentration first.",
+    "date": "2026-07-09",
+    "tags": [
+      "whales",
+      "Leviathan",
+      "trading"
+    ]
+  },
+  {
+    "slug": "what-is-a-rug-pull-on-solana",
+    "title": "What Is a Rug Pull on Solana? Patterns SyNexus Aegis Flags Early",
+    "excerpt": "From liquidity pulls to slow bleeds — how rugs show up in on-chain data before timelines explode.",
+    "date": "2026-07-08",
+    "tags": [
+      "rug pull",
+      "scams",
+      "Aegis"
+    ]
+  },
+  {
+    "slug": "liquidity-pools-explained-for-beginners",
+    "title": "Liquidity Pools Explained for Beginners on Solana",
+    "excerpt": "Why depth matters, how pools can be pulled, and what Sentinels watch on new launches.",
+    "date": "2026-07-07",
+    "tags": [
+      "liquidity",
+      "DeFi",
+      "beginners"
+    ]
+  },
+  {
+    "slug": "understanding-solana-mint-addresses",
+    "title": "Understanding Solana Mint Addresses (And Why Copy-Paste Errors Cost Money)",
+    "excerpt": "What a mint is, how to verify it, and how SyNexus uses mints in Should I buy this?",
+    "date": "2026-07-06",
+    "tags": [
+      "Solana",
+      "research",
+      "beginners"
+    ]
+  },
+  {
+    "slug": "phantom-wallet-safety-checklist",
+    "title": "Phantom Wallet Safety Checklist for SyNexus Users",
+    "excerpt": "Step-by-step habits when connecting Phantom to scan, swap, and track Solana tokens.",
+    "date": "2026-07-05",
+    "tags": [
+      "Phantom",
+      "wallet",
+      "checklist"
+    ]
+  },
+  {
+    "slug": "solana-wallet-security-basics",
+    "title": "Solana Wallet Security Basics Every Trader Should Know",
+    "excerpt": "Seed phrases, hardware wallets, device hygiene, and why non-custodial beats convenience hacks.",
+    "date": "2026-07-04",
+    "tags": [
+      "wallet",
+      "security",
+      "Solana"
+    ]
+  },
+  {
+    "slug": "fake-support-scams-and-wallet-drainers",
+    "title": "Fake Support Scams and Wallet Drainers: What Solana Traders Miss",
+    "excerpt": "How impersonators exploit urgency — and the habits that keep your keys safe.",
+    "date": "2026-07-03",
+    "tags": [
+      "scams",
+      "wallet",
+      "security"
+    ]
+  },
+  {
+    "slug": "red-flags-before-you-buy-any-memecoin",
+    "title": "7 Red Flags to Check Before You Buy Any Memecoin",
+    "excerpt": "A repeatable checklist for Solana memecoin launches — liquidity, holders, authority, and social proof.",
+    "date": "2026-07-02",
+    "tags": [
+      "memecoins",
+      "risk",
+      "checklist"
+    ]
+  },
+  {
+    "slug": "how-to-spot-crypto-scams-on-solana",
+    "title": "How to Spot Crypto Scams on Solana Before You Connect Your Wallet",
+    "excerpt": "Practical red flags every Solana trader should know — from fake mints to impersonator support accounts.",
+    "date": "2026-07-01",
+    "tags": [
+      "scams",
+      "Solana",
+      "security",
+      "beginners"
+    ]
+  },
+  {
     "slug": "2026-06-28-should-i-buy-this-methodology",
     "title": "Should I Buy This? The SyNexus Methodology",
     "excerpt": "Plain English token intelligence for Solana — built for speed, not hype.",
-    "date": "2026-06-28"
+    "date": "2026-06-28",
+    "tags": [
+      "SyNexus",
+      "methodology",
+      "Sentinel"
+    ]
   }
 ]

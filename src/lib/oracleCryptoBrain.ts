@@ -1,6 +1,6 @@
 import type { Token } from "../data/tokens";
 import { synexusRiskBandLabel } from "../data/tokens";
-import { DEFAULT_TITAN_BOT_NAME } from "../config/titanBot";
+import { resolveInternalCommanderPersona } from "./titanBotName";
 import { answerAegisSecurityPrivacyQuestion } from "../config/sentinelAegis";
 import type { SentinelLaneId } from "./sentinelIntel";
 import { isInstantTitanPath } from "./titanRouting";
@@ -216,7 +216,7 @@ export function buildAllOracleDirectives(tokens: Token[]): Record<SentinelLaneId
   return out;
 }
 
-export function answerCryptoConcept(question: string, commanderName = DEFAULT_TITAN_BOT_NAME): string | null {
+export function answerCryptoConcept(question: string, commanderName = resolveInternalCommanderPersona()): string | null {
   const q = question.toLowerCase();
   if (/rug pull|rugpull/.test(q)) {
     return "A rug pull is when developers drain liquidity or mint away value — Sentinel Aegis watches liquidity depth, wallet concentration, contract authority, and privacy-safe operator hygiene for exactly this.";

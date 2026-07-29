@@ -1,4 +1,4 @@
-import { DEFAULT_TITAN_BOT_NAME } from "../config/titanBot";
+import { resolveInternalCommanderPersona } from "../lib/titanBotName";
 import {
   AEGIS_LESSON,
   AEGIS_ROLE,
@@ -47,7 +47,7 @@ const XP_PER_LEVEL = 140;
 const sentinelSeeds = [
   {
     id: "titan-commander",
-    name: DEFAULT_TITAN_BOT_NAME,
+    name: resolveInternalCommanderPersona(),
     role: "Commander · your private AI briefing officer",
     baseXp: 180,
     status:
@@ -113,7 +113,7 @@ function scoreSignals(signals: SentinelSignals) {
 
 export function buildSyntheticSentinels(
   signals: SentinelSignals,
-  commanderName = DEFAULT_TITAN_BOT_NAME,
+  commanderName = resolveInternalCommanderPersona(),
 ): SyntheticSentinel[] {
   const signalXp = scoreSignals(signals);
 
@@ -150,7 +150,7 @@ export function oracleSupremeMoodLabel(mood: OracleSupremeDailyReport["mood"]): 
 export function buildOracleSupremeBriefing(
   sentinels: SyntheticSentinel[],
   signals: SentinelSignals,
-  commanderName = DEFAULT_TITAN_BOT_NAME,
+  commanderName = resolveInternalCommanderPersona(),
 ): string {
   const commander = sentinels.find((s) => s.isOracleSupreme);
   const confidence = commander?.confidence ?? 70;
@@ -177,7 +177,7 @@ export function buildOracleSupremeBriefing(
 export function buildOracleSupremeDailyReport(
   sentinels: SyntheticSentinel[],
   signals: SentinelSignals,
-  commanderName = DEFAULT_TITAN_BOT_NAME,
+  commanderName = resolveInternalCommanderPersona(),
 ): OracleSupremeDailyReport {
   const averageConfidence = Math.round(
     sentinels.reduce((total, s) => total + s.confidence, 0) / sentinels.length,

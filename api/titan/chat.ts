@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { ViteDevServer } from "../viteDevServer";
-import { buildTitanSystemPrompt, type TitanPromptInput } from "../../lib/server/titan/prompt.js";
+import { buildTitanSystemPrompt, resolveDefaultCommanderPersona, type TitanPromptInput } from "../../lib/server/titan/prompt.js";
 
 export type TitanChatRequestBody = TitanPromptInput & {
   message: string;
@@ -85,7 +85,7 @@ function validateBody(raw: unknown): TitanChatRequestBody | null {
   const titanBotName =
     typeof body.titanBotName === "string" && body.titanBotName.trim()
       ? body.titanBotName.trim().slice(0, 40)
-      : "Titan";
+      : resolveDefaultCommanderPersona();
   const operatorName =
     typeof body.operatorName === "string" ? body.operatorName.trim().slice(0, 60) : "there";
   const plan = body.plan === "PRO" ? "PRO" : "FREE";

@@ -162,6 +162,42 @@ export const FAQ_ITEMS = [
     q: "Where is the SYN token roadmap?",
     a: "On the About page under Syn coin roadmap. Token utility and treasury allocation are documented separately from app features.",
   },
+  {
+    q: "How do I spot a crypto scam before I buy?",
+    a: "Verify the full mint address (not just the ticker), check liquidity depth and top-holder concentration, ignore DMs from fake support, and never share your seed phrase. SyNexus Journal has step-by-step guides — start with How to Spot Crypto Scams on Solana at /blog/how-to-spot-crypto-scams-on-solana.",
+  },
+  {
+    q: "What are the four SyNexus Sentinels?",
+    a: "Aegis (security & privacy), Pulse (momentum/volume), Leviathan (whale flows), and Cipher (patterns & community reports). They fuse into one Avoid, Watch, or OK verdict on the home scan panel.",
+  },
+  {
+    q: "Can AI predict which token will moon?",
+    a: "No. Titan and Sentinel outputs are research aids — they can be wrong, delayed, or incomplete. AI helps explain risk reads and compress data; it does not replace your judgment or on-chain verification.",
+  },
+  {
+    q: "How many free deep scans do I get?",
+    a: "Three deep scans before signup. Re-scanning the same token does not use another slot. Linked operator accounts with verified email get unlimited scans.",
+  },
+  {
+    q: "Is SyNexus safe to connect my wallet to?",
+    a: "SyNexus is non-custodial — we never receive your seed phrase. Wallet connections happen in your wallet app; you approve every transaction. Read our Trust page for security practices and supported wallets.",
+  },
+  {
+    q: "Where can I learn Solana wallet safety?",
+    a: "See the SyNexus Journal: Solana Wallet Security Basics and Phantom Wallet Safety Checklist at /blog. Our homepage also links education articles on scams, verification, and memecoin risk.",
+  },
+  {
+    q: "Does SyNexus publish market analysis?",
+    a: "Yes — weekly outlook and trading-education articles live on the Journal at /blog. They are informational framing, not buy/sell signals or price targets.",
+  },
+  {
+    q: "What should I do if a token shows Avoid?",
+    a: "Treat it as a structured harm read: multiple Sentinel lanes flagged elevated risk. It is not a ban — you can still trade — but understand why (liquidity, whales, patterns) before sizing any position.",
+  },
+  {
+    q: "How do I verify a token before swapping?",
+    a: "Use our five-minute checklist: confirm mint, run Should I buy this?, check Solscan holders, verify official socials, then size for total loss. Full guide at /blog/how-to-verify-a-token-before-swapping.",
+  },
 ] as const;
 
 export const SYN_COIN_ROADMAP = [

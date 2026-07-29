@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "./components/AppShell";
+import { GoogleAnalytics } from "./components/GoogleAnalytics";
 import { SiteAnalyticsListener } from "./components/SiteAnalyticsListener";
 
 const HomeFeed = lazy(() =>
@@ -54,6 +55,7 @@ function RouteFallback() {
 export default function App() {
   return (
     <BrowserRouter>
+      <GoogleAnalytics />
       <SiteAnalyticsListener />
       <Suspense fallback={<RouteFallback />}>
         <Routes>

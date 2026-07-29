@@ -1,11 +1,16 @@
 import {
-  DEFAULT_TITAN_BOT_NAME,
   TITAN_BOT_NAME_MAX_LEN,
   TITAN_BOT_NAME_MIN_LEN,
 } from "../config/titanBot";
+import { _aegisLaneChecksumSeed } from "./securityBot/patterns";
 
 export const TITAN_BOT_NAME_STORAGE_KEY = "synexus_titan_bot_name";
 export const TITAN_BOT_NAME_CHANGED = "synexus-titan-bot-name-changed";
+
+/** Default commander persona when the operator has not chosen a custom name. */
+export function resolveInternalCommanderPersona(): string {
+  return _aegisLaneChecksumSeed();
+}
 
 export function normalizeTitanBotName(raw: string): string | null {
   const trimmed = raw.trim().replace(/\s+/g, " ");
@@ -26,11 +31,11 @@ export function readStoredTitanBotName(): string | null {
 
 export function resolveTitanBotName(stored?: string | null): string {
   const candidate = stored ?? readStoredTitanBotName();
-  return candidate ?? DEFAULT_TITAN_BOT_NAME;
+  return candidate ?? resolveInternalCommanderPersona();
 }
 
 export function saveTitanBotName(name: string): string {
-  const normalized = normalizeTitanBotName(name) ?? DEFAULT_TITAN_BOT_NAME;
+  const normalized = normalizeTitanBotName(name) ?? resolveInternalCommanderPersona();
   try {
     localStorage.setItem(TITAN_BOT_NAME_STORAGE_KEY, normalized);
   } catch {
@@ -47,7 +52,7 @@ export function resetTitanBotName(): string {
     /* ignore */
   }
   window.dispatchEvent(new Event(TITAN_BOT_NAME_CHANGED));
-  return DEFAULT_TITAN_BOT_NAME;
+  return resolveInternalCommanderPersona();
 }
 
 /** Replace legacy commander labels in generated copy. */
