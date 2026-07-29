@@ -5,6 +5,11 @@ import { SYNEXUS_PRO_PRICE_LABEL } from "../config/proPricing";
 import { hasStoredOwnerGrant } from "../lib/ownerAccess";
 import { isProTrialActive } from "../lib/proDemo";
 import { getCurrentUser } from "../lib/supabaseData";
+import {
+  ANDROID_WEB_SUBSCRIBE_HINT,
+  androidRequiresWebSubscription,
+  resolveSubscribeLabel,
+} from "../lib/androidSubscription";
 import { redirectToProCheckout, startProCheckout } from "../lib/squareCheckout";
 import { useOperatorAuth } from "../hooks/useOperatorAuth";
 import { ProDemoButton } from "./ProDemoButton";
@@ -68,9 +73,11 @@ export function ProTrialBanner() {
 
   const detail = error
     ? "Checkout couldn't open. Tap Subscribe to retry."
-    : !linked
-      ? `${SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial · card at checkout · then ${SYNEXUS_PRO_PRICE_LABEL}`
-      : `${SYNEXUS_PRO_TRIAL_LABEL} active or available · ${SYNEXUS_PRO_PRICE_LABEL} after trial · cancel anytime`;
+    : androidRequiresWebSubscription()
+      ? ANDROID_WEB_SUBSCRIBE_HINT
+      : !linked
+        ? `${SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial · card at checkout · then ${SYNEXUS_PRO_PRICE_LABEL}`
+        : `${SYNEXUS_PRO_TRIAL_LABEL} active or available · ${SYNEXUS_PRO_PRICE_LABEL} after trial · cancel anytime`;
 
   return (
     <div className="pro-trial-banner" role="region" aria-label="SyNexusPro subscription">
@@ -88,7 +95,7 @@ export function ProTrialBanner() {
         disabled={busy}
         onClick={() => void startCheckout()}
       >
-        {busy ? "Opening…" : "Subscribe"}
+        {busy ? "Opening…" : resolveSubscribeLabel("Subscribe")}
       </button>
       <button type="button" className="pro-trial-banner__close" onClick={dismiss} aria-label="Dismiss offer">
         ×

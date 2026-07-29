@@ -11,6 +11,11 @@ import {
 import { oracleSupremeMoodLabel } from "../data/syntheticWatchers";
 import { SYNEXUS_PRO_PRICE_LABEL } from "../config/proPricing";
 import { SYNEXUS_PRO_TRIAL_DAYS } from "../config/proTrial";
+import {
+  ANDROID_WEB_SUBSCRIBE_HINT,
+  androidRequiresWebSubscription,
+  resolveSubscribeLabel,
+} from "../lib/androidSubscription";
 import { scrollTitanGateIntoView } from "../lib/openOracleLogin";
 import { useTitanShell } from "../context/TitanShellContext";
 import { ProDemoButton } from "./ProDemoButton";
@@ -167,15 +172,19 @@ export function OracleAdminControlCenter({
               ) : (
                 <div className="oracle-admin__unlock">
                   <p>
-                    Unlock {titanBotName} briefings with SyNexusPro — {SYNEXUS_PRO_PRICE_LABEL}. Your{" "}
-                    {SYNEXUS_PRO_TRIAL_DAYS}-day trial starts when you add a card at checkout.
+                    Unlock {titanBotName} briefings with SyNexusPro — {SYNEXUS_PRO_PRICE_LABEL}.{" "}
+                    {androidRequiresWebSubscription()
+                      ? ANDROID_WEB_SUBSCRIBE_HINT
+                      : `Your ${SYNEXUS_PRO_TRIAL_DAYS}-day trial starts when you add a card at checkout.`}
                   </p>
                   <ProDemoButton
                     className="oracle-admin__demo pulse-demo-button"
                     label={`Start ${SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial`}
                   />
                   <button type="button" disabled={checkoutBusy} onClick={onUpgrade}>
-                    {checkoutBusy ? "Opening checkout…" : `Subscribe · ${SYNEXUS_PRO_PRICE_LABEL}`}
+                    {checkoutBusy
+                      ? "Opening…"
+                      : resolveSubscribeLabel(`Subscribe · ${SYNEXUS_PRO_PRICE_LABEL}`)}
                   </button>
                 </div>
               )}

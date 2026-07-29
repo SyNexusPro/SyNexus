@@ -77,6 +77,10 @@ import {
   syncProTrialForUser,
 } from "../lib/proDemo";
 import { redirectToProCheckout, startProCheckout } from "../lib/squareCheckout";
+import {
+  androidRequiresWebSubscription,
+  resolveSubscribeLabel,
+} from "../lib/androidSubscription";
 import { SYNEXUS_PRO_PRICE_LABEL, SYNEXUS_PRO_SUBSCRIBE_LABEL } from "../config/proPricing";
 import { SYNEXUS_PRO_TRIAL_DAYS, SYNEXUS_PRO_TRIAL_LABEL } from "../config/proTrial";
 import { getSentinelIdleMessage, getSentinelMessage } from "../lib/watcherVoice";
@@ -670,9 +674,26 @@ export function Pulse() {
         setAuthMessage({
           tone: "info",
           text: trialStarted
-            ? `${SYNEXUS_PRO_TRIAL_LABEL} started — opening secure checkout…`
-            : "Account created — opening secure checkout…",
+            ? androidRequiresWebSubscription()
+              ? `${SYNEXUS_PRO_TRIAL_LABEL} started — subscribe at synexus.pro in your browser before trial ends.`
+              : `${SYNEXUS_PRO_TRIAL_LABEL} started — opening secure checkout…`
+            : androidRequiresWebSubscription()
+              ? "Account created — subscribe at synexus.pro when you're ready for Pro."
+              : "Account created — opening secure checkout…",
         });
+        if (androidRequiresWebSubscription()) {
+          await completeAuthWithBiometricOffer(result.session, signupEmail, message);
+          setAuthMessage({
+            tone: "success",
+            text: trialStarted
+              ? `${message} Your ${SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial is active. Subscribe at synexus.pro before it ends.`
+              : message,
+          });
+          pendingAuthMethod.current = null;
+          trackSiteEvent("sign_up", { path: "/pulse" });
+          void refreshMarketSignals();
+          return;
+        }
         const checkout = await startProCheckout({ userId: signupUser.id, email: signupEmail });
         if (checkout.ok) {
           redirectToProCheckout(checkout.url);
@@ -1014,10 +1035,19 @@ export function Pulse() {
     if (checkoutBusy) return;
     try {
       setCheckoutBusy(true);
-      setAuthMessage({ tone: "info", text: "Opening secure checkout…" });
+      setAuthMessage({
+        tone: "info",
+        text: androidRequiresWebSubscription()
+          ? "Opening synexus.pro in your browser…"
+          : "Opening secure checkout…",
+      });
       const checkout = await startProCheckout({ userId: userId ?? undefined, email: userEmail ?? undefined });
       if (!checkout.ok) {
         setAuthMessage({ tone: "error", text: checkout.error });
+        return;
+      }
+      if (checkout.openedExternally) {
+        setAuthMessage({ tone: "info", text: "Complete subscription in your browser at synexus.pro." });
         return;
       }
       redirectToProCheckout(checkout.url);
@@ -1359,7 +1389,7 @@ export function Pulse() {
                   disabled={checkoutBusy}
                   onClick={() => void handleUpgradeTrigger()}
                 >
-                  {checkoutBusy ? "Opening…" : SYNEXUS_PRO_SUBSCRIBE_LABEL}
+                  {checkoutBusy ? "Opening…" : resolveSubscribeLabel(SYNEXUS_PRO_SUBSCRIBE_LABEL)}
                 </button>
               </>
             ) : isProDemoActive() ? (
@@ -1373,7 +1403,7 @@ export function Pulse() {
                   disabled={checkoutBusy}
                   onClick={() => void handleUpgradeTrigger()}
                 >
-                  {checkoutBusy ? "Opening…" : "Keep Pro — Subscribe"}
+                  {checkoutBusy ? "Opening…" : resolveSubscribeLabel("Keep Pro — Subscribe")}
                 </button>
               </>
             ) : (

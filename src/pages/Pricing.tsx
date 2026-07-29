@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { ProDemoButton } from "../components/ProDemoButton";
 import { SynexusSubscribeButton } from "../components/SynexusSubscribeButton";
+import { ANDROID_WEB_SUBSCRIBE_HINT, androidRequiresWebSubscription } from "../lib/androidSubscription";
 import {
   getExternalPricingUrl,
   SYNEXUS_PRO_FEATURES,
@@ -31,10 +32,18 @@ export function Pricing() {
           <p className="pulse-synexus-pro-promo__price">{SYNEXUS_PRO_PRICE_LABEL}</p>
           <p className="pulse-synexus-pro-promo__headline">Unlimited trading intelligence. One simple price.</p>
           <p className="pulse-synexus-pro-promo__body">
-            Sign up for a {SYNEXUS_PRO_TRIAL_DAYS}-day full Pro trial — add a card at checkout. After the trial,
-            billing continues at {SYNEXUS_PRO_PRICE_LABEL} unless you cancel. Payments are processed by our
-            third-party subscription platform (shown at checkout).
+            Sign up for a {SYNEXUS_PRO_TRIAL_DAYS}-day full Pro trial
+            {androidRequiresWebSubscription()
+              ? " — on Android, billing completes at synexus.pro in your browser."
+              : " — add a card at checkout"}
+            . After the trial, billing continues at {SYNEXUS_PRO_PRICE_LABEL} unless you cancel. Payments
+            are processed by our third-party subscription platform (shown at checkout).
           </p>
+          {androidRequiresWebSubscription() ? (
+            <p className="pricing-page__android-note" role="note">
+              {ANDROID_WEB_SUBSCRIBE_HINT}
+            </p>
+          ) : null}
           <ul className="pulse-synexus-pro-promo__bullets">
             {SYNEXUS_PRO_FEATURES.map((item) => (
               <li key={item}>{item}</li>

@@ -71,7 +71,8 @@ npm run android:bundle
 - [ ] **Data safety:** declare email (account), usage/diagnostics, payment metadata (Stripe); link Privacy Policy.
 - [ ] **Financial features:** declare crypto/token information app; not a wallet or exchange.
 - [ ] **Target audience:** 18+ (matches Terms).
-- [ ] **Ads:** No if you do not show third-party ads.
+- [ ] **Ads:** Yes if AdSense runs on the home feed (`VITE_ADSENSE_HOME_SLOT`).
+- [ ] **Subscriptions:** Android app opens synexus.pro in the browser for billing (see `src/lib/androidSubscription.ts`); declare accordingly in Play Console.
 - [ ] **Content rating:** complete IARC questionnaire (likely low maturity; crypto info may add flags).
 
 ## Operations

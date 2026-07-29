@@ -25,6 +25,19 @@ See [Sign your release](https://developer.android.com/studio/publish/app-signing
 Every new Play upload needs a **strictly larger** `versionCode` (`android/app/build.gradle` → `defaultConfig.versionCode`).  
 Bump `versionName` (user-visible) when you ship meaningful releases (keep it aligned with `package.json` if you prefer).
 
+## Remote WebView (production APIs)
+
+The Android shell loads **`https://www.synexus.pro`** at runtime (`capacitor.config.ts` → `server.url`), so checkout, Titan chat, auth, and other `/api/*` routes hit Vercel instead of the bundled `dist/` folder.
+
+For local UI testing against bundled assets only:
+
+```bash
+set CAPACITOR_USE_LOCAL=1
+npm run build && npx cap sync android
+```
+
+Override the remote origin with `CAPACITOR_SERVER_URL` if needed.
+
 ## Build & sync
 
 From the repo root:
@@ -49,13 +62,14 @@ npm run android:apk
 - **Content rating questionnaire** complete.
 - **Target audience** & declarations (ads, COVID‑19 apps, news, etc.) as applicable.
 - **Privacy policy URL** — required if you collect or process user data (e.g. auth, subscriptions).
-- **Data safety** section — disclose data collected (e.g. account, diagnostics, Stripe usage as relevant).
-- **Subscriptions** — if SyNexusPro sells via Stripe in-app web view, clarify policy compliance with Play Billing rules ([Google Play Payments](https://support.google.com/googleplay/android-developer/answer/9858738)).
+- **Data safety** section — disclose data collected (e.g. account, diagnostics, Square billing metadata).
+- **Ads** — declare **Yes** if AdSense runs on the home feed (`VITE_ADSENSE_HOME_SLOT`).
+- **Subscriptions** — On **Android**, Subscribe opens **synexus.pro in the system browser** (no Square checkout inside the app shell). Web and iOS still use Square. Confirm Play Console declarations match ([Google Play Payments](https://support.google.com/googleplay/android-developer/answer/9858738)).
 
 ## QA before release
 
 - Install release build on a device (internal testing track).
-- Cold start after `cap sync`; exercise auth, Stripe checkout in WebView if used, offline errors.
+- Cold start after `cap sync`; exercise auth, Square checkout, Titan chat, offline errors (app needs network for prod WebView).
 - Confirm **no cleartext** requirements for prod APIs you call (HTTPS only).
 
 ## Troubleshooting Gradle

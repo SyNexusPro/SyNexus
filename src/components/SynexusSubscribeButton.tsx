@@ -1,4 +1,5 @@
 import { useState, type ButtonHTMLAttributes } from "react";
+import { resolveSubscribeLabel } from "../lib/androidSubscription";
 import { getCurrentUser } from "../lib/supabaseData";
 import { redirectToProCheckout, startProCheckout } from "../lib/squareCheckout";
 
@@ -42,9 +43,11 @@ export function SynexusSubscribeButton({
     }
   }
 
+  const displayLabel = resolveSubscribeLabel(label);
+
   return (
     <button type="button" {...rest} disabled={disabled || busy} onClick={(e) => void handleClick(e)}>
-      {busy ? busyLabel : label}
+      {busy ? busyLabel : displayLabel}
     </button>
   );
 }
