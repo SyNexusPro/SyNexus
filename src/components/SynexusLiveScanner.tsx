@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import type { Token } from "../data/tokens";
+import { SENTINEL_LANE_IDS, SENTINEL_LANES } from "../config/sentinels";
 import { synexusRiskBandLabel } from "../data/tokens";
 
 type Props = {
@@ -11,14 +12,14 @@ type Props = {
   error: string | null;
 };
 
-const SENTINEL_LANES = [
-  { id: "aegis", label: "Aegis", role: "Security & privacy", pro: false },
-  { id: "pulse", label: "Pulse", role: "Momentum", pro: false },
-  { id: "titan", label: "Leviathan", role: "Whales", pro: true },
-  { id: "cipher", label: "Cipher", role: "Patterns", pro: true },
-] as const;
+const SENTINEL_LANES_UI = SENTINEL_LANE_IDS.map((id) => ({
+  id,
+  label: SENTINEL_LANES[id].shortName,
+  role: SENTINEL_LANES[id].role,
+  pro: SENTINEL_LANES[id].proPrecisionBoost,
+}));
 
-function laneStatus(token: Token, laneId: (typeof SENTINEL_LANES)[number]["id"]): string {
+function laneStatus(token: Token, laneId: (typeof SENTINEL_LANE_IDS)[number]): string {
   switch (laneId) {
     case "aegis":
       return synexusRiskBandLabel(token.guardianRisk);
@@ -26,7 +27,7 @@ function laneStatus(token: Token, laneId: (typeof SENTINEL_LANES)[number]["id"])
       return token.change24hPct >= 0
         ? `+${token.change24hPct.toFixed(1)}% 24h`
         : `${token.change24hPct.toFixed(1)}% 24h`;
-    case "titan":
+    case "leviathan":
       return token.topWalletPct != null ? `Top ${token.topWalletPct}%` : "Tracking…";
     case "cipher":
       return token.riskScore != null ? `Score ${token.riskScore}` : "Analyzing…";
@@ -83,7 +84,7 @@ export function SynexusLiveScanner({ tokens, feedSource, dexLiveCount, loading, 
             </div>
 
             <ul className="synexus-scanner__lanes">
-              {SENTINEL_LANES.map((lane, laneIndex) => {
+              {SENTINEL_LANES_UI.map((lane, laneIndex) => {
                 const locked = lane.pro;
                 const stagger = laneIndex * 0.12;
                 return (

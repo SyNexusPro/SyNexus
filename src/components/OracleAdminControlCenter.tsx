@@ -51,7 +51,7 @@ export function OracleAdminControlCenter({
   const { openLogin } = useTitanShell();
   const { name: titanBotName } = useTitanBotName();
   const [open, setOpen] = useState(() => loggedIn && window.location.hash === "#oracle-admin");
-  const lanes = syntheticSentinels.filter((s) => !s.isOracleSupreme);
+  const lanes = syntheticSentinels.filter((s) => !s.isCommander && !s.isOracleSupreme);
 
   useEffect(() => {
     if (!loggedIn) {

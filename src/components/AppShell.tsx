@@ -94,6 +94,12 @@ export function AppShell() {
         <span className="app-footer__sep" aria-hidden>
           ·
         </span>
+        <Link className="app-footer__link" to="/wallet-terms" title="SyNexus Vault — coming soon">
+          Vault
+        </Link>
+        <span className="app-footer__sep" aria-hidden>
+          ·
+        </span>
         <Link
           className="app-footer__link"
           to="/liquidity-treasury"

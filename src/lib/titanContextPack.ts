@@ -8,6 +8,7 @@ import {
   resolveOracleTokenQuery,
   searchOracleTokens,
 } from "./oracleCryptoBrain";
+import { SENTINEL_LANE_IDS, sentinelLaneLabel } from "../config/sentinels";
 import { buildOperatorStrengthBrief } from "./titanOperatorBrief";
 
 function formatUsd(value: number | undefined): string {
@@ -78,13 +79,11 @@ function resolveMultiTokenIntel(message: string, tokens: Token[]): string | null
 export function buildTitanSentinelBrief(tokens: Token[]): string {
   if (!tokens.length) return "Sentinels on standby — no live targets yet.";
   const dirs = buildAllOracleDirectives(tokens);
-  return (["aegis", "pulse", "titan", "cipher"] as const)
-    .map((lane) => {
-      const d = dirs[lane];
-      const target = d.targetSymbol ? ` → ${d.targetSymbol}` : "";
-      return `${lane.charAt(0).toUpperCase() + lane.slice(1)}${target}: ${d.order}`;
-    })
-    .join("\n");
+  return SENTINEL_LANE_IDS.map((lane) => {
+    const d = dirs[lane];
+    const target = d.targetSymbol ? ` → ${d.targetSymbol}` : "";
+    return `${sentinelLaneLabel(lane)}${target}: ${d.order}`;
+  }).join("\n");
 }
 
 /** Watchlist symbols matched against the live pool. */

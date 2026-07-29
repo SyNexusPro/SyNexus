@@ -27,9 +27,11 @@ export const AEGIS_PRIVACY_POINTS = [
 ] as const;
 
 export const AEGIS_SECURITY_POINTS = [
-  "Contract authority, liquidity depth, and wallet concentration on every scanned token.",
-  "Rug-pull heuristics, honeypot patterns, and community abuse reports fused into risk bands.",
-  "In-app SecurityBot blocks suspicious chat patterns and validates Pro grant sources.",
+  "Mint authority, freeze authority, and renounce status on every scanned token.",
+  "Liquidity depth vs volume — flags honeypots and thin-pool exit traps.",
+  "Top-holder and top-5 concentration fused with Leviathan lane.",
+  "Rug-pull heuristics, pump-then-dump patterns, and community abuse reports.",
+  "In-app SecurityBot blocks seed-phrase phishing and validates Pro grant sources.",
   "Verify mint addresses and URLs — SyNexus support will never DM you for a seed phrase.",
 ] as const;
 

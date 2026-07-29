@@ -1144,7 +1144,7 @@ export function Pulse() {
         </div>
         <div className="synthetic-sentinels">
           {syntheticSentinels
-            .filter((s) => !s.isOracleSupreme)
+            .filter((s) => !s.isCommander && !s.isOracleSupreme)
             .map((sentinel) => {
               const laneId = sentinelLaneIdFromSentinel(sentinel.id);
               const intel = laneId ? sentinelLiveIntel[laneId] : null;

@@ -4,11 +4,18 @@ import {
   AEGIS_ROLE,
   AEGIS_SENTINEL_NAME,
 } from "../config/sentinelAegis";
+import {
+  COMMANDER_LESSON,
+  COMMANDER_ROLE,
+  SENTINEL_LANES,
+  type SentinelLaneId,
+} from "../config/sentinels";
 
 export type SentinelRank = "Scout" | "Sentinel" | "Bulwark" | "Oracle" | "SyNexus Core";
 
 export type SyntheticSentinel = {
   id: string;
+  laneId?: SentinelLaneId;
   name: string;
   role: string;
   level: number;
@@ -19,7 +26,9 @@ export type SyntheticSentinel = {
   status: string;
   lesson: string;
   accent: "green" | "gold" | "danger";
-  /** Commander synthetic bot (user-renamable; default Titan). */
+  /** Commander synthetic bot (user-renamable; default Shia). */
+  isCommander?: boolean;
+  /** @deprecated Use isCommander */
   isOracleSupreme?: boolean;
 };
 
@@ -46,53 +55,55 @@ const XP_PER_LEVEL = 140;
 
 const sentinelSeeds = [
   {
-    id: "titan-commander",
+    id: "commander",
     name: resolveInternalCommanderPersona(),
-    role: "Commander · your private AI briefing officer",
-    baseXp: 180,
+    role: COMMANDER_ROLE,
+    baseXp: 200,
     status:
-      "Titan commands Aegis, Pulse, Leviathan, and Cipher — then tells you what matters in plain English.",
-    lesson:
-      "Titan is synthetic: your bot learns from every alert and report you feed SyNexus, and makes calls in seconds.",
+      "Commands Aegis, Pulse, Leviathan, and Cipher — fuses their reports into one plain-English briefing.",
+    lesson: COMMANDER_LESSON,
     accent: "gold" as const,
-    isOracleSupreme: true,
+    isCommander: true,
   },
   {
     id: "aegis",
+    laneId: "aegis" as const,
     name: AEGIS_SENTINEL_NAME,
     role: AEGIS_ROLE,
-    baseXp: 48,
-    status:
-      "Guarding tokens and operator privacy — scams, rugs, contracts, liquidity, and account-safe sign-in.",
+    baseXp: 52,
+    status: SENTINEL_LANES.aegis.idleStatus,
     lesson: AEGIS_LESSON,
-    accent: "green" as const,
+    accent: SENTINEL_LANES.aegis.accent,
   },
   {
     id: "pulse",
-    name: "Sentinel Pulse",
-    role: "Momentum & trend reads",
-    baseXp: 86,
-    status: "Separating real breakouts from fake pumps and dead-cat bounces.",
-    lesson: "Pulse gets sharper when you track volatile tokens — it learns what real demand looks like.",
-    accent: "green" as const,
+    laneId: "pulse" as const,
+    name: SENTINEL_LANES.pulse.fullName,
+    role: SENTINEL_LANES.pulse.role,
+    baseXp: 90,
+    status: SENTINEL_LANES.pulse.idleStatus,
+    lesson: SENTINEL_LANES.pulse.lesson,
+    accent: SENTINEL_LANES.pulse.accent,
   },
   {
-    id: "titan",
-    name: "Sentinel Leviathan",
-    role: "Whale & wallet tracking",
-    baseXp: 112,
-    status: "Watching large wallets, sudden concentration shifts, and exit pressure.",
-    lesson: "Leviathan flags when whales move before the timeline catches up.",
-    accent: "danger" as const,
+    id: "leviathan",
+    laneId: "leviathan" as const,
+    name: SENTINEL_LANES.leviathan.fullName,
+    role: SENTINEL_LANES.leviathan.role,
+    baseXp: 118,
+    status: SENTINEL_LANES.leviathan.idleStatus,
+    lesson: SENTINEL_LANES.leviathan.lesson,
+    accent: SENTINEL_LANES.leviathan.accent,
   },
   {
     id: "cipher",
-    name: "Sentinel Cipher",
-    role: "Pattern & signal fusion",
-    baseXp: 124,
-    status: "Connecting today's warnings to past ripples so weak signals stack into real risk.",
-    lesson: "Cipher tightens confidence when multiple lanes agree — that's when Titan escalates.",
-    accent: "gold" as const,
+    laneId: "cipher" as const,
+    name: SENTINEL_LANES.cipher.fullName,
+    role: SENTINEL_LANES.cipher.role,
+    baseXp: 130,
+    status: SENTINEL_LANES.cipher.idleStatus,
+    lesson: SENTINEL_LANES.cipher.lesson,
+    accent: SENTINEL_LANES.cipher.accent,
   },
 ];
 
@@ -101,14 +112,18 @@ function getRankForLevel(level: number): SentinelRank {
 }
 
 function scoreSignals(signals: SentinelSignals) {
-  const planBoost = signals.plan === "PRO" ? 140 : 0;
+  const planBoost = signals.plan === "PRO" ? 160 : 0;
   return (
-    signals.watchlistCount * 22 +
-    signals.alertCount * 28 +
-    signals.trackedCount * 24 +
-    signals.reportCount * 36 +
+    signals.watchlistCount * 24 +
+    signals.alertCount * 30 +
+    signals.trackedCount * 26 +
+    signals.reportCount * 38 +
     planBoost
   );
+}
+
+function isCommanderSentinel(s: (typeof sentinelSeeds)[number]): boolean {
+  return "isCommander" in s && !!s.isCommander;
 }
 
 export function buildSyntheticSentinels(
@@ -121,17 +136,18 @@ export function buildSyntheticSentinels(
     const xp = sentinel.baseXp + signalXp + index * 17;
     const level = Math.min(5, Math.max(1, Math.floor(xp / XP_PER_LEVEL) + 1));
     const nextLevelXp = level >= 5 ? xp : level * XP_PER_LEVEL;
-    const proBoost = signals.plan === "PRO" ? 12 : 0;
+    const proBoost = signals.plan === "PRO" ? 14 : 0;
     const confidence = Math.min(
       99,
-      62 + level * 9 + signals.alertCount * 2 + signals.reportCount * 3 + proBoost,
+      64 + level * 9 + signals.alertCount * 2 + signals.reportCount * 3 + proBoost,
     );
 
-    const name = sentinel.isOracleSupreme ? commanderName : sentinel.name;
+    const name = isCommanderSentinel(sentinel) ? commanderName : sentinel.name;
 
     return {
       ...sentinel,
       name,
+      isOracleSupreme: isCommanderSentinel(sentinel),
       level,
       levelName: getRankForLevel(level),
       xp,
@@ -152,26 +168,26 @@ export function buildOracleSupremeBriefing(
   signals: SentinelSignals,
   commanderName = resolveInternalCommanderPersona(),
 ): string {
-  const commander = sentinels.find((s) => s.isOracleSupreme);
+  const commander = sentinels.find((s) => s.isCommander || s.isOracleSupreme);
   const confidence = commander?.confidence ?? 70;
   const activeAlerts = signals.alertCount;
   const watchedTokens = signals.watchlistCount + signals.trackedCount;
   const topSentinel = sentinels
-    .filter((s) => !s.isOracleSupreme)
+    .filter((s) => !s.isCommander && !s.isOracleSupreme)
     .sort((a, b) => b.level - a.level || b.confidence - a.confidence)[0];
   const leadName = topSentinel
     ? topSentinel.name.replace(/^Sentinel /, "")
     : "your Sentinels";
 
   if (watchedTokens === 0 && activeAlerts === 0) {
-    return `${commanderName} is online and waiting. Add tokens to your watchlist — ${commanderName} will command your Sentinels to watch them and brief you here.`;
+    return `${commanderName} is online. Add tokens to your watchlist — ${commanderName} will command Aegis, Pulse, Leviathan, and Cipher, then brief you here.`;
   }
 
   if (activeAlerts === 0) {
-    return `${commanderName} is monitoring ${watchedTokens} token${watchedTokens === 1 ? "" : "s"} for you. Nothing urgent right now — ${leadName} is leading the team at level ${topSentinel?.level ?? 1}. ${commanderName} is ${confidence}% confident in the read.`;
+    return `${commanderName} is monitoring ${watchedTokens} token${watchedTokens === 1 ? "" : "s"}. Nothing urgent — ${leadName} leads at level ${topSentinel?.level ?? 1}. Read: ${confidence}% confidence.`;
   }
 
-  return `${commanderName} just reviewed ${activeAlerts} alert${activeAlerts === 1 ? "" : "s"} across ${watchedTokens} watched token${watchedTokens === 1 ? "" : "s"}. ${leadName} is on point at level ${topSentinel?.level ?? 1}. ${commanderName}'s call: ${confidence}% confidence — see your briefing below.`;
+  return `${commanderName} reviewed ${activeAlerts} alert${activeAlerts === 1 ? "" : "s"} across ${watchedTokens} watched token${watchedTokens === 1 ? "" : "s"}. ${leadName} on point at level ${topSentinel?.level ?? 1}. ${commanderName}'s call: ${confidence}% confidence — briefing below.`;
 }
 
 export function buildOracleSupremeDailyReport(
@@ -189,7 +205,7 @@ export function buildOracleSupremeDailyReport(
   const systemHealth = Math.min(99, Math.max(55, averageConfidence + signals.trackedCount * 2));
   const oversightGrade = systemHealth >= 86 ? "A" : systemHealth >= 72 ? "B" : "C";
   const topSentinel = sentinels
-    .filter((s) => !s.isOracleSupreme)
+    .filter((s) => !s.isCommander && !s.isOracleSupreme)
     .sort((a, b) => b.level - a.level || b.confidence - a.confidence)[0];
   const leadName = topSentinel ? topSentinel.name.replace(/^Sentinel /, "") : "your team";
 
@@ -199,28 +215,28 @@ export function buildOracleSupremeDailyReport(
     oversightGrade,
     headline:
       watchedAssets > 0
-        ? `Your Sentinel team is graded ${oversightGrade} today — ${commanderName} is holding the line above them.`
-        : `${commanderName} is ready — add watchlist tokens so ${commanderName} has live data to command with.`,
+        ? `Sentinel grid graded ${oversightGrade} today — ${commanderName} holds command above the lanes.`
+        : `${commanderName} is ready — add watchlist tokens so the lanes have live targets.`,
     daySummary:
       watchedAssets > 0
-        ? `${commanderName} pulled together ${watchedAssets} watched token${watchedAssets === 1 ? "" : "s"}, ${activeAlerts} alert${activeAlerts === 1 ? "" : "s"}, and ${signals.reportCount} community report${signals.reportCount === 1 ? "" : "s"}. This briefing is for you only — the Sentinels don't see ${commanderName}'s full notes.`
-        : `SyNexusPro gives you ${commanderName}'s private commander briefings: what ${commanderName} sees, what ${commanderName} recommends, and which Sentinel ${commanderName} sends first.`,
+        ? `${commanderName} fused ${watchedAssets} watched token${watchedAssets === 1 ? "" : "s"}, ${activeAlerts} alert${activeAlerts === 1 ? "" : "s"}, and ${signals.reportCount} community report${signals.reportCount === 1 ? "" : "s"} into your private briefing.`
+        : `SyNexusPro unlocks ${commanderName}'s commander briefings: lane orders, fused reads, and which Sentinel moves first.`,
     priorities: [
       activeAlerts > 0
-        ? `Review ${activeAlerts} live alert${activeAlerts === 1 ? "" : "s"} — ${commanderName} flagged them for you, not for the public feed.`
-        : `Add tokens to your watchlist so ${commanderName} can assign Aegis, Pulse, Leviathan, and Cipher to real targets.`,
+        ? `Review ${activeAlerts} live alert${activeAlerts === 1 ? "" : "s"} — ${commanderName} flagged them from the lane grid.`
+        : `Add watchlist tokens so Aegis, Pulse, Leviathan, and Cipher scan real targets.`,
       signals.reportCount > 0
-        ? "Keep submitting reports on shady tokens — your commander learns from every one and retrains the Sentinels."
-        : "Tap Report on suspicious tokens. Your commander reads those first, then decides which Sentinel to sharpen.",
+        ? "Keep submitting reports — Cipher weights community intel into fused confidence."
+        : "Report suspicious tokens. Aegis and Cipher read those first.",
       topSentinel
-        ? `${leadName} is your strongest lane right now (level ${topSentinel.level}). ${commanderName} still outranks them — ask for a fresh brief anytime.`
-        : "Build your watchlist — your commander establishes a baseline, then the Sentinels execute.",
+        ? `${leadName} is your strongest lane (level ${topSentinel.level}). Ask ${commanderName} for a fresh fused read anytime.`
+        : "Build your watchlist — the commander establishes baseline, then the lanes execute.",
     ],
     closingNote:
       mood === "High Guard"
-        ? `${commanderName}'s advice: play defense. ${commanderName} is tracking escalation for you — keep alerts on until the lane clears.`
+        ? `${commanderName}: play defense. Lanes are tracking escalation — keep alerts on until Cipher clears the stack.`
         : mood === "Alert"
-          ? "Something moved. Double-check before acting — your commander won't spam the Sentinels until you're ready."
-          : `Markets look calm from ${commanderName}'s chair — good time to grow your watchlist. ${commanderName} will ping you the second that changes.`,
+          ? "Something moved across lanes. Verify before acting — your commander won't spam orders until you're ready."
+          : `Markets look calm from ${commanderName}'s chair — good time to grow the watchlist.`,
   };
 }

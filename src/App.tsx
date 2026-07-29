@@ -43,6 +43,9 @@ const Pricing = lazy(() => import("./pages/Pricing").then((m) => ({ default: m.P
 const RefundPolicy = lazy(() =>
   import("./pages/RefundPolicy").then((m) => ({ default: m.RefundPolicy })),
 );
+const WalletComingSoon = lazy(() =>
+  import("./pages/WalletComingSoon").then((m) => ({ default: m.WalletComingSoon })),
+);
 
 function RouteFallback() {
   return (
@@ -73,6 +76,7 @@ export default function App() {
             <Route path="refund-policy" element={<RefundPolicy />} />
             <Route path="terms" element={<Terms />} />
             <Route path="privacy" element={<Privacy />} />
+            <Route path="wallet-terms" element={<WalletComingSoon />} />
             <Route path="liquidity-treasury" element={<LiquidityTreasury />} />
             <Route path="marketing-command" element={<MarketingCommand />} />
             <Route path="analytics" element={<SiteAnalytics />} />

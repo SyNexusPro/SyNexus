@@ -2,7 +2,7 @@ import type { Token } from "../data/tokens";
 import { synexusRiskBandLabel } from "../data/tokens";
 import { resolveInternalCommanderPersona } from "./titanBotName";
 import { answerAegisSecurityPrivacyQuestion } from "../config/sentinelAegis";
-import type { SentinelLaneId } from "./sentinelIntel";
+import { SENTINEL_LANE_IDS, sentinelLaneLabel, type SentinelLaneId } from "../config/sentinels";
 import { isInstantTitanPath } from "./titanRouting";
 import { appendTitanDecisionFooter } from "./titanGuardrails";
 import { rememberFavoriteSymbol } from "./titanMemory";
@@ -91,7 +91,7 @@ function pickFocus(pool: Token[], lane: SentinelLaneId): Token | null {
       );
     case "pulse":
       return [...pool].sort((a, b) => Math.abs(b.change24hPct) - Math.abs(a.change24hPct))[0] ?? null;
-    case "titan":
+    case "leviathan":
       return [...pool].sort((a, b) => (b.topWalletPct ?? 0) - (a.topWalletPct ?? 0))[0] ?? null;
     case "cipher":
       return (
@@ -119,7 +119,7 @@ export function buildOracleSentinelDirective(
     const standby: Record<SentinelLaneId, string> = {
       aegis: "Hold security & privacy watch — token scams, contracts, and operator-safe posture.",
       pulse: "Hold momentum filter — ignore sub-8% moves until volume confirms.",
-      titan: "Hold whale lane — report any top-wallet shift above 3 points.",
+      leviathan: "Hold whale lane — report any top-wallet shift above 3 points.",
       cipher: "Hold pattern fusion — escalate when two lanes agree on one symbol.",
     };
     return { lane, order: standby[lane], targetSymbol: null };
@@ -139,17 +139,17 @@ export function buildOracleSentinelDirective(
         targetSymbol: sym,
         order: `Track ${sym} breakout lane — ${formatPct(token.change24hPct)} 24h must match volume ${formatUsd(token.volume24hUsd)} or discard as noise.`,
       };
-    case "titan":
+    case "leviathan":
       return {
         lane,
         targetSymbol: sym,
-        order: `Shadow ${sym} wallets — top holder ${token.topWalletPct ?? "?"}%, alert Oracle on concentration spikes.`,
+        order: `Shadow ${sym} wallets — top holder ${token.topWalletPct ?? "?"}%, alert commander on concentration spikes.`,
       };
     case "cipher":
       return {
         lane,
         targetSymbol: sym,
-        order: `Fuse ${sym} signals — cross-check risk, flow, and whales; report fused confidence to Oracle.`,
+        order: `Fuse ${sym} signals — cross-check risk, flow, and whales; report fused confidence to commander.`,
       };
     default:
       return { lane, order: `Scan ${poolSize} pairs`, targetSymbol: sym };
@@ -169,7 +169,7 @@ export function buildSentinelReportToOracle(
   if (!token) {
     return {
       lane,
-      report: "All quiet — standing by for Oracle's next order.",
+      report: "All quiet — standing by for the commander's next order.",
       latencyMs: baseLatency,
       precision,
     };
@@ -182,33 +182,33 @@ export function buildSentinelReportToOracle(
     case "aegis":
       report =
         token.guardianRisk === "SAFE"
-          ? `Report to Oracle: ${sym} passed contract/liquidity lane — no rug signals in ${baseLatency}ms.`
-          : `Report to Oracle: ${sym} ${synexusRiskBandLabel(token.guardianRisk)} — ${token.riskReasons?.[0] ?? "risk elevated"}.`;
+          ? `Aegis → commander: ${sym} passed contract/liquidity lane — no rug signals in ${baseLatency}ms.`
+          : `Aegis → commander: ${sym} ${synexusRiskBandLabel(token.guardianRisk)} — ${token.riskReasons?.[0] ?? "risk elevated"}.`;
       break;
     case "pulse":
       report =
         Math.abs(token.change24hPct) >= 10
-          ? `Report to Oracle: ${sym} momentum real at ${formatPct(token.change24hPct)} — volume supports the move.`
-          : `Report to Oracle: ${sym} move muted (${formatPct(token.change24hPct)}) — likely noise, not a chase.`;
+          ? `Pulse → commander: ${sym} momentum real at ${formatPct(token.change24hPct)} — volume supports the move.`
+          : `Pulse → commander: ${sym} move muted (${formatPct(token.change24hPct)}) — likely noise, not a chase.`;
       break;
-    case "titan":
+    case "leviathan":
       report =
         (token.topWalletPct ?? 0) >= 22
-          ? `Report to Oracle: ${sym} whale control ${token.topWalletPct}% — exit risk elevated.`
-          : `Report to Oracle: ${sym} wallets dispersed — no whale squeeze detected.`;
+          ? `Leviathan → commander: ${sym} whale control ${token.topWalletPct}% — exit risk elevated.`
+          : `Leviathan → commander: ${sym} wallets dispersed — no whale squeeze detected.`;
       break;
     case "cipher":
-      report = `Report to Oracle: ${sym} pattern read fused — score ${token.riskScore ?? "?"} with ${synexusRiskBandLabel(token.guardianRisk)} alignment. Directive acknowledged.`;
+      report = `Cipher → commander: ${sym} pattern fused — score ${token.riskScore ?? "?"} with ${synexusRiskBandLabel(token.guardianRisk)} alignment.`;
       break;
     default:
-      report = `Report to Oracle: ${sym} scanned.`;
+      report = `${sentinelLaneLabel(lane)} → commander: ${sym} scanned.`;
   }
 
   return { lane, report, latencyMs: baseLatency, precision };
 }
 
 export function buildAllOracleDirectives(tokens: Token[]): Record<SentinelLaneId, OracleSentinelDirective> {
-  const lanes: SentinelLaneId[] = ["aegis", "pulse", "titan", "cipher"];
+  const lanes: SentinelLaneId[] = [...SENTINEL_LANE_IDS];
   const out = {} as Record<SentinelLaneId, OracleSentinelDirective>;
   for (const lane of lanes) {
     out[lane] = buildOracleSentinelDirective(lane, pickFocus(tokens, lane), tokens.length);
@@ -268,7 +268,7 @@ export function oracleRespondToMessage(text: string, ctx: OracleMessageContext):
       `Sentinel status — ${titanBotName}:`,
       `Aegis → ${dirs.aegis.order}`,
       `Pulse → ${dirs.pulse.order}`,
-      `Leviathan → ${dirs.titan.order}`,
+      `Leviathan → ${dirs.leviathan.order}`,
       `Cipher → ${dirs.cipher.order}`,
     ].join("\n");
   }

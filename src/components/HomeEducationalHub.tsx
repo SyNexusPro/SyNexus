@@ -19,10 +19,10 @@ const FEATURES = [
     linkLabel: "How scoring works →",
   },
   {
-    id: "titan",
+    id: "commander",
     title: "Titan AI commander",
     body:
-      "Ask plain-language questions about tokens, Sentinel reads, and market context. Titan synthesizes intel — it does not execute trades or hold your keys.",
+      "Your private briefing officer — fuses Aegis, Pulse, Leviathan, and Cipher into plain-English answers. Renameable; default persona is encoded server-side.",
     link: "/blog/using-titan-ai-for-crypto-research",
     linkLabel: "Using Titan safely →",
   },

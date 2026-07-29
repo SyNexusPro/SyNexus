@@ -1,8 +1,10 @@
+import type { SentinelLaneId } from "../config/sentinels";
+
 const sentinelIdleMessages = [
   "Sentinels are analyzing the market.",
-  "The SyNexus is scanning risk, momentum, whales, and patterns.",
-  "Sentinels are observing liquidity flow across The SyNexus.",
-  "Sentinels are tracking volume spikes in real time.",
+  "The SyNexus grid is scanning security, momentum, whales, and fused patterns.",
+  "Aegis, Pulse, Leviathan, and Cipher are observing liquidity flow across The SyNexus.",
+  "Sentinels are tracking volume spikes and holder concentration in real time.",
 ];
 
 /** User-facing risk copy for Sentinel / SyNexus intelligence. */
@@ -21,7 +23,7 @@ export function getSentinelMessage(status: string): string {
 }
 
 const laneMessages: Record<
-  "aegis" | "pulse" | "titan" | "cipher",
+  SentinelLaneId,
   { safe: string; warning: string; danger: string }
 > = {
   aegis: {
@@ -30,32 +32,38 @@ const laneMessages: Record<
     danger: "Aegis: high-risk security signals — treat as scam/rug until verified.",
   },
   pulse: {
-    safe: "Pulse: no abnormal momentum spikes right now.",
-    warning: "Pulse: volume moving fast — could be real or a trap.",
-    danger: "Pulse: violent price action — verify before chasing.",
+    safe: "Pulse: momentum integrity normal — no violent volume spikes.",
+    warning: "Pulse: volume moving fast — confirm demand before chasing.",
+    danger: "Pulse: violent price action with thin support — verify before entry.",
   },
-  titan: {
-    safe: "Titan: whale lanes quiet on this token.",
-    warning: "Titan: wallet concentration shifting.",
-    danger: "Titan: heavy wallet control — exit risk elevated.",
+  leviathan: {
+    safe: "Leviathan: whale lanes quiet on this token.",
+    warning: "Leviathan: holder concentration shifting — watch for distribution.",
+    danger: "Leviathan: heavy wallet control — exit liquidity risk elevated.",
   },
   cipher: {
     safe: "Cipher: weak signals don't stack into a pattern yet.",
     warning: "Cipher: two lanes starting to agree — watch closely.",
-    danger: "Cipher: multi-lane pattern match — Oracle should escalate.",
+    danger: "Cipher: multi-lane pattern match — commander should escalate.",
   },
 };
 
-export function getSentinelLaneMessage(
-  lane: "aegis" | "pulse" | "titan" | "cipher",
-  status: string,
-): string {
+export function getSentinelLaneMessage(lane: SentinelLaneId, status: string): string {
   const normalized = status.toLowerCase() as "safe" | "warning" | "danger";
   const copy = laneMessages[lane];
   if (normalized === "safe" || normalized === "warning" || normalized === "danger") {
     return copy[normalized];
   }
   return getSentinelMessage(status);
+}
+
+/** Accept legacy "titan" lane id (pre-v2 whale lane naming). */
+export function getSentinelLaneMessageLegacy(
+  lane: SentinelLaneId | "titan",
+  status: string,
+): string {
+  const id = lane === "titan" ? "leviathan" : lane;
+  return getSentinelLaneMessage(id, status);
 }
 
 export function getSentinelIdleMessage(seed: number): string {
