@@ -8,5 +8,6 @@ dist
 android/keystore.properties
 android/**/*.jks
 android/**/*.keystore
+android/KEYSTORE-BACKUP.txt
 .vercel
 .env*

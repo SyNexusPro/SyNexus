@@ -72,6 +72,8 @@ npm run android:apk
 - Cold start after `cap sync`; exercise auth, Square checkout, Titan chat, offline errors (app needs network for prod WebView).
 - Confirm **no cleartext** requirements for prod APIs you call (HTTPS only).
 
+**Store listing copy, Data safety answers, and screenshot captions:** [GOOGLE_PLAY_STORE_LISTING.md](./GOOGLE_PLAY_STORE_LISTING.md)
+
 ## Troubleshooting Gradle
 
 Open `android/` in Android Studio → **Build > Generate Signed Bundle/APK** is an alternative to CLI if you prefer a GUI for the first signing flow.
