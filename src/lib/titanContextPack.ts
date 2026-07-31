@@ -10,6 +10,8 @@ import {
 } from "./oracleCryptoBrain";
 import { SENTINEL_LANE_IDS, sentinelLaneLabel } from "../config/sentinels";
 import { buildOperatorStrengthBrief } from "./titanOperatorBrief";
+import { buildTitanMoversBrief } from "./titanMoversAnswer";
+import { isTopMoversQuestion } from "./moverTimeframes";
 
 function formatUsd(value: number | undefined): string {
   if (value == null || !Number.isFinite(value)) return "—";
@@ -30,11 +32,13 @@ export type TitanIntent =
   | "strategy"
   | "life_counsel"
   | "explain"
+  | "market_movers"
   | "general";
 
 /** Lightweight intent tag so the LLM picks the right reasoning mode. */
 export function classifyTitanIntent(text: string): TitanIntent {
   const lower = text.toLowerCase().trim();
+  if (isTopMoversQuestion(text)) return "market_movers";
   if (/should i (buy|sell|ape|exit|hold)|worth (buying|it)|good entry|take profit|cut loss/.test(lower)) {
     return "trade_decision";
   }
@@ -157,6 +161,7 @@ export type TitanChatPayload = {
   watchlistCount: number;
   feedSource: "live" | "mock";
   marketBrief: string;
+  moversBrief?: string | null;
   operatorBrief?: string | null;
   sentinelBrief?: string | null;
   watchlistBrief?: string | null;
@@ -181,6 +186,7 @@ export function buildTitanChatPayload(
     watchlistCount: ctx.watchlistCount,
     feedSource: ctx.feedSource,
     marketBrief: buildTitanMarketBrief(ctx.tokens),
+    moversBrief: buildTitanMoversBrief(ctx.moversBoard),
     operatorBrief: buildOperatorStrengthBrief(ctx),
     sentinelBrief: buildTitanSentinelBrief(ctx.tokens),
     watchlistBrief: buildTitanWatchlistBrief(ctx.watchlistSymbols ?? [], ctx.tokens),

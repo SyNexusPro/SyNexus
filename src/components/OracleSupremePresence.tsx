@@ -15,6 +15,7 @@ import {
   type OracleConversationContext,
 } from "../lib/oracleSupremeConversation";
 import { useOracleMarketFeed } from "../lib/useOracleMarketFeed";
+import { useSolanaMoversBoard } from "../lib/useSolanaMoversBoard";
 import { isSynexusBootComplete, subscribeSynexusBootComplete } from "../lib/synexusBootComplete";
 import { OracleSupremeChat } from "./OracleSupremeChat";
 import { SynexusSymbolMark } from "./SynexusSymbolMark";
@@ -40,6 +41,7 @@ export function OracleSupremePresence() {
     normalizePlan(localStorage.getItem(PLAN_STORAGE_KEY)),
   );
   const { tokens, feedSource } = useOracleMarketFeed(plan === "PRO" ? 8_000 : 10_000);
+  const { board: moversBoard } = useSolanaMoversBoard(plan === "PRO" ? 60_000 : 90_000);
 
   useEffect(() => subscribeSynexusBootComplete(() => setBootReady(true)), []);
 
@@ -139,8 +141,9 @@ export function OracleSupremePresence() {
       daysSinceLastVisit: readDaysSinceLastVisit(),
       tokens,
       feedSource,
+      moversBoard,
     }),
-    [alertCount, feedSource, operatorName, plan, commanderLabel, tokens, watchlistCount, watchlistSymbols],
+    [alertCount, feedSource, operatorName, plan, commanderLabel, tokens, watchlistCount, watchlistSymbols, moversBoard],
   );
 
   return (

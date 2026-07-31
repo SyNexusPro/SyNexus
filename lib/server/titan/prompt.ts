@@ -23,6 +23,7 @@ type TitanIntent =
   | "strategy"
   | "life_counsel"
   | "explain"
+  | "market_movers"
   | "general";
 
 const INTENT_GUIDANCE: Record<TitanIntent, string> = {
@@ -38,6 +39,8 @@ const INTENT_GUIDANCE: Record<TitanIntent, string> = {
     "Life counsel mode: listen first, then give grounded advice. Tie back to clarity and decision-making; only mention markets if relevant.",
   explain:
     "Explain mode: teach clearly — cause, effect, and what the host should watch for next. Use plain language, one analogy max.",
+  market_movers:
+    "Market movers mode: answer top gainers/losers questions with the ranked movers brief below. Match the host's timeframe (5m, 24h, week, month, year). List symbols, % change, price, liquidity. Warn about thin liquidity and rugs on pumped names.",
   general:
     "General mode: infer what they really need, answer directly, then offer one sharp follow-up if useful.",
 };
@@ -50,6 +53,7 @@ export type TitanPromptInput = {
   watchlistCount: number;
   feedSource: "live" | "mock";
   marketBrief: string;
+  moversBrief?: string | null;
   operatorBrief?: string | null;
   sentinelBrief?: string | null;
   watchlistBrief?: string | null;
@@ -115,6 +119,7 @@ export function buildTitanSystemPrompt(input: TitanPromptInput): string {
     "",
     "Live market brief:",
     input.marketBrief,
+    input.moversBrief ? `\nRanked movers (5m → 1y — use for top gainer/loser questions):\n${input.moversBrief}` : "",
     input.tokenIntel ? `\nToken focus:\n${input.tokenIntel}` : "",
   ]
     .filter(Boolean)

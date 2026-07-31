@@ -4,6 +4,7 @@ import { hasTitanMemoryConsent, titanMemoryContextLine } from "./titanMemory";
 import { softenTitanResponse } from "./titanGuardrails";
 import { oracleRespondToMessage } from "./oracleCryptoBrain";
 import type { Token } from "../data/tokens";
+import type { SolanaMoversBoard } from "../services/marketDataService";
 
 export type TimeBand = "morning" | "afternoon" | "evening" | "night";
 
@@ -20,6 +21,8 @@ export type OracleConversationContext = {
   daysSinceLastVisit: number;
   tokens: Token[];
   feedSource: "live" | "mock";
+  /** Pre-fetched multi-timeframe gainers/losers for Titan instant answers. */
+  moversBoard?: SolanaMoversBoard | null;
 };
 
 export type ConversationTurn = {

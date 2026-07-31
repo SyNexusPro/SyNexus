@@ -55,6 +55,7 @@
     "hype:retract": "npm run hype:retract --prefix marketing-ai",
     "aegis:check": "node scripts/aegis-check.mjs",
     "ga4:check": "npm run build && node scripts/smoke-ga4.mjs",
+    "birdeye:check": "node scripts/smoke-birdeye.mjs",
     "owner:generate": "node scripts/generate-owner-code.mjs"
   },
   "dependencies": {

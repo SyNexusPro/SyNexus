@@ -1,3 +1,6 @@
+import { isTopMoversQuestion } from "./moverTimeframes";
+import { fetchSolanaMoversBoard } from "../services/marketDataService";
+import { formatTopMoversAnswer } from "./titanMoversAnswer";
 import { softenTitanResponse } from "./titanGuardrails";
 import {
   buildTitanChatPayload,
@@ -99,6 +102,12 @@ export async function respondToTitanMessage(
 ): Promise<string> {
   const trimmed = text.trim();
   if (!trimmed) return "What's on your mind? I'm ready.";
+
+  if (isTopMoversQuestion(trimmed)) {
+    const board = ctx.moversBoard ?? (await fetchSolanaMoversBoard());
+    const moversAnswer = formatTopMoversAnswer(trimmed, board, ctx.operatorName);
+    if (moversAnswer) return moversAnswer;
+  }
 
   if (isInstantTitanPath(trimmed)) {
     const instant = oracleRespondToMessage(trimmed, ctx);

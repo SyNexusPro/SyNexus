@@ -94,6 +94,10 @@ function validateBody(raw: unknown): TitanChatRequestBody | null {
   const feedSource = body.feedSource === "mock" ? "mock" : "live";
   const marketBrief =
     typeof body.marketBrief === "string" ? body.marketBrief.slice(0, 8000) : "No market data.";
+  const moversBrief =
+    typeof body.moversBrief === "string" && body.moversBrief.trim()
+      ? body.moversBrief.trim().slice(0, 4000)
+      : null;
   const tokenIntel =
     typeof body.tokenIntel === "string" && body.tokenIntel.trim()
       ? body.tokenIntel.trim().slice(0, 2000)
@@ -121,6 +125,7 @@ function validateBody(raw: unknown): TitanChatRequestBody | null {
     "strategy",
     "life_counsel",
     "explain",
+    "market_movers",
     "general",
   ]);
   const intentHint =
@@ -167,6 +172,7 @@ function validateBody(raw: unknown): TitanChatRequestBody | null {
     watchlistCount,
     feedSource,
     marketBrief,
+    moversBrief,
     operatorBrief,
     sentinelBrief,
     watchlistBrief,
