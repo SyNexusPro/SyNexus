@@ -40,8 +40,14 @@ export function OracleSupremePresence() {
   const [plan, setPlan] = useState<"FREE" | "PRO">(() =>
     normalizePlan(localStorage.getItem(PLAN_STORAGE_KEY)),
   );
-  const { tokens, feedSource } = useOracleMarketFeed(plan === "PRO" ? 8_000 : 10_000);
-  const { board: moversBoard } = useSolanaMoversBoard(plan === "PRO" ? 60_000 : 90_000);
+  const { tokens, feedSource } = useOracleMarketFeed({
+    enabled: expanded,
+    intervalMs: plan === "PRO" ? 15_000 : 20_000,
+  });
+  const { board: moversBoard } = useSolanaMoversBoard({
+    enabled: expanded,
+    intervalMs: 300_000,
+  });
 
   useEffect(() => subscribeSynexusBootComplete(() => setBootReady(true)), []);
 

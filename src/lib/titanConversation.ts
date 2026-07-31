@@ -1,6 +1,6 @@
-import { isTopMoversQuestion } from "./moverTimeframes";
-import { fetchSolanaMoversBoard } from "../services/marketDataService";
-import { formatTopMoversAnswer } from "./titanMoversAnswer";
+import { isTopMoversQuestion, parseMoverTimeframeFromText } from "./moverTimeframes";
+import { fetchSolanaTopMovers } from "../services/marketDataService";
+import { formatTopMoversAnswerFromResult } from "./titanMoversAnswer";
 import { softenTitanResponse } from "./titanGuardrails";
 import {
   buildTitanChatPayload,
@@ -104,8 +104,13 @@ export async function respondToTitanMessage(
   if (!trimmed) return "What's on your mind? I'm ready.";
 
   if (isTopMoversQuestion(trimmed)) {
-    const board = ctx.moversBoard ?? (await fetchSolanaMoversBoard());
-    const moversAnswer = formatTopMoversAnswer(trimmed, board, ctx.operatorName);
+    const timeframe = parseMoverTimeframeFromText(trimmed);
+    const cached = ctx.moversBoard?.[timeframe];
+    const slice =
+      cached && cached.source === "live" && cached.gainers.length
+        ? cached
+        : await fetchSolanaTopMovers(timeframe);
+    const moversAnswer = formatTopMoversAnswerFromResult(trimmed, slice, ctx.operatorName);
     if (moversAnswer) return moversAnswer;
   }
 

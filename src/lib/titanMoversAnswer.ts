@@ -35,6 +35,16 @@ function formatMoverLine(mover: TokenMover, index: number): string {
   return `${index + 1}. ${mover.symbol} (${mover.name}) — ${formatPct(mover.changePct)} · ${formatUsd(mover.priceUsd)}${liq}`;
 }
 
+export function formatTopMoversAnswerFromResult(
+  text: string,
+  slice: SolanaMoversResult,
+  operatorName: string,
+): string {
+  const timeframe = parseMoverTimeframeFromText(text);
+  const board = { [timeframe]: slice } as SolanaMoversBoard;
+  return formatTopMoversAnswer(text, board, operatorName);
+}
+
 export function formatTopMoversAnswer(
   text: string,
   board: SolanaMoversBoard,

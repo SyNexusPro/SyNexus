@@ -16,3 +16,16 @@ export function writeMoversCache<T>(key: string, value: T, ttlMs: number): T {
   store.set(key, { value, expiresAt: Date.now() + ttlMs });
   return value;
 }
+
+const inFlight = new Map<string, Promise<unknown>>();
+
+/** Collapse duplicate concurrent fetches (prevents API storms / UI freezes). */
+export function dedupeInFlight<T>(key: string, fn: () => Promise<T>): Promise<T> {
+  const hit = inFlight.get(key);
+  if (hit) return hit as Promise<T>;
+  const promise = fn().finally(() => {
+    inFlight.delete(key);
+  });
+  inFlight.set(key, promise);
+  return promise;
+}

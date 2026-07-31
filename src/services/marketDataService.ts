@@ -2,9 +2,8 @@ import type { DeepPartial, GuardianEngineConfig } from "../data/guardianEngine";
 import { buildSampleTokens, buildTokenFromPartial, type Token } from "../data/tokens";
 import { SYN_MINT } from "../config/synToken";
 import { guardApiFetch, guardTokenScan } from "../lib/securityBot";
-import { readMoversCache, writeMoversCache } from "../lib/moversCache";
+import { dedupeInFlight, readMoversCache, writeMoversCache } from "../lib/moversCache";
 import type { MoverTimeframe } from "../lib/moverTimeframes";
-import { MOVER_TIMEFRAMES } from "../lib/moverTimeframes";
 import { loadGuardianConfigOverride } from "./guardianConfigService";
 
 type TokenPatch = {
@@ -60,7 +59,9 @@ export type Solana5mMoversResult = {
 const MIN_MOVER_LIQUIDITY_USD = 3_000;
 const MOVER_POOL_SIZE = 30;
 const MOVER_LIST_SIZE = 5;
-const HISTORY_MOVER_POOL = 12;
+const HISTORY_MOVER_POOL = 6;
+const BIRDEYE_CONCURRENCY = 2;
+const BIRDEYE_STAGGER_MS = 400;
 
 const MOVER_CACHE_TTL_MS: Record<MoverTimeframe, number> = {
   "5m": 60_000,
@@ -616,11 +617,32 @@ async function fetchDexPairsBatch(addresses: string[]): Promise<DexPair[]> {
 }
 
 async function fetchDexMoverPool(): Promise<{ pairs: DexPair[]; source: FeedSource }> {
-  const addresses = await fetchDexBoostAddresses();
-  if (!addresses.length) throw new Error("No boosted Solana tokens");
-  const pairs = await fetchDexPairsBatch(addresses);
-  if (!pairs.length) throw new Error("DexScreener returned no pairs");
-  return { pairs, source: "live" };
+  return dedupeInFlight("dex:mover-pool", async () => {
+    const addresses = await fetchDexBoostAddresses();
+    if (!addresses.length) throw new Error("No boosted Solana tokens");
+    const pairs = await fetchDexPairsBatch(addresses);
+    if (!pairs.length) throw new Error("DexScreener returned no pairs");
+    return { pairs, source: "live" as FeedSource };
+  });
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function mapWithConcurrency<T>(
+  items: T[],
+  concurrency: number,
+  fn: (item: T, index: number) => Promise<void>,
+): Promise<void> {
+  let index = 0;
+  const workers = Array.from({ length: Math.min(concurrency, items.length) }, async () => {
+    while (index < items.length) {
+      const i = index++;
+      await fn(items[i]!, i);
+    }
+  });
+  await Promise.all(workers);
 }
 
 async function fetchPeriodChangePct(mintAddress: string, seconds: number, type: string): Promise<number | null> {
@@ -668,13 +690,12 @@ async function fetchHistoricalMovers(
     .slice(0, HISTORY_MOVER_POOL);
 
   const movers: TokenMover[] = [];
-  await Promise.all(
-    candidates.map(async (base) => {
-      const changePct = await fetchPeriodChangePct(base.mintAddress, config.seconds, config.type);
-      if (changePct == null || !Number.isFinite(changePct)) return;
-      movers.push({ ...base, changePct });
-    }),
-  );
+  await mapWithConcurrency(candidates, BIRDEYE_CONCURRENCY, async (base, index) => {
+    if (index > 0) await sleep(BIRDEYE_STAGGER_MS);
+    const changePct = await fetchPeriodChangePct(base.mintAddress, config.seconds, config.type);
+    if (changePct == null || !Number.isFinite(changePct)) return;
+    movers.push({ ...base, changePct });
+  });
 
   return movers;
 }
@@ -684,50 +705,88 @@ export async function fetchSolanaTopMovers(timeframe: MoverTimeframe): Promise<S
   const cached = readMoversCache<SolanaMoversResult>(cacheKey);
   if (cached) return cached;
 
-  const apiGuard = guardApiFetch(`dex-movers-${timeframe}`);
-  if (!apiGuard.allowed) {
-    return writeMoversCache(cacheKey, mockSolanaMovers(timeframe), MOVER_CACHE_TTL_MS[timeframe]);
-  }
+  return dedupeInFlight(cacheKey, async () => {
+    const apiGuard = guardApiFetch(`dex-movers-${timeframe}`);
+    if (!apiGuard.allowed) {
+      return writeMoversCache(cacheKey, mockSolanaMovers(timeframe), MOVER_CACHE_TTL_MS[timeframe]);
+    }
 
-  try {
-    const { pairs } = await fetchDexMoverPool();
+    try {
+      const { pairs } = await fetchDexMoverPool();
 
-    if (timeframe === "5m" || timeframe === "24h") {
-      const readChange =
-        timeframe === "5m"
-          ? (pair: DexPair) => toFiniteNumber(pair.priceChange?.m5)
-          : (pair: DexPair) => toFiniteNumber(pair.priceChange?.h24);
-      const movers = pickBestMoverPairs(pairs, readChange);
-      if (!movers.length) throw new Error("No movers passed liquidity filter");
+      if (timeframe === "5m" || timeframe === "24h") {
+        const readChange =
+          timeframe === "5m"
+            ? (pair: DexPair) => toFiniteNumber(pair.priceChange?.m5)
+            : (pair: DexPair) => toFiniteNumber(pair.priceChange?.h24);
+        const movers = pickBestMoverPairs(pairs, readChange);
+        if (!movers.length) throw new Error("No movers passed liquidity filter");
+        const ranked = rankMovers(movers);
+        return writeMoversCache(
+          cacheKey,
+          { timeframe, ...ranked, source: "live", updatedAt: Date.now() },
+          MOVER_CACHE_TTL_MS[timeframe],
+        );
+      }
+
+      const movers = await fetchHistoricalMovers(pairs, timeframe);
+      if (!movers.length) throw new Error("No historical movers");
       const ranked = rankMovers(movers);
       return writeMoversCache(
         cacheKey,
         { timeframe, ...ranked, source: "live", updatedAt: Date.now() },
         MOVER_CACHE_TTL_MS[timeframe],
       );
+    } catch {
+      return writeMoversCache(cacheKey, mockSolanaMovers(timeframe), MOVER_CACHE_TTL_MS[timeframe]);
     }
+  });
+}
 
-    const movers = await fetchHistoricalMovers(pairs, timeframe);
-    if (!movers.length) throw new Error("No historical movers");
-    const ranked = rankMovers(movers);
-    return writeMoversCache(
-      cacheKey,
-      { timeframe, ...ranked, source: "live", updatedAt: Date.now() },
-      MOVER_CACHE_TTL_MS[timeframe],
-    );
-  } catch {
-    return writeMoversCache(cacheKey, mockSolanaMovers(timeframe), MOVER_CACHE_TTL_MS[timeframe]);
-  }
+function buildBoardFromCaches(): SolanaMoversBoard {
+  return {
+    "5m": readMoversCache("movers:5m") ?? mockSolanaMovers("5m"),
+    "24h": readMoversCache("movers:24h") ?? mockSolanaMovers("24h"),
+    "7d": readMoversCache("movers:7d") ?? mockSolanaMovers("7d"),
+    "30d": readMoversCache("movers:30d") ?? mockSolanaMovers("30d"),
+    "365d": readMoversCache("movers:365d") ?? mockSolanaMovers("365d"),
+  };
+}
+
+/** Load week/month/year movers in the background — never blocks UI. */
+function hydrateHistoricalMoversBoard(): void {
+  void dedupeInFlight("movers:hydrate", async () => {
+    for (const timeframe of ["7d", "30d", "365d"] as const) {
+      if (readMoversCache(`movers:${timeframe}`)) continue;
+      await fetchSolanaTopMovers(timeframe);
+      await sleep(1200);
+    }
+    writeMoversCache("movers:board", buildBoardFromCaches(), MOVER_CACHE_TTL_MS["7d"]);
+  });
 }
 
 export async function fetchSolanaMoversBoard(): Promise<SolanaMoversBoard> {
   const cached = readMoversCache<SolanaMoversBoard>("movers:board");
   if (cached) return cached;
 
-  const slices = await Promise.all(MOVER_TIMEFRAMES.map((timeframe) => fetchSolanaTopMovers(timeframe)));
-  const board = Object.fromEntries(slices.map((slice) => [slice.timeframe, slice])) as SolanaMoversBoard;
-  writeMoversCache("movers:board", board, 60_000);
-  return board;
+  return dedupeInFlight("movers:board", async () => {
+    const [fiveM, day] = await Promise.all([
+      fetchSolanaTopMovers("5m"),
+      fetchSolanaTopMovers("24h"),
+    ]);
+
+    const board: SolanaMoversBoard = {
+      "5m": fiveM,
+      "24h": day,
+      "7d": readMoversCache("movers:7d") ?? mockSolanaMovers("7d"),
+      "30d": readMoversCache("movers:30d") ?? mockSolanaMovers("30d"),
+      "365d": readMoversCache("movers:365d") ?? mockSolanaMovers("365d"),
+    };
+
+    writeMoversCache("movers:board", board, 120_000);
+    hydrateHistoricalMoversBoard();
+    return board;
+  });
 }
 
 export async function fetchSolana5mMovers(): Promise<Solana5mMoversResult> {

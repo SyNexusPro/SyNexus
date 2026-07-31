@@ -4,15 +4,25 @@ import {
   type SolanaMoversBoard,
 } from "../services/marketDataService";
 
-export function useSolanaMoversBoard(intervalMs = 90_000) {
+type Options = {
+  /** Only fetch when Titan chat is open — avoids Birdeye storms on every page. */
+  enabled?: boolean;
+  intervalMs?: number;
+};
+
+export function useSolanaMoversBoard(options: Options = {}) {
+  const { enabled = false, intervalMs = 300_000 } = options;
   const [board, setBoard] = useState<SolanaMoversBoard | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (!enabled) return;
+
     let cancelled = false;
 
     async function pull() {
       try {
+        setLoading(true);
         const next = await fetchSolanaMoversBoard();
         if (!cancelled) setBoard(next);
       } catch {
@@ -28,7 +38,7 @@ export function useSolanaMoversBoard(intervalMs = 90_000) {
       cancelled = true;
       window.clearInterval(id);
     };
-  }, [intervalMs]);
+  }, [enabled, intervalMs]);
 
   return { board, loading };
 }

@@ -2449,6 +2449,38 @@ a {
   color: #ff9e9e;
 }
 
+.route-error {
+  display: grid;
+  gap: 12px;
+  max-width: 36rem;
+  margin: 24px auto;
+  padding: 20px;
+}
+
+.route-error__title {
+  margin: 0;
+  font-weight: 600;
+}
+
+.route-error__detail {
+  margin: 0;
+  opacity: 0.85;
+}
+
+.route-error__reload {
+  justify-self: start;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: inherit;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+.route-error__reload:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
 .top-movers {
   margin-bottom: 16px;
 }

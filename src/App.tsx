@@ -3,15 +3,19 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "./components/AppShell";
 import { GoogleAnalytics } from "./components/GoogleAnalytics";
 import { SiteAnalyticsListener } from "./components/SiteAnalyticsListener";
+import { lazyWithRetry } from "./lib/lazyWithRetry";
 
-const HomeFeed = lazy(() =>
-  import("./pages/HomeFeed").then((m) => ({ default: m.HomeFeed })),
+const HomeFeed = lazyWithRetry(
+  () => import("./pages/HomeFeed").then((m) => ({ default: m.HomeFeed })),
+  "Home",
 );
-const EcosystemHub = lazy(() =>
-  import("./pages/EcosystemHub").then((m) => ({ default: m.EcosystemHub })),
+const EcosystemHub = lazyWithRetry(
+  () => import("./pages/EcosystemHub").then((m) => ({ default: m.EcosystemHub })),
+  "Hub",
 );
-const Pulse = lazy(() =>
-  import("./pages/Pulse").then((m) => ({ default: m.Pulse })),
+const Pulse = lazyWithRetry(
+  () => import("./pages/Pulse").then((m) => ({ default: m.Pulse })),
+  "Pulse",
 );
 const Terms = lazy(() =>
   import("./pages/Terms").then((m) => ({ default: m.Terms })),

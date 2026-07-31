@@ -1,6 +1,7 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { TitanShellProvider } from "../context/TitanShellContext";
 import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
+import { RouteErrorBoundary } from "./RouteErrorBoundary";
 import { BottomNav } from "./BottomNav";
 import { UIModeToggle } from "./UIModeToggle";
 import { TitanSheet } from "./TitanSheet";
@@ -24,7 +25,9 @@ export function AppShell() {
             <BeginnerModeCoach />
           </>
         ) : null}
-        <Outlet />
+        <RouteErrorBoundary label="page">
+          <Outlet />
+        </RouteErrorBoundary>
       </main>
       <TitanSheet />
       <footer className="app-footer">
