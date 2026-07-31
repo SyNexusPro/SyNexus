@@ -74,6 +74,16 @@ npm run android:apk
 
 **Store listing copy, Data safety answers, and screenshot captions:** [GOOGLE_PLAY_STORE_LISTING.md](./GOOGLE_PLAY_STORE_LISTING.md)
 
+## Troubleshooting (Windows / Play only)
+
+| Error | Meaning | Fix |
+|-------|---------|-----|
+| `android platform already exists` | You ran `npx cap add android` but `android/` is already in the repo | **Do not re-add.** Use `npm run cap:sync` or `npx cap sync android` |
+| `Xcode is not installed` from `npx cap doctor` | Normal on Windows — iOS is not needed for Google Play | Use `npm run android:doctor` instead |
+| `npm install @capacitor/core@capacitor/cli@...` ERESOLVE | Wrong syntax — `@` was used between package names | Capacitor is already installed. Run `npm install` only |
+| Gradle `SDK location not found` | Android SDK path missing | Create `android/local.properties` with `sdk.dir=...` (see local machine) |
+| Gradle `invalid source release: 21` | JDK too old | Use **JDK 21** (Temurin), not Android Studio's JDK 25 |
+
 ## Troubleshooting Gradle
 
 Open `android/` in Android Studio → **Build > Generate Signed Bundle/APK** is an alternative to CLI if you prefer a GUI for the first signing flow.

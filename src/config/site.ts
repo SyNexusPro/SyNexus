@@ -1,7 +1,7 @@
 /** Public site copy and contact defaults (override via env where noted). */
 
 export const PUBLIC_SITE_URL =
-  (import.meta.env.VITE_APP_ORIGIN as string | undefined)?.trim() || "https://synexus.pro";
+  (import.meta.env.VITE_APP_ORIGIN as string | undefined)?.trim() || "https://www.synexus.pro";
 
 export const OPERATOR_LABEL = "SyNexus and its operator(s)";
 

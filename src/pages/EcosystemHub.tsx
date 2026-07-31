@@ -2,11 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   AFFILIATE_TIERS,
-  HIVE_DOMAIN,
   STAKING_FEE_BPS,
   STAKING_STATUS,
-  STORAGE_KEYS,
   bpsToLabel,
+  buildAffiliateReferralUrl,
+  readStoredAffiliateHandle,
+  saveAffiliateHandle,
 } from "../config/ecosystem";
 import { SYN_IS_LIVE, SYN_PUMPFUN_URL, SYN_SYMBOL, SYN_TOKEN_ID } from "../config/synToken";
 
@@ -14,18 +15,15 @@ export function EcosystemHub() {
   const [params] = useSearchParams();
   const intent = params.get("intent");
   const symbol = params.get("symbol");
-  const [affiliateHandle, setAffiliateHandle] = useState(() =>
-    typeof localStorage !== "undefined" ? localStorage.getItem(STORAGE_KEYS.affiliateHandle) ?? "" : "",
-  );
+  const [affiliateHandle, setAffiliateHandle] = useState(() => readStoredAffiliateHandle());
   const [payoutHintOpen, setPayoutHintOpen] = useState(false);
 
   const payoutPortalUrl = (import.meta.env.VITE_AFFILIATE_PAYOUT_URL ?? "").trim() || undefined;
 
-  const referralPreview = useMemo(() => {
-    const handle = affiliateHandle.trim().replace(/\s+/g, "-").toLowerCase().replace(/[^a-z0-9-_]/g, "");
-    if (!handle) return `${HIVE_DOMAIN}/?ref=your-handle`;
-    return `${HIVE_DOMAIN}/?ref=${encodeURIComponent(handle)}`;
-  }, [affiliateHandle]);
+  const referralPreview = useMemo(
+    () => buildAffiliateReferralUrl(affiliateHandle),
+    [affiliateHandle],
+  );
 
   useEffect(() => {
     if (intent === "stake" || symbol) {
@@ -35,7 +33,7 @@ export function EcosystemHub() {
   }, [intent, symbol]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.affiliateHandle, affiliateHandle);
+    saveAffiliateHandle(affiliateHandle);
   }, [affiliateHandle]);
 
   return (
@@ -104,7 +102,7 @@ export function EcosystemHub() {
           className="ecosystem-hub__input"
           value={affiliateHandle}
           onChange={(e) => setAffiliateHandle(e.target.value)}
-          placeholder="e.g. cryptosara"
+          placeholder="e.g. synexuspro"
           autoComplete="off"
         />
         <p className="ecosystem-hub__ref-url">

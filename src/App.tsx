@@ -46,6 +46,9 @@ const RefundPolicy = lazy(() =>
 const WalletComingSoon = lazy(() =>
   import("./pages/WalletComingSoon").then((m) => ({ default: m.WalletComingSoon })),
 );
+const AffiliateReferralRedirect = lazy(() =>
+  import("./pages/AffiliateReferralRedirect").then((m) => ({ default: m.AffiliateReferralRedirect })),
+);
 
 function RouteFallback() {
   return (
@@ -64,6 +67,7 @@ export default function App() {
         <Routes>
           <Route element={<AppShell />}>
             <Route index element={<HomeFeed />} />
+            <Route path="ref/:handle" element={<AffiliateReferralRedirect />} />
             <Route path="hub" element={<EcosystemHub />} />
             <Route path="about" element={<About />} />
             <Route path="trust" element={<Trust />} />
