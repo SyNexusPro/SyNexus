@@ -1,0 +1,41 @@
+{
+  "slug": "liquidity-pools-explained-for-beginners",
+  "title": "Liquidity Pools Explained for Beginners on Solana",
+  "excerpt": "Why depth matters, how pools can be pulled, and what Sentinels watch on new launches.",
+  "date": "2026-07-07",
+  "author": "SyNexus Editorial",
+  "origin": "https://www.synexus.pro",
+  "trustLine": "Non-custodial · You sign every trade · Not financial advice.",
+  "blocks": [
+    {
+      "type": "h2",
+      "text": "Pools enable swaps"
+    },
+    {
+      "type": "p",
+      "text": "DEX pools pair your token with SOL (or stables). Depth determines how much you can buy or sell without extreme slippage — and how hard it is for insiders to exit."
+    },
+    {
+      "type": "h2",
+      "text": "Liquidity removal risk"
+    },
+    {
+      "type": "p",
+      "text": "If creators retain keys to remove liquidity, they can drain the pool after retail buys. Aegis lane incorporates liquidity integrity signals into Avoid and Watch verdicts."
+    },
+    {
+      "type": "h2",
+      "text": "Read before you ape"
+    },
+    {
+      "type": "p",
+      "text": "A hot chart with a shallow pool is a classic trap. Scan first on SyNexus, then connect your wallet only when you accept the structural risk."
+    }
+  ],
+  "cta": "Run a free Sentinel scan → https://www.synexus.pro",
+  "tags": [
+    "liquidity",
+    "DeFi",
+    "beginners"
+  ]
+}

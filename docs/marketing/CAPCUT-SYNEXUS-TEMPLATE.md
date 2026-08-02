@@ -37,7 +37,6 @@ Use this alongside auto-rendered MP4s in `marketing-ai/output/launch/day-XX/`. A
 
 Source files:
 - Auto-rendered scenes: `output/launch/day-XX/scenes/{script-id}/`
-- Syn-Bunny overlay: `output/launch/day-XX/syn-bunny.png`
 - App screen record: synexus.pro Pulse scan (optional B-roll)
 
 ## Audio

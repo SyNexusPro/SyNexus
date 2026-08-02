@@ -1,6 +1,5 @@
 import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
-import { getSynBunnyPngPath } from "../synBunny.js";
 
 const API = "https://api.telegram.org";
 
@@ -23,7 +22,7 @@ async function sendTelegramPhoto(token, chatId, photoPath, caption, quiet) {
   form.append("chat_id", chatId);
   form.append("caption", toTelegramHtml(caption));
   form.append("parse_mode", "HTML");
-  form.append("photo", new Blob([buf], { type: "image/png" }), "syn-bunny.png");
+  form.append("photo", new Blob([buf], { type: "image/png" }), "synexus.png");
 
   const res = await fetch(`${API}/bot${token}/sendPhoto`, {
     method: "POST",
@@ -35,7 +34,7 @@ async function sendTelegramPhoto(token, chatId, photoPath, caption, quiet) {
     throw new Error(data.description || `Telegram sendPhoto failed (${res.status})`);
   }
 
-  if (!quiet) console.log("✓ Posted to Telegram (with Syn bunny)");
+  if (!quiet) console.log("✓ Posted to Telegram (with photo)");
   return { messageId: data.result?.message_id, chatId, withPhoto: true };
 }
 
@@ -103,19 +102,6 @@ export async function postTelegram(message, { quiet = false, photoPath, videoPat
   if (photoPath && existsSync(photoPath)) {
     try {
       return await sendTelegramPhoto(token, chatId, photoPath, message, quiet);
-    } catch (err) {
-      if (!quiet) {
-        console.warn(`Telegram photo failed (${err.message}) — falling back to text`);
-      }
-    }
-  }
-
-  const bunnyPath =
-    process.env.TELEGRAM_BUNNY_PHOTO === "1" ? getSynBunnyPngPath() : null;
-
-  if (bunnyPath && existsSync(bunnyPath)) {
-    try {
-      return await sendTelegramPhoto(token, chatId, bunnyPath, message, quiet);
     } catch (err) {
       if (!quiet) {
         console.warn(`Telegram photo failed (${err.message}) — falling back to text`);

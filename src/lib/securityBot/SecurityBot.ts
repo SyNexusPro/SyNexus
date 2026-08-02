@@ -115,7 +115,7 @@ class SecurityBotCore {
     const verdict = this.verifyPlanIntegrity(storedPlan, hasPaidProfile);
     if (!verdict.allowed && storedPlan === "PRO") {
       try {
-        localStorage.setItem("hivemind_paid_plan", "FREE");
+        localStorage.setItem("synexus_paid_plan", "FREE");
       } catch {
         /* ignore */
       }
@@ -309,7 +309,7 @@ class SecurityBotCore {
   }
 
   private installPlanTamperWatch() {
-    const key = "hivemind_paid_plan";
+    const key = "synexus_paid_plan";
     const original = localStorage.setItem.bind(localStorage);
     localStorage.setItem = (k: string, value: string) => {
       if (k === key && value === "PRO") {
@@ -342,7 +342,7 @@ class SecurityBotCore {
 
   private installCrossTabPlanWatch() {
     window.addEventListener("storage", (e) => {
-      if (e.key !== "hivemind_paid_plan" || e.newValue !== "PRO") return;
+      if (e.key !== "synexus_paid_plan" || e.newValue !== "PRO") return;
       this.record({
         action: "plan_check",
         code: "PLAN_TAMPER",

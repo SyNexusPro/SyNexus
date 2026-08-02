@@ -10928,11 +10928,27 @@ html.native-android [class*="scanner"],
 html.native-android [class*="synexus-pro-promo"],
 html.native-android [class*="operator-link-scan"],
 html.native-android [class*="card-circuit"],
+html.native-android [class*="brain-pulse"],
+html.native-android [class*="neural-hero"],
+html.native-android [class*="oracle-presence-fab"],
 html.native-android .synthetic-sentinel__live-dot {
   animation: none !important;
+}
+
+html.native-android .brain-pulse__ring,
+html.native-android .synexus-scanner__scanline,
+html.native-android .oracle-presence-fab__ring {
+  display: none !important;
 }
 
 html.native-android .pulse-page,
 html.native-android .app-main {
   scroll-behavior: auto;
+}
+
+html.native-android .token-list,
+html.native-android .top-movers__list,
+html.native-android .synexus-scanner__lanes {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 320px;
 }

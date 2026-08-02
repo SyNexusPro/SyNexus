@@ -3,6 +3,9 @@ import { Link } from "react-router-dom";
 import type { Token } from "../data/tokens";
 import { SENTINEL_LANE_IDS, SENTINEL_LANES } from "../config/sentinels";
 import { synexusRiskBandLabel } from "../data/tokens";
+import { useAppIsActive } from "../hooks/useAppIsActive";
+import { isNativeAndroid } from "../lib/bootExperience";
+import { nativePollIntervalMs } from "../lib/nativePerformance";
 
 type Props = {
   tokens: Token[];
@@ -43,20 +46,20 @@ function riskClass(risk: Token["guardianRisk"]): string {
 }
 
 export function SynexusLiveScanner({ tokens, feedSource, dexLiveCount, loading, error }: Props) {
+  const appActive = useAppIsActive();
+  const nativeStatic = isNativeAndroid();
   const [scanIndex, setScanIndex] = useState(0);
-  const [tick, setTick] = useState(0);
 
   const scanQueue = useMemo(() => (tokens.length ? tokens : []).slice(0, 12), [tokens]);
   const active = scanQueue[scanIndex % Math.max(scanQueue.length, 1)];
 
   useEffect(() => {
-    if (!scanQueue.length) return;
+    if (nativeStatic || !appActive || !scanQueue.length) return;
     const id = window.setInterval(() => {
       setScanIndex((i) => (i + 1) % scanQueue.length);
-      setTick((t) => t + 1);
-    }, 2200);
+    }, nativePollIntervalMs(8_000));
     return () => window.clearInterval(id);
-  }, [scanQueue.length]);
+  }, [appActive, nativeStatic, scanQueue.length]);
 
   const sourceLabel = feedSource === "live" ? "DexScreener · Live feed" : "Sample feed";
 
@@ -72,7 +75,7 @@ export function SynexusLiveScanner({ tokens, feedSource, dexLiveCount, loading, 
         <span className="synexus-scanner__source">{sourceLabel}</span>
       </header>
 
-      <div className="synexus-scanner__viewport" key={active ? `${active.id}-${tick}` : "empty"}>
+      <div className="synexus-scanner__viewport" key={active?.id ?? "empty"}>
         {active ? (
           <>
             <div className="synexus-scanner__token">

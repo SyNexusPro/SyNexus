@@ -1,0 +1,41 @@
+{
+  "slug": "synexus-pro-features-deep-dive",
+  "title": "SyNexusPro Features Deep Dive: Who Benefits and Why",
+  "excerpt": "Oracle briefings, faster refresh, fee tiers, and the seven-day trial explained honestly.",
+  "date": "2026-07-20",
+  "author": "SyNexus Editorial",
+  "origin": "https://www.synexus.pro",
+  "trustLine": "Non-custodial · You sign every trade · Not financial advice.",
+  "blocks": [
+    {
+      "type": "h2",
+      "text": "Built for daily operators"
+    },
+    {
+      "type": "p",
+      "text": "If you paste more than a few tokens per week, Pro's faster Sentinel refresh and deeper grid on Pulse save real time — and one Avoid verdict can pay for a month."
+    },
+    {
+      "type": "h2",
+      "text": "Fee tier difference"
+    },
+    {
+      "type": "p",
+      "text": "Pro reduces swap fees versus free tier when using SyNexus trade shortcuts. Exact tiers are shown in-app before you sign."
+    },
+    {
+      "type": "h2",
+      "text": "Trial and cancellation"
+    },
+    {
+      "type": "p",
+      "text": "New signups get a seven-day Pro trial with card on file at checkout. Cancel through billing tools linked from Pulse; see Refund Policy for eligibility details."
+    }
+  ],
+  "cta": "Run a free Sentinel scan → https://www.synexus.pro",
+  "tags": [
+    "SyNexusPro",
+    "pricing",
+    "features"
+  ]
+}

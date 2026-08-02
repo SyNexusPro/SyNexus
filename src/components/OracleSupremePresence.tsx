@@ -22,7 +22,7 @@ import { SynexusSymbolMark } from "./SynexusSymbolMark";
 
 import { SYNEXUS_PLAN_CHANGED } from "../hooks/useSynexusPlan";
 
-const PLAN_STORAGE_KEY = "hivemind_paid_plan";
+const PLAN_STORAGE_KEY = "synexus_paid_plan";
 
 function normalizePlan(raw: string | null | undefined): "FREE" | "PRO" {
   return raw === "PRO" ? "PRO" : "FREE";

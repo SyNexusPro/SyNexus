@@ -24,7 +24,7 @@ import { warmTitanBrain } from "../lib/titanConversation";
 import { QuickOperatorLogin } from "./QuickOperatorLogin";
 import { SynexusSymbolMark } from "./SynexusSymbolMark";
 
-const PLAN_STORAGE_KEY = "hivemind_paid_plan";
+const PLAN_STORAGE_KEY = "synexus_paid_plan";
 
 function normalizePlan(raw: string | null | undefined): "FREE" | "PRO" {
   return raw === "PRO" ? "PRO" : "FREE";

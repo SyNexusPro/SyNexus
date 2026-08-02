@@ -25,49 +25,49 @@ import { SentinelAlertsHub } from "../components/SentinelAlertsHub";
 import { HomeEducationalHub } from "../components/HomeEducationalHub";
 import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
 import { useOpenTitanChat } from "../hooks/useOpenTitanChat";
-import { sampleTokens, type Token } from "../data/tokens";
-import { fetchMvpTokenFeed } from "../services/marketDataService";
+import { useAppIsActive } from "../hooks/useAppIsActive";
+import { useOracleMarketFeed } from "../lib/useOracleMarketFeed";
+import { isNativeAndroid } from "../lib/bootExperience";
+import { sampleTokens } from "../data/tokens";
 
 export function HomeFeed() {
   const { isSimple } = useSynexusUIMode();
   const openTitanChat = useOpenTitanChat();
+  const appActive = useAppIsActive();
   const [searchParams] = useSearchParams();
   const scanQuery = searchParams.get("scan")?.trim() ?? "";
-  const [allTokens, setAllTokens] = useState<Token[]>(sampleTokens);
-  const [trendingTokens, setTrendingTokens] = useState<Token[]>(
-    sampleTokens
-      .slice()
-      .sort((a, b) => b.change24hPct - a.change24hPct)
-      .slice(0, 3),
+  const { tokens: feedTokens, feedSource, loading: feedLoading } = useOracleMarketFeed({
+    enabled: appActive,
+    intervalMs: 90_000,
+  });
+  const allTokens = feedTokens.length ? feedTokens : sampleTokens;
+  const trendingTokens = useMemo(
+    () =>
+      allTokens
+        .slice()
+        .sort((a, b) => b.change24hPct - a.change24hPct)
+        .slice(0, 3),
+    [allTokens],
   );
-  const [guardianAlerts, setGuardianAlerts] = useState<Token[]>(
-    sampleTokens.filter((token) => token.guardianRisk !== "SAFE"),
+  const guardianAlerts = useMemo(
+    () => allTokens.filter((token) => token.guardianRisk !== "SAFE"),
+    [allTokens],
   );
-  const [saferTokens, setSaferTokens] = useState<Token[]>(
-    sampleTokens.filter((token) => token.guardianRisk === "SAFE"),
+  const saferTokens = useMemo(
+    () => allTokens.filter((token) => token.guardianRisk === "SAFE"),
+    [allTokens],
   );
-  const [feedSource, setFeedSource] = useState<"live" | "mock">("mock");
-  const [dexLiveCount, setDexLiveCount] = useState(0);
-  const [feedLoading, setFeedLoading] = useState(true);
+  const dexLiveCount = feedSource === "live" ? allTokens.length : 0;
   const [feedError, setFeedError] = useState<string | null>(null);
   const [coinSearch, setCoinSearch] = useState("");
 
   useEffect(() => {
-    setFeedError(null);
-    fetchMvpTokenFeed()
-      .then((data) => {
-        setAllTokens(data.all);
-        setTrendingTokens(data.trending);
-        setGuardianAlerts(data.alerts);
-        setSaferTokens(data.verified);
-        setFeedSource(data.source);
-        setDexLiveCount(data.dexLiveCount);
-      })
-      .catch(() => {
-        setFeedError("Market data is not available right now. Showing sample tokens.");
-      })
-      .finally(() => setFeedLoading(false));
-  }, []);
+    if (!feedLoading && !feedTokens.length) {
+      setFeedError("Market data is not available right now. Showing sample tokens.");
+    } else {
+      setFeedError(null);
+    }
+  }, [feedLoading, feedTokens.length]);
 
   const searchedTokens = useMemo(() => {
     const query = coinSearch.trim().toLowerCase();
@@ -87,10 +87,10 @@ export function HomeFeed() {
           <div className="landing-hero__masthead">
             <div className="neural-hero-art neural-hero-art--masthead">
               <div className="neural-hero-art__frame">
-                <BrainCircuitPulse variant="hero" className="neural-brain-pulse-wrap">
+                <BrainCircuitPulse variant="hero" className="neural-brain-pulse-wrap" alive={!isNativeAndroid()}>
                   <img
                     className="neural-brain-logo neural-brain-logo--art"
-                    src="/hivemind-brain.png"
+                    src="/synexus-symbol.png"
                     alt=""
                     aria-hidden
                   />

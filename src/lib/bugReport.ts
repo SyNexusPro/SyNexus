@@ -1,6 +1,6 @@
 import { guardBugReport } from "./securityBot";
 
-const LOCAL_BUG_REPORTS_KEY = "hivemind_bug_reports";
+const LOCAL_BUG_REPORTS_KEY = "synexus_bug_reports";
 
 export type BugReportInput = {
   email?: string;

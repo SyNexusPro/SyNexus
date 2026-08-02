@@ -1,0 +1,49 @@
+{
+  "slug": "solana-wallet-security-basics",
+  "title": "Solana Wallet Security Basics Every Trader Should Know",
+  "excerpt": "Seed phrases, hardware wallets, device hygiene, and why non-custodial beats convenience hacks.",
+  "date": "2026-07-04",
+  "author": "SyNexus Editorial",
+  "origin": "https://www.synexus.pro",
+  "trustLine": "Non-custodial · You sign every trade · Not financial advice.",
+  "blocks": [
+    {
+      "type": "h2",
+      "text": "Your keys, your responsibility"
+    },
+    {
+      "type": "p",
+      "text": "SyNexus is non-custodial: we never hold SOL or tokens. Intelligence flows through the app; value stays in wallets you control. That means your security habits matter more than any score we display."
+    },
+    {
+      "type": "h2",
+      "text": "Seed phrase rules"
+    },
+    {
+      "type": "p",
+      "text": "Write seed phrases offline. Never photograph them. Never store them in cloud notes or email. No support agent — including SyNexus — should ever ask for them."
+    },
+    {
+      "type": "h2",
+      "text": "Device and browser hygiene"
+    },
+    {
+      "type": "p",
+      "text": "Keep wallet extensions updated. Use separate browser profiles for degen trading vs banking. Be skeptical of browser plugins that request broad permissions."
+    },
+    {
+      "type": "h2",
+      "text": "Hardware wallets for size"
+    },
+    {
+      "type": "p",
+      "text": "For meaningful holdings, consider Ledger or similar hardware signing through Phantom or Solflare. The extra step beats rebuilding a portfolio from zero after a hot-wallet mistake."
+    }
+  ],
+  "cta": "Run a free Sentinel scan → https://www.synexus.pro",
+  "tags": [
+    "wallet",
+    "security",
+    "Solana"
+  ]
+}

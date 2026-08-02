@@ -110,7 +110,7 @@ export function About() {
           >
             Open $SyN community
           </a>
-          <Link className="about-page__link" to="/token/hivemind-sol">
+          <Link className="about-page__link" to="/token/syn-sol">
             Scan {SYN_SYMBOL} in SyNexus →
           </Link>
         </div>

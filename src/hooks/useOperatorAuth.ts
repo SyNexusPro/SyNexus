@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { getCurrentUser } from "../lib/supabaseData";
 import { hasSupabaseEnv, supabase } from "../lib/supabaseClient";
 
-const DEMO_SESSION_KEY = "hivemind_demo_session";
+const DEMO_SESSION_KEY = "synexus_demo_session";
 
 export function useOperatorAuth() {
   const [userId, setUserId] = useState<string | null>(null);

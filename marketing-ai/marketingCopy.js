@@ -205,7 +205,7 @@ export function buildYouTubeMeta({ hook, build, payoff, id = "", titleBase = "" 
   };
 }
 
-/** Daily blast Telegram — 3 distinct briefs, no bunny spam. */
+/** Daily blast Telegram — 3 distinct briefs. */
 export function buildDailyTelegramBrief({ hook, slot = 0 }) {
   const origin = appOrigin();
   const frames = [

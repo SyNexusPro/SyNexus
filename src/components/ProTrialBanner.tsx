@@ -14,8 +14,8 @@ import { redirectToProCheckout, startProCheckout } from "../lib/squareCheckout";
 import { useOperatorAuth } from "../hooks/useOperatorAuth";
 import { ProDemoButton } from "./ProDemoButton";
 
-const PLAN_STORAGE_KEY = "hivemind_paid_plan";
-const BANNER_DISMISS_KEY = "hivemind_pro_banner_dismissed";
+const PLAN_STORAGE_KEY = "synexus_paid_plan";
+const BANNER_DISMISS_KEY = "synexus_pro_banner_dismissed";
 
 function isSynexusProPlan(): boolean {
   try {

@@ -1,0 +1,33 @@
+{
+  "slug": "solana-smart-contract-risks-for-traders",
+  "title": "Smart Contract Risks on Solana Every Trader Should Understand",
+  "excerpt": "Token programs, authorities, and upgradeability — without needing to be a developer.",
+  "date": "2026-07-22",
+  "author": "SyNexus Editorial",
+  "origin": "https://www.synexus.pro",
+  "trustLine": "Non-custodial · You sign every trade · Not financial advice.",
+  "blocks": [
+    {
+      "type": "h2",
+      "text": "Authorities are power"
+    },
+    {
+      "type": "p",
+      "text": "Mint and freeze authorities let issuers create supply or freeze accounts. Renounced authority reduces certain risks but does not make a token 'safe' by itself."
+    },
+    {
+      "type": "h2",
+      "text": "Verify in explorers"
+    },
+    {
+      "type": "p",
+      "text": "Check token program details on Solscan before large entries. Aegis incorporates authority and metadata signals into scans where data is available."
+    }
+  ],
+  "cta": "Run a free Sentinel scan → https://www.synexus.pro",
+  "tags": [
+    "contracts",
+    "security",
+    "Solana"
+  ]
+}

@@ -12,7 +12,6 @@
     "video": "node makeVideo.js",
     "video:force": "node makeVideo.js --force",
     "video:upload": "node makeVideo.js --upload",
-    "bunny:export": "node exportSynBunny.js",
     "youtube:daily": "node dailyYouTube.js",
     "youtube:watch": "node dailyYouTube.js --watch",
     "youtube:oauth": "node youtubeAuth.js --callback",

@@ -30,9 +30,6 @@ const planNameCandidates = [
   "SyNexus Pro",
   "SyNexusPro",
   "SyNexus",
-  "Hive-Mind",
-  "Hive Mind",
-  "HiveMind",
 ];
 
 const useSandbox =

@@ -142,7 +142,7 @@ export function generateRedditPost(now: number): string {
     "",
     `Try it: ${origin}`,
     "",
-    "🐰 Syn the bunny · paste before you ape",
+    "SyNexus · paste before you ape",
   ].join("\n");
 
   return `TITLE:\n${title}\n\nBODY:\n${body}`;
@@ -199,7 +199,7 @@ export function generateTikTokCaption(now: number): string {
     TRIAL_OFFER_SHORT,
     PRO_PRICE_LINE,
     "",
-    "🐰 Syn the bunny · paste before you ape",
+    "SyNexus · paste before you ape",
     "#SyNexus #Solana #Crypto #Trading #Memecoin #ShouldIBuyThis #DeFi",
   ].join("\n");
 }

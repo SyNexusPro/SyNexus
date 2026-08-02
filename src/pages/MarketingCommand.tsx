@@ -11,7 +11,7 @@ import {
   marketingAppOrigin,
 } from "../lib/syMarketingGenerators";
 
-const CHECKLIST_STORAGE = "hivemind_syneux_marketing_checklist_v1";
+const CHECKLIST_STORAGE = "synexus_marketing_checklist_v1";
 
 type CheckDef = { id: string; label: string };
 const CHECK_ITEMS: readonly CheckDef[] = [

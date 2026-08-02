@@ -2,6 +2,8 @@ import type { DeepPartial, GuardianEngineConfig } from "../data/guardianEngine";
 import { buildSampleTokens, buildTokenFromPartial, type Token } from "../data/tokens";
 import { SYN_MINT } from "../config/synToken";
 import { guardApiFetch, guardTokenScan } from "../lib/securityBot";
+import { isNativeAndroid } from "../lib/bootExperience";
+import { nativeFeedCacheTtlMs } from "../lib/nativePerformance";
 import { dedupeInFlight, readMoversCache, writeMoversCache } from "../lib/moversCache";
 import type { MoverTimeframe } from "../lib/moverTimeframes";
 import { loadGuardianConfigOverride } from "./guardianConfigService";
@@ -214,16 +216,15 @@ async function fetchDexScreenerPatches(baseTokens: Token[]): Promise<{
   try {
     const patches: Record<string, TokenPatch> = {};
     let liveCount = 0;
-    await Promise.all(
-      baseTokens.map(async (token) => {
-        const pair = token.mintAddress
-          ? await fetchDexPairByAddress(token.mintAddress)
-          : await fetchDexPairBySearch(token.symbol, token.name);
-        if (!pair) return;
-        patches[token.symbol.toUpperCase()] = patchFromDexPair(pair);
-        liveCount += 1;
-      }),
-    );
+    const dexConcurrency = isNativeAndroid() ? 2 : 6;
+    await mapWithConcurrency(baseTokens, dexConcurrency, async (token) => {
+      const pair = token.mintAddress
+        ? await fetchDexPairByAddress(token.mintAddress)
+        : await fetchDexPairBySearch(token.symbol, token.name);
+      if (!pair) return;
+      patches[token.symbol.toUpperCase()] = patchFromDexPair(pair);
+      liveCount += 1;
+    });
     if (!liveCount) {
       throw new Error("DexScreener returned no matching pairs");
     }
@@ -234,7 +235,7 @@ async function fetchDexScreenerPatches(baseTokens: Token[]): Promise<{
       source: "mock",
       liveCount: 0,
       patches: {
-        HIVE: {
+        SYN: {
           priceUsd: 0.00432,
           change24hPct: 5.92,
           volume24hUsd: 482364,
@@ -253,7 +254,7 @@ async function fetchBirdeyePatches(): Promise<Record<string, TokenPatch>> {
   const apiKey = import.meta.env.VITE_BIRDEYE_API_KEY;
   if (!apiKey) {
     return {
-      HIVE: { liquidityUsd: 1285730, marketCapUsd: 43198122 },
+      SYN: { liquidityUsd: 1285730, marketCapUsd: 43198122 },
       SOL: { liquidityUsd: 156000000, marketCapUsd: 89200000000 },
     };
   }
@@ -384,20 +385,23 @@ export async function fetchTokenPriceHistory(
   };
 }
 
-export async function fetchMvpTokenFeed() {
+const MVP_FEED_CACHE_KEY = "mvp:feed";
+const MVP_FEED_TTL_MS = nativeFeedCacheTtlMs(45_000);
+
+async function fetchMvpTokenFeedUncached() {
   const guardianOverride = await loadGuardianConfigOverride();
   const baseTokens = buildSampleTokens(guardianOverride);
   const [dexResult, birdeyePatches, solanaPatch] = await Promise.all([
     fetchDexScreenerPatches(baseTokens),
-    fetchBirdeyePatches(),
-    fetchSolanaRpcPatch(),
+    isNativeAndroid() ? Promise.resolve({} as Record<string, TokenPatch>) : fetchBirdeyePatches(),
+    isNativeAndroid() ? Promise.resolve({ mintAddress: SYN_MINT } as TokenPatch) : fetchSolanaRpcPatch(),
   ]);
 
   const mergedPatches: Record<string, TokenPatch> = { ...dexResult.patches };
   for (const [symbol, patch] of Object.entries(birdeyePatches)) {
     mergedPatches[symbol] = { ...mergedPatches[symbol], ...patch };
   }
-  mergedPatches.HIVE = { ...mergedPatches.HIVE, ...solanaPatch };
+  mergedPatches.SYN = { ...mergedPatches.SYN, ...solanaPatch };
 
   const all = applyPatches(baseTokens, mergedPatches);
   const trending = all
@@ -415,6 +419,18 @@ export async function fetchMvpTokenFeed() {
     source: dexResult.source,
     dexLiveCount: dexResult.liveCount,
   };
+}
+
+export async function fetchMvpTokenFeed() {
+  const cached = readMoversCache<Awaited<ReturnType<typeof fetchMvpTokenFeedUncached>>>(MVP_FEED_CACHE_KEY);
+  if (cached) return cached;
+
+  return dedupeInFlight(MVP_FEED_CACHE_KEY, async () => {
+    const fresh = readMoversCache<Awaited<ReturnType<typeof fetchMvpTokenFeedUncached>>>(MVP_FEED_CACHE_KEY);
+    if (fresh) return fresh;
+    const result = await fetchMvpTokenFeedUncached();
+    return writeMoversCache(MVP_FEED_CACHE_KEY, result, MVP_FEED_TTL_MS);
+  });
 }
 
 function tokenFromDexPair(pair: DexPair, idHint: string): Token {
@@ -708,7 +724,7 @@ export async function fetchSolanaTopMovers(timeframe: MoverTimeframe): Promise<S
   return dedupeInFlight(cacheKey, async () => {
     const apiGuard = guardApiFetch(`dex-movers-${timeframe}`);
     if (!apiGuard.allowed) {
-      return writeMoversCache(cacheKey, mockSolanaMovers(timeframe), MOVER_CACHE_TTL_MS[timeframe]);
+      return writeMoversCache(cacheKey, mockSolanaMovers(timeframe), nativeFeedCacheTtlMs(MOVER_CACHE_TTL_MS[timeframe]));
     }
 
     try {
@@ -725,7 +741,7 @@ export async function fetchSolanaTopMovers(timeframe: MoverTimeframe): Promise<S
         return writeMoversCache(
           cacheKey,
           { timeframe, ...ranked, source: "live", updatedAt: Date.now() },
-          MOVER_CACHE_TTL_MS[timeframe],
+          nativeFeedCacheTtlMs(MOVER_CACHE_TTL_MS[timeframe]),
         );
       }
 
@@ -738,7 +754,7 @@ export async function fetchSolanaTopMovers(timeframe: MoverTimeframe): Promise<S
         MOVER_CACHE_TTL_MS[timeframe],
       );
     } catch {
-      return writeMoversCache(cacheKey, mockSolanaMovers(timeframe), MOVER_CACHE_TTL_MS[timeframe]);
+      return writeMoversCache(cacheKey, mockSolanaMovers(timeframe), nativeFeedCacheTtlMs(MOVER_CACHE_TTL_MS[timeframe]));
     }
   });
 }

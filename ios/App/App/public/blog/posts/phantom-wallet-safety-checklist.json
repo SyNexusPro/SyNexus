@@ -1,0 +1,41 @@
+{
+  "slug": "phantom-wallet-safety-checklist",
+  "title": "Phantom Wallet Safety Checklist for SyNexus Users",
+  "excerpt": "Step-by-step habits when connecting Phantom to scan, swap, and track Solana tokens.",
+  "date": "2026-07-05",
+  "author": "SyNexus Editorial",
+  "origin": "https://www.synexus.pro",
+  "trustLine": "Non-custodial · You sign every trade · Not financial advice.",
+  "blocks": [
+    {
+      "type": "h2",
+      "text": "Connect only on sites you trust"
+    },
+    {
+      "type": "p",
+      "text": "Use https://www.synexus.pro and verify the URL bar. SyNexus opens swap shortcuts; Phantom handles signing. If a popup appears on an unfamiliar domain, reject it."
+    },
+    {
+      "type": "h2",
+      "text": "Review every transaction"
+    },
+    {
+      "type": "p",
+      "text": "Read token names, amounts, and program IDs in Phantom's preview. Malicious approvals often hide behind generic labels."
+    },
+    {
+      "type": "h2",
+      "text": "Separate wallets for experiments"
+    },
+    {
+      "type": "p",
+      "text": "Many operators keep a 'burner' wallet for new mints and a separate cold or hardware-backed wallet for long-term holdings. Losses on the burner stay contained."
+    }
+  ],
+  "cta": "Run a free Sentinel scan → https://www.synexus.pro",
+  "tags": [
+    "Phantom",
+    "wallet",
+    "checklist"
+  ]
+}

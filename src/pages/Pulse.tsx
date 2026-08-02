@@ -124,9 +124,9 @@ type AuthMessage = {
   text: string;
 };
 
-const PLAN_STORAGE_KEY = "hivemind_paid_plan";
-const DEMO_SESSION_KEY = "hivemind_demo_session";
-const LOCAL_REPORTS_KEY = "hivemind_pending_reports";
+const PLAN_STORAGE_KEY = "synexus_paid_plan";
+const DEMO_SESSION_KEY = "synexus_demo_session";
+const LOCAL_REPORTS_KEY = "synexus_pending_reports";
 const USER_FRIENDLY_ERROR = "Something went wrong. Please try again.";
 
 function normalizeStoredPlan(plan: string | null | undefined): AppPlan {
@@ -162,7 +162,6 @@ function describeAuthError(err: unknown): string {
     lower.includes("schema cache") ||
     lower.includes("could not find the table") ||
     lower.includes("pgrst205") ||
-    lower.includes("hivemind") ||
     lower.includes("undefined_table") ||
     lower.includes("42p01")
   ) {

@@ -2,5 +2,15 @@
 	"appId": "com.synexus.app",
 	"appName": "Synexus",
 	"webDir": "dist",
-	"packageClassList": []
+	"server": {
+		"androidScheme": "https",
+		"url": "https://www.synexus.pro",
+		"cleartext": false
+	},
+	"packageClassList": [
+		"BiometricAuthNative",
+		"CAPBrowserPlugin",
+		"PreferencesPlugin",
+		"SecureStoragePlugin"
+	]
 }

@@ -1,0 +1,57 @@
+{
+  "slug": "how-to-verify-a-token-before-swapping",
+  "title": "How to Verify a Token Before Swapping on Jupiter or Any DEX",
+  "excerpt": "A five-minute verification ritual that pairs perfectly with a SyNexus scan.",
+  "date": "2026-07-23",
+  "author": "SyNexus Editorial",
+  "origin": "https://www.synexus.pro",
+  "trustLine": "Non-custodial · You sign every trade · Not financial advice.",
+  "blocks": [
+    {
+      "type": "h2",
+      "text": "Minute one: mint"
+    },
+    {
+      "type": "p",
+      "text": "Copy the full mint from SyNexus or the project's official channel — not a reposted screenshot."
+    },
+    {
+      "type": "h2",
+      "text": "Minute two: scan"
+    },
+    {
+      "type": "p",
+      "text": "Run Should I buy this? on SyNexus. Read Avoid, Watch, or OK and the listed reasons."
+    },
+    {
+      "type": "h2",
+      "text": "Minute three: explorer"
+    },
+    {
+      "type": "p",
+      "text": "Open Solscan. Confirm holder distribution and recent large transfers."
+    },
+    {
+      "type": "h2",
+      "text": "Minute four: social proof"
+    },
+    {
+      "type": "p",
+      "text": "Find official links from verified project accounts — beware lookalike domains."
+    },
+    {
+      "type": "h2",
+      "text": "Minute five: size"
+    },
+    {
+      "type": "p",
+      "text": "If you still trade, size for total loss. Verification reduces mistakes; it does not remove them."
+    }
+  ],
+  "cta": "Run a free Sentinel scan → https://www.synexus.pro",
+  "tags": [
+    "research",
+    "checklist",
+    "swaps"
+  ]
+}

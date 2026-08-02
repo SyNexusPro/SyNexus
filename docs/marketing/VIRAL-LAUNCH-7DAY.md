@@ -74,7 +74,7 @@ Winners are stored in `output/launch/launch-state.json`.
 6. **Audio:** Match `VIDEO_TTS_VOICE` (Aria female) or replace with ElevenLabs  
 7. **Effects:** Glitch on Day 1–2 · slower pacing Day 4  
 
-Auto-rendered videos already include circuit-board art, fake Sentinel dashboard, and Syn-Bunny.
+Auto-rendered videos already include circuit-board art and fake Sentinel dashboard.
 
 ## Three engines (parallel)
 

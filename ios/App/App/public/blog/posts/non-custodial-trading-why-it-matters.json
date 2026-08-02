@@ -1,0 +1,33 @@
+{
+  "slug": "non-custodial-trading-why-it-matters",
+  "title": "Non-Custodial Trading: Why SyNexus Never Holds Your Keys",
+  "excerpt": "Custody models, swap routing, and what operators should expect from a research-first app.",
+  "date": "2026-07-21",
+  "author": "SyNexus Editorial",
+  "origin": "https://www.synexus.pro",
+  "trustLine": "Non-custodial · You sign every trade · Not financial advice.",
+  "blocks": [
+    {
+      "type": "h2",
+      "text": "Intelligence layer, not exchange"
+    },
+    {
+      "type": "p",
+      "text": "SyNexus organizes data, Sentinel heuristics, and Jupiter shortcuts. You sign every swap in Phantom, Solflare, or Backpack — we cannot move your funds."
+    },
+    {
+      "type": "h2",
+      "text": "Why that matters for ads and trust"
+    },
+    {
+      "type": "p",
+      "text": "Regulators and users alike scrutinize custody. Our model keeps asset control with you while we compete on speed and clarity of risk reads."
+    }
+  ],
+  "cta": "Run a free Sentinel scan → https://www.synexus.pro",
+  "tags": [
+    "non-custodial",
+    "trust",
+    "SyNexus"
+  ]
+}

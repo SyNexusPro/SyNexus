@@ -2,7 +2,7 @@ import { getCurrentUser, submitTokenReport } from "./supabaseData";
 import { hasSupabaseEnv } from "./supabaseClient";
 import { guardTokenReport } from "./securityBot";
 
-const LOCAL_KEY = "hivemind_pending_reports";
+const LOCAL_KEY = "synexus_pending_reports";
 const DEFAULT_REASON = "User reported from SyNexus";
 
 export type SubmitReportInput = {

@@ -79,7 +79,6 @@ Complete **LLC formation first** (or in parallel), then file trademarks/patents 
 | **P2** | SyNexus logo / wordmark | Design mark | Specimen: `public/synexus-wordmark.png` |
 | **P2** | SyNexus symbol / emblem | Design mark | Specimen: `public/synexus-symbol.png` |
 | **P3** | **SHOULD I BUY THIS?** | Word/slogan mark | Only if used consistently as source identifier (hero headline, marketing) — counsel to advise on descriptiveness |
-| **P3** | Syn-Bunny mascot | Design mark | `public/syn-bunny.svg` — if used in commerce |
 
 ### Secondary marks (product features — counsel discretion)
 
@@ -93,9 +92,8 @@ Complete **LLC formation first** (or in parallel), then file trademarks/patents 
 
 ### Do **not** register as primary brand
 
-- SyNexus, Hive Mind, hivemind-*  
-- hivemindtoken.ai (legacy domain in `src/config/ecosystem.ts`)  
-- Internal IDs: `hivemind-sol`, `hivemind-supabase-auth`
+- Former working names / retired marks (HiveMind era) — removed from product code and assets  
+- Descriptive feature names alone without SyNexus house mark
 
 ### Suggested USPTO classes (attorney to confirm)
 
@@ -134,13 +132,9 @@ You may use **SyNexus™** on website, app, and marketing now. Use **®** only a
 | Full logo | `public/synexus-logo.png` | Design mark |
 | Symbol / emblem | `public/synexus-symbol.png` | App icon source, design mark |
 | Favicon | `public/favicon.svg` | Web |
-| Syn-Bunny mascot | `public/syn-bunny.svg`, `public/syn-bunny.png` | Marketing mascot |
 | Circuit background | `public/circuit-background.png` | UI trade dress (optional design patent) |
 | Video frame template | `marketing-ai/generated/synexus-frame.svg` | Marketing watermark |
 | Android icons | `android/app/src/main/res/mipmap-*/` | App store |
-
-**Legacy assets — do not use in TM specimens:**  
-`public/hivemind-brain.png`, `hivemind-wordmark.png`, `hivemind-logo.svg`, `hivemind-logo-art.png`
 
 ---
 
@@ -484,7 +478,6 @@ Automatic copyright exists in original works. Optional registration ([copyright.
 |------|-------------|
 | Application source code | Full TypeScript/React codebase |
 | Marketing videos | `marketing-ai/output/` generated MP4s |
-| Syn-Bunny mascot art | SVG/PNG |
 | SyNexus wordmark & logo | PNG assets |
 | Video art templates | `videoArt.js`, `synexus-frame.svg` |
 
@@ -509,14 +502,7 @@ Automatic copyright exists in original works. Optional registration ([copyright.
 
 ## 13. Legacy naming — exclude from filings
 
-| Legacy term | Where it appears | Action |
-|-------------|------------------|--------|
-| SyNexus | Old docs, iOS bundle HTML, some images | Do not trademark; migrate UI to SyNexus assets |
-| SyNexus-app | Repo folder name | Internal only; public brand is SyNexus |
-| hivemind-sol | Internal token ID for $SYN | Internal only |
-| hivemind-supabase-auth | localStorage key | Internal only |
-| hivemindtoken.ai | `ecosystem.ts` | Legacy domain — deprecate |
-| hivemind-brain.png | HomeFeed hero (still loaded) | **Replace with synexus-symbol.png before TM specimens** |
+Former HiveMind / Syn-Bunny naming and assets have been removed from the product. Public brand is **SyNexus** only. Internal token id is `syn-sol`; storage keys use `synexus_*`.
 
 ---
 
@@ -577,10 +563,9 @@ public/synexus-*.png             — Brand assets
 1. **File SyNexus LLC** in chosen state  
 2. **Sign IP assignment** to LLC immediately after formation  
 3. **Book trademark attorney** — bring this packet + specimens from `public/synexus-wordmark.png`  
-4. **Replace hivemind-brain.png** in HomeFeed with SyNexus symbol before TM specimens  
-5. **Screenshot** synexus.pro + Pulse Operator Link for first-use evidence  
-6. **Book patent attorney** — ask: “Provisional for Claim sets A + C + D?”  
-7. **Keep repo private** until counsel advises otherwise  
+4. **Screenshot** synexus.pro + Pulse Operator Link for first-use evidence  
+5. **Book patent attorney** — ask: “Provisional for Claim sets A + C + D?”  
+6. **Keep repo private** until counsel advises otherwise  
 
 ---
 

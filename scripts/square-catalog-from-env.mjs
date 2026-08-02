@@ -52,7 +52,7 @@ do {
 
 function planMatches(name) {
   const n = normalizeName(name);
-  return n.includes("synexus") || n.includes("hivemind") || n.includes("hive-mind");
+  return n.includes("synexus");
 }
 
 let matchPlan = null;

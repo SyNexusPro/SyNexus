@@ -1,0 +1,1 @@
+var e=`9naVtLAGKWYuEcGehe1BZ3DpiSLHjSNsaeFr2JPHpump`,t=`hivemind-sol`,n=`https://pump.fun/communities/${e}`,r=`https://pump.fun/coin/${e}`;`${e}`;var i=`synexus_syn_launch_banner_dismissed`;function a(){try{return localStorage.getItem(i)===`1`}catch{return!1}}function o(){try{localStorage.setItem(i,`1`)}catch{}}export{o as a,t as i,r as n,a as o,n as r,e as t};

@@ -12,7 +12,7 @@ import { isEmailVerified } from "../lib/emailVerification";
 import { SYNEXUS_BRAND_NAME } from "../config/brand";
 import { useOperatorAuth } from "../hooks/useOperatorAuth";
 
-const DEMO_SESSION_KEY = "hivemind_demo_session";
+const DEMO_SESSION_KEY = "synexus_demo_session";
 
 export type QuickOperatorAuthResult = {
   mode: "signin" | "signup";

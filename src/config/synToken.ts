@@ -6,7 +6,7 @@ export const SYN_MINT =
 
 export const SYN_SYMBOL = "SYN";
 
-export const SYN_TOKEN_ID = "hivemind-sol";
+export const SYN_TOKEN_ID = "syn-sol";
 
 /** Official pump.fun community hub (posts, members, coin link). */
 export const SYN_PUMPFUN_URL =

@@ -106,7 +106,7 @@ export function buildTokenFromPartial(
 
 const tokenSeeds: TokenSeed[] = [
   {
-    id: "hivemind-sol",
+    id: "syn-sol",
     symbol: "SYN",
     name: "SyNexus",
     priceUsd: 0.00432,

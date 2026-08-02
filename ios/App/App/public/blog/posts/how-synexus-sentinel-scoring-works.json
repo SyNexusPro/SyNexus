@@ -1,0 +1,41 @@
+{
+  "slug": "how-synexus-sentinel-scoring-works",
+  "title": "How SyNexus Sentinel Scoring Works: Four Lanes, One Verdict",
+  "excerpt": "Aegis, Pulse, Leviathan, and Cipher — what each lane measures and how scores become Avoid, Watch, or OK.",
+  "date": "2026-07-10",
+  "author": "SyNexus Editorial",
+  "origin": "https://www.synexus.pro",
+  "trustLine": "Non-custodial · You sign every trade · Not financial advice.",
+  "blocks": [
+    {
+      "type": "h2",
+      "text": "Parallel scans, fused read"
+    },
+    {
+      "type": "p",
+      "text": "Instead of drowning you in dashboards, SyNexus runs four Sentinel lanes in parallel and fuses them into one risk band and score with human-readable reasons."
+    },
+    {
+      "type": "h2",
+      "text": "Lane responsibilities"
+    },
+    {
+      "type": "p",
+      "text": "Aegis covers security and privacy — scams, rugs, contracts, liquidity. Pulse tracks volume and momentum integrity. Leviathan watches whales. Cipher matches naming traps and swarm reports."
+    },
+    {
+      "type": "h2",
+      "text": "Informational only"
+    },
+    {
+      "type": "p",
+      "text": "Scores use heuristics and third-party APIs. They can be wrong or delayed. Always verify mint addresses and do your own research before trading."
+    }
+  ],
+  "cta": "Run a free Sentinel scan → https://www.synexus.pro",
+  "tags": [
+    "Sentinel",
+    "SyNexus",
+    "methodology"
+  ]
+}

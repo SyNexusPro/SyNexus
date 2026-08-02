@@ -19,7 +19,7 @@ export const supabase = hasSupabaseEnv
         autoRefreshToken: true,
         detectSessionInUrl: true,
         flowType: "pkce",
-        storageKey: "hivemind-supabase-auth",
+        storageKey: "synexus-supabase-auth",
       },
     })
   : null;

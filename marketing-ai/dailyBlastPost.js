@@ -108,7 +108,7 @@ export async function runBlastSlot({ slot, force = false, quiet = false, launch 
     if (launch) {
       throw new Error(`Launch video missing: ${videoPath} — run launch:render first`);
     }
-    if (!quiet) console.log("  Rendering video (green glow · female voice · Syn bunny)…");
+    if (!quiet) console.log("  Rendering video (green glow · female voice)…");
     await renderDailyVideo({ force: false, quiet: true });
   }
 

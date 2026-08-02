@@ -1,0 +1,49 @@
+{
+  "slug": "red-flags-before-you-buy-any-memecoin",
+  "title": "7 Red Flags to Check Before You Buy Any Memecoin",
+  "excerpt": "A repeatable checklist for Solana memecoin launches — liquidity, holders, authority, and social proof.",
+  "date": "2026-07-02",
+  "author": "SyNexus Editorial",
+  "origin": "https://www.synexus.pro",
+  "trustLine": "Non-custodial · You sign every trade · Not financial advice.",
+  "blocks": [
+    {
+      "type": "h2",
+      "text": "Start with structure, not hype"
+    },
+    {
+      "type": "p",
+      "text": "Charts lag reality. Before you chase a vertical candle, ask structural questions: Who holds supply? Is liquidity locked or removable? Are mint or freeze authorities still active? SyNexus compresses many of these reads into one paste-and-scan flow on the home feed."
+    },
+    {
+      "type": "h2",
+      "text": "Thin liquidity is not a flex"
+    },
+    {
+      "type": "p",
+      "text": "A pool with very little SOL depth can move violently on small sells — and collapse when early wallets exit. Aegis lane watches liquidity integrity and sudden drains that often precede rugs."
+    },
+    {
+      "type": "h2",
+      "text": "Concentrated top wallets"
+    },
+    {
+      "type": "p",
+      "text": "When a handful of wallets hold most supply, your buy may become someone else's exit liquidity. Leviathan lane tracks whale concentration and large-wallet flows so you see distribution into strength early."
+    },
+    {
+      "type": "h2",
+      "text": "Dead or copied socials"
+    },
+    {
+      "type": "p",
+      "text": "Broken websites, recycled art, and bot-filled comment sections are common on fast launches. Community reports feed SyNexus scoring — operators flag suspicious tokens from token detail pages when signed in."
+    }
+  ],
+  "cta": "Run a free Sentinel scan → https://www.synexus.pro",
+  "tags": [
+    "memecoins",
+    "risk",
+    "checklist"
+  ]
+}

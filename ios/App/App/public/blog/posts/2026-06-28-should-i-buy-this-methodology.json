@@ -1,0 +1,41 @@
+{
+  "slug": "2026-06-28-should-i-buy-this-methodology",
+  "title": "Should I Buy This? The SyNexus Methodology",
+  "excerpt": "Plain English token intelligence for Solana — built for speed, not hype.",
+  "date": "2026-06-28",
+  "author": "SyNexus Editorial",
+  "origin": "https://www.synexus.pro",
+  "trustLine": "Non-custodial · You sign every trade · Not financial advice.",
+  "blocks": [
+    {
+      "type": "h2",
+      "text": "Built for decision speed"
+    },
+    {
+      "type": "p",
+      "text": "Memecoin cycles move in minutes. SyNexus compresses hours of manual chart and wallet research into seconds — one paste, one Sentinel fusion, one verdict."
+    },
+    {
+      "type": "h2",
+      "text": "Four Sentinel lanes"
+    },
+    {
+      "type": "p",
+      "text": "Aegis hunts rug and liquidity traps. Pulse reads momentum integrity. Leviathan shadows whale wallets. Cipher fuses weak cross-lane signals and community reports."
+    },
+    {
+      "type": "h2",
+      "text": "Pro when you need depth"
+    },
+    {
+      "type": "p",
+      "text": "Free tier covers the core scan. SyNexusPro unlocks full Sentinel grid refresh, Oracle briefings, and reduced trading fees — for operators who live on-chain daily."
+    }
+  ],
+  "cta": "Run a free Sentinel scan → https://www.synexus.pro",
+  "tags": [
+    "SyNexus",
+    "methodology",
+    "Sentinel"
+  ]
+}

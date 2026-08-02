@@ -24,7 +24,6 @@ import {
   buildTikTokCaption as buildPremiumTikTokCaption,
   appOrigin,
 } from "./marketingCopy.js";
-import { mascotSignOff } from "./synBunny.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -98,7 +97,7 @@ export function generateTikTokScript(now = Date.now()) {
     `[0–3s] Show paste box + instant verdict card (Avoid / Watch / OK).`,
     `[3–7s] Flash scorecard: risk · whales · momentum · liquidity · rug warning.`,
     `[7–11s] One line: "Not financial advice — you still sign in your wallet."`,
-    `[11–15s] Syn the bunny floats in corner. CTA: Try free · ${appOrigin()} · ${TRIAL_LINE}`,
+    `[11–15s] SyNexus logo + CTA: Try free · ${appOrigin()} · ${TRIAL_LINE}`,
     "",
     `Tags: ${TAGS}`,
   ].join("\n");
@@ -156,7 +155,7 @@ export function generateRedditPost(now = Date.now()) {
     "",
     `Try it: ${origin}`,
     "",
-    mascotSignOff().replace(/\*\*(.+?)\*\*/g, "$1"),
+    "SyNexus · paste before you ape",
   ].join("\n");
 
   return `TITLE:\n${title}\n\nBODY:\n${body}`;

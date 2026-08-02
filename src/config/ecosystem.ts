@@ -2,7 +2,6 @@
 
 import { PUBLIC_SITE_URL } from "./site";
 
-/** @deprecated Use PUBLIC_SITE_URL — kept for imports migrating off hivemindtoken.ai */
 export const SYNEXUS_SITE_URL = PUBLIC_SITE_URL;
 
 export const STAKING_STATUS: "planned" | "live" = "planned";
@@ -29,7 +28,7 @@ export const AFFILIATE_TIERS = [
     exampleRevSharePct: "10%",
   },
   {
-    tier: "Hive",
+    tier: "Ranger",
     qualifiedVolumeUsd: "$500 – $4,999",
     exampleRevSharePct: "15%",
   },
@@ -42,8 +41,6 @@ export const AFFILIATE_TIERS = [
 
 export const STORAGE_KEYS = {
   affiliateHandle: "synexus-affiliate-handle",
-  /** @deprecated Legacy localStorage key from HiveMind era */
-  legacyAffiliateHandle: "hivemind-affiliate-handle",
 } as const;
 
 export function normalizeAffiliateHandle(raw: string): string {
@@ -60,17 +57,10 @@ export function buildAffiliateReferralUrl(handle = ""): string {
 
 export function readStoredAffiliateHandle(): string {
   if (typeof localStorage === "undefined") return "";
-  return (
-    localStorage.getItem(STORAGE_KEYS.affiliateHandle) ??
-    localStorage.getItem(STORAGE_KEYS.legacyAffiliateHandle) ??
-    ""
-  );
+  return localStorage.getItem(STORAGE_KEYS.affiliateHandle) ?? "";
 }
 
 export function saveAffiliateHandle(handle: string): void {
   if (typeof localStorage === "undefined") return;
   localStorage.setItem(STORAGE_KEYS.affiliateHandle, handle);
-  if (handle.trim()) {
-    localStorage.removeItem(STORAGE_KEYS.legacyAffiliateHandle);
-  }
 }

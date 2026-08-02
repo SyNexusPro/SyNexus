@@ -10,7 +10,7 @@ import { trackSiteEvent } from "../lib/siteAnalytics";
 import { dexScreenerTokenUrl, jupiterBuyWithSolUrl, jupiterSellForSolUrl } from "../lib/solanaTradeLinks";
 import { getTradingFeeBps } from "../lib/tradingFees";
 import { useSynexusPlan } from "../hooks/useSynexusPlan";
-import { SYN_IS_LIVE, SYN_MINT, SYN_PUMPFUN_COIN_URL } from "../config/synToken";
+import { SYN_IS_LIVE, SYN_MINT, SYN_PUMPFUN_COIN_URL, SYN_TOKEN_ID } from "../config/synToken";
 import type { Token } from "../data/tokens";
 import {
   fetchTokenDetailById,
@@ -206,7 +206,7 @@ export function TokenDetail() {
   const dexscreenerUrl = dexScreenerTokenUrl(token.mintAddress, token.symbol);
   const buySwapUrl = jupiterBuyWithSolUrl(token.mintAddress, swapOpts) ?? dexscreenerUrl;
   const sellSwapUrl = jupiterSellForSolUrl(token.mintAddress, swapOpts) ?? dexscreenerUrl;
-  const isSynToken = token.id === "hivemind-sol" || token.mintAddress === SYN_MINT;
+  const isSynToken = token.id === "syn-sol" || token.id === SYN_TOKEN_ID || token.mintAddress === SYN_MINT;
   const showPumpFun = SYN_IS_LIVE && isSynToken;
   const explorerUrl = token.mintAddress
     ? `https://solscan.io/token/${token.mintAddress}`

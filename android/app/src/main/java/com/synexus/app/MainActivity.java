@@ -31,6 +31,7 @@ public class MainActivity extends BridgeActivity {
     WebSettings settings = webView.getSettings();
     settings.setCacheMode(WebSettings.LOAD_DEFAULT);
     settings.setDomStorageEnabled(true);
-    settings.setOffscreenPreRaster(true);
+    settings.setMediaPlaybackRequiresUserGesture(true);
+    settings.setOffscreenPreRaster(false);
   }
 }

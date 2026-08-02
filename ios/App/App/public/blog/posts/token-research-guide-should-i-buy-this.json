@@ -1,0 +1,49 @@
+{
+  "slug": "token-research-guide-should-i-buy-this",
+  "title": "Token Research Guide: How to Use Should I Buy This?",
+  "excerpt": "A step-by-step walkthrough of SyNexus's fastest research tool — paste, scan, read, share.",
+  "date": "2026-07-11",
+  "author": "SyNexus Editorial",
+  "origin": "https://www.synexus.pro",
+  "trustLine": "Non-custodial · You sign every trade · Not financial advice.",
+  "blocks": [
+    {
+      "type": "h2",
+      "text": "One question, one workflow"
+    },
+    {
+      "type": "p",
+      "text": "Open the home feed, paste a Solana symbol or mint into Should I buy this?, and tap scan. You get Avoid, Watch, or OK in plain English plus supporting signals."
+    },
+    {
+      "type": "h2",
+      "text": "Three free deep scans"
+    },
+    {
+      "type": "p",
+      "text": "New visitors get three deep scans before signup. Re-scanning the same token does not consume another slot — compare reads over time as conditions change."
+    },
+    {
+      "type": "h2",
+      "text": "Use the tutorial"
+    },
+    {
+      "type": "p",
+      "text": "Tap the small ? button on the scan panel for a watch-and-listen tutorial that explains what the tool does and what it never will do."
+    },
+    {
+      "type": "h2",
+      "text": "Share your read"
+    },
+    {
+      "type": "p",
+      "text": "Send the scan URL to friends so everyone references the same mint and Sentinel fusion — critical during fast memecoin cycles."
+    }
+  ],
+  "cta": "Run a free Sentinel scan → https://www.synexus.pro",
+  "tags": [
+    "research",
+    "tutorial",
+    "SyNexus"
+  ]
+}

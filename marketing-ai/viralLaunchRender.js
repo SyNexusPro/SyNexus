@@ -2,7 +2,6 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { buildLaunchVideoJob } from "./viralLaunchBlueprint.js";
 import { renderSceneSvg } from "./videoArt.js";
-import { renderSynBunnyStandaloneSvg, clearSynBunnyCache } from "./synBunny.js";
 import {
   composeVideo,
   fileExists,
@@ -28,14 +27,6 @@ async function renderScriptToDir(script, { force = false, quiet = false, outDir,
 
   const scenesDir = join(dayDir, "scenes", script.id);
   await mkdir(scenesDir, { recursive: true });
-
-  const bunnyPng = join(dayDir, "syn-bunny.png");
-  if (process.env.VIDEO_MASCOT?.trim() === "1" && !(await fileExists(bunnyPng))) {
-    const bunnySvg = renderSynBunnyStandaloneSvg(512);
-    await writeFile(join(dayDir, "syn-bunny.svg"), bunnySvg, "utf8");
-    await renderSvgToPng(bunnySvg, bunnyPng);
-  }
-  clearSynBunnyCache();
 
   const audioPath = await synthesizeVoiceover(
     script.voiceover,

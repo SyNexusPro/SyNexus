@@ -7,12 +7,16 @@ import { SynexusBootSequence } from "./components/SynexusBootSequence";
 import { initSecurityBot } from "./lib/securityBot";
 import { refreshOwnerAccess } from "./lib/ownerAccess";
 import { clearExpiredProDemo, restoreActiveProTrialGrant } from "./lib/proDemo";
+import { markNativePerformanceMode } from "./lib/nativePerformance";
+import { migrateLegacyStorageKeys } from "./lib/legacyStorageMigrate";
 import "./index.css";
 
+migrateLegacyStorageKeys();
 initSecurityBot();
 clearExpiredProDemo();
 restoreActiveProTrialGrant();
 void refreshOwnerAccess();
+markNativePerformanceMode();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
