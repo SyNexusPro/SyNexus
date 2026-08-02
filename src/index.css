@@ -10922,3 +10922,17 @@ a {
   opacity: 0.55;
   cursor: not-allowed;
 }
+
+/* Native Android WebView — trim infinite animations that freeze low-end GPUs */
+html.native-android [class*="scanner"],
+html.native-android [class*="synexus-pro-promo"],
+html.native-android [class*="operator-link-scan"],
+html.native-android [class*="card-circuit"],
+html.native-android .synthetic-sentinel__live-dot {
+  animation: none !important;
+}
+
+html.native-android .pulse-page,
+html.native-android .app-main {
+  scroll-behavior: auto;
+}

@@ -86,6 +86,8 @@ import { SYNEXUS_PRO_TRIAL_DAYS, SYNEXUS_PRO_TRIAL_LABEL } from "../config/proTr
 import { getSentinelIdleMessage, getSentinelMessage } from "../lib/watcherVoice";
 import type { Token } from "../data/tokens";
 import { fetchMvpTokenFeed } from "../services/marketDataService";
+import { useAppIsActive } from "../hooks/useAppIsActive";
+import { nativePollIntervalMs } from "../lib/nativePerformance";
 import { buildSentinelLiveIntel, sentinelLaneIdFromSentinel } from "../lib/sentinelIntel";
 import { trackSiteEvent } from "../lib/siteAnalytics";
 
@@ -196,6 +198,7 @@ export function Pulse() {
   const [sentinelIdle, setSentinelIdle] = useState(getSentinelIdleMessage(Date.now()));
   const [authBusy, setAuthBusy] = useState(false);
   const [authLoadPhrase, setAuthLoadPhrase] = useState<"synexus" | "sentinel">("synexus");
+  const appActive = useAppIsActive();
   const [authMessage, setAuthMessage] = useState<AuthMessage>({
     tone: "info",
     text: hasSupabaseEnv
@@ -476,14 +479,15 @@ export function Pulse() {
   }, []);
 
   useEffect(() => {
-    const pollMs = plan === "PRO" ? 8_000 : 12_000;
+    if (!appActive) return;
+    const pollMs = nativePollIntervalMs(plan === "PRO" ? 8_000 : 12_000);
     const id = window.setInterval(() => {
       void refreshMarketSignals().catch(() => {
         /* keep last good read */
       });
     }, pollMs);
     return () => window.clearInterval(id);
-  }, [plan]);
+  }, [appActive, plan]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);

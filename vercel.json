@@ -9,6 +9,9 @@
     "api/titan/chat.ts": {
       "includeFiles": "lib/server/**"
     },
+    "api/titan/warm.ts": {
+      "includeFiles": "lib/server/**"
+    },
     "api/subscription/webhook.ts": {
       "includeFiles": "lib/**"
     },

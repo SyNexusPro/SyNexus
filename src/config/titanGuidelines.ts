@@ -10,19 +10,19 @@ export const TITAN_PRODUCT_TAGLINE = "Don't use SyNexus — ask Titan.";
 
 export const TITAN_PRODUCT_VISION =
   "Titan is the host's AI commander — a soft, futuristic female intelligence with real strength: " +
-  "decisive counsel on markets and life, grounded in live SyNexus data.";
+  "the most open, honest advisor in the app — decisive counsel on markets and life, grounded in live SyNexus data.";
 
 export function buildTitanIdentityLine(titanBotName: string): string {
   return (
-    `I'm ${titanBotName} — your intelligence commander. Soft voice, sharp mind. ` +
-    `Ask me anything with strength — I'll give you a straight read and real advice.`
+    `I'm ${titanBotName} — your intelligence commander. Soft voice, sharp mind, zero filter. ` +
+    `Ask me anything — I'll give you the straight truth and real advice.`
   );
 }
 
 export function buildTitanCapabilityBlurb(titanBotName: string): string {
   return (
-    `${titanBotName} connects to live markets, flags scams, coaches your decisions, remembers your style when you opt in, ` +
-    `and holds real conversations — not just menus. ${TITAN_GUARDRAILS.disclaimer}`
+    `${titanBotName} connects to live markets, flags scams, tells you what she really thinks, remembers your style when you opt in, ` +
+    `and holds real conversations — not menus or corporate scripts.`
   );
 }
 
@@ -74,7 +74,7 @@ export const TITAN_CAPABILITIES: readonly TitanCapability[] = [
     id: "trading_coach",
     title: "Trading coach",
     summary:
-      "Instead of saying \"buy this,\" Titan explains indicators, sentiment, support and resistance, and helps you learn to decide for yourself.",
+      "Shia gives you her real read — risk, momentum, liquidity, and a clear Avoid · Watch · or OK stance. No hedging, no fake certainty.",
     requiresPermission: false,
     status: "live",
   },
@@ -104,20 +104,19 @@ export const TITAN_CAPABILITIES: readonly TitanCapability[] = [
 ] as const;
 
 export const TITAN_GUARDRAILS = {
-  /** Never present guaranteed profits or exact buy/sell orders as advice. */
-  noDefinitiveFinancialRecommendations: true,
-  /** Provide analysis, explain risks, help users make informed decisions. */
-  coachNotCommand: true,
-  noGuaranteedProfits: true,
-  noExactBuySellOrders: true,
+  /** Honest stance over vague coaching — still non-custodial. */
+  coachNotCommand: false,
+  noGuaranteedProfits: false,
+  noExactBuySellOrders: false,
   alwaysNonCustodial: true,
+  /** Shown in settings only — not appended to every reply. */
   disclaimer:
-    "Not financial advice. Titan provides analysis and education — you sign every trade in your own wallet.",
+    "Shia gives direct analysis and honest counsel. You sign every trade in your own wallet — not financial advice.",
 } as const;
 
-/** Short lines Titan may use when users ask for guaranteed picks. */
+/** Short lines Titan may use when users ask for a pick. */
 export const TITAN_COACH_REDIRECTS = [
-  "Here's my read — then you decide.",
-  "I'll give you a straight answer from the data.",
-  "Let me break down the risk and momentum — your call from there.",
+  "Here's my honest read — then you decide.",
+  "Straight answer from the data — no filter.",
+  "I'll tell you what I really think on risk and momentum — your call from there.",
 ] as const;

@@ -1,14 +1,15 @@
-import { isTopMoversQuestion, parseMoverTimeframeFromText } from "./moverTimeframes";
+import { isTopMoversQuestion, parseMoverTimeframeFromText, type MoverTimeframe } from "./moverTimeframes";
 import { fetchSolanaTopMovers } from "../services/marketDataService";
-import { formatTopMoversAnswerFromResult } from "./titanMoversAnswer";
+import { formatLocalPoolMoversAnswer, formatTopMoversAnswer, formatTopMoversAnswerFromResult } from "./titanMoversAnswer";
 import { softenTitanResponse } from "./titanGuardrails";
 import {
   buildTitanChatPayload,
+  classifyTitanIntent,
   type TitanChatHistoryMessage,
 } from "./titanContextPack";
 import { loadTitanMemoryProfile, hasTitanMemoryConsent, rememberFavoriteSymbol } from "./titanMemory";
-import { oracleRespondToMessage, resolveOracleTokenQuery } from "./oracleCryptoBrain";
-import { isInstantTitanPath } from "./titanRouting";
+import { resolveOracleTokenQuery } from "./oracleCryptoBrain";
+import { isInstantCryptoPath, tryInstantCryptoAnswer } from "./titanInstantCrypto";
 import {
   reactToFreeText,
   type ConversationTurn,
@@ -20,20 +21,32 @@ export type TitanStreamHandlers = {
   signal?: AbortSignal;
 };
 
-function turnsToHistory(turns: ConversationTurn[]): TitanChatHistoryMessage[] {
+const CRYPTO_INTENTS = new Set([
+  "trade_decision",
+  "comparison",
+  "token_lookup",
+  "strategy",
+  "explain",
+  "market_movers",
+]);
+
+function turnsToHistory(turns: ConversationTurn[], cryptoFast: boolean): TitanChatHistoryMessage[] {
+  const limit = cryptoFast ? 4 : 8;
   return turns
-    .slice(-10)
+    .slice(-limit)
     .map((turn) => ({
       role: turn.role === "user" ? ("user" as const) : ("assistant" as const),
-      content: turn.text,
+      content: turn.text.slice(0, cryptoFast ? 1200 : 2000),
     }))
     .filter((turn) => turn.content.trim());
 }
 
-/** Pre-warm the Titan API route when the chat opens (reduces first-reply latency). */
+/** Pre-warm Titan + LLM connection when chat opens (cuts first-token latency). */
 export function warmTitanBrain(): void {
-  void fetch("/api/titan/warm", { method: "GET" }).catch(() => {
-    /* optional */
+  void fetch("/api/titan/warm", { method: "POST", keepalive: true }).catch(() => {
+    void fetch("/api/titan/warm", { method: "GET", keepalive: true }).catch(() => {
+      /* optional */
+    });
   });
 }
 
@@ -92,7 +105,7 @@ async function streamTitanChatApi(
 }
 
 /**
- * Titan brain: instant scans/status → streaming LLM for everything else.
+ * Titan brain: instant crypto reads → streaming LLM for everything else.
  */
 export async function respondToTitanMessage(
   text: string,
@@ -103,27 +116,45 @@ export async function respondToTitanMessage(
   const trimmed = text.trim();
   if (!trimmed) return "What's on your mind? I'm ready.";
 
+  const instant = tryInstantCryptoAnswer(trimmed, ctx);
+  if (instant) return instant;
+
   if (isTopMoversQuestion(trimmed)) {
     const timeframe = parseMoverTimeframeFromText(trimmed);
     const cached = ctx.moversBoard?.[timeframe];
-    const slice =
-      cached && cached.source === "live" && cached.gainers.length
-        ? cached
-        : await fetchSolanaTopMovers(timeframe);
-    const moversAnswer = formatTopMoversAnswerFromResult(trimmed, slice, ctx.operatorName);
-    if (moversAnswer) return moversAnswer;
+    if (cached?.gainers.length) {
+      const moversAnswer = formatTopMoversAnswer(trimmed, ctx.moversBoard!, ctx.operatorName);
+      if (moversAnswer) return moversAnswer;
+    }
+    const local = formatLocalPoolMoversAnswer(trimmed, ctx.tokens, ctx.operatorName);
+    if (local) return local;
+
+    const needsHistorical = (["7d", "30d", "365d"] as MoverTimeframe[]).includes(timeframe);
+    if (needsHistorical) {
+      const slice = await fetchSolanaTopMovers(timeframe);
+      const moversAnswer = formatTopMoversAnswerFromResult(trimmed, slice, ctx.operatorName);
+      if (moversAnswer) return moversAnswer;
+    }
   }
 
-  if (isInstantTitanPath(trimmed)) {
-    const instant = oracleRespondToMessage(trimmed, ctx);
-    if (instant) return instant;
-  }
+  const intent = classifyTitanIntent(trimmed);
+  const cryptoFast = CRYPTO_INTENTS.has(intent) || isInstantCryptoPath(trimmed);
 
   const token = resolveOracleTokenQuery(trimmed, ctx.tokens);
   if (token && hasTitanMemoryConsent()) rememberFavoriteSymbol(token.symbol);
 
   const memory = hasTitanMemoryConsent() ? loadTitanMemoryProfile() : null;
-  const payload = buildTitanChatPayload(trimmed, ctx, turnsToHistory(turns), memory);
+  const basePayload = buildTitanChatPayload(trimmed, ctx, turnsToHistory(turns, cryptoFast), memory);
+  const payload = cryptoFast
+    ? {
+        ...basePayload,
+        fastMode: true,
+        marketBrief: basePayload.marketBrief.split("\n").slice(0, 8).join("\n"),
+        moversBrief: intent === "market_movers" ? basePayload.moversBrief : null,
+        operatorBrief: null,
+        watchlistBrief: null,
+      }
+    : { ...basePayload, fastMode: false };
 
   try {
     const llm = await streamTitanChatApi(payload, handlers);
@@ -135,10 +166,12 @@ export async function respondToTitanMessage(
   return reactToFreeText(trimmed, ctx);
 }
 
-/** @deprecated Use isInstantTitanPath — LLM is default for all non-instant messages. */
+/** @deprecated Use isInstantCryptoPath — LLM is fallback after instant crypto brain. */
 export function shouldUseTitanLlm(_text: string, fastBrainReply: string): boolean {
   return !fastBrainReply;
 }
+
+export { isInstantCryptoPath };
 
 export function isGenericTitanFallback(reply: string): boolean {
   return /Got it|thinking out loud|What's the real question/.test(reply);

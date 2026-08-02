@@ -20,6 +20,7 @@ import { useSolanaMoversBoard } from "../lib/useSolanaMoversBoard";
 import { isSynexusBootComplete, subscribeSynexusBootComplete } from "../lib/synexusBootComplete";
 import { SYNEXUS_PLAN_CHANGED } from "../hooks/useSynexusPlan";
 import { OracleSupremeChat } from "./OracleSupremeChat";
+import { warmTitanBrain } from "../lib/titanConversation";
 import { QuickOperatorLogin } from "./QuickOperatorLogin";
 import { SynexusSymbolMark } from "./SynexusSymbolMark";
 
@@ -51,6 +52,10 @@ export function TitanSheet() {
     enabled: titanChatActive,
     intervalMs: 300_000,
   });
+
+  useEffect(() => {
+    if (sheetOpen) warmTitanBrain();
+  }, [sheetOpen]);
 
   useEffect(() => subscribeSynexusBootComplete(() => setBootReady(true)), []);
 

@@ -10,9 +10,8 @@ import {
   saveConversationHistory,
   DAY_MOOD_QUICK_REPLIES,
 } from "../lib/oracleSupremeConversation";
-import { respondToTitanMessage, warmTitanBrain } from "../lib/titanConversation";
-import { isInstantTitanPath } from "../lib/titanRouting";
-import { oracleRespondToMessage } from "../lib/oracleCryptoBrain";
+import { respondToTitanMessage, warmTitanBrain, isInstantCryptoPath } from "../lib/titanConversation";
+import { tryInstantCryptoAnswer } from "../lib/titanInstantCrypto";
 import { guardOracleChat } from "../lib/securityBot";
 import { recordTitanFeedback, hasTitanFeedbackConsent } from "../lib/titanFeedback";
 import {
@@ -118,8 +117,8 @@ export function OracleSupremeChat({
     setLastUserTopic(trimmed);
     appendUser(trimmed);
 
-    if (isInstantTitanPath(trimmed)) {
-      const instant = oracleRespondToMessage(trimmed, context);
+    if (isInstantCryptoPath(trimmed)) {
+      const instant = tryInstantCryptoAnswer(trimmed, context);
       if (instant) {
         appendOracle(instant);
         speakReply(instant);

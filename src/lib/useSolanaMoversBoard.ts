@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useAppIsActive } from "../hooks/useAppIsActive";
+import { nativePollIntervalMs } from "../lib/nativePerformance";
 import {
   fetchSolanaMoversBoard,
   type SolanaMoversBoard,
@@ -11,12 +13,14 @@ type Options = {
 };
 
 export function useSolanaMoversBoard(options: Options = {}) {
-  const { enabled = false, intervalMs = 300_000 } = options;
+  const { enabled = false, intervalMs: baseIntervalMs = 300_000 } = options;
+  const intervalMs = nativePollIntervalMs(baseIntervalMs);
+  const appActive = useAppIsActive();
   const [board, setBoard] = useState<SolanaMoversBoard | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || !appActive) return;
 
     let cancelled = false;
 
@@ -38,7 +42,7 @@ export function useSolanaMoversBoard(options: Options = {}) {
       cancelled = true;
       window.clearInterval(id);
     };
-  }, [enabled, intervalMs]);
+  }, [appActive, enabled, intervalMs]);
 
   return { board, loading };
 }

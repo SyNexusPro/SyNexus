@@ -11,6 +11,10 @@ const config: CapacitorConfig = {
   appId: "com.synexus.app",
   appName: "Synexus",
   webDir: "dist",
+  android: {
+    backgroundColor: "#071007",
+    allowMixedContent: false,
+  },
   server: {
     androidScheme: "https",
     ...(useRemoteServer

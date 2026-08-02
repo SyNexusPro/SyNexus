@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Token } from "../data/tokens";
+import { useAppIsActive } from "../hooks/useAppIsActive";
+import { nativePollIntervalMs } from "../lib/nativePerformance";
 import { fetchMvpTokenFeed } from "../services/marketDataService";
 
 type OracleMarketFeed = {
@@ -16,14 +18,16 @@ type Options = {
 
 export function useOracleMarketFeed(options: Options | number = 10_000): OracleMarketFeed {
   const enabled = typeof options === "number" ? true : (options.enabled ?? true);
-  const intervalMs = typeof options === "number" ? options : (options.intervalMs ?? 10_000);
+  const baseIntervalMs = typeof options === "number" ? options : (options.intervalMs ?? 10_000);
+  const intervalMs = nativePollIntervalMs(baseIntervalMs);
+  const appActive = useAppIsActive();
 
   const [tokens, setTokens] = useState<Token[]>([]);
   const [feedSource, setFeedSource] = useState<"live" | "mock">("mock");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!enabled) {
+    if (!enabled || !appActive) {
       setLoading(false);
       return;
     }
@@ -50,7 +54,7 @@ export function useOracleMarketFeed(options: Options | number = 10_000): OracleM
       cancelled = true;
       window.clearInterval(id);
     };
-  }, [enabled, intervalMs]);
+  }, [appActive, enabled, intervalMs]);
 
   return { tokens, feedSource, loading };
 }

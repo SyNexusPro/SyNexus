@@ -42,34 +42,50 @@ function checkRateLimit(ip: string, plan: "FREE" | "PRO"): { ok: true } | { ok: 
   return { ok: true };
 }
 
-function resolveLlmConfig(env: TitanEnv, plan: "FREE" | "PRO" = "FREE") {
+function resolveLlmConfig(env: TitanEnv, plan: "FREE" | "PRO" = "FREE", fastMode = false) {
   const apiKey = env.TITAN_API_KEY?.trim() || env.OPENAI_API_KEY?.trim();
   const baseUrl = (
     env.TITAN_API_BASE?.trim() ||
     env.OPENAI_API_BASE?.trim() ||
     "https://api.openai.com/v1"
   ).replace(/\/$/, "");
+  const groq = /groq\.com/i.test(baseUrl);
   const model =
     plan === "PRO"
       ? env.TITAN_MODEL_PRO?.trim() ||
         env.OPENAI_MODEL_PRO?.trim() ||
         env.TITAN_MODEL?.trim() ||
         env.OPENAI_MODEL?.trim() ||
-        "gpt-4o"
+        (groq ? "llama-3.3-70b-versatile" : "gpt-4o")
       : env.TITAN_MODEL_FREE?.trim() ||
         env.OPENAI_MODEL_FREE?.trim() ||
         env.TITAN_MODEL?.trim() ||
         env.OPENAI_MODEL?.trim() ||
-        "gpt-4o-mini";
+        (groq ? "llama-3.1-8b-instant" : "gpt-4o-mini");
+  const defaultMax = fastMode
+    ? plan === "PRO"
+      ? 640
+      : 480
+    : plan === "PRO"
+      ? 1400
+      : 1000;
   const maxTokens = Math.min(
-    2000,
-    Math.max(200, Number(plan === "PRO" ? env.TITAN_MAX_TOKENS_PRO ?? env.TITAN_MAX_TOKENS ?? 1400 : env.TITAN_MAX_TOKENS ?? 1000) || 1000),
+    fastMode ? 900 : 2000,
+    Math.max(
+      fastMode ? 180 : 200,
+      Number(
+        plan === "PRO"
+          ? env.TITAN_MAX_TOKENS_PRO ?? env.TITAN_MAX_TOKENS ?? defaultMax
+          : env.TITAN_MAX_TOKENS ?? defaultMax,
+      ) || defaultMax,
+    ),
   );
   return { apiKey, baseUrl, model, maxTokens };
 }
 
-function resolveTemperature(plan: "FREE" | "PRO"): number {
-  return plan === "PRO" ? 0.42 : 0.48;
+function resolveTemperature(plan: "FREE" | "PRO", fastMode = false): number {
+  if (fastMode) return plan === "PRO" ? 0.55 : 0.6;
+  return plan === "PRO" ? 0.62 : 0.68;
 }
 
 function sanitizeMessage(text: string): string {
@@ -163,6 +179,8 @@ function validateBody(raw: unknown): TitanChatRequestBody | null {
         }))
     : [];
 
+  const fastMode = body.fastMode === true;
+
   return {
     message,
     operatorName,
@@ -180,14 +198,74 @@ function validateBody(raw: unknown): TitanChatRequestBody | null {
     tokenIntel,
     memory,
     history,
+    fastMode,
   };
+}
+
+/** Ping the LLM once so the first real chat token arrives faster (Groq/OpenAI cold start). */
+export async function warmTitanLlm(env: TitanEnv): Promise<boolean> {
+  const { apiKey, baseUrl, model } = resolveLlmConfig(env, "FREE", true);
+  if (!apiKey) return false;
+
+  try {
+    const response = await fetch(`${baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        stream: false,
+        max_tokens: 1,
+        temperature: 0,
+        messages: [
+          { role: "system", content: "ok" },
+          { role: "user", content: "ping" },
+        ],
+      }),
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+export async function handleTitanWarm(
+  req: IncomingMessage,
+  res: ServerResponse,
+  env: TitanEnv,
+): Promise<void> {
+  const ready = !!(env.TITAN_API_KEY?.trim() || env.OPENAI_API_KEY?.trim());
+  if (!ready) {
+    res.statusCode = 503;
+    res.end();
+    return;
+  }
+
+  if (req.method === "GET" || req.method === "HEAD") {
+    res.statusCode = 204;
+    res.end();
+    return;
+  }
+
+  if (req.method === "POST") {
+    const ok = await warmTitanLlm(env);
+    res.statusCode = ok ? 204 : 502;
+    res.end();
+    return;
+  }
+
+  res.statusCode = 405;
+  res.end();
 }
 
 async function* streamOpenAiChat(
   body: TitanChatRequestBody,
   env: TitanEnv,
 ): AsyncGenerator<string, void, unknown> {
-  const { apiKey, baseUrl, model, maxTokens } = resolveLlmConfig(env, body.plan);
+  const fastMode = body.fastMode === true;
+  const { apiKey, baseUrl, model, maxTokens } = resolveLlmConfig(env, body.plan, fastMode);
   if (!apiKey) throw new Error("llm_unavailable");
 
   const system = buildTitanSystemPrompt(body);
@@ -208,9 +286,9 @@ async function* streamOpenAiChat(
       messages,
       stream: true,
       max_tokens: maxTokens,
-      temperature: resolveTemperature(body.plan),
-      presence_penalty: 0.08,
-      frequency_penalty: 0.05,
+      temperature: resolveTemperature(body.plan, fastMode),
+      presence_penalty: fastMode ? 0 : 0.08,
+      frequency_penalty: fastMode ? 0 : 0.05,
     }),
   });
 
@@ -319,14 +397,12 @@ export async function handleTitanChatStream(
 }
 
 export function configureTitanChatApi(server: ViteDevServer, env: TitanEnv) {
-  server.middlewares.use("/api/titan/warm", (req, res, next) => {
-    if (req.method !== "GET" && req.method !== "HEAD") {
+  server.middlewares.use("/api/titan/warm", async (req, res, next) => {
+    if (req.method !== "GET" && req.method !== "HEAD" && req.method !== "POST") {
       next();
       return;
     }
-    const ready = !!(env.TITAN_API_KEY?.trim() || env.OPENAI_API_KEY?.trim());
-    res.statusCode = ready ? 204 : 503;
-    res.end();
+    await handleTitanWarm(req, res, env);
   });
 
   server.middlewares.use("/api/titan/chat", async (req, res, next) => {

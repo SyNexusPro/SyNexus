@@ -1,8 +1,8 @@
 import type { MoverTimeframe } from "./moverTimeframes";
 import { MOVER_TIMEFRAME_LABEL } from "./moverTimeframes";
 import type { SolanaMoversBoard, SolanaMoversResult, TokenMover } from "../services/marketDataService";
-import { appendTitanDecisionFooter } from "./titanGuardrails";
 import { parseMoverTimeframeFromText } from "./moverTimeframes";
+import type { Token } from "../data/tokens";
 
 function formatUsd(value: number | undefined): string {
   if (value == null || !Number.isFinite(value)) return "—";
@@ -62,17 +62,36 @@ export function formatTopMoversAnswer(
   const sourceNote = slice.source === "live" ? "DexScreener + Birdeye" : "demo data";
 
   if (!list.length) {
-    return appendTitanDecisionFooter(
-      `No clear ${kind} in the ${label} window right now, ${operatorName}. Liquidity filters may have trimmed thin pairs — try 24h or ask me to widen the scan.`,
-    );
+    return `No clear ${kind} in the ${label} window right now, ${operatorName}. Liquidity filters may have trimmed thin pairs — try 24h or ask me to widen the scan.`;
   }
 
   const lines = list.map((m, i) => formatMoverLine(m, i));
   const header = `Top ${list.length} Solana ${kind} — ${label} (${sourceNote}):`;
 
-  return appendTitanDecisionFooter(
-    `${header}\n${lines.join("\n")}\n\nPulse lane: these are momentum leaders, not buy signals — check Aegis for rug/thin-liquidity flags before you sign anything.`,
+  return `${header}\n${lines.join("\n")}\n\nPulse lane leaders — verify Aegis before you sign.`;
+}
+
+/** Instant movers from the in-memory live pool (no Dex/Birdeye round-trip). */
+export function formatLocalPoolMoversAnswer(
+  text: string,
+  tokens: Token[],
+  operatorName: string,
+): string | null {
+  if (!tokens.length) return null;
+
+  const count = parseMoverCount(text);
+  const losers = wantsLosers(text);
+  const sorted = [...tokens].sort((a, b) =>
+    losers ? a.change24hPct - b.change24hPct : b.change24hPct - a.change24hPct,
   );
+  const list = sorted.slice(0, count);
+  const kind = losers ? "losers" : "gainers";
+  const lines = list.map(
+    (t, i) =>
+      `${i + 1}. ${t.symbol} (${t.name}) — ${formatPct(t.change24hPct)} · ${formatUsd(t.priceUsd)} · liq ${formatUsd(t.liquidityUsd)}`,
+  );
+
+  return `Top ${list.length} Solana ${kind} — live pool (instant), ${operatorName}:\n${lines.join("\n")}\n\nFull ${parseMoverTimeframeFromText(text)} board may still be syncing — this is your fastest read.`;
 }
 
 /** Compact brief for Titan LLM context — all timeframes. */

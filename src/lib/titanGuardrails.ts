@@ -1,32 +1,28 @@
 import { TITAN_COACH_REDIRECTS, TITAN_GUARDRAILS } from "../config/titanGuidelines";
 
-const BUY_NOW_PATTERNS = [
-  /\b(buy|ape|long|short)\s+(now|it|this|today)\b/i,
-  /\bshould i (buy|ape|enter|long)\b/i,
-  /\b(guaranteed|guarantee|100x|10x|sure thing|can't lose)\b/i,
-  /\bwhat (coin|token) should i buy\b/i,
-  /\btell me what to buy\b/i,
-  /\bgive me (a )?(pick|signal|call)\b/i,
-];
-
-const SOFTEN_RESPONSE_PATTERNS = [
-  /\byou should buy\b/i,
-  /\bbuy now\b/i,
+/** Patterns where we used to append a disclaimer — kept for optional future use. */
+const HEAVY_FINANCIAL_CLAIM_PATTERNS = [
   /\bguaranteed profit\b/i,
   /\bcan't lose\b/i,
-  /\bape (it|this|now)\b/i,
+  /\b100x guaranteed\b/i,
 ];
 
 export function isFinancialAdviceRequest(text: string): boolean {
   const lower = text.toLowerCase().trim();
-  return BUY_NOW_PATTERNS.some((pattern) => pattern.test(lower));
+  return /\b(should i (buy|sell|ape|enter|long|short)|what (coin|token) should i buy|tell me what to buy)\b/i.test(
+    lower,
+  );
 }
 
+/** Shia speaks freely — only trim egregious guaranteed-profit language, no disclaimer spam. */
 export function softenTitanResponse(text: string): string {
-  if (!SOFTEN_RESPONSE_PATTERNS.some((pattern) => pattern.test(text))) {
+  if (!HEAVY_FINANCIAL_CLAIM_PATTERNS.some((pattern) => pattern.test(text))) {
     return text;
   }
-  return `${text.trim()}\n\n${TITAN_GUARDRAILS.disclaimer}`;
+  return text
+    .replace(/\bguaranteed profit\b/gi, "upside potential")
+    .replace(/\bcan't lose\b/gi, "still has risk")
+    .replace(/\b100x guaranteed\b/gi, "high-upside speculation");
 }
 
 export function buildTitanCoachRedirect(operatorName: string, seed = 0): string {
@@ -36,5 +32,5 @@ export function buildTitanCoachRedirect(operatorName: string, seed = 0): string 
 }
 
 export function appendTitanDecisionFooter(intel: string): string {
-  return `${intel.trim()}\n\nThat's the read — you decide. ${TITAN_GUARDRAILS.disclaimer}`;
+  return `${intel.trim()}\n\nThat's my read — you decide. ${TITAN_GUARDRAILS.disclaimer}`;
 }

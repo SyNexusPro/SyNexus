@@ -29,6 +29,12 @@ else {
   errors++;
 }
 
+const localProps = join(androidDir, "local.properties");
+if (existsSync(localProps)) ok("local.properties");
+else {
+  warn("local.properties missing", "run: npm run android:studio");
+}
+
 if (existsSync(configFile)) ok("capacitor.config.ts");
 else {
   fail("capacitor.config.ts missing");
@@ -48,6 +54,7 @@ else {
 }
 
 console.log("\nCommands (do not use cap add — platform already exists):");
+console.log("  npm run android:studio  # SDK path + cap sync for Android Studio");
 console.log("  npm run cap:sync       # web build + sync Android");
 console.log("  npm run android:bundle # signed AAB for Play Console");
 console.log("  npx cap open android   # Android Studio\n");

@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "./components/AppShell";
 import { GoogleAnalytics } from "./components/GoogleAnalytics";
+import { NativePerformanceInit } from "./components/NativePerformanceInit";
 import { SiteAnalyticsListener } from "./components/SiteAnalyticsListener";
 import { lazyWithRetry } from "./lib/lazyWithRetry";
 
@@ -65,6 +66,7 @@ function RouteFallback() {
 export default function App() {
   return (
     <BrowserRouter>
+      <NativePerformanceInit />
       <GoogleAnalytics />
       <SiteAnalyticsListener />
       <Suspense fallback={<RouteFallback />}>

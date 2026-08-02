@@ -10,6 +10,14 @@ function resolveJavaHome() {
   if (process.env.JAVA_HOME?.trim()) return process.env.JAVA_HOME.trim();
 
   if (process.platform === "win32") {
+    const studioRoots = [
+      "C:\\Program Files\\Android\\Android Studio\\jbr",
+      join(process.env.LOCALAPPDATA ?? "", "Programs", "Android Studio", "jbr"),
+    ];
+    for (const root of studioRoots) {
+      if (existsSync(join(root, "bin", "java.exe"))) return root;
+    }
+
     const adoptiumRoot = "C:\\Program Files\\Eclipse Adoptium";
     if (existsSync(adoptiumRoot)) {
       const jdks = readdirSync(adoptiumRoot, { withFileTypes: true })

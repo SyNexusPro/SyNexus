@@ -4,7 +4,6 @@ import { resolveInternalCommanderPersona } from "./titanBotName";
 import { answerAegisSecurityPrivacyQuestion } from "../config/sentinelAegis";
 import { SENTINEL_LANE_IDS, sentinelLaneLabel, type SentinelLaneId } from "../config/sentinels";
 import { isInstantTitanPath } from "./titanRouting";
-import { appendTitanDecisionFooter } from "./titanGuardrails";
 import { rememberFavoriteSymbol } from "./titanMemory";
 
 export type OracleSentinelDirective = {
@@ -251,9 +250,7 @@ export function oracleRespondToMessage(text: string, ctx: OracleMessageContext):
     const token = resolveOracleTokenQuery(text, tokens);
     if (token) {
       rememberFavoriteSymbol(token.symbol);
-      return appendTitanDecisionFooter(
-        `Found ${token.symbol} in ${tokens.length} tracked pairs:\n${buildTokenIntelBrief(token)}\n\nSentinels are on ${token.symbol} — Pulse has live orders.`,
-      );
+      return `Found ${token.symbol} in ${tokens.length} tracked pairs:\n${buildTokenIntelBrief(token)}\n\nSentinels are on ${token.symbol} — Pulse has live orders.`;
     }
     const partial = searchOracleTokens(text.replace(/[^\w\s]/g, " "), tokens);
     if (partial.length) {
