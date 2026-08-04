@@ -14,7 +14,7 @@ export function isFinancialAdviceRequest(text: string): boolean {
   );
 }
 
-/** Shia speaks freely — only trim egregious guaranteed-profit language, no disclaimer spam. */
+/** Hera speaks freely — only trim egregious guaranteed-profit language, no disclaimer spam. */
 export function softenTitanResponse(text: string): string {
   if (!HEAVY_FINANCIAL_CLAIM_PATTERNS.some((pattern) => pattern.test(text))) {
     return text;

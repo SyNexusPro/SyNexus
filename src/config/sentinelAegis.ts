@@ -42,7 +42,7 @@ export function buildAegisSecurityPrivacyBrief(): string {
     "On-chain: scams, rugs, suspicious contracts, thin liquidity, wallet concentration.",
     "Off-chain: privacy-safe accounts, no custody, opt-in memory, verified sign-in.",
     "",
-    "Ask Titan to scan a token, or visit Trust for the full security & privacy breakdown.",
+    "Scan a token on the home feed, or visit Trust for the full security & privacy breakdown.",
   ].join("\n");
 }
 

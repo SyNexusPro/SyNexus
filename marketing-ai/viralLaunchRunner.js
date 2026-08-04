@@ -135,7 +135,7 @@ function capCutBrief(plan, scripts) {
     "  · Dark green/black background · circuit board overlay",
     "  · Glitch text on hook (Day 1–2)",
     "  · Fake dashboard clip on authority days",
-    "  · Syn-Bunny bottom-right on payoff",
+    "  · SyNexus logo watermark on payoff",
     "",
     "AUDIO:",
     "  · Calm synthetic authority (Aria neural, steady pace)",

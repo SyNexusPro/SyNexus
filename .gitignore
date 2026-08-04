@@ -4,6 +4,16 @@ dist
 .DS_Store
 .env
 
+# Retired brand images (do not restore — OneDrive sometimes resurrects these)
+public/hivemind-*
+public/syn-bunny.png
+marketing-ai/assets/syn-bunny.*
+ios/**/hivemind-*
+ios/**/syn-bunny.*
+android/**/hivemind-*
+android/**/syn-bunny.*
+supabase/hivemind-complete-schema.sql
+
 # Android release signing — never commit real secrets or keystores
 android/keystore.properties
 android/**/*.jks

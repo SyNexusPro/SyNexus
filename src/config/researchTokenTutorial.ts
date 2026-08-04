@@ -23,7 +23,7 @@ export const RESEARCH_TOKEN_TUTORIAL_STEPS: readonly ResearchTutorialStep[] = [
     visual: "welcome",
     caption: "Research any Solana token before you ape.",
     narration:
-      "Welcome to SyNexus token research. This tool answers one question in plain English: should I buy this? Paste any Solana token and the Sentinels scan it in seconds.",
+      "Welcome to SyNexus token research. Paste any Solana token and the Sentinels return Avoid, Watch, or OK in plain English within seconds.",
   },
   {
     id: "paste",

@@ -40,6 +40,20 @@ const Disclaimer = lazy(() => import("./pages/Disclaimer").then((m) => ({ defaul
 const Faq = lazy(() => import("./pages/Faq").then((m) => ({ default: m.Faq })));
 const BlogIndex = lazy(() => import("./pages/Blog").then((m) => ({ default: m.BlogIndex })));
 const BlogPostView = lazy(() => import("./pages/Blog").then((m) => ({ default: m.BlogPostView })));
+const Markets = lazy(() => import("./pages/Markets").then((m) => ({ default: m.Markets })));
+const NewsIntelligence = lazy(() =>
+  import("./pages/NewsIntelligence").then((m) => ({ default: m.NewsIntelligence })),
+);
+const BusinessTools = lazy(() =>
+  import("./pages/BusinessTools").then((m) => ({ default: m.BusinessTools })),
+);
+const Automations = lazy(() =>
+  import("./pages/Automations").then((m) => ({ default: m.Automations })),
+);
+const LearningHub = lazy(() =>
+  import("./pages/LearningHub").then((m) => ({ default: m.LearningHub })),
+);
+const Watchlist = lazy(() => import("./pages/Watchlist").then((m) => ({ default: m.Watchlist })));
 const SiteAnalytics = lazy(() =>
   import("./pages/SiteAnalytics").then((m) => ({ default: m.SiteAnalytics })),
 );
@@ -92,6 +106,12 @@ export default function App() {
             <Route path="analytics" element={<SiteAnalytics />} />
             <Route path="blog" element={<BlogIndex />} />
             <Route path="blog/:slug" element={<BlogPostView />} />
+            <Route path="markets" element={<Markets />} />
+            <Route path="news" element={<NewsIntelligence />} />
+            <Route path="business" element={<BusinessTools />} />
+            <Route path="automations" element={<Automations />} />
+            <Route path="learn" element={<LearningHub />} />
+            <Route path="watchlist" element={<Watchlist />} />
             <Route path="token/:tokenId" element={<TokenDetail />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -74,7 +74,7 @@ export const TITAN_CAPABILITIES: readonly TitanCapability[] = [
     id: "trading_coach",
     title: "Trading coach",
     summary:
-      "Shia gives you her real read — risk, momentum, liquidity, and a clear Avoid · Watch · or OK stance. No hedging, no fake certainty.",
+      "Hera gives you her real read — risk, momentum, liquidity, and a clear Avoid · Watch · or OK stance. No hedging, no fake certainty.",
     requiresPermission: false,
     status: "live",
   },
@@ -111,7 +111,7 @@ export const TITAN_GUARDRAILS = {
   alwaysNonCustodial: true,
   /** Shown in settings only — not appended to every reply. */
   disclaimer:
-    "Shia gives direct analysis and honest counsel. You sign every trade in your own wallet — not financial advice.",
+    "Hera gives direct analysis and honest counsel. You sign every trade in your own wallet — not financial advice.",
 } as const;
 
 /** Short lines Titan may use when users ask for a pick. */

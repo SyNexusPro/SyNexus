@@ -30,6 +30,7 @@ export function AppShell() {
         </RouteErrorBoundary>
       </main>
       <TitanSheet />
+      {isHome ? null : (
       <footer className="app-footer">
         <Link className="app-footer__link" to="/about">
           About
@@ -111,6 +112,7 @@ export function AppShell() {
           Liquidity Treasury
         </Link>
       </footer>
+      )}
       <BottomNav />
     </div>
     </TitanShellProvider>

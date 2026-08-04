@@ -124,7 +124,7 @@ function instantComparison(text: string, tokens: Token[]): string | null {
 
 function instantTokenBrief(token: Token, operatorName: string): string {
   rememberFavoriteSymbol(token.symbol);
-  return `${token.symbol} — live read:\n${buildTokenIntelBrief(token)}\n\nAsk me "should I buy ${token.symbol}" for a one-line verdict, ${operatorName}.`;
+  return `${token.symbol} — live read:\n${buildTokenIntelBrief(token)}\n\nAsk me for a one-line verdict on ${token.symbol}, ${operatorName}.`;
 }
 
 function instantLocalHot(tokens: Token[], operatorName: string): string | null {

@@ -169,7 +169,7 @@ export function buildTikTokCaption({ hook, build, payoff, id = "" }) {
     "",
     TRIAL_OFFER_SHORT,
     "",
-    "#SyNexus #Solana #ShouldIBuyThis #Crypto #Shorts",
+    "#SyNexus #Solana #TokenScan #Crypto #Shorts",
   ]
     .filter(Boolean)
     .join("\n");
@@ -195,13 +195,13 @@ export function buildYouTubeMeta({ hook, build, payoff, id = "", titleBase = "" 
     "",
     TRUST_LINE,
     "",
-    "#SyNexus #Solana #ShouldIBuyThis #Crypto #Shorts #Trading",
+    "#SyNexus #Solana #TokenScan #Crypto #Shorts #Trading",
   ].join("\n");
 
   return {
     title,
     description,
-    tags: "SyNexus, Should I buy this, Solana, crypto, token scanner, Sentinel, rug pull, memecoin",
+    tags: "SyNexus, Token scan, Solana, crypto, token scanner, Sentinel, rug pull, memecoin",
   };
 }
 
@@ -259,8 +259,8 @@ export function buildSocialCaption({ hook, platform = "facebook" }) {
   const origin = appOrigin();
   const tags =
     platform === "instagram"
-      ? "#SyNexus #Solana #Crypto #Trading #ShouldIBuyThis #Reels"
-      : "#SyNexus #Solana #Crypto #ShouldIBuyThis";
+      ? "#SyNexus #Solana #Crypto #Trading #TokenScan #Reels"
+      : "#SyNexus #Solana #Crypto #TokenScan";
 
   return [
     hook,

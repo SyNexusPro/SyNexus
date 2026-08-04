@@ -19,7 +19,7 @@ export function WalletComingSoon() {
         <h2>What to use today</h2>
         <p>
           Connect Phantom, Solflare, or Backpack for swaps via Jupiter shortcuts. Run{" "}
-          <strong>Should I buy this?</strong> on the home feed before you sign anything in your wallet app.
+          <strong>token scan</strong> on the home feed before you sign anything in your wallet app.
         </p>
         <p>
           <Link to="/">← Back to feed</Link>

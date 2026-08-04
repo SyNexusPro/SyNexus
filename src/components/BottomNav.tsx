@@ -3,7 +3,6 @@ import { useTitanShell } from "../context/TitanShellContext";
 import { useOpenTitanGate } from "../hooks/useOpenTitanGate";
 import { useOpenTitanChat } from "../hooks/useOpenTitanChat";
 import { useOperatorAuth } from "../hooks/useOperatorAuth";
-import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
 import { useTitanChatOpen } from "../hooks/useTitanChatOpen";
 import { useTitanLoginOpen } from "../hooks/useTitanChatOpen";
 
@@ -11,7 +10,6 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
   `bottom-nav__link${isActive ? " is-active" : ""}`;
 
 export function BottomNav() {
-  const { isSimple } = useSynexusUIMode();
   const { closeSheet } = useTitanShell();
   const openLoginGate = useOpenTitanGate();
   const openTitanChat = useOpenTitanChat();
@@ -36,9 +34,9 @@ export function BottomNav() {
       </button>
       <NavLink to="/" end className={linkClass} onClick={closeSheet}>
         <span className="bottom-nav__icon" aria-hidden>
-          {isSimple ? "◎" : "⌂"}
+          ◎
         </span>
-        {isSimple ? "Scan" : "Feed"}
+        Scan
       </NavLink>
       <NavLink to="/hub" className={linkClass} onClick={closeSheet}>
         <span className="bottom-nav__icon" aria-hidden>
@@ -53,9 +51,9 @@ export function BottomNav() {
         aria-current={titanActive ? "page" : undefined}
       >
         <span className="bottom-nav__icon bottom-nav__icon--oracle" aria-hidden>
-          {isSimple ? "◉" : "∿"}
+          ◉
         </span>
-        {isSimple ? "Titan" : "Sentinels"}
+        Titan
       </button>
     </nav>
   );

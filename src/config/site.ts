@@ -90,7 +90,7 @@ export const HOW_SYNEXUS_WORKS = [
   },
   {
     step: 5,
-    title: "Ask Titan",
+    title: "Talk to Titan",
     body: "The AI assistant explains tokens, Sentinel reads, and market context. Outputs are informational — not financial advice.",
   },
 ] as const;
@@ -115,7 +115,7 @@ export const PRIVACY_HIGHLIGHTS = [
 
 export const FAQ_ITEMS = [
   {
-    q: "What is “Should I buy this?”",
+    q: "What is the token scan?",
     a: "Paste any Solana mint or symbol and SyNexus returns Avoid, Watch, or OK in plain English — plus risk score, whale activity, liquidity, and rug-pull flags. It is a research shortcut, not a buy order.",
   },
   {
@@ -196,7 +196,7 @@ export const FAQ_ITEMS = [
   },
   {
     q: "How do I verify a token before swapping?",
-    a: "Use our five-minute checklist: confirm mint, run Should I buy this?, check Solscan holders, verify official socials, then size for total loss. Full guide at /blog/how-to-verify-a-token-before-swapping.",
+    a: "Use our five-minute checklist: confirm mint, run a token scan, check Solscan holders, verify official socials, then size for total loss. Full guide at /blog/how-to-verify-a-token-before-swapping.",
   },
 ] as const;
 

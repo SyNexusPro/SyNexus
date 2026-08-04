@@ -4,7 +4,7 @@ import { FAQ_ITEMS } from "../config/site";
 const FEATURES = [
   {
     id: "scan",
-    title: "Should I buy this?",
+    title: "Token scan",
     body:
       "Paste any Solana mint or symbol for an instant Avoid, Watch, or OK verdict — plus risk score, liquidity read, whale activity, and rug-pattern flags. Three free deep scans for new visitors.",
     link: "/blog/token-research-guide-should-i-buy-this",

@@ -69,7 +69,7 @@ export function buildWalletHealthReport(): WalletHealthReport {
 
   if (summary.total === 0) {
     riskHabits.push("No trades logged yet — SyNexus auto-tracks when you tap Buy or Sell.");
-    suggestions.push("Run Should I buy? before your next entry, then trade from a token page.");
+    suggestions.push("Run a token scan before your next entry, then trade from a token page.");
   } else {
     if (dangerTradePct >= 40) {
       riskHabits.push(`You chase high-risk setups ${dangerTradePct}% of the time.`);

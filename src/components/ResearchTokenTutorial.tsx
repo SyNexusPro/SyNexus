@@ -16,7 +16,7 @@ function TutorialVisual({ visual }: { visual: ResearchTutorialVisual }) {
         <div className="research-tutorial__stage research-tutorial__stage--welcome">
           <div className="research-tutorial__orb" aria-hidden />
           <p className="research-tutorial__stage-title">Token research</p>
-          <p className="research-tutorial__stage-sub">Should I buy this?</p>
+          <p className="research-tutorial__stage-sub">Token scan</p>
         </div>
       );
     case "paste":

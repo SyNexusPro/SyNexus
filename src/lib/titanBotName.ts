@@ -23,6 +23,11 @@ export function readStoredTitanBotName(): string | null {
   try {
     const raw = localStorage.getItem(TITAN_BOT_NAME_STORAGE_KEY)?.trim();
     if (!raw) return null;
+    // Migrate legacy default persona name
+    if (/^shia$/i.test(raw)) {
+      localStorage.setItem(TITAN_BOT_NAME_STORAGE_KEY, "Hera");
+      return "Hera";
+    }
     return normalizeTitanBotName(raw) ?? null;
   } catch {
     return null;
@@ -60,5 +65,6 @@ export function applyTitanBotNameToText(text: string, titanName = resolveTitanBo
   return text
     .replace(/Oracle Supreme/g, titanName)
     .replace(/\bOracle('s|s)\b/g, (_, suffix) => `${titanName}${suffix ?? ""}`)
-    .replace(/\bOracle\b/g, titanName);
+    .replace(/\bOracle\b/g, titanName)
+    .replace(/\bShia\b/g, titanName);
 }

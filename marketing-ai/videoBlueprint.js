@@ -61,12 +61,12 @@ export function buildYouTubeMetadata(pack, now = Date.now()) {
     "",
     "Not financial advice.",
     "",
-    "#SyNexus #Solana #ShouldIBuyThis #Crypto #Shorts #Trading",
+    "#SyNexus #Solana #TokenScan #Crypto #Shorts #Trading",
   ].join("\n");
 
   const tags = [
     "SyNexus",
-    "Should I buy this",
+    "Token scan",
     "Solana",
     "crypto trading",
     "token scanner",
@@ -83,7 +83,7 @@ export function buildScenes(pack) {
     {
       id: "intro",
       kicker: "SyNexus",
-      headline: "SHOULD I BUY THIS?",
+      headline: "SCAN ANY TOKEN",
       sub: "Paste · Scan · Decide",
       durationRatio: 0.22,
     },

@@ -15,7 +15,7 @@ export function buildShareScanPayload(result: ShouldIBuyResult): ShareScanPayloa
   const url = `${PUBLIC_SITE_URL.replace(/\/$/, "")}/?scan=${encodeURIComponent(scanKey)}`;
   const label = beginner.label;
   const text = [
-    `Should I buy $${token.symbol}? SyNexus: ${headline} — ${label}`,
+    `$${token.symbol} scan — SyNexus: ${headline} — ${label}`,
     "",
     `Scan any Solana token free → ${url}`,
   ].join("\n");

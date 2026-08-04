@@ -1,26 +1,13 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { TokenCard } from "../components/TokenCard";
-import { TrustIndicators } from "../components/TrustIndicators";
 import { NonCustodialDisclaimer } from "../components/NonCustodialDisclaimer";
-import { AppScreenshotGallery } from "../components/AppScreenshotGallery";
-import { SupportedWallets } from "../components/SupportedWallets";
 import { SynexusLiveScanner } from "../components/SynexusLiveScanner";
-import { HomeAdSense } from "../components/HomeAdSense";
 import { ShouldIBuyPanel } from "../components/ShouldIBuyPanel";
 import { TopMoversPanel } from "../components/TopMoversPanel";
-import { HomeHeroAuth } from "../components/HomeHeroAuth";
-import {
-  SYNEXUS_PRO_OFFER_SHORT,
-  SYNEXUS_PRO_PRICE_LABEL,
-} from "../config/proPricing";
-import { SYNEXUS_PRO_TRIAL_DAYS } from "../config/proTrial";
+import { CircuitBoardBackdrop } from "../components/CircuitBoardBackdrop";
 import { SynCoinLaunchBanner } from "../components/SynCoinLaunchBanner";
-import { BrainCircuitPulse } from "../components/BrainCircuitPulse";
 import { BeginnerQuickStart } from "../components/BeginnerQuickStart";
-import { BeginnerModeCoach } from "../components/BeginnerModeCoach";
-import { UIModeToggle } from "../components/UIModeToggle";
-import { ProDemoBanner } from "../components/ProDemoBanner";
 import { SentinelAlertsHub } from "../components/SentinelAlertsHub";
 import { HomeEducationalHub } from "../components/HomeEducationalHub";
 import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
@@ -29,6 +16,23 @@ import { useAppIsActive } from "../hooks/useAppIsActive";
 import { useOracleMarketFeed } from "../lib/useOracleMarketFeed";
 import { isNativeAndroid } from "../lib/bootExperience";
 import { sampleTokens } from "../data/tokens";
+
+type FeatureCard = {
+  id: string;
+  title: string;
+  body: string;
+  icon: ReactNode;
+  to?: string;
+  onClick?: () => void;
+};
+
+function FeatureIcon({ children }: { children: ReactNode }) {
+  return (
+    <span className="home-feature-card__icon" aria-hidden>
+      {children}
+    </span>
+  );
+}
 
 export function HomeFeed() {
   const { isSimple } = useSynexusUIMode();
@@ -80,313 +84,313 @@ export function HomeFeed() {
     );
   }, [allTokens, coinSearch]);
 
+  const featureCards: FeatureCard[] = [
+    {
+      id: "markets",
+      title: "Markets",
+      body: "Crypto, Stocks, Forex & Market Intelligence.",
+      to: "/markets",
+      icon: (
+        <FeatureIcon>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+            <path d="M4 19V5M4 19h16" />
+            <path d="M8 16V10M12 16V7M16 16v-4" />
+          </svg>
+        </FeatureIcon>
+      ),
+    },
+    {
+      id: "ai",
+      title: "AI Assistant",
+      body: "Your personal AI for anything.",
+      onClick: openTitanChat,
+      icon: (
+        <FeatureIcon>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+            <rect x="5" y="8" width="14" height="10" rx="3" />
+            <circle cx="9.5" cy="13" r="1.1" fill="currentColor" stroke="none" />
+            <circle cx="14.5" cy="13" r="1.1" fill="currentColor" stroke="none" />
+            <path d="M12 4v2M9 18v2M15 18v2" />
+          </svg>
+        </FeatureIcon>
+      ),
+    },
+    {
+      id: "cyber",
+      title: "Cybersecurity",
+      body: "Threat detection, scans & protection.",
+      to: "/trust",
+      icon: (
+        <FeatureIcon>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+            <path d="M12 3l8 3v5c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-3z" />
+            <circle cx="12" cy="12" r="2.2" />
+          </svg>
+        </FeatureIcon>
+      ),
+    },
+    {
+      id: "news",
+      title: "News Intelligence",
+      body: "Real-time news, insights & event impact.",
+      to: "/news",
+      icon: (
+        <FeatureIcon>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+            <circle cx="12" cy="12" r="8" />
+            <path d="M4 12h16M12 4c2.5 2.5 3.5 5.5 3.5 8S14.5 17.5 12 20M12 4c-2.5 2.5-3.5 5.5-3.5 8S9.5 17.5 12 20" />
+          </svg>
+        </FeatureIcon>
+      ),
+    },
+    {
+      id: "business",
+      title: "Business Tools",
+      body: "Analyze, optimize & grow your business.",
+      to: "/business",
+      icon: (
+        <FeatureIcon>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+            <rect x="4" y="8" width="16" height="11" rx="1.5" />
+            <path d="M9 8V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />
+          </svg>
+        </FeatureIcon>
+      ),
+    },
+    {
+      id: "automations",
+      title: "Automations",
+      body: "Build AI workflows that work for you.",
+      to: "/automations",
+      icon: (
+        <FeatureIcon>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M12 3v2.5M12 18.5V21M4.9 6.1l1.8 1.8M17.3 16.1l1.8 1.8M3 12h2.5M18.5 12H21M4.9 17.9l1.8-1.8M17.3 7.9l1.8-1.8" />
+          </svg>
+        </FeatureIcon>
+      ),
+    },
+    {
+      id: "learning",
+      title: "Learning Hub",
+      body: "Learn, upskill & grow with AI tutors.",
+      to: "/learn",
+      icon: (
+        <FeatureIcon>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+            <path d="M3 9l9-4 9 4-9 4-9-4z" />
+            <path d="M7 11.5v4.2c0 .6 2.2 2.3 5 2.3s5-1.7 5-2.3v-4.2" />
+            <path d="M21 9v6" />
+          </svg>
+        </FeatureIcon>
+      ),
+    },
+    {
+      id: "watchlist",
+      title: "Watchlist",
+      body: "Track what matters most to you.",
+      to: "/watchlist",
+      icon: (
+        <FeatureIcon>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+            <path d="M12 3.5l2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 15.8l-4.8 2.6.9-5.4-3.9-3.8 5.4-.8L12 3.5z" />
+          </svg>
+        </FeatureIcon>
+      ),
+    },
+  ];
+
   return (
-    <div className={`page${isSimple ? " page--easy" : ""}`}>
-      <section className={`landing-hero${isSimple ? " landing-hero--easy" : ""}`}>
-        <div className="landing-hero__inner">
-          <div className="landing-hero__masthead">
-            <div className="neural-hero-art neural-hero-art--masthead">
-              <div className="neural-hero-art__frame">
-                <BrainCircuitPulse variant="hero" className="neural-brain-pulse-wrap" alive={!isNativeAndroid()}>
-                  <img
-                    className="neural-brain-logo neural-brain-logo--art"
-                    src="/synexus-symbol.png"
-                    alt=""
-                    aria-hidden
-                  />
-                </BrainCircuitPulse>
-              </div>
-              <img
-                className="landing-hero__wordmark"
-                src="/synexus-wordmark.png"
-                alt="SyNexus"
-              />
-            </div>
-          </div>
-          <h1 className="landing-hero__headline">
-            {isSimple ? "Ask Titan — should I buy this?" : "AI-powered Solana trading intelligence"}
-          </h1>
-          <p className="landing-hero__subtext">
-            {isSimple
-              ? `Don't dig through menus. Paste any token and ask Titan — ${SYNEXUS_PRO_OFFER_SHORT}`
-              : "Detect scams, track whales, monitor momentum, and trade smarter."}
+    <div className={`page page--command${isSimple ? " page--easy" : ""}`}>
+      <CircuitBoardBackdrop alive={!isNativeAndroid()} />
+
+      <section className="home-command" aria-label="SyNexus home">
+        <div className="home-command__brand">
+          <img
+            className="home-command__mark"
+            src="/synexus-brand-mark.png"
+            alt="SyNexus"
+            draggable={false}
+          />
+          <h1 className="home-command__headline">One AI. Unlimited Intelligence.</h1>
+          <p className="home-command__lede">
+            Markets. Business. Security. Automation. All Connected.
           </p>
-          <HomeHeroAuth isSimple={isSimple} />
+        </div>
+
+        <div className="home-feature-grid" role="list">
+          {featureCards.map((card) => {
+            const inner = (
+              <>
+                {card.icon}
+                <span className="home-feature-card__title">{card.title}</span>
+                <span className="home-feature-card__body">{card.body}</span>
+              </>
+            );
+
+            if (card.onClick) {
+              return (
+                <button
+                  key={card.id}
+                  type="button"
+                  className="home-feature-card"
+                  role="listitem"
+                  onClick={card.onClick}
+                >
+                  {inner}
+                </button>
+              );
+            }
+
+            return (
+              <Link
+                key={card.id}
+                className="home-feature-card"
+                role="listitem"
+                to={card.to ?? "/"}
+              >
+                {inner}
+              </Link>
+            );
+          })}
         </div>
       </section>
 
-      <div className="home-below-hero">
-        <div className="app-mode-bar">
-          <UIModeToggle />
-        </div>
-        <BeginnerModeCoach />
-        <ProDemoBanner />
-      </div>
+      <div className="home-command-tools">
+        <SynCoinLaunchBanner />
+        {isSimple ? <BeginnerQuickStart /> : null}
 
-      <SynCoinLaunchBanner />
-
-      {isSimple ? null : (
-        <section className="home-trust-strip marketing-panel">
-          <TrustIndicators compact />
-          <p className="home-trust-strip__links">
-            <Link to="/trust">Security &amp; privacy</Link>
-            {" · "}
-            <Link to="/about">About</Link>
-            {" · "}
-            <Link to="/contact">Support</Link>
-          </p>
+        <section id="scan" className="home-command-tools__scan">
+          <ShouldIBuyPanel poolTokens={allTokens} initialScan={scanQuery} />
+          <TopMoversPanel />
         </section>
-      )}
 
-      {isSimple ? <BeginnerQuickStart /> : null}
+        {isSimple ? (
+          <>
+            <section className="simple-launch-links">
+              <Link to="/pulse#wallet-performance" className="simple-launch-links__card">
+                <p className="simple-launch-links__eyebrow">Step 3 · Track</p>
+                <h2>Wallet dashboard</h2>
+                <p>See wins, losses, and habits — your trading stats in one place.</p>
+              </Link>
+              <button type="button" className="simple-launch-links__card" onClick={openTitanChat}>
+                <p className="simple-launch-links__eyebrow">Bonus · Command</p>
+                <h2>Titan tools</h2>
+                <p>Ask questions and run Sentinels when you&apos;re ready to go deeper.</p>
+              </button>
+            </section>
 
-      <ShouldIBuyPanel poolTokens={allTokens} initialScan={scanQuery} />
-      <TopMoversPanel />
-      <HomeAdSense />
+            <section className="token-section">
+              <div className="token-section__head">
+                <h2 className="token-section__title">Popular right now</h2>
+                <p className="token-section__lede">Tap any coin to scan it first</p>
+              </div>
+              <ul className="token-list">
+                {trendingTokens.map((token) => (
+                  <li key={`trend-${token.id}`}>
+                    <TokenCard token={token} />
+                  </li>
+                ))}
+              </ul>
+            </section>
 
-      {isSimple ? (
-        <p className="easy-trust-note">
-          Non-custodial — SyNexus never holds your keys.{" "}
-          <Link to="/trust">How we keep you safe →</Link>
-        </p>
-      ) : (
-        <NonCustodialDisclaimer className="home-non-custodial" />
-      )}
+            <HomeEducationalHub />
+          </>
+        ) : (
+          <>
+            <SentinelAlertsHub tokens={allTokens} />
 
-      {isSimple ? (
-        <>
-          <section className="simple-launch-links">
-            <Link to="/pulse#wallet-performance" className="simple-launch-links__card">
-              <p className="simple-launch-links__eyebrow">Step 3 · Track</p>
-              <h2>Wallet dashboard</h2>
-              <p>See wins, losses, and habits — your trading stats in one place.</p>
-            </Link>
-            <button type="button" className="simple-launch-links__card" onClick={openTitanChat}>
-              <p className="simple-launch-links__eyebrow">Bonus · Command</p>
-              <h2>Titan tools</h2>
-              <p>Ask questions and run Sentinels when you&apos;re ready to go deeper.</p>
-            </button>
-          </section>
+            <SynexusLiveScanner
+              tokens={allTokens}
+              feedSource={feedSource}
+              dexLiveCount={dexLiveCount}
+              loading={feedLoading}
+              error={feedError}
+            />
 
-          <section className="token-section">
-            <div className="token-section__head">
-              <h2 className="token-section__title">Popular right now</h2>
-              <p className="token-section__lede">Tap any coin to scan it first</p>
-            </div>
-            <ul className="token-list">
-              {trendingTokens.map((token) => (
-                <li key={`trend-${token.id}`}>
-                  <TokenCard token={token} />
-                </li>
-              ))}
-            </ul>
-          </section>
+            <section className="coin-search-panel">
+              <h2 className="token-section__title coin-search-panel__title">Token search</h2>
+              <input
+                id="token-search"
+                className="coin-search-panel__input"
+                value={coinSearch}
+                onChange={(event) => setCoinSearch(event.target.value)}
+                placeholder="Name, symbol, or mint"
+                aria-label="Search tokens"
+              />
+              {coinSearch.trim() ? (
+                searchedTokens.length ? (
+                  <ul className="token-list coin-search-panel__results">
+                    {searchedTokens.map((token) => (
+                      <li key={`search-${token.id}`}>
+                        <TokenCard token={token} />
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="coin-search-panel__empty">
+                    No matching tokens in the SyNexus feed. Try SOL, SYN, BONK, or PEPE.
+                  </p>
+                )
+              ) : null}
+            </section>
 
-          <HomeEducationalHub />
-        </>
-      ) : (
-        <>
-      <SentinelAlertsHub tokens={allTokens} />
+            <section className="token-section">
+              <div className="token-section__head">
+                <h2 className="token-section__title">Trending Tokens</h2>
+                <p className="token-section__lede">Fast movers across the SyNexus feed</p>
+              </div>
+              <ul className="token-list">
+                {trendingTokens.map((token) => (
+                  <li key={`trend-${token.id}`}>
+                    <TokenCard token={token} />
+                  </li>
+                ))}
+              </ul>
+            </section>
 
-      <section className="landing-info-grid">
-        <article className="landing-info-card landing-info-card--spotlight">
-          <h2>One flash of intel before the candles catch up.</h2>
-          <p>
-            The SyNexus Sentinels slam liquidity drift, whale-sized moves, violent volume, and swarm reports into a
-            single hit—you feel the shift before the feed goes loud.
+            <section className="token-section">
+              <div className="token-section__head">
+                <h2 className="token-section__title">SyNexus risk alerts</h2>
+                <p className="token-section__lede">Warning and danger bands that need attention</p>
+              </div>
+              <ul className="token-list">
+                {guardianAlerts.map((token) => (
+                  <li key={`alert-${token.id}`}>
+                    <TokenCard token={token} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+            <section className="token-section">
+              <div className="token-section__head">
+                <h2 className="token-section__title">Verified / Safer Tokens</h2>
+                <p className="token-section__lede">Tokens currently classified in the SyNexus Safe band</p>
+              </div>
+              <ul className="token-list">
+                {saferTokens.map((token) => (
+                  <li key={`safe-${token.id}`}>
+                    <TokenCard token={token} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+            <HomeEducationalHub />
+          </>
+        )}
+
+        {isSimple ? (
+          <p className="easy-trust-note">
+            Non-custodial — SyNexus never holds your keys.{" "}
+            <Link to="/trust">How we keep you safe →</Link>
           </p>
-        </article>
-        <article className="landing-info-card">
-          <h2>Detect risks. Track whales. Flag scams.</h2>
-          <p>
-            The SyNexus routes signals through four Sentinels—<strong>Aegis</strong> (security &amp; privacy), Pulse,
-            Leviathan, and Cipher—so you get one
-            coherent read instead of noise.
-          </p>
-        </article>
-        <article className="landing-info-card landing-info-card--warning">
-          <h2>Bad tokens move fast.</h2>
-          <p>
-            Scam launches, rug pulls, sudden dumps, and whale exits can hit before most traders see
-            the warning. SyNexus is built to surface those signals early.
-          </p>
-        </article>
-      </section>
-
-      <SynexusLiveScanner
-        tokens={allTokens}
-        feedSource={feedSource}
-        dexLiveCount={dexLiveCount}
-        loading={feedLoading}
-        error={feedError}
-      />
-
-      <section className="coin-search-panel">
-        <h2 className="token-section__title coin-search-panel__title">Token search</h2>
-        <input
-          id="token-search"
-          className="coin-search-panel__input"
-          value={coinSearch}
-          onChange={(event) => setCoinSearch(event.target.value)}
-          placeholder="Name, symbol, or mint"
-          aria-label="Search tokens"
-        />
-        {coinSearch.trim() ? (
-          searchedTokens.length ? (
-            <ul className="token-list coin-search-panel__results">
-              {searchedTokens.map((token) => (
-                <li key={`search-${token.id}`}>
-                  <TokenCard token={token} />
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="coin-search-panel__empty">
-              No matching tokens in the SyNexus feed. Try SOL, SYN, BONK, or PEPE.
-            </p>
-          )
-        ) : null}
-      </section>
-
-      <section className="synexus-trade-panel">
-        <div className="synexus-trade-panel__body">
-          <p className="synexus-trade-panel__eyebrow">Trade on SyNexus</p>
-          <h2 className="synexus-trade-panel__title">Scan first. Execute when you&apos;re ready.</h2>
-          <p className="synexus-trade-panel__copy">
-            Sentinel-checked tokens from your feed — open any coin, review the risk read, then buy or sell
-            from SyNexus. Your wallet only signs; SyNexus runs the flow.
-          </p>
-        </div>
-        <p className="synexus-trade-panel__wallet">
-          <img className="synexus-trade-panel__wallet-icon" src="/phantom-wallet.svg" alt="" aria-hidden />
-          <span>
-            Works with Phantom{" "}
-            <a href="https://phantom.app/" target="_blank" rel="noopener noreferrer">
-              (get wallet)
-            </a>
-            {" "}and other Solana wallets.
-          </span>
-        </p>
-      </section>
-
-      <section className="hive-vision">
-        <div className="hive-vision__head">
-          <p className="hive-vision__eyebrow">SyNexus Security Grid</p>
-          <h2 className="hive-vision__title">Built to be the safest Solana trading command center.</h2>
-          <p className="hive-vision__copy">
-            AI risk modeling, crowd intelligence, and real-time signals from The SyNexus work as one system.
-          </p>
-        </div>
-        <div className="hive-vision__grid">
-          <article className="hive-vision-card">
-            <p className="hive-vision-card__icon">AI</p>
-            <p className="hive-vision-card__title">AI Detection</p>
-            <p className="hive-vision-card__body">
-              Pattern detection scans volatility, liquidity shifts, and suspicious transaction behavior.
-            </p>
-          </article>
-          <article className="hive-vision-card">
-            <p className="hive-vision-card__icon">COM</p>
-            <p className="hive-vision-card__title">Community Protection</p>
-            <p className="hive-vision-card__body">
-              Reports from traders feed into The SyNexus scoring so risky tokens are flagged faster.
-            </p>
-          </article>
-          <article className="hive-vision-card">
-            <p className="hive-vision-card__icon">RT</p>
-            <p className="hive-vision-card__title">Real-Time Alerts</p>
-            <p className="hive-vision-card__body">
-              Live warnings fire immediately when confidence drops or danger signals accelerate.
-            </p>
-          </article>
-        </div>
-      </section>
-
-      <section className="token-section">
-        <div className="token-section__head">
-          <h2 className="token-section__title">Trending Tokens</h2>
-          <p className="token-section__lede">Fast movers across the SyNexus feed</p>
-        </div>
-        <ul className="token-list">
-          {trendingTokens.map((token) => (
-            <li key={`trend-${token.id}`}>
-              <TokenCard token={token} />
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="token-section">
-        <div className="token-section__head">
-          <h2 className="token-section__title">SyNexus risk alerts</h2>
-          <p className="token-section__lede">
-            Warning and danger bands that need attention
-          </p>
-        </div>
-        <ul className="token-list">
-          {guardianAlerts.map((token) => (
-            <li key={`alert-${token.id}`}>
-              <TokenCard token={token} />
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="token-section">
-        <div className="token-section__head">
-          <h2 className="token-section__title">Verified / Safer Tokens</h2>
-          <p className="token-section__lede">
-            Tokens currently classified in the SyNexus Safe band
-          </p>
-        </div>
-        <ul className="token-list">
-          {saferTokens.map((token) => (
-            <li key={`safe-${token.id}`}>
-              <TokenCard token={token} />
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="home-screenshots marketing-panel">
-        <div className="home-screenshots__head">
-          <p className="home-screenshots__eyebrow">Inside SyNexus</p>
-          <h2 className="home-screenshots__title">Token scanner · Whale tracker · Risk score · Alerts · AI</h2>
-          <p className="home-screenshots__copy">
-            Preview the core surfaces — export device captures for Google Play when you ship Android.
-          </p>
-        </div>
-        <AppScreenshotGallery />
-        <p className="home-screenshots__more">
-          <Link to="/about">Full About page →</Link>
-        </p>
-      </section>
-
-      <section className="home-wallets marketing-panel">
-        <h2 className="home-wallets__title">Supported wallets</h2>
-        <p className="home-wallets__copy">Connect Phantom, Solflare, Backpack, and other Solana wallets — you sign every swap.</p>
-        <SupportedWallets />
-      </section>
-
-      <HomeEducationalHub />
-
-      <section className="monetization-panel">
-        <div className="token-section__head">
-          <h2 className="token-section__title">Why SyNexus matters</h2>
-          <p className="token-section__lede">
-            Crypto traders need warnings before momentum turns into damage.
-          </p>
-        </div>
-
-        <div className="build-goal">
-          <h3>Built for faster decisions</h3>
-          <p>1) Search coins before you buy.</p>
-          <p>2) Read Sentinel risk signals before you chase hype.</p>
-          <p>3) Sign up through Titan — {SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial with card on file — then {SYNEXUS_PRO_PRICE_LABEL} if you keep it.</p>
-        </div>
-      </section>
-        </>
-      )}
+        ) : (
+          <NonCustodialDisclaimer className="home-non-custodial" />
+        )}
+      </div>
     </div>
   );
 }

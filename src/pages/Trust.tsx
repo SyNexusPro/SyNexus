@@ -33,7 +33,7 @@ export function Trust() {
         <h2>Security</h2>
         <p>
           <strong>Sentinel Aegis</strong> is SyNexus&apos;s security &amp; privacy lane — token scams and rug
-          heuristics on-chain, plus non-custodial operator hygiene off-chain. Ask Titan or Aegis about privacy,
+          heuristics on-chain, plus non-custodial operator hygiene off-chain. Talk to Titan or Aegis about privacy,
           phishing, or a suspicious mint before you sign anything.
         </p>
         <ul className="trust-page__bullets">

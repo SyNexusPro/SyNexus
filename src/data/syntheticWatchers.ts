@@ -26,7 +26,7 @@ export type SyntheticSentinel = {
   status: string;
   lesson: string;
   accent: "green" | "gold" | "danger";
-  /** Commander synthetic bot (user-renamable; default Shia). */
+  /** Commander synthetic bot (user-renamable; default Hera). */
   isCommander?: boolean;
   /** @deprecated Use isCommander */
   isOracleSupreme?: boolean;

@@ -15,7 +15,7 @@ export function Disclaimer() {
         <h2>Not financial, legal, or tax advice</h2>
         <p>
           SyNexus is an <strong>informational technology platform</strong>. Nothing on the Service — including
-          &quot;Should I buy this?&quot; verdicts (Avoid · Watch · OK), risk scores, Sentinel alerts, whale
+          token-scan verdicts (Avoid · Watch · OK), risk scores, Sentinel alerts, whale
           reads, trade journal stats, Titan chat, voice briefings, or marketing content — is
           investment, trading, legal, tax, or accounting advice. We do not recommend buying, selling, or
           holding any digital asset. Consult qualified professionals before making financial decisions.

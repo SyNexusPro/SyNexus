@@ -40,14 +40,14 @@ export function ShouldIBuyVerdict({ token }: { token: Token }) {
             {beginner.icon}
           </span>
           <div>
-            <p className="should-i-buy__verdict-label">Should I buy {token.symbol}?</p>
+            <p className="should-i-buy__verdict-label">{token.symbol} scan</p>
             <p className="should-i-buy__verdict-headline">{beginner.label}</p>
             <p className="should-i-buy__verdict-copy">{beginner.hint}</p>
           </div>
         </div>
       ) : (
         <>
-          <p className="should-i-buy__verdict-label">Should I buy {token.symbol}?</p>
+          <p className="should-i-buy__verdict-label">{token.symbol} scan</p>
           <p className="should-i-buy__verdict-headline">{result.headline}</p>
           <p className="should-i-buy__verdict-copy">{result.explanation}</p>
         </>
@@ -132,12 +132,12 @@ export function ShouldIBuyPanel({ poolTokens = [], initialScan = "" }: Props) {
         <ResearchTokenTutorialButton />
         <p className="should-i-buy__eyebrow">{isSimple ? "Step 1 · Scan" : "Instant read"}</p>
         <h2 className="should-i-buy__title" id="should-i-buy-title">
-          Should I buy this?
+          Scan a token
         </h2>
         <p className="should-i-buy__lede">
           {isSimple
-            ? "Paste any Solana token below. SyNexus answers in plain English — no charts required."
-            : "Paste a token mint or symbol. SyNexus answers in plain English — watch, high risk, or avoid."}
+            ? "Paste any Solana token below. SyNexus returns Avoid, Watch, or OK in plain English."
+            : "Paste a token mint or symbol. SyNexus returns Avoid, Watch, or OK — plus risk, whales, and liquidity."}
         </p>
         {!unlimited ? (
           <p className="should-i-buy__demo-count" aria-live="polite">

@@ -95,7 +95,7 @@ export function About() {
         <h2>$SyN community is live on pump.fun</h2>
         <p>
           The SyNexus community token ({SYN_SYMBOL}) has a home on pump.fun. Paste the mint in{" "}
-          <strong>Should I buy this?</strong> for a Sentinel read before you ape — then buy only through your
+          <strong>token scan</strong> for a Sentinel read before you ape — then buy only through your
           own wallet.
         </p>
         <p className="about-page__mint">

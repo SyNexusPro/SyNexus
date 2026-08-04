@@ -4,6 +4,9 @@ import android.os.Bundle;
 import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+
+import androidx.core.splashscreen.SplashScreen;
+
 import com.getcapacitor.Bridge;
 import com.getcapacitor.BridgeActivity;
 
@@ -11,13 +14,14 @@ public class MainActivity extends BridgeActivity {
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
+    SplashScreen.installSplashScreen(this);
     super.onCreate(savedInstanceState);
+    tuneWebView();
   }
 
   @Override
   public void onResume() {
     super.onResume();
-    tuneWebView();
   }
 
   private void tuneWebView() {

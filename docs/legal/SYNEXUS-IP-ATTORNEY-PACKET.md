@@ -92,7 +92,6 @@ Complete **LLC formation first** (or in parallel), then file trademarks/patents 
 
 ### Do **not** register as primary brand
 
-- Former working names / retired marks (HiveMind era) — removed from product code and assets  
 - Descriptive feature names alone without SyNexus house mark
 
 ### Suggested USPTO classes (attorney to confirm)
@@ -502,7 +501,7 @@ Automatic copyright exists in original works. Optional registration ([copyright.
 
 ## 13. Legacy naming — exclude from filings
 
-Former HiveMind / Syn-Bunny naming and assets have been removed from the product. Public brand is **SyNexus** only. Internal token id is `syn-sol`; storage keys use `synexus_*`.
+Public brand is **SyNexus** only. Internal token id is `syn-sol`; storage keys use `synexus_*`.
 
 ---
 

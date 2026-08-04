@@ -48,7 +48,7 @@ async function main() {
   const videoPath = videoArg || defaultVideo;
   const caption =
     captionArg ||
-    "Should I buy this? SyNexus scans any Solana token — Avoid, Watch, or OK.\n\nTry free → https://synexus.pro\n\n#SyNexus #Solana #Crypto";
+    "SyNexus scans any Solana token — Avoid, Watch, or OK.\n\nTry free → https://synexus.pro\n\n#SyNexus #Solana #Crypto";
 
   if (!(await fileExists(videoPath))) {
     console.error(`Video not found: ${videoPath}`);

@@ -1,5 +1,5 @@
 /**
- * SyNexus Sentinel grid — four scan lanes + commander (Titan / Shia).
+ * SyNexus Sentinel grid — four scan lanes + commander (Titan / Hera).
  * Lane ids are stable API keys; display names are user-facing.
  */
 
