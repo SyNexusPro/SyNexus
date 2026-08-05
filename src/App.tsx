@@ -4,10 +4,15 @@ import { AppShell } from "./components/AppShell";
 import { GoogleAnalytics } from "./components/GoogleAnalytics";
 import { NativePerformanceInit } from "./components/NativePerformanceInit";
 import { SiteAnalyticsListener } from "./components/SiteAnalyticsListener";
+import { isNativeAndroid } from "./lib/bootExperience";
 import { lazyWithRetry } from "./lib/lazyWithRetry";
 
+/** Android: static home only — never load Matrix / ShouldIBuy / market feed chunk. */
 const HomeFeed = lazyWithRetry(
-  () => import("./pages/HomeFeed").then((m) => ({ default: m.HomeFeed })),
+  () =>
+    isNativeAndroid()
+      ? import("./pages/AndroidHomeStatic").then((m) => ({ default: m.AndroidHomeStatic }))
+      : import("./pages/HomeFeed").then((m) => ({ default: m.HomeFeed })),
   "Home",
 );
 const EcosystemHub = lazyWithRetry(

@@ -18,6 +18,7 @@ import {
 import { useOracleMarketFeed } from "../lib/useOracleMarketFeed";
 import { useSolanaMoversBoard } from "../lib/useSolanaMoversBoard";
 import { isSynexusBootComplete, subscribeSynexusBootComplete } from "../lib/synexusBootComplete";
+import { isNativeAndroid } from "../lib/bootExperience";
 import { SYNEXUS_PLAN_CHANGED } from "../hooks/useSynexusPlan";
 import { OracleSupremeChat } from "./OracleSupremeChat";
 import { warmTitanBrain } from "../lib/titanConversation";
@@ -70,6 +71,8 @@ export function TitanSheet() {
   }, []);
 
   useEffect(() => {
+    // Android: no boot network/greeting — only when the sheet is actually opened.
+    if (isNativeAndroid() && !sheetOpen) return;
     if (!bootReady || hasGreetedThisSession()) return;
 
     let cancelled = false;
@@ -116,7 +119,7 @@ export function TitanSheet() {
     return () => {
       cancelled = true;
     };
-  }, [bootReady]);
+  }, [bootReady, sheetOpen]);
 
   const context = useMemo<OracleConversationContext>(
     () => ({
@@ -193,6 +196,7 @@ export function TitanSheet() {
             : `Talk to ${commanderLabel}`
         }
         title={commanderLabel}
+        hidden={isNativeAndroid()}
       >
         <span className="oracle-presence-fab__ring" aria-hidden />
         <span className="oracle-presence-fab__avatar" aria-hidden>

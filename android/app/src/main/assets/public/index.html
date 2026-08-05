@@ -1,21 +1,16 @@
 <!doctype html>
 <html lang="en">
-  <head><!-- Google Analytics GA4 -->
-    <script
-      async
-      src="https://www.googletagmanager.com/gtag/js?id=G-N7W1GFMFC2"
-    ></script>
-    
+  <head>
+    <!-- Google Analytics GA4 — early load; SPA page_views come from React -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-N7W1GFMFC2"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
-    
       function gtag() {
         dataLayer.push(arguments);
       }
-    
       gtag("js", new Date());
-      gtag("config", "G-N7W1GFMFC2");
-    </script> 
+      gtag("config", "G-N7W1GFMFC2", { send_page_view: false });
+    </script>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -35,20 +30,20 @@
       crossorigin="anonymous"
     ></script>
     <title>SyNexus</title>
-    <script type="module" crossorigin src="/assets/index-GGgTtZd1.js"></script>
+    <script type="module" crossorigin src="/assets/index-ZGU40M1e.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-QTnfLwEv.js">
     <link rel="modulepreload" crossorigin href="/assets/react-BCNaQh7K.js">
     <link rel="modulepreload" crossorigin href="/assets/react-router-DXY31wzx.js">
     <link rel="modulepreload" crossorigin href="/assets/dist-BrZyoEm1.js">
     <link rel="modulepreload" crossorigin href="/assets/react-dom-cbxlHhbu.js">
     <link rel="modulepreload" crossorigin href="/assets/site-BYGXZqZz.js">
-    <link rel="modulepreload" crossorigin href="/assets/synToken-BjMXxnC-.js">
-    <link rel="modulepreload" crossorigin href="/assets/supabase-C7aPrQ27.js">
     <link rel="modulepreload" crossorigin href="/assets/ecosystem-DvyyxMDL.js">
     <link rel="modulepreload" crossorigin href="/assets/tradingFees-1_HgqYDi.js">
-    <link rel="modulepreload" crossorigin href="/assets/securityBot-xtTsKcoR.js">
-    <link rel="modulepreload" crossorigin href="/assets/titanVoice-CLMszu9n.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-CmOx0PYX.css">
+    <link rel="modulepreload" crossorigin href="/assets/TitanShellContext-CPSOhlAu.js">
+    <link rel="modulepreload" crossorigin href="/assets/nativePerformance-5wTGS-lQ.js">
+    <link rel="modulepreload" crossorigin href="/assets/supabase-C7aPrQ27.js">
+    <link rel="modulepreload" crossorigin href="/assets/securityBot-Cz7Bav8f.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CktRpYqk.css">
   </head>
   <body>
     <div id="root"></div>

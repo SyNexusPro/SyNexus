@@ -1,0 +1,12 @@
+android
+ios
+node_modules
+marketing-ai
+docs
+.cursor
+New folder
+*.jks
+*.keystore
+android/keystore.properties
+.env*
+.git

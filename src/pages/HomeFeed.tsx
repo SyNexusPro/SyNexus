@@ -38,11 +38,40 @@ export function HomeFeed() {
   const { isSimple } = useSynexusUIMode();
   const openTitanChat = useOpenTitanChat();
   const appActive = useAppIsActive();
+  const nativeAndroid = isNativeAndroid();
   const [searchParams] = useSearchParams();
   const scanQuery = searchParams.get("scan")?.trim() ?? "";
+  /** Defer heavy home panels on Android so first paint / nav stay responsive. */
+  const [toolsReady, setToolsReady] = useState(!nativeAndroid);
+
+  useEffect(() => {
+    if (!nativeAndroid) return;
+    let cancelled = false;
+    const arm = () => {
+      if (!cancelled) setToolsReady(true);
+    };
+    // Prefer idle; fall back so tools still appear
+    const ric = (window as Window & { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number })
+      .requestIdleCallback;
+    let idleId = 0;
+    let timeoutId = 0;
+    if (typeof ric === "function") {
+      idleId = ric(arm, { timeout: 1200 });
+    } else {
+      timeoutId = window.setTimeout(arm, 700);
+    }
+    return () => {
+      cancelled = true;
+      if (idleId && "cancelIdleCallback" in window) {
+        (window as Window & { cancelIdleCallback?: (id: number) => void }).cancelIdleCallback?.(idleId);
+      }
+      if (timeoutId) window.clearTimeout(timeoutId);
+    };
+  }, [nativeAndroid]);
+
   const { tokens: feedTokens, feedSource, loading: feedLoading } = useOracleMarketFeed({
-    enabled: appActive,
-    intervalMs: 90_000,
+    enabled: appActive && toolsReady,
+    intervalMs: nativeAndroid ? 120_000 : 90_000,
   });
   const allTokens = feedTokens.length ? feedTokens : sampleTokens;
   const trendingTokens = useMemo(
@@ -54,24 +83,25 @@ export function HomeFeed() {
     [allTokens],
   );
   const guardianAlerts = useMemo(
-    () => allTokens.filter((token) => token.guardianRisk !== "SAFE"),
-    [allTokens],
+    () => (nativeAndroid ? [] : allTokens.filter((token) => token.guardianRisk !== "SAFE")),
+    [allTokens, nativeAndroid],
   );
   const saferTokens = useMemo(
-    () => allTokens.filter((token) => token.guardianRisk === "SAFE"),
-    [allTokens],
+    () => (nativeAndroid ? [] : allTokens.filter((token) => token.guardianRisk === "SAFE")),
+    [allTokens, nativeAndroid],
   );
   const dexLiveCount = feedSource === "live" ? allTokens.length : 0;
   const [feedError, setFeedError] = useState<string | null>(null);
   const [coinSearch, setCoinSearch] = useState("");
 
   useEffect(() => {
+    if (!toolsReady) return;
     if (!feedLoading && !feedTokens.length) {
       setFeedError("Market data is not available right now. Showing sample tokens.");
     } else {
       setFeedError(null);
     }
-  }, [feedLoading, feedTokens.length]);
+  }, [feedLoading, feedTokens.length, toolsReady]);
 
   const searchedTokens = useMemo(() => {
     const query = coinSearch.trim().toLowerCase();
@@ -203,7 +233,7 @@ export function HomeFeed() {
 
   return (
     <div className={`page page--command${isSimple ? " page--easy" : ""}`}>
-      <CircuitBoardBackdrop alive={!isNativeAndroid()} />
+      <CircuitBoardBackdrop alive={!nativeAndroid} />
 
       <section className="home-command" aria-label="SyNexus home">
         <div className="home-command__brand">
@@ -212,6 +242,8 @@ export function HomeFeed() {
             src="/synexus-brand-mark.png"
             alt="SyNexus"
             draggable={false}
+            decoding="async"
+            fetchPriority="high"
           />
           <h1 className="home-command__headline">One AI. Unlimited Intelligence.</h1>
           <p className="home-command__lede">
@@ -258,12 +290,18 @@ export function HomeFeed() {
       </section>
 
       <div className="home-command-tools">
+        {!toolsReady ? (
+          <p className="home-command-tools__loading" role="status">
+            Loading tools…
+          </p>
+        ) : (
+          <>
         <SynCoinLaunchBanner />
         {isSimple ? <BeginnerQuickStart /> : null}
 
         <section id="scan" className="home-command-tools__scan">
           <ShouldIBuyPanel poolTokens={allTokens} initialScan={scanQuery} />
-          <TopMoversPanel />
+          {nativeAndroid ? null : <TopMoversPanel />}
         </section>
 
         {isSimple ? (
@@ -299,15 +337,17 @@ export function HomeFeed() {
           </>
         ) : (
           <>
-            <SentinelAlertsHub tokens={allTokens} />
+            {nativeAndroid ? null : <SentinelAlertsHub tokens={allTokens} />}
 
-            <SynexusLiveScanner
-              tokens={allTokens}
-              feedSource={feedSource}
-              dexLiveCount={dexLiveCount}
-              loading={feedLoading}
-              error={feedError}
-            />
+            {nativeAndroid ? null : (
+              <SynexusLiveScanner
+                tokens={allTokens}
+                feedSource={feedSource}
+                dexLiveCount={dexLiveCount}
+                loading={feedLoading}
+                error={feedError}
+              />
+            )}
 
             <section className="coin-search-panel">
               <h2 className="token-section__title coin-search-panel__title">Token search</h2>
@@ -322,7 +362,7 @@ export function HomeFeed() {
               {coinSearch.trim() ? (
                 searchedTokens.length ? (
                   <ul className="token-list coin-search-panel__results">
-                    {searchedTokens.map((token) => (
+                    {searchedTokens.slice(0, nativeAndroid ? 8 : 40).map((token) => (
                       <li key={`search-${token.id}`}>
                         <TokenCard token={token} />
                       </li>
@@ -350,35 +390,39 @@ export function HomeFeed() {
               </ul>
             </section>
 
-            <section className="token-section">
-              <div className="token-section__head">
-                <h2 className="token-section__title">SyNexus risk alerts</h2>
-                <p className="token-section__lede">Warning and danger bands that need attention</p>
-              </div>
-              <ul className="token-list">
-                {guardianAlerts.map((token) => (
-                  <li key={`alert-${token.id}`}>
-                    <TokenCard token={token} />
-                  </li>
-                ))}
-              </ul>
-            </section>
+            {nativeAndroid ? null : (
+              <>
+                <section className="token-section">
+                  <div className="token-section__head">
+                    <h2 className="token-section__title">SyNexus risk alerts</h2>
+                    <p className="token-section__lede">Warning and danger bands that need attention</p>
+                  </div>
+                  <ul className="token-list">
+                    {guardianAlerts.map((token) => (
+                      <li key={`alert-${token.id}`}>
+                        <TokenCard token={token} />
+                      </li>
+                    ))}
+                  </ul>
+                </section>
 
-            <section className="token-section">
-              <div className="token-section__head">
-                <h2 className="token-section__title">Verified / Safer Tokens</h2>
-                <p className="token-section__lede">Tokens currently classified in the SyNexus Safe band</p>
-              </div>
-              <ul className="token-list">
-                {saferTokens.map((token) => (
-                  <li key={`safe-${token.id}`}>
-                    <TokenCard token={token} />
-                  </li>
-                ))}
-              </ul>
-            </section>
+                <section className="token-section">
+                  <div className="token-section__head">
+                    <h2 className="token-section__title">Verified / Safer Tokens</h2>
+                    <p className="token-section__lede">Tokens currently classified in the SyNexus Safe band</p>
+                  </div>
+                  <ul className="token-list">
+                    {saferTokens.map((token) => (
+                      <li key={`safe-${token.id}`}>
+                        <TokenCard token={token} />
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              </>
+            )}
 
-            <HomeEducationalHub />
+            {nativeAndroid ? null : <HomeEducationalHub />}
           </>
         )}
 
@@ -389,6 +433,8 @@ export function HomeFeed() {
           </p>
         ) : (
           <NonCustodialDisclaimer className="home-non-custodial" />
+        )}
+          </>
         )}
       </div>
     </div>

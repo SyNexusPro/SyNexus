@@ -23,6 +23,42 @@ export function isNativeWebView(): boolean {
   return Capacitor.isNativePlatform();
 }
 
+const ANDROID_BLOCKED_GLOBAL_EVENTS = new Set([
+  "touchmove",
+  "pointermove",
+  "mousemove",
+  "wheel",
+  "scroll",
+]);
+
+let androidInputHardened = false;
+
+/**
+ * Drop window/document move + scroll listeners on Android.
+ * Native scrolling still works; JS handlers that fire every finger move do not.
+ */
+export function hardenAndroidInputListeners(): void {
+  if (androidInputHardened || typeof window === "undefined" || !isNativeAndroid()) return;
+  androidInputHardened = true;
+
+  const orig = EventTarget.prototype.addEventListener;
+  EventTarget.prototype.addEventListener = function (
+    this: EventTarget,
+    type: string,
+    listener: EventListenerOrEventListenerObject | null,
+    options?: boolean | AddEventListenerOptions,
+  ) {
+    if (
+      listener &&
+      ANDROID_BLOCKED_GLOBAL_EVENTS.has(type) &&
+      (this === window || this === document || this === document.documentElement || this === document.body)
+    ) {
+      return;
+    }
+    return orig.call(this, type, listener as EventListenerOrEventListenerObject, options);
+  };
+}
+
 /** Tag `<html>` / `<body>` so CSS can reduce motion on native shells. */
 export function markNativePerformanceMode(): void {
   if (typeof document === "undefined") return;
@@ -30,6 +66,7 @@ export function markNativePerformanceMode(): void {
   document.documentElement.classList.add("native-shell");
   if (isNativeAndroid()) {
     document.documentElement.classList.add("native-android");
+    hardenAndroidInputListeners();
   }
   try {
     document.body?.classList.add("native-shell");

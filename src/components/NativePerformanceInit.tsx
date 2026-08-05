@@ -1,9 +1,9 @@
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 import { markNativePerformanceMode } from "../lib/nativePerformance";
 
-/** One-time native shell tuning (CSS classes, lifecycle hooks elsewhere). */
+/** One-time native shell tuning (CSS classes + Android input hardening). */
 export function NativePerformanceInit() {
-  useEffect(() => {
+  useLayoutEffect(() => {
     markNativePerformanceMode();
   }, []);
   return null;
