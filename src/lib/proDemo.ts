@@ -15,7 +15,14 @@ export const PRO_DEMO_CHANGED = "synexus-pro-demo-changed";
 export const PRO_DEMO_DURATION_MS = SYNEXUS_PRO_TRIAL_MS;
 export const PRO_TRIAL_DURATION_MS = SYNEXUS_PRO_TRIAL_MS;
 
-const PAID_GRANT_SOURCES = new Set(["subscription_checkout", "square_checkout", "supabase_profile", "owner", "admin"]);
+const PAID_GRANT_SOURCES = new Set([
+  "subscription_checkout",
+  "square_checkout",
+  "supabase_profile",
+  "owner",
+  "admin",
+  "play_review",
+]);
 
 function readPlanGrantSource(): string | null {
   try {

@@ -34,6 +34,8 @@ function laneStatus(token: Token, laneId: (typeof SENTINEL_LANE_IDS)[number]): s
       return token.topWalletPct != null ? `Top ${token.topWalletPct}%` : "Tracking…";
     case "cipher":
       return token.riskScore != null ? `Score ${token.riskScore}` : "Analyzing…";
+    case "helix":
+      return "Vault watch";
     default:
       return "—";
   }

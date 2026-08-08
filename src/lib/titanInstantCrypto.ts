@@ -16,7 +16,7 @@ import type { OracleConversationContext } from "./oracleSupremeConversation";
 import { rememberFavoriteSymbol } from "./titanMemory";
 
 const CRYPTO_TOPIC =
-  /\b(solana|sol\b|crypto|token|coin|memecoin|defi|nft|wallet|liquidity|rug|whale|pump|mcap|dex|mint|trade|trading|market|gainer|loser|sentinel|aegis|pulse|leviathan|cipher)\b/i;
+  /\b(solana|sol\b|crypto|token|coin|memecoin|defi|nft|wallet|liquidity|rug|whale|pump|mcap|dex|mint|trade|trading|market|gainer|loser|sentinel|aegis|pulse|leviathan|cipher|helix)\b/i;
 
 const PRICE_QUERY =
   /\b(price|cost|worth|trading at|how much|what'?s .+ at|\$\d|usd)\b/i;

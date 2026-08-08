@@ -1,18 +1,19 @@
 /**
- * SyNexus Sentinel grid — four scan lanes + commander (Titan / Hera).
+ * SyNexus Sentinel grid — five scan lanes + commander (Titan / Hera).
  * Lane ids are stable API keys; display names are user-facing.
  */
 
-export type SentinelLaneId = "aegis" | "pulse" | "leviathan" | "cipher";
+export type SentinelLaneId = "aegis" | "pulse" | "leviathan" | "cipher" | "helix";
 
 /** @deprecated Legacy id — whale lane was misnamed "titan" before v2. */
-export type LegacySentinelLaneId = SentinelLaneId | "titan";
+export type LegacySentinelLaneId = SentinelLaneId | "titan" | "guardian";
 
 export const SENTINEL_LANE_IDS: readonly SentinelLaneId[] = [
   "aegis",
   "pulse",
   "leviathan",
   "cipher",
+  "helix",
 ] as const;
 
 export type SentinelLaneDef = {
@@ -81,11 +82,28 @@ export const SENTINEL_LANES: Record<SentinelLaneId, SentinelLaneDef> = {
     accent: "gold",
     proPrecisionBoost: true,
   },
+  helix: {
+    id: "helix",
+    shortName: "Helix",
+    fullName: "Sentinel Helix",
+    role: "Wallet & key security",
+    roleDetail:
+      "Key vault integrity · unlock hygiene · scan-before-sign · phishing blocks · signature simulation gates",
+    idleStatus:
+      "Helix standing watch — when SyN Wallet ships, keys stay on-device and no seed leaves your vault.",
+    lesson:
+      "Every locked session, verified address, and scan-before-sign makes Helix sharper before the next signature.",
+    accent: "green",
+    proPrecisionBoost: true,
+  },
 };
 
 export function normalizeSentinelLaneId(id: string): SentinelLaneId | null {
   if (id === "titan") return "leviathan";
-  if (id === "aegis" || id === "pulse" || id === "leviathan" || id === "cipher") return id;
+  if (id === "guardian") return "helix";
+  if (id === "aegis" || id === "pulse" || id === "leviathan" || id === "cipher" || id === "helix") {
+    return id;
+  }
   return null;
 }
 
@@ -97,7 +115,7 @@ export function sentinelLaneFullName(id: SentinelLaneId): string {
   return SENTINEL_LANES[id].fullName;
 }
 
-/** Commander sits above the four lanes — user-renamable; internal default via titanBotName. */
+/** Commander sits above the lanes — user-renamable; internal default via titanBotName. */
 export const COMMANDER_PRODUCT_LABEL = "Titan";
 
 export const COMMANDER_ROLE =

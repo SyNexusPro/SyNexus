@@ -54,6 +54,18 @@ Research Solana tokens · Sentinel risk scores · AI Titan briefings
 
 ---
 
+## App access (reviewer login)
+
+Play Console → **App content** → **App access** → all or some features restricted:
+
+| Field | Value |
+|-------|--------|
+| **Email / username** | `google-review@synexus.pro` |
+| **Password** | `GoogleRocks2026` |
+| **Any other info** | Sign in via Operator Link (Pulse) or home Sign in. Account has SyNexus Pro. No 2FA. |
+
+Full notes: [GOOGLE_PLAY.md](./GOOGLE_PLAY.md#app-access-google-play-reviewers).
+
 ## Policy declarations
 
 | Question | Answer |

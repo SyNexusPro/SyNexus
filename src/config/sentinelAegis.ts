@@ -20,7 +20,7 @@ export const AEGIS_LESSON =
 
 export const AEGIS_PRIVACY_POINTS = [
   "Non-custodial — SyNexus never holds your SOL, tokens, or seed phrases.",
-  "Wallet keys stay in Phantom, Solflare, or your hardware wallet — not on our servers.",
+  "Wallet keys stay in SyN Wallet (Sentinel Helix), Phantom, Solflare, or hardware — never on our servers.",
   "Operator Link uses verified email sign-in; we don't ask for seed phrases or private keys.",
   "Titan personalized memory and feedback are opt-in only — off by default.",
   "Full retention and rights are in the Privacy Policy on /privacy.",

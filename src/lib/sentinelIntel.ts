@@ -77,6 +77,7 @@ export function buildSentinelLiveIntel({
   const pulseSentinel = sentinelById(sentinels, "pulse");
   const leviathanSentinel = sentinelById(sentinels, "leviathan");
   const cipherSentinel = sentinelById(sentinels, "cipher");
+  const helixSentinel = sentinelById(sentinels, "helix");
 
   const baseScans = Math.max(48, pool.length * 14 + sentinelAlerts.length * 6);
 
@@ -89,6 +90,9 @@ export function buildSentinelLiveIntel({
   const pulseHits = movers.length;
   const leviathanHits = whales.length;
   const cipherHits = fused.length;
+
+  // Helix watches key/signing hygiene; SyN Wallet UI is parked — idle hits for now.
+  const helixHits = 0;
 
   function computeStats(sentinel: SyntheticSentinel | undefined, hits: number, scansBoost: number) {
     const level = sentinel?.level ?? 1;
@@ -106,6 +110,7 @@ export function buildSentinelLiveIntel({
   const pulseStats = computeStats(pulseSentinel, pulseHits, 30);
   const leviathanStats = computeStats(leviathanSentinel, leviathanHits, 18);
   const cipherStats = computeStats(cipherSentinel, cipherHits, 24);
+  const helixStats = computeStats(helixSentinel, helixHits, 26);
 
   const aegisStatus =
     pool.length === 0
@@ -134,6 +139,8 @@ export function buildSentinelLiveIntel({
       : cipherFocus
         ? `${cipherHits} multi-lane match${cipherHits === 1 ? "" : "es"} · ${cipherFocus.symbol} stacked across lanes`
         : `Patterns quiet — cross-checking ${pool.length} pair${pool.length === 1 ? "" : "s"}.`;
+
+  const helixStatus = SENTINEL_LANES.helix.idleStatus;
 
   function laneIntel(
     lane: SentinelLaneId,
@@ -176,6 +183,7 @@ export function buildSentinelLiveIntel({
     leviathanSentinel,
   );
   out.cipher = laneIntel("cipher", cipherFocus, cipherStats, cipherStatus, cipherHits, cipherSentinel);
+  out.helix = laneIntel("helix", null, helixStats, helixStatus, helixHits, helixSentinel);
   return out;
 }
 

@@ -2,6 +2,7 @@ import type { Token } from "../data/tokens";
 import { synexusRiskBandLabel } from "../data/tokens";
 import { resolveInternalCommanderPersona } from "./titanBotName";
 import { answerAegisSecurityPrivacyQuestion } from "../config/sentinelAegis";
+import { answerHelixQuestion } from "../config/sentinelHelix";
 import { SENTINEL_LANE_IDS, sentinelLaneLabel, type SentinelLaneId } from "../config/sentinels";
 import { isInstantTitanPath } from "./titanRouting";
 import { rememberFavoriteSymbol } from "./titanMemory";
@@ -104,6 +105,8 @@ function pickFocus(pool: Token[], lane: SentinelLaneId): Token | null {
         }) ?? pool.find((t) => t.guardianRisk !== "SAFE") ??
         null
       );
+    case "helix":
+      return null;
     default:
       return pool[0] ?? null;
   }
@@ -120,6 +123,8 @@ export function buildOracleSentinelDirective(
       pulse: "Hold momentum filter — ignore sub-8% moves until volume confirms.",
       leviathan: "Hold whale lane — report any top-wallet shift above 3 points.",
       cipher: "Hold pattern fusion — escalate when two lanes agree on one symbol.",
+      helix:
+        "Helix standing watch — key hygiene, scan-before-sign, never expose seeds (SyN Wallet on hold).",
     };
     return { lane, order: standby[lane], targetSymbol: null };
   }
@@ -150,6 +155,12 @@ export function buildOracleSentinelDirective(
         targetSymbol: sym,
         order: `Fuse ${sym} signals — cross-check risk, flow, and whales; report fused confidence to commander.`,
       };
+    case "helix":
+      return {
+        lane,
+        targetSymbol: null,
+        order: `Helix clear on vault — if signing ${sym}, verify mint + destination before approve.`,
+      };
     default:
       return { lane, order: `Scan ${poolSize} pairs`, targetSymbol: sym };
   }
@@ -168,7 +179,10 @@ export function buildSentinelReportToOracle(
   if (!token) {
     return {
       lane,
-      report: "All quiet — standing by for the commander's next order.",
+      report:
+        lane === "helix"
+          ? "Helix → commander: key-security lane clear — no signature in flight."
+          : "All quiet — standing by for the commander's next order.",
       latencyMs: baseLatency,
       precision,
     };
@@ -198,6 +212,9 @@ export function buildSentinelReportToOracle(
       break;
     case "cipher":
       report = `Cipher → commander: ${sym} pattern fused — score ${token.riskScore ?? "?"} with ${synexusRiskBandLabel(token.guardianRisk)} alignment.`;
+      break;
+    case "helix":
+      report = `Helix → commander: vault watch active — scan ${sym} before any SyN Wallet signature.`;
       break;
     default:
       report = `${sentinelLaneLabel(lane)} → commander: ${sym} scanned.`;
@@ -232,9 +249,11 @@ export function answerCryptoConcept(question: string, commanderName = resolveInt
   if (/solana|sol\b/.test(q) && /what|explain|how/.test(q)) {
     return "Solana is the chain SyNexus scans first — fast blocks, meme velocity, and rug risk. Sentinels watch SPL tokens, pools, and wallet flow in real time.";
   }
-  if (/sentinel|aegis|pulse|leviathan|cipher/.test(q) && /what|who|do/.test(q)) {
-    return `Aegis guards security & privacy (scams, rugs, accounts), Pulse reads momentum, Leviathan shadows whales, Cipher fuses weak signals. ${commanderName} commands each lane and reads their reports.`;
+  if (/sentinel|aegis|pulse|leviathan|cipher|helix/.test(q) && /what|who|do/.test(q)) {
+    return `Aegis guards token/account security, Pulse reads momentum, Leviathan shadows whales, Cipher fuses weak signals, Helix protects SyN Wallet keys and signatures. ${commanderName} commands each lane and reads their reports.`;
   }
+  const helixBrief = answerHelixQuestion(q);
+  if (helixBrief) return helixBrief;
   const aegisBrief = answerAegisSecurityPrivacyQuestion(q);
   if (aegisBrief) return aegisBrief;
   return null;
@@ -259,7 +278,7 @@ export function oracleRespondToMessage(text: string, ctx: OracleMessageContext):
     return `No match in the live feed, ${name}. Try a symbol — e.g. BONK, SOL, SYN.`;
   }
 
-  if (/sentinel|aegis|pulse|leviathan|cipher/.test(lower) && /status|report|doing|orders?/.test(lower)) {
+  if (/sentinel|aegis|pulse|leviathan|cipher|helix/.test(lower) && /status|report|doing|orders?/.test(lower)) {
     const dirs = buildAllOracleDirectives(tokens);
     return [
       `Sentinel status — ${titanBotName}:`,
@@ -267,6 +286,7 @@ export function oracleRespondToMessage(text: string, ctx: OracleMessageContext):
       `Pulse → ${dirs.pulse.order}`,
       `Leviathan → ${dirs.leviathan.order}`,
       `Cipher → ${dirs.cipher.order}`,
+      `Helix → ${dirs.helix.order}`,
     ].join("\n");
   }
 

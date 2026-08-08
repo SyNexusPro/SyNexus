@@ -71,6 +71,14 @@ export const TITAN_CAPABILITIES: readonly TitanCapability[] = [
     status: "live",
   },
   {
+    id: "syn_wallet_helix",
+    title: "Helix — wallet security",
+    summary:
+      "Sentinel Helix protects SyN Wallet — encrypted vault posture, unlock hygiene, scan-before-sign, and phishing defense on every send or swap.",
+    requiresPermission: false,
+    status: "live",
+  },
+  {
     id: "trading_coach",
     title: "Trading coach",
     summary:

@@ -25,6 +25,10 @@ export default defineConfig(({ mode }) => {
     define: {
       "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(supabaseUrl),
       "import.meta.env.VITE_SUPABASE_ANON_KEY": JSON.stringify(supabaseAnon),
+      global: "globalThis",
+    },
+    optimizeDeps: {
+      include: ["buffer", "bs58", "@solana/web3.js", "@scure/bip39", "ed25519-hd-key"],
     },
     build: {
       rollupOptions: {
@@ -32,6 +36,9 @@ export default defineConfig(({ mode }) => {
           manualChunks(id) {
             if (!id.includes("node_modules")) {
               return;
+            }
+            if (id.includes("@solana") || id.includes("@scure") || id.includes("ed25519-hd-key") || id.includes("bs58")) {
+              return "solana";
             }
             if (id.includes("@supabase")) {
               return "supabase";

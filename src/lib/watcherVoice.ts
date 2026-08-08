@@ -3,7 +3,7 @@ import type { SentinelLaneId } from "../config/sentinels";
 const sentinelIdleMessages = [
   "Sentinels are analyzing the market.",
   "The SyNexus grid is scanning security, momentum, whales, and fused patterns.",
-  "Aegis, Pulse, Leviathan, and Cipher are observing liquidity flow across The SyNexus.",
+  "Aegis, Pulse, Leviathan, Cipher, and Helix are observing liquidity and wallet posture across The SyNexus.",
   "Sentinels are tracking volume spikes and holder concentration in real time.",
 ];
 
@@ -45,6 +45,11 @@ const laneMessages: Record<
     safe: "Cipher: weak signals don't stack into a pattern yet.",
     warning: "Cipher: two lanes starting to agree — watch closely.",
     danger: "Cipher: multi-lane pattern match — commander should escalate.",
+  },
+  helix: {
+    safe: "Helix: key-security lane clear — no seed exposure signals.",
+    warning: "Helix: tighten wallet hygiene before the next signature.",
+    danger: "Helix: elevated wallet risk — do not sign until posture is restored.",
   },
 };
 

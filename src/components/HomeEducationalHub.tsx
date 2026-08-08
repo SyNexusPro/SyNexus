@@ -22,7 +22,7 @@ const FEATURES = [
     id: "commander",
     title: "Titan AI commander",
     body:
-      "Your private briefing officer — fuses Aegis, Pulse, Leviathan, and Cipher into plain-English answers. Renameable; default persona is encoded server-side.",
+      "Your private briefing officer — fuses Aegis, Pulse, Leviathan, Cipher, and Helix into plain-English answers. Renameable; default persona is encoded server-side.",
     link: "/blog/using-titan-ai-for-crypto-research",
     linkLabel: "Using Titan safely →",
   },

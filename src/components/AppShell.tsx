@@ -7,6 +7,7 @@ import { UIModeToggle } from "./UIModeToggle";
 import { TitanSheet } from "./TitanSheet";
 import { ProDemoBanner } from "./ProDemoBanner";
 import { BeginnerModeCoach } from "./BeginnerModeCoach";
+import { SYNEXUS_VAULT_PATH, SYNEXUS_VAULT_PRODUCT_NAME } from "../config/walletComingSoon";
 
 export function AppShell() {
   const { isSimple } = useSynexusUIMode();
@@ -14,107 +15,109 @@ export function AppShell() {
 
   return (
     <TitanShellProvider>
-    <div className={`app-shell${isSimple ? " app-shell--easy" : " app-shell--advanced"}${isHome ? " app-shell--home" : ""}`}>
-      {!isHome ? <ProDemoBanner /> : null}
-      <main className="app-main">
-        {!isHome ? (
-          <>
-            <div className="app-mode-bar">
-              <UIModeToggle />
-            </div>
-            <BeginnerModeCoach />
-          </>
-        ) : null}
-        <RouteErrorBoundary label="page">
-          <Outlet />
-        </RouteErrorBoundary>
-      </main>
-      <TitanSheet />
-      {isHome ? null : (
-      <footer className="app-footer">
-        <Link className="app-footer__link" to="/about">
-          About
-        </Link>
-        <span className="app-footer__sep" aria-hidden>
-          ·
-        </span>
-        <Link className="app-footer__link" to="/trust">
-          Trust
-        </Link>
-        <span className="app-footer__sep" aria-hidden>
-          ·
-        </span>
-        <Link className="app-footer__link" to="/contact">
-          Contact
-        </Link>
-        <span className="app-footer__sep" aria-hidden>
-          ·
-        </span>
-        <Link className="app-footer__link" to="/hub">
-          Hub
-        </Link>
-        <span className="app-footer__sep" aria-hidden>
-          ·
-        </span>
-        <Link className="app-footer__link" to="/faq">
-          FAQ
-        </Link>
-        <span className="app-footer__sep" aria-hidden>
-          ·
-        </span>
-        <Link className="app-footer__link" to="/pricing">
-          Pricing
-        </Link>
-        <span className="app-footer__sep" aria-hidden>
-          ·
-        </span>
-        <Link className="app-footer__link" to="/blog">
-          Journal
-        </Link>
-        <span className="app-footer__sep" aria-hidden>
-          ·
-        </span>
-        <Link className="app-footer__link" to="/disclaimer">
-          Disclaimer
-        </Link>
-        <span className="app-footer__sep" aria-hidden>
-          ·
-        </span>
-        <Link className="app-footer__link" to="/terms">
-          Terms
-        </Link>
-        <span className="app-footer__sep" aria-hidden>
-          ·
-        </span>
-        <Link className="app-footer__link" to="/privacy">
-          Privacy
-        </Link>
-        <span className="app-footer__sep" aria-hidden>
-          ·
-        </span>
-        <Link className="app-footer__link" to="/refund-policy">
-          Refunds
-        </Link>
-        <span className="app-footer__sep" aria-hidden>
-          ·
-        </span>
-        <Link className="app-footer__link" to="/wallet-terms" title="SyNexus Vault — coming soon">
-          Vault
-        </Link>
-        <span className="app-footer__sep" aria-hidden>
-          ·
-        </span>
-        <Link
-          className="app-footer__link"
-          to="/liquidity-treasury"
-          title="SyNexus Coin Liquidity Treasury"
-        >
-          Liquidity Treasury
-        </Link>
-      </footer>
-      )}
-      <BottomNav />
-    </div>
+      <div
+        className={`app-shell${isSimple ? " app-shell--easy" : " app-shell--advanced"}${isHome ? " app-shell--home" : ""}`}
+      >
+        {!isHome ? <ProDemoBanner /> : null}
+        <main className="app-main">
+          {!isHome ? (
+            <>
+              <div className="app-mode-bar">
+                <UIModeToggle />
+              </div>
+              <BeginnerModeCoach />
+            </>
+          ) : null}
+          <RouteErrorBoundary label="page">
+            <Outlet />
+          </RouteErrorBoundary>
+        </main>
+        <TitanSheet />
+        {isHome ? null : (
+          <footer className="app-footer">
+            <Link className="app-footer__link" to="/about">
+              About
+            </Link>
+            <span className="app-footer__sep" aria-hidden>
+              ·
+            </span>
+            <Link className="app-footer__link" to="/trust">
+              Trust
+            </Link>
+            <span className="app-footer__sep" aria-hidden>
+              ·
+            </span>
+            <Link className="app-footer__link" to="/contact">
+              Contact
+            </Link>
+            <span className="app-footer__sep" aria-hidden>
+              ·
+            </span>
+            <Link className="app-footer__link" to="/hub">
+              Hub
+            </Link>
+            <span className="app-footer__sep" aria-hidden>
+              ·
+            </span>
+            <Link className="app-footer__link" to="/faq">
+              FAQ
+            </Link>
+            <span className="app-footer__sep" aria-hidden>
+              ·
+            </span>
+            <Link className="app-footer__link" to="/pricing">
+              Pricing
+            </Link>
+            <span className="app-footer__sep" aria-hidden>
+              ·
+            </span>
+            <Link className="app-footer__link" to="/blog">
+              Journal
+            </Link>
+            <span className="app-footer__sep" aria-hidden>
+              ·
+            </span>
+            <Link className="app-footer__link" to="/disclaimer">
+              Disclaimer
+            </Link>
+            <span className="app-footer__sep" aria-hidden>
+              ·
+            </span>
+            <Link className="app-footer__link" to="/terms">
+              Terms
+            </Link>
+            <span className="app-footer__sep" aria-hidden>
+              ·
+            </span>
+            <Link className="app-footer__link" to="/privacy">
+              Privacy
+            </Link>
+            <span className="app-footer__sep" aria-hidden>
+              ·
+            </span>
+            <Link className="app-footer__link" to="/refund-policy">
+              Refunds
+            </Link>
+            <span className="app-footer__sep" aria-hidden>
+              ·
+            </span>
+            <Link className="app-footer__link" to={SYNEXUS_VAULT_PATH} title={SYNEXUS_VAULT_PRODUCT_NAME}>
+              {SYNEXUS_VAULT_PRODUCT_NAME}
+            </Link>
+            <span className="app-footer__sep" aria-hidden>
+              ·
+            </span>
+            <Link
+              className="app-footer__link"
+              to="/liquidity-treasury"
+              title="SyNexus Coin Liquidity Treasury"
+            >
+              Liquidity Treasury
+            </Link>
+          </footer>
+        )}
+        <BottomNav />
+      </div>
     </TitanShellProvider>
   );
 }

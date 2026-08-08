@@ -59,7 +59,8 @@
     "aegis:check": "node scripts/aegis-check.mjs",
     "ga4:check": "npm run build && node scripts/smoke-ga4.mjs",
     "birdeye:check": "node scripts/smoke-birdeye.mjs",
-    "owner:generate": "node scripts/generate-owner-code.mjs"
+    "owner:generate": "node scripts/generate-owner-code.mjs",
+    "play:provision-reviewer": "node scripts/provision-play-reviewer.mjs"
   },
   "dependencies": {
     "@aparajita/capacitor-biometric-auth": "^10.0.0",
@@ -70,9 +71,14 @@
     "@capacitor/core": "^8.3.4",
     "@capacitor/ios": "^8.3.4",
     "@capacitor/preferences": "^8.0.1",
+    "@scure/bip39": "^1.6.0",
+    "@solana/web3.js": "^1.98.4",
     "@supabase/supabase-js": "^2.104.0",
     "@vercel/analytics": "^2.0.1",
+    "bs58": "^6.0.0",
+    "buffer": "^6.0.3",
     "capacitor-secure-storage-plugin": "^0.13.0",
+    "ed25519-hd-key": "^1.3.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.6.0"

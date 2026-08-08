@@ -167,8 +167,8 @@ export const FAQ_ITEMS = [
     a: "Verify the full mint address (not just the ticker), check liquidity depth and top-holder concentration, ignore DMs from fake support, and never share your seed phrase. SyNexus Journal has step-by-step guides — start with How to Spot Crypto Scams on Solana at /blog/how-to-spot-crypto-scams-on-solana.",
   },
   {
-    q: "What are the four SyNexus Sentinels?",
-    a: "Aegis (security & privacy), Pulse (momentum/volume), Leviathan (whale flows), and Cipher (patterns & community reports). They fuse into one Avoid, Watch, or OK verdict on the home scan panel.",
+    q: "What are the SyNexus Sentinels?",
+    a: "Aegis (token & account security), Pulse (momentum/volume), Leviathan (whale flows), Cipher (pattern fusion), and Helix (SyN Wallet key & signature security). They fuse into Avoid, Watch, or OK on the home scan panel — Helix watches your wallet vault separately.",
   },
   {
     q: "Can AI predict which token will moon?",

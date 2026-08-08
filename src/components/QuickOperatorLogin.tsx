@@ -11,6 +11,7 @@ import {
 import { isEmailVerified } from "../lib/emailVerification";
 import { SYNEXUS_BRAND_NAME } from "../config/brand";
 import { useOperatorAuth } from "../hooks/useOperatorAuth";
+import { applyGooglePlayReviewAccess } from "../lib/googlePlayReviewAccess";
 
 const DEMO_SESSION_KEY = "synexus_demo_session";
 
@@ -135,6 +136,9 @@ export function QuickOperatorLogin({
         return;
       }
       saveRememberedEmail(trimmedEmail);
+      if (signedInUser?.id) {
+        await applyGooglePlayReviewAccess(signedInUser.id, trimmedEmail);
+      }
       setPassword("");
       setMessage({ tone: "success", text: "Signed in." });
       onSuccess?.({

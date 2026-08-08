@@ -4,7 +4,7 @@ import { NonCustodialDisclaimer } from "../components/NonCustodialDisclaimer";
 import { SupportedWallets } from "../components/SupportedWallets";
 import { TrustIndicators } from "../components/TrustIndicators";
 import { HOW_SYNEXUS_WORKS, PRIVACY_HIGHLIGHTS, SECURITY_POINTS } from "../config/site";
-import { SYNEXUS_VAULT_PATH } from "../config/walletComingSoon";
+import { SYNEXUS_VAULT_PATH, SYNEXUS_VAULT_PRODUCT_NAME } from "../config/walletComingSoon";
 
 export function Trust() {
   return (
@@ -82,8 +82,9 @@ export function Trust() {
         <h2>Supported wallets</h2>
         <p>
           SyNexus opens Jupiter swap flows in your browser. Connect with any Solana wallet that supports those
-          transactions. A native SyNexus Vault is{" "}
-          <Link to={SYNEXUS_VAULT_PATH}>coming soon</Link>.
+          transactions.{" "}
+          <Link to={SYNEXUS_VAULT_PATH}>{SYNEXUS_VAULT_PRODUCT_NAME}</Link> is coming soon —
+          Sentinel Helix will guard those keys on-device.
         </p>
         <SupportedWallets />
       </section>

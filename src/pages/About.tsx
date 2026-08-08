@@ -52,7 +52,7 @@ export function About() {
         <h2>Titan</h2>
         <p>
           Titan is SyNexus&apos;s conversational AI commander — your synthetic bot and the strategic voice of
-          the network. You can rename Titan to whatever you want; the four Sentinels keep their fixed names.
+          the network. You can rename Titan to whatever you want; the five Sentinels keep their fixed names.
           Titan synthesizes Sentinel intel, token metadata, and market context into briefings you can read or
           hear. Ask about a coin, request a risk summary, or get a plain-language explanation of why a token
           flagged Warning or Danger.

@@ -1,5 +1,6 @@
 import { buildTitanIdentityLine } from "../config/titanGuidelines";
 import { answerAegisSecurityPrivacyQuestion } from "../config/sentinelAegis";
+import { answerHelixQuestion } from "../config/sentinelHelix";
 import { hasTitanMemoryConsent, titanMemoryContextLine } from "./titanMemory";
 import { softenTitanResponse } from "./titanGuardrails";
 import { oracleRespondToMessage } from "./oracleCryptoBrain";
@@ -342,7 +343,11 @@ export function reactToFreeText(text: string, ctx: OracleConversationContext): s
     return buildFollowUpAfterMood("long", ctx);
   }
 
-  if (/alert|warning|danger|rug|scam|privacy|security|phish/.test(lower)) {
+  if (/alert|warning|danger|rug|scam|privacy|security|phish|wallet|helix|seed/.test(lower)) {
+    if (/helix|syn wallet|wallet (pin|vault|security)|recovery phrase|seed/.test(lower)) {
+      const helix = answerHelixQuestion(text);
+      if (helix) return helix;
+    }
     if (/privacy|security|phish|seed|private key|my data/.test(lower)) {
       const aegis = answerAegisSecurityPrivacyQuestion(text);
       if (aegis) return aegis;

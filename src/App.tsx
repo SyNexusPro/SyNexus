@@ -106,6 +106,8 @@ export default function App() {
             <Route path="terms" element={<Terms />} />
             <Route path="privacy" element={<Privacy />} />
             <Route path="wallet-terms" element={<WalletComingSoon />} />
+            <Route path="wallet" element={<WalletComingSoon />} />
+            <Route path="wallet/*" element={<WalletComingSoon />} />
             <Route path="liquidity-treasury" element={<LiquidityTreasury />} />
             <Route path="marketing-command" element={<MarketingCommand />} />
             <Route path="analytics" element={<SiteAnalytics />} />

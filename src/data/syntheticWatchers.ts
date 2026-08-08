@@ -5,6 +5,11 @@ import {
   AEGIS_SENTINEL_NAME,
 } from "../config/sentinelAegis";
 import {
+  HELIX_LESSON,
+  HELIX_ROLE,
+  HELIX_SENTINEL_NAME,
+} from "../config/sentinelHelix";
+import {
   COMMANDER_LESSON,
   COMMANDER_ROLE,
   SENTINEL_LANES,
@@ -60,7 +65,7 @@ const sentinelSeeds = [
     role: COMMANDER_ROLE,
     baseXp: 200,
     status:
-      "Commands Aegis, Pulse, Leviathan, and Cipher — fuses their reports into one plain-English briefing.",
+      "Commands Aegis, Pulse, Leviathan, Cipher, and Helix — fuses their reports into one plain-English briefing.",
     lesson: COMMANDER_LESSON,
     accent: "gold" as const,
     isCommander: true,
@@ -104,6 +109,16 @@ const sentinelSeeds = [
     status: SENTINEL_LANES.cipher.idleStatus,
     lesson: SENTINEL_LANES.cipher.lesson,
     accent: SENTINEL_LANES.cipher.accent,
+  },
+  {
+    id: "helix",
+    laneId: "helix" as const,
+    name: HELIX_SENTINEL_NAME,
+    role: HELIX_ROLE,
+    baseXp: 140,
+    status: SENTINEL_LANES.helix.idleStatus,
+    lesson: HELIX_LESSON,
+    accent: SENTINEL_LANES.helix.accent,
   },
 ];
 
@@ -180,7 +195,7 @@ export function buildOracleSupremeBriefing(
     : "your Sentinels";
 
   if (watchedTokens === 0 && activeAlerts === 0) {
-    return `${commanderName} is online. Add tokens to your watchlist — ${commanderName} will command Aegis, Pulse, Leviathan, and Cipher, then brief you here.`;
+    return `${commanderName} is online. Add tokens to your watchlist — ${commanderName} will command Aegis, Pulse, Leviathan, Cipher, and Helix, then brief you here.`;
   }
 
   if (activeAlerts === 0) {
@@ -224,10 +239,10 @@ export function buildOracleSupremeDailyReport(
     priorities: [
       activeAlerts > 0
         ? `Review ${activeAlerts} live alert${activeAlerts === 1 ? "" : "s"} — ${commanderName} flagged them from the lane grid.`
-        : `Add watchlist tokens so Aegis, Pulse, Leviathan, and Cipher scan real targets.`,
+        : `Add watchlist tokens so Aegis, Pulse, Leviathan, Cipher, and Helix scan real targets.`,
       signals.reportCount > 0
         ? "Keep submitting reports — Cipher weights community intel into fused confidence."
-        : "Report suspicious tokens. Aegis and Cipher read those first.",
+        : "Report suspicious tokens. Aegis and Cipher read those first. Helix watches SyN Wallet.",
       topSentinel
         ? `${leadName} is your strongest lane (level ${topSentinel.level}). Ask ${commanderName} for a fresh fused read anytime.`
         : "Build your watchlist — the commander establishes baseline, then the lanes execute.",

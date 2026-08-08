@@ -10,9 +10,8 @@ export function WalletComingSoon() {
       <p className="legal-page__eyebrow">{SYNEXUS_VAULT_STATUS}</p>
       <h1 className="legal-page__title">{SYNEXUS_VAULT_PRODUCT_NAME}</h1>
       <p className="legal-page__summary">
-        A self-custodial Solana wallet with Sentinel scan-before-sign built in — same SyNexus intelligence,
-        keys that never leave your device. We&apos;re holding Vault on the back burner while we upgrade the
-        Sentinels and Titan AI first.
+        Self-custodial Solana wallet with Sentinel Helix on watch — keys that never leave your device.
+        Wallet UI is on hold while we harden Helix and the rest of the Sentinel grid.
       </p>
 
       <section className="legal-section marketing-panel">
@@ -31,8 +30,8 @@ export function WalletComingSoon() {
       </section>
 
       <p className="legal-page__note">
-        Draft wallet terms and architecture live in the repo under <code>future/synexus-vault/</code> — not
-        linked from production until launch.
+        Implementation parked under <code>future/syn-wallet/</code>. Sentinel Helix is already live in the
+        grid — ask Titan about him anytime.
       </p>
     </div>
   );

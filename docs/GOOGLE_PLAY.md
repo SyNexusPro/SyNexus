@@ -56,6 +56,23 @@ For a signed **APK** (sideload / testers only):
 npm run android:apk
 ```
 
+## App access (Google Play reviewers)
+
+Play Console → **App content** → **App access**. Declare that login is required and provide:
+
+| Field | Value |
+|-------|--------|
+| **Email** | `google-review@synexus.pro` |
+| **Password** | `GoogleRocks2026` |
+| **Instructions** | Open the app → Operator Link / Sign in (Pulse or home auth). Use the credentials above. Account has **SyNexus Pro** full access for review. No 2FA. |
+
+Provision / refresh the account against Supabase (service role in `.env`):
+
+```bash
+set GOOGLE_PLAY_REVIEW_PASSWORD=GoogleRocks2026
+npm run play:provision-reviewer
+```
+
 ## Play Console checklist (high level)
 
 - **App details**: short / full description, screenshots, icon, feature graphic.
@@ -65,6 +82,7 @@ npm run android:apk
 - **Data safety** section — disclose data collected (e.g. account, diagnostics, Square billing metadata).
 - **Ads** — declare **Yes** if AdSense runs on the home feed (`VITE_ADSENSE_HOME_SLOT`).
 - **Subscriptions** — On **Android**, Subscribe opens **synexus.pro in the system browser** (no Square checkout inside the app shell). Web and iOS still use Square. Confirm Play Console declarations match ([Google Play Payments](https://support.google.com/googleplay/android-developer/answer/9858738)).
+- **App access** — paste the reviewer credentials from the section above.
 
 ## QA before release
 

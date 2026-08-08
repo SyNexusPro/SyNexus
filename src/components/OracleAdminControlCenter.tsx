@@ -114,7 +114,7 @@ export function OracleAdminControlCenter({
                   <p className="oracle-admin__eyebrow">Command center</p>
                   <h2 className="oracle-admin__title">{titanBotName}</h2>
                   <p className="oracle-admin__lede">
-                    Aegis, Pulse, Leviathan, and Cipher — your private operator console.
+                    Aegis, Pulse, Leviathan, Cipher, and Helix — your private operator console.
                   </p>
                 </div>
               </div>

@@ -32,6 +32,7 @@ import {
   buildSyntheticSentinels,
 } from "../data/syntheticWatchers";
 import { recordTrustedPlanGrant, enforceStoredPlan } from "../lib/securityBot";
+import { applyGooglePlayReviewAccess } from "../lib/googlePlayReviewAccess";
 import {
   hasStoredOwnerGrant,
   refreshOwnerAccess,
@@ -346,19 +347,20 @@ export function Pulse() {
       clearEmailVerificationPending();
       syncProTrialForUser(user.id);
 
+      const playReviewPro = await applyGooglePlayReviewAccess(user.id, user.email);
       const profile = await fetchProfile(user.id);
       if (profile?.titan_bot_name) {
         saveTitanBotName(profile.titan_bot_name);
       }
       setOperatorName(resolveOperatorDisplayName(profile, user.email));
       saveIntroOperatorName(resolveOperatorName(profile));
-      const hasPaidProfile = profile?.paid_plan === "PRO";
+      const hasPaidProfile = profile?.paid_plan === "PRO" || playReviewPro;
       const trialActive = isProDemoActive();
       const rawPlan =
         hasPaidProfile || trialActive
           ? "PRO"
           : (profile?.paid_plan ?? localStorage.getItem(PLAN_STORAGE_KEY) ?? "FREE");
-      if (hasStoredOwnerGrant()) {
+      if (hasStoredOwnerGrant() || playReviewPro) {
         setPlan("PRO");
       } else {
         const normalizedPlan = enforceStoredPlan(rawPlan, hasPaidProfile);
