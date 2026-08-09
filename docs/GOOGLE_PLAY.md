@@ -56,6 +56,14 @@ For a signed **APK** (sideload / testers only):
 npm run android:apk
 ```
 
+## Account deletion URL (Play Console)
+
+Play Console → **App content** → **Data safety** / account deletion:
+
+**https://www.synexus.pro/account-deletion**
+
+Page explains how to request deletion, what is deleted vs retained, and the ~30-day timeline. Alias: `/delete-account` redirects to the same page.
+
 ## App access (Google Play reviewers)
 
 Play Console → **App content** → **App access**. Declare that login is required and provide:

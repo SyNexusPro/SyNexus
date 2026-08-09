@@ -29,6 +29,9 @@ const Terms = lazy(() =>
 const Privacy = lazy(() =>
   import("./pages/Privacy").then((m) => ({ default: m.Privacy })),
 );
+const AccountDeletion = lazy(() =>
+  import("./pages/AccountDeletion").then((m) => ({ default: m.AccountDeletion })),
+);
 const LiquidityTreasury = lazy(() =>
   import("./pages/LiquidityTreasury").then((m) => ({ default: m.LiquidityTreasury })),
 );
@@ -105,6 +108,8 @@ export default function App() {
             <Route path="refund-policy" element={<RefundPolicy />} />
             <Route path="terms" element={<Terms />} />
             <Route path="privacy" element={<Privacy />} />
+            <Route path="account-deletion" element={<AccountDeletion />} />
+            <Route path="delete-account" element={<Navigate to="/account-deletion" replace />} />
             <Route path="wallet-terms" element={<WalletComingSoon />} />
             <Route path="wallet" element={<WalletComingSoon />} />
             <Route path="wallet/*" element={<WalletComingSoon />} />

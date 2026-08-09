@@ -93,7 +93,7 @@ Full notes: [GOOGLE_PLAY.md](./GOOGLE_PLAY.md#app-access-google-play-reviewers).
 |----------|--------|
 | Collect or share user data? | **Yes** |
 | Encrypted in transit? | **Yes** (HTTPS) |
-| Users can request deletion? | **Yes** — thesynexus@synexus.pro |
+| Users can request deletion? | **Yes** — https://www.synexus.pro/account-deletion |
 | Families Policy (designed for children)? | **No** (18+ app) |
 
 ### Data types
@@ -145,7 +145,7 @@ Supabase (auth) · Square (web billing) · Google Analytics & AdSense · Vercel 
 
 - **Purposes:** App functionality, analytics, advertising, fraud prevention, account management
 - **Data sold:** **No**
-- **Deletion:** Email thesynexus@synexus.pro or use https://www.synexus.pro/contact
+- **Deletion URL:** https://www.synexus.pro/account-deletion (also email thesynexus@synexus.pro)
 
 ---
 

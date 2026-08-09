@@ -95,6 +95,12 @@ export function AppShell() {
             <span className="app-footer__sep" aria-hidden>
               ·
             </span>
+            <Link className="app-footer__link" to="/account-deletion">
+              Delete account
+            </Link>
+            <span className="app-footer__sep" aria-hidden>
+              ·
+            </span>
             <Link className="app-footer__link" to="/refund-policy">
               Refunds
             </Link>
