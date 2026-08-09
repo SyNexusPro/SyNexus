@@ -100,8 +100,9 @@ export function Privacy() {
           Depending on where you live, you may have rights to access, correct, delete, or export personal
           information, or to object to or restrict certain processing. You may update account details where the
           Service allows, cancel subscriptions through checkout or processor tools, and disconnect your operator
-          link. To request account and personal-data deletion, use our{" "}
-          <Link to="/account-deletion">Account deletion</Link> page. To exercise other privacy rights, contact us
+          link. To delete some or all personal data while keeping your account, use{" "}
+          <Link to="/data-deletion">Data deletion</Link>. To close the account entirely, use{" "}
+          <Link to="/account-deletion">Account deletion</Link>. To exercise other privacy rights, contact us
           through channels published in the Service. We may verify your request before responding. We will not
           discriminate against you for exercising applicable privacy rights.
         </p>
@@ -112,6 +113,8 @@ export function Privacy() {
         <p>
           Privacy questions or data requests:{" "}
           <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>
+          {" · "}
+          <Link to="/data-deletion">Delete data</Link>
           {" · "}
           <Link to="/account-deletion">Delete account</Link>
           {" · "}
@@ -138,6 +141,8 @@ export function Privacy() {
         <Link to="/trust">Trust &amp; privacy summary</Link>
         {" · "}
         <Link to="/contact">Contact</Link>
+        {" · "}
+        <Link to="/data-deletion">Delete data</Link>
         {" · "}
         <Link to="/account-deletion">Delete account</Link>
         {" · "}

@@ -145,7 +145,9 @@ Supabase (auth) · Square (web billing) · Google Analytics & AdSense · Vercel 
 
 - **Purposes:** App functionality, analytics, advertising, fraud prevention, account management
 - **Data sold:** **No**
-- **Deletion URL:** https://www.synexus.pro/account-deletion (also email thesynexus@synexus.pro)
+- **Account deletion URL:** https://www.synexus.pro/account-deletion
+- **Data deletion (keep account):** https://www.synexus.pro/data-deletion
+- Or email thesynexus@synexus.pro
 
 ---
 

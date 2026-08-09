@@ -104,7 +104,9 @@ export function AccountDeletion() {
       <h1 className="legal-page__title">Delete your SyNexus account</h1>
       <p className="legal-page__summary">
         Use this page to request deletion of your SyNexus Operator account and related personal data held by{" "}
-        {OPERATOR_LABEL}. This URL is provided for Google Play and privacy compliance.
+        {OPERATOR_LABEL}. This URL is provided for Google Play and privacy compliance. To delete some or all
+        data <strong>without</strong> closing your account, use{" "}
+        <Link to="/data-deletion">data deletion</Link> instead.
       </p>
 
       <section className="legal-section marketing-panel">
@@ -226,6 +228,8 @@ export function AccountDeletion() {
       </section>
 
       <p className="legal-page__back">
+        <Link to="/data-deletion">Delete data, keep account</Link>
+        {" · "}
         <Link to="/privacy">Privacy Policy</Link>
         {" · "}
         <Link to="/contact">Contact</Link>

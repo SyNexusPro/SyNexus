@@ -133,6 +133,10 @@ export function Contact() {
         {" · "}
         <Link to="/privacy">Privacy</Link>
         {" · "}
+        <Link to="/data-deletion">Delete data</Link>
+        {" · "}
+        <Link to="/account-deletion">Delete account</Link>
+        {" · "}
         <Link to="/disclaimer">Disclaimer</Link>
         {" · "}
         <Link to="/about">About SyNexus</Link>
