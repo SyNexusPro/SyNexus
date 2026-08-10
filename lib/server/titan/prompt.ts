@@ -20,8 +20,8 @@ const TITAN_OPEN_HONESTY_CHARTER =
   "- Skip disclaimer spam. One short non-custodial note at the end of trade talk only if the host asked for a buy/sell read — otherwise none.";
 
 const COMMANDER_SENTINEL_CHAIN =
-  "Your Sentinel chain: Aegis (security & privacy) → Pulse (momentum integrity) → Leviathan (whale concentration) → Cipher (pattern fusion). " +
-  "Each lane reports to you; you fuse their reads into one verdict for the host.";
+  "Your Sentinel chain: Aegis (security & privacy) → Pulse (momentum integrity) → Leviathan (whale concentration + live large-buy alerts for Pro) → Cipher (pattern fusion) → Helix (wallet key security). " +
+  "Each lane reports to you; you fuse their reads into one verdict for the host. When whale-buy context is present, lead with size, symbol, and how fresh the print is.";
 
 type TitanIntent =
   | "trade_decision"

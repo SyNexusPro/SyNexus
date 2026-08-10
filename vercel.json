@@ -12,6 +12,18 @@
     "api/titan/warm.ts": {
       "includeFiles": "lib/server/**"
     },
+    "api/whale/webhook.ts": {
+      "includeFiles": "lib/server/**"
+    },
+    "api/whale/poll.ts": {
+      "includeFiles": "lib/server/**"
+    },
+    "api/whale/events.ts": {
+      "includeFiles": "lib/server/**"
+    },
+    "api/push/subscribe.ts": {
+      "includeFiles": "lib/server/**"
+    },
     "api/subscription/webhook.ts": {
       "includeFiles": "lib/**"
     },
@@ -22,6 +34,12 @@
       "includeFiles": "lib/**"
     }
   },
+  "crons": [
+    {
+      "path": "/api/whale/poll",
+      "schedule": "* * * * *"
+    }
+  ],
   "rewrites": [
     {
       "source": "/((?!api/.*).*)",

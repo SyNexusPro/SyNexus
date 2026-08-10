@@ -12073,3 +12073,53 @@ html.native-android .syn-wallet__portfolio {
   background: #050805;
 }
 
+/* Pro Leviathan whale-buy toast */
+.whale-alert-toast {
+  position: fixed;
+  z-index: 80;
+  right: 16px;
+  bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  max-width: min(320px, calc(100vw - 32px));
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  background: linear-gradient(145deg, rgba(8, 24, 40, 0.96), rgba(6, 14, 28, 0.98));
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  color: #e8f4ff;
+  animation: whale-toast-in 0.35s ease-out;
+}
+
+.whale-alert-toast__title {
+  margin: 0 0 4px;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #7dd3fc;
+}
+
+.whale-alert-toast__body {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+}
+
+.whale-alert-toast__link {
+  color: #bae6fd;
+  font-size: 0.82rem;
+  text-decoration: none;
+}
+
+.whale-alert-toast__link:hover {
+  text-decoration: underline;
+}
+
+@keyframes whale-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+

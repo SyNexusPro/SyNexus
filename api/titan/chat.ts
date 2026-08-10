@@ -1,6 +1,9 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { ViteDevServer } from "../viteDevServer";
 import { buildTitanSystemPrompt, resolveDefaultCommanderPersona, type TitanPromptInput } from "../../lib/server/titan/prompt.js";
+import { resolveTitanAuthPlan } from "../../lib/server/titan/authPlan.js";
+import { guardTitanServerMessage } from "../../lib/server/titan/sanitize.js";
+import { titanCacheGet, titanCacheSet } from "../../lib/server/titan/responseCache.js";
 
 export type TitanChatRequestBody = TitanPromptInput & {
   message: string;
@@ -26,13 +29,16 @@ function clientIp(req: IncomingMessage): string {
   return req.socket.remoteAddress ?? "unknown";
 }
 
-function checkRateLimit(ip: string, plan: "FREE" | "PRO"): { ok: true } | { ok: false; retryAfterSec: number } {
-  const limit = plan === "PRO" ? 120 : 40;
+function checkRateLimit(
+  key: string,
+  plan: "FREE" | "PRO",
+): { ok: true } | { ok: false; retryAfterSec: number } {
+  const limit = plan === "PRO" ? 180 : 40;
   const windowMs = 60 * 60 * 1000;
   const now = Date.now();
-  const entry = rateLimit.get(ip);
+  const entry = rateLimit.get(key);
   if (!entry || now >= entry.resetAt) {
-    rateLimit.set(ip, { count: 1, resetAt: now + windowMs });
+    rateLimit.set(key, { count: 1, resetAt: now + windowMs });
     return { ok: true };
   }
   if (entry.count >= limit) {
@@ -104,7 +110,8 @@ function validateBody(raw: unknown): TitanChatRequestBody | null {
       : resolveDefaultCommanderPersona();
   const operatorName =
     typeof body.operatorName === "string" ? body.operatorName.trim().slice(0, 60) : "there";
-  const plan = body.plan === "PRO" ? "PRO" : "FREE";
+  // Client-claimed plan is ignored — resolved from auth on the server.
+  const plan = "FREE" as const;
   const alertCount = typeof body.alertCount === "number" ? Math.max(0, body.alertCount) : 0;
   const watchlistCount = typeof body.watchlistCount === "number" ? Math.max(0, body.watchlistCount) : 0;
   const feedSource = body.feedSource === "mock" ? "mock" : "live";
@@ -354,8 +361,19 @@ export async function handleTitanChatStream(
     return;
   }
 
-  const ip = clientIp(req);
-  const limit = checkRateLimit(ip, parsed.plan);
+  const inputGuard = guardTitanServerMessage(parsed.message);
+  if (!inputGuard.ok) {
+    res.statusCode = 400;
+    res.setHeader("Content-Type", "application/json");
+    res.end(JSON.stringify({ error: "blocked_content", reason: inputGuard.reason }));
+    return;
+  }
+
+  const auth = await resolveTitanAuthPlan(req, env);
+  parsed.plan = auth.plan;
+
+  const rateKey = auth.userId ? `u:${auth.userId}` : `ip:${clientIp(req)}`;
+  const limit = checkRateLimit(rateKey, parsed.plan);
   if (!limit.ok) {
     res.statusCode = 429;
     res.setHeader("Content-Type", "application/json");
@@ -372,14 +390,40 @@ export async function handleTitanChatStream(
     return;
   }
 
+  const cacheParts = [
+    parsed.plan,
+    String(parsed.fastMode),
+    parsed.message.toLowerCase(),
+    (parsed.tokenIntel || "").slice(0, 120),
+  ];
+  if (parsed.fastMode) {
+    const cached = titanCacheGet(cacheParts);
+    if (cached) {
+      res.statusCode = 200;
+      res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+      res.setHeader("Cache-Control", "no-cache, no-transform");
+      res.setHeader("X-Titan-Cache", "hit");
+      res.write(`data: ${JSON.stringify({ delta: cached })}\n\n`);
+      res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+      res.end();
+      return;
+    }
+  }
+
   res.statusCode = 200;
   res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
   res.setHeader("Cache-Control", "no-cache, no-transform");
   res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Titan-Plan", parsed.plan);
 
   try {
+    let full = "";
     for await (const delta of streamOpenAiChat(parsed, env)) {
+      full += delta;
       res.write(`data: ${JSON.stringify({ delta })}\n\n`);
+    }
+    if (parsed.fastMode && full.trim()) {
+      titanCacheSet(cacheParts, full.trim(), parsed.plan === "PRO" ? 5_000 : 10_000);
     }
     res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
     res.end();

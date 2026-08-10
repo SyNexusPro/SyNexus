@@ -7,6 +7,7 @@ import { UIModeToggle } from "./UIModeToggle";
 import { TitanSheet } from "./TitanSheet";
 import { ProDemoBanner } from "./ProDemoBanner";
 import { BeginnerModeCoach } from "./BeginnerModeCoach";
+import { WhaleAlertToaster } from "./WhaleAlertToaster";
 import { SYNEXUS_VAULT_PATH, SYNEXUS_VAULT_PRODUCT_NAME } from "../config/walletComingSoon";
 
 export function AppShell() {
@@ -19,6 +20,7 @@ export function AppShell() {
         className={`app-shell${isSimple ? " app-shell--easy" : " app-shell--advanced"}${isHome ? " app-shell--home" : ""}`}
       >
         {!isHome ? <ProDemoBanner /> : null}
+        <WhaleAlertToaster />
         <main className="app-main">
           {!isHome ? (
             <>

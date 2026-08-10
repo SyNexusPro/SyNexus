@@ -15,6 +15,9 @@ import {
   type ConversationTurn,
   type OracleConversationContext,
 } from "./oracleSupremeConversation";
+import { authHeaders } from "./authSession";
+import { fetchRecentWhaleEvents, titanWhaleBrief } from "./whaleAlerts";
+import { normalizeSynexusPlan, PLAN_STORAGE_KEY } from "./tradingFees";
 
 export type TitanStreamHandlers = {
   onDelta?: (text: string) => void;
@@ -29,6 +32,9 @@ const CRYPTO_INTENTS = new Set([
   "explain",
   "market_movers",
 ]);
+
+const WHALE_ASK =
+  /\b(whale|whales|large buy|big buy|leviathan alert|whale alert|who(?:'s| is) buying)\b/i;
 
 function turnsToHistory(turns: ConversationTurn[], cryptoFast: boolean): TitanChatHistoryMessage[] {
   const limit = cryptoFast ? 4 : 8;
@@ -56,7 +62,7 @@ async function streamTitanChatApi(
 ): Promise<string> {
   const response = await fetch("/api/titan/chat", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: await authHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify(payload),
     signal: handlers.signal,
   });
@@ -64,6 +70,7 @@ async function streamTitanChatApi(
   if (!response.ok) {
     if (response.status === 503) throw new Error("llm_unavailable");
     if (response.status === 429) throw new Error("rate_limited");
+    if (response.status === 400) throw new Error("blocked_content");
     throw new Error(`titan_chat_${response.status}`);
   }
 
@@ -119,6 +126,18 @@ export async function respondToTitanMessage(
   const instant = tryInstantCryptoAnswer(trimmed, ctx);
   if (instant) return instant;
 
+  let plan: "FREE" | "PRO" = "FREE";
+  try {
+    plan = normalizeSynexusPlan(localStorage.getItem(PLAN_STORAGE_KEY));
+  } catch {
+    /* ignore */
+  }
+  if (WHALE_ASK.test(trimmed) && plan === "PRO") {
+    const events = await fetchRecentWhaleEvents();
+    const brief = titanWhaleBrief(events, ctx.operatorName);
+    if (brief) return brief;
+  }
+
   if (isTopMoversQuestion(trimmed)) {
     const timeframe = parseMoverTimeframeFromText(trimmed);
     const cached = ctx.moversBoard?.[timeframe];
@@ -134,6 +153,39 @@ export async function respondToTitanMessage(
       const slice = await fetchSolanaTopMovers(timeframe);
       const moversAnswer = formatTopMoversAnswerFromResult(trimmed, slice, ctx.operatorName);
       if (moversAnswer) return moversAnswer;
+    }
+  }
+
+  const mintMatch = trimmed.match(/\b([1-9A-HJ-NP-Za-km-z]{32,44})\b/);
+  if (mintMatch && !resolveOracleTokenQuery(trimmed, ctx.tokens)) {
+    try {
+      const mint = mintMatch[1]!;
+      const res = await fetch(
+        `https://api.dexscreener.com/latest/dex/tokens/${encodeURIComponent(mint)}`,
+        { signal: handlers.signal },
+      );
+      if (res.ok) {
+        const json = (await res.json()) as {
+          pairs?: {
+            baseToken?: { symbol?: string };
+            priceUsd?: string;
+            priceChange?: { h24?: number };
+            liquidity?: { usd?: number };
+          }[];
+        };
+        const pair = json.pairs?.[0];
+        if (pair?.baseToken?.symbol) {
+          const price = Number(pair.priceUsd);
+          const ch = Number(pair.priceChange?.h24 ?? 0);
+          const liq = Number(pair.liquidity?.usd ?? 0);
+          const priceLabel = Number.isFinite(price) ? `$${price}` : "—";
+          const chLabel = Number.isFinite(ch) ? `${ch >= 0 ? "+" : ""}${ch.toFixed(2)}%` : "—";
+          const liqLabel = Number.isFinite(liq) ? `$${Math.round(liq).toLocaleString()}` : "—";
+          return `${pair.baseToken.symbol}: ${priceLabel} · 24h ${chLabel} · liq ${liqLabel} · mint verified on DexScreener. Ask for Avoid/Watch/OK when it's in your live pool.`;
+        }
+      }
+    } catch {
+      /* fall through to LLM */
     }
   }
 

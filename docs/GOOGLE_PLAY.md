@@ -67,6 +67,10 @@ Page explains how to request deletion, what is deleted vs retained, and the ~30-
 **Delete some/all data without closing the account:**  
 **https://www.synexus.pro/data-deletion**
 
+## Whale alerts (Pro)
+
+See [WHALE_ALERTS.md](./WHALE_ALERTS.md) — Helius webhook + Web Push + in-app toast for large buys within seconds.
+
 ## App access (Google Play reviewers)
 
 Play Console → **App content** → **App access**. Declare that login is required and provide:

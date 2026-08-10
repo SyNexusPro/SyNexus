@@ -88,11 +88,11 @@ export const TITAN_CAPABILITIES: readonly TitanCapability[] = [
   },
   {
     id: "automation_alerts",
-    title: "Smart alerts",
+    title: "Smart alerts · whale buys",
     summary:
-      "Create alerts like \"Notify me if Bitcoin drops 5%,\" \"Alert me if whale wallets buy this token,\" or \"Tell me if liquidity changes dramatically.\"",
+      "Pro: Leviathan detects large buys and pushes alerts within seconds (Web Push + in-app toast). Ask Titan “any whale buys?” for a live brief. Optional: price/liquidity rules next.",
     requiresPermission: true,
-    status: "planned",
+    status: "beta",
   },
   {
     id: "voice",

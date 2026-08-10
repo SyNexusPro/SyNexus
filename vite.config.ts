@@ -5,6 +5,10 @@ import { configureOwnerUnlockApi } from "./api/ownerUnlock";
 import { configureAnalyticsApi } from "./api/analytics";
 import { configureTitanChatApi } from "./api/titan/chat";
 import { configureSubscriptionWebhookApi } from "./api/subscription/webhook";
+import { configureWhaleWebhookApi } from "./api/whale/webhook";
+import { configureWhalePollApi } from "./api/whale/poll";
+import { configureWhaleEventsApi } from "./api/whale/events";
+import { configurePushSubscribeApi } from "./api/push/subscribe";
 
 /** Client bundle reads only VITE_* from import.meta.env; Vercel often sets SUPABASE_* without the prefix. */
 function resolveSupabaseForClientBuild(mode: string) {
@@ -66,6 +70,10 @@ export default defineConfig(({ mode }) => {
           configureOwnerUnlockApi(server, env);
           configureAnalyticsApi(server);
           configureTitanChatApi(server, env);
+          configureWhaleWebhookApi(server, env);
+          configureWhalePollApi(server, env);
+          configureWhaleEventsApi(server, env);
+          configurePushSubscribeApi(server, env);
         },
       },
     ],

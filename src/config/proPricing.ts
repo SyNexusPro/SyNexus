@@ -18,6 +18,7 @@ export const SYNEXUS_PRO_FEATURES = [
   "Real-time Sentinel signals",
   "Scam and risk alerts",
   "Whale activity tracking",
+  "Whale-buy push alerts (seconds)",
   "Momentum and trend analysis",
   "Pattern recognition insights",
   "Fast trading links",
