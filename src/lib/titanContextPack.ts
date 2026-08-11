@@ -12,6 +12,7 @@ import { SENTINEL_LANE_IDS, sentinelLaneLabel } from "../config/sentinels";
 import { buildOperatorStrengthBrief } from "./titanOperatorBrief";
 import { buildTitanMoversBrief } from "./titanMoversAnswer";
 import { isTopMoversQuestion } from "./moverTimeframes";
+import { getReplyLanguage } from "../i18n";
 
 function formatUsd(value: number | undefined): string {
   if (value == null || !Number.isFinite(value)) return "—";
@@ -169,6 +170,8 @@ export type TitanChatPayload = {
   tokenIntel?: string | null;
   memory?: Pick<TitanMemoryProfile, "favoriteSymbols" | "riskTolerance" | "tradingNotes"> | null;
   history: TitanChatHistoryMessage[];
+  /** BCP-47 language for Titan replies (any language). */
+  replyLanguage?: string;
 };
 
 export function buildTitanChatPayload(
@@ -200,5 +203,6 @@ export function buildTitanChatPayload(
         }
       : null,
     history: history.slice(-10),
+    replyLanguage: getReplyLanguage(),
   };
 }

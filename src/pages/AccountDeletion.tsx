@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { LEGAL_EFFECTIVE_DATE, OPERATOR_LABEL, SUPPORT_EMAIL } from "../config/site";
 import { getCurrentUser, signOut } from "../lib/supabaseData";
 import { hasSupabaseEnv } from "../lib/supabaseClient";
@@ -26,6 +27,7 @@ function clearLocalSyNexusData() {
 }
 
 export function AccountDeletion() {
+  const { t } = useTranslation();
   const [accountEmail, setAccountEmail] = useState("");
   const [signedInEmail, setSignedInEmail] = useState<string | null>(null);
   const [confirm, setConfirm] = useState(false);
@@ -101,7 +103,7 @@ export function AccountDeletion() {
   return (
     <div className="page legal-page">
       <p className="legal-page__eyebrow">{EFFECTIVE_LABEL}</p>
-      <h1 className="legal-page__title">Delete your SyNexus account</h1>
+      <h1 className="legal-page__title">{t("accountDeletion.title")}</h1>
       <p className="legal-page__summary">
         Use this page to request deletion of your SyNexus Operator account and related personal data held by{" "}
         {OPERATOR_LABEL}. This URL is provided for Google Play and privacy compliance. To delete some or all
@@ -167,7 +169,7 @@ export function AccountDeletion() {
           </label>
 
           <button className="contact-page__submit" type="submit" disabled={busy} style={{ marginTop: "1rem" }}>
-            {busy ? "Preparing request…" : "Request account deletion"}
+            {busy ? t("accountDeletion.busy") : t("accountDeletion.submit")}
           </button>
         </form>
 

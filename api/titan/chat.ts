@@ -188,6 +188,11 @@ function validateBody(raw: unknown): TitanChatRequestBody | null {
 
   const fastMode = body.fastMode === true;
 
+  const replyLanguage =
+    typeof body.replyLanguage === "string" && body.replyLanguage.trim()
+      ? body.replyLanguage.trim().slice(0, 24)
+      : "en";
+
   return {
     message,
     operatorName,
@@ -206,6 +211,7 @@ function validateBody(raw: unknown): TitanChatRequestBody | null {
     memory,
     history,
     fastMode,
+    replyLanguage,
   };
 }
 

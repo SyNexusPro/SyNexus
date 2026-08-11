@@ -1,4 +1,5 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { TitanShellProvider } from "../context/TitanShellContext";
 import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
 import { RouteErrorBoundary } from "./RouteErrorBoundary";
@@ -8,9 +9,11 @@ import { TitanSheet } from "./TitanSheet";
 import { ProDemoBanner } from "./ProDemoBanner";
 import { BeginnerModeCoach } from "./BeginnerModeCoach";
 import { WhaleAlertToaster } from "./WhaleAlertToaster";
+import { LanguagePicker } from "./LanguagePicker";
 import { SYNEXUS_VAULT_PATH, SYNEXUS_VAULT_PRODUCT_NAME } from "../config/walletComingSoon";
 
 export function AppShell() {
+  const { t } = useTranslation();
   const { isSimple } = useSynexusUIMode();
   const isHome = useLocation().pathname === "/";
 
@@ -38,79 +41,79 @@ export function AppShell() {
         {isHome ? null : (
           <footer className="app-footer">
             <Link className="app-footer__link" to="/about">
-              About
+              {t("footer.about")}
             </Link>
             <span className="app-footer__sep" aria-hidden>
               ·
             </span>
             <Link className="app-footer__link" to="/trust">
-              Trust
+              {t("footer.trust")}
             </Link>
             <span className="app-footer__sep" aria-hidden>
               ·
             </span>
             <Link className="app-footer__link" to="/contact">
-              Contact
+              {t("footer.contact")}
             </Link>
             <span className="app-footer__sep" aria-hidden>
               ·
             </span>
             <Link className="app-footer__link" to="/hub">
-              Hub
+              {t("footer.hub")}
             </Link>
             <span className="app-footer__sep" aria-hidden>
               ·
             </span>
             <Link className="app-footer__link" to="/faq">
-              FAQ
+              {t("footer.faq")}
             </Link>
             <span className="app-footer__sep" aria-hidden>
               ·
             </span>
             <Link className="app-footer__link" to="/pricing">
-              Pricing
+              {t("footer.pricing")}
             </Link>
             <span className="app-footer__sep" aria-hidden>
               ·
             </span>
             <Link className="app-footer__link" to="/blog">
-              Journal
+              {t("footer.blog")}
             </Link>
             <span className="app-footer__sep" aria-hidden>
               ·
             </span>
             <Link className="app-footer__link" to="/disclaimer">
-              Disclaimer
+              {t("footer.disclaimer")}
             </Link>
             <span className="app-footer__sep" aria-hidden>
               ·
             </span>
             <Link className="app-footer__link" to="/terms">
-              Terms
+              {t("footer.terms")}
             </Link>
             <span className="app-footer__sep" aria-hidden>
               ·
             </span>
             <Link className="app-footer__link" to="/privacy">
-              Privacy
+              {t("footer.privacy")}
             </Link>
             <span className="app-footer__sep" aria-hidden>
               ·
             </span>
             <Link className="app-footer__link" to="/data-deletion">
-              Delete data
+              {t("footer.deleteData")}
             </Link>
             <span className="app-footer__sep" aria-hidden>
               ·
             </span>
             <Link className="app-footer__link" to="/account-deletion">
-              Delete account
+              {t("footer.deleteAccount")}
             </Link>
             <span className="app-footer__sep" aria-hidden>
               ·
             </span>
             <Link className="app-footer__link" to="/refund-policy">
-              Refunds
+              {t("footer.refunds")}
             </Link>
             <span className="app-footer__sep" aria-hidden>
               ·
@@ -130,6 +133,9 @@ export function AppShell() {
             </Link>
           </footer>
         )}
+        <div className="lang-picker-dock" aria-label="Language">
+          <LanguagePicker compact />
+        </div>
         <BottomNav />
       </div>
     </TitanShellProvider>

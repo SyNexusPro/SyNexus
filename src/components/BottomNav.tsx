@@ -1,4 +1,5 @@
 import { NavLink } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useTitanShell } from "../context/TitanShellContext";
 import { useOpenTitanGate } from "../hooks/useOpenTitanGate";
 import { useOpenTitanChat } from "../hooks/useOpenTitanChat";
@@ -10,6 +11,7 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
   `bottom-nav__link${isActive ? " is-active" : ""}`;
 
 export function BottomNav() {
+  const { t } = useTranslation();
   const { closeSheet } = useTitanShell();
   const openLoginGate = useOpenTitanGate();
   const openTitanChat = useOpenTitanChat();
@@ -20,7 +22,7 @@ export function BottomNav() {
   const titanActive = chatOpen;
 
   return (
-    <nav className="bottom-nav" aria-label="Primary">
+    <nav className="bottom-nav" aria-label={t("nav.primary")}>
       <button
         type="button"
         className={`bottom-nav__link${loginActive ? " is-active" : ""}`}
@@ -30,19 +32,19 @@ export function BottomNav() {
         <span className="bottom-nav__icon bottom-nav__icon--login" aria-hidden>
           {linked ? "◉" : "⎔"}
         </span>
-        {linked ? "Account" : "Login"}
+        {linked ? t("nav.account") : t("nav.login")}
       </button>
       <NavLink to="/" end className={linkClass} onClick={closeSheet}>
         <span className="bottom-nav__icon" aria-hidden>
           ◎
         </span>
-        Scan
+        {t("nav.scan")}
       </NavLink>
       <NavLink to="/hub" className={linkClass} onClick={closeSheet}>
         <span className="bottom-nav__icon" aria-hidden>
           ⧉
         </span>
-        Hub
+        {t("nav.hub")}
       </NavLink>
       <button
         type="button"
@@ -53,7 +55,7 @@ export function BottomNav() {
         <span className="bottom-nav__icon bottom-nav__icon--oracle" aria-hidden>
           ◉
         </span>
-        Titan
+        {t("nav.titan")}
       </button>
     </nav>
   );

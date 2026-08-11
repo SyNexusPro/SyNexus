@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { LEGAL_EFFECTIVE_DATE, OPERATOR_LABEL, SUPPORT_EMAIL } from "../config/site";
 import { getCurrentUser } from "../lib/supabaseData";
 import { hasSupabaseEnv } from "../lib/supabaseClient";
@@ -67,6 +68,7 @@ function clearLocalSyNexusData() {
 }
 
 export function DataDeletion() {
+  const { t } = useTranslation();
   const [accountEmail, setAccountEmail] = useState("");
   const [signedInEmail, setSignedInEmail] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<DataCategoryId>>(new Set());
@@ -164,7 +166,7 @@ export function DataDeletion() {
   return (
     <div className="page legal-page">
       <p className="legal-page__eyebrow">{EFFECTIVE_LABEL}</p>
-      <h1 className="legal-page__title">Request data deletion</h1>
+      <h1 className="legal-page__title">{t("dataDeletion.title")}</h1>
       <p className="legal-page__summary">
         Ask {OPERATOR_LABEL} to delete some or all personal data we hold for you — without closing your SyNexus
         Operator account. To remove the account itself, use{" "}
@@ -178,7 +180,7 @@ export function DataDeletion() {
           cloud account or server-side watchlists.
         </p>
         <button type="button" className="contact-page__submit" onClick={onClearLocalOnly}>
-          Clear local data on this device
+          {t("dataDeletion.clearLocal")}
         </button>
       </section>
 
@@ -268,7 +270,7 @@ export function DataDeletion() {
           </label>
 
           <button className="contact-page__submit" type="submit" disabled={busy} style={{ marginTop: "1rem" }}>
-            {busy ? "Preparing request…" : "Request data deletion (keep account)"}
+            {busy ? t("common.loading") : t("dataDeletion.submit")}
           </button>
         </form>
 
@@ -304,7 +306,7 @@ export function DataDeletion() {
       </section>
 
       <p className="legal-page__back">
-        <Link to="/account-deletion">Delete entire account</Link>
+        <Link to="/account-deletion">{t("dataDeletion.accountLink")}</Link>
         {" · "}
         <Link to="/privacy">Privacy Policy</Link>
         {" · "}

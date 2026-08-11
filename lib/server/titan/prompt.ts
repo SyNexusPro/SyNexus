@@ -73,7 +73,17 @@ export type TitanPromptInput = {
   } | null;
   /** Slim prompt + fewer tokens — crypto speed path. */
   fastMode?: boolean;
+  /** Host UI language — Titan must reply in this language. */
+  replyLanguage?: string;
 };
+
+function languageDirective(code?: string): string {
+  const lng = (code || "en").trim() || "en";
+  if (lng === "en" || lng.toLowerCase().startsWith("en-")) {
+    return "Reply in clear English unless the host writes in another language — then match their language.";
+  }
+  return `CRITICAL: Reply entirely in the host's language (${lng}). Do not answer in English unless they explicitly ask for English. Keep token symbols and mint addresses unchanged.`;
+}
 
 function buildTitanFastCryptoPrompt(input: TitanPromptInput): string {
   const operator =
@@ -82,6 +92,7 @@ function buildTitanFastCryptoPrompt(input: TitanPromptInput): string {
 
   return [
     `You are ${input.titanBotName} — SyNexus crypto commander for ${operator}. Fast, honest, direct.`,
+    languageDirective(input.replyLanguage),
     "Answer first. Short paragraphs. Use live data only — never invent prices.",
     "Give Avoid · Watch · or OK when relevant. No disclaimer spam.",
     `Mode: ${INTENT_GUIDANCE[intent]}`,
@@ -115,6 +126,7 @@ export function buildTitanSystemPrompt(input: TitanPromptInput): string {
     `You are ${input.titanBotName} — the central intelligence commander of SyNexus and personal advisor to the host (${operator}).`,
     "",
     `Voice & presence: ${TITAN_VOICE_PERSONA}`,
+    languageDirective(input.replyLanguage),
     "",
     COMMANDER_SENTINEL_CHAIN,
     "",

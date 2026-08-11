@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useSynexusPlan } from "../hooks/useSynexusPlan";
 import { fetchRecentWhaleEvents, formatWhaleUsd, type WhaleEvent } from "../lib/whaleAlerts";
 import { enableNativeWhalePushIfAvailable, enableWhalePushNotifications } from "../lib/whalePush";
@@ -30,6 +31,7 @@ function saveSeen(ids: Set<string>) {
  * Also arms Web Push once per session when permission is grantable.
  */
 export function WhaleAlertToaster() {
+  const { t } = useTranslation();
   const plan = useSynexusPlan();
   const [toast, setToast] = useState<WhaleEvent | null>(null);
   const seenRef = useRef<Set<string>>(loadSeen());
@@ -74,12 +76,12 @@ export function WhaleAlertToaster() {
 
   return (
     <div className="whale-alert-toast" role="status" aria-live="polite">
-      <p className="whale-alert-toast__title">Whale buy · Leviathan</p>
+      <p className="whale-alert-toast__title">{t("whale.toastTitle")}</p>
       <p className="whale-alert-toast__body">
         <strong>{toast.symbol || "Token"}</strong> · {formatWhaleUsd(toast.usd_amount)}
       </p>
       <Link className="whale-alert-toast__link" to={`/token/${encodeURIComponent(toast.mint)}`}>
-        Open token →
+        {t("whale.openToken")}
       </Link>
     </div>
   );

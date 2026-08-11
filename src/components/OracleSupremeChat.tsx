@@ -23,6 +23,7 @@ import {
 } from "../lib/titanVoice";
 import { TitanChatSettings } from "./TitanChatSettings";
 import { SynexusSymbolMark } from "./SynexusSymbolMark";
+import { useTranslation } from "react-i18next";
 
 type OracleSupremeChatProps = {
   context: OracleConversationContext;
@@ -40,6 +41,7 @@ export function OracleSupremeChat({
   showOpeningPrompt = false,
   onDismiss,
 }: OracleSupremeChatProps) {
+  const { t } = useTranslation();
   const [turns, setTurns] = useState<ConversationTurn[]>(() => loadConversationHistory());
   const [draft, setDraft] = useState("");
   const [awaitingDayReply, setAwaitingDayReply] = useState(showOpeningPrompt);
@@ -325,16 +327,12 @@ export function OracleSupremeChat({
         <input
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
-          placeholder={
-            minimal
-              ? `Message ${context.titanBotName}…`
-              : `Talk to ${context.titanBotName} — anything on your mind…`
-          }
+          placeholder={t("titan.placeholder")}
           aria-label={`Message to ${context.titanBotName}`}
           disabled={thinking}
         />
         <button type="submit" disabled={!draft.trim() || thinking}>
-          {thinking ? "…" : "Send"}
+          {thinking ? t("titan.thinking") : "Send"}
         </button>
       </form>
 

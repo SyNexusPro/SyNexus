@@ -9,6 +9,7 @@ import { refreshOwnerAccess } from "./lib/ownerAccess";
 import { clearExpiredProDemo, restoreActiveProTrialGrant } from "./lib/proDemo";
 import { markNativePerformanceMode } from "./lib/nativePerformance";
 import { migrateLegacyStorageKeys } from "./lib/legacyStorageMigrate";
+import "./i18n";
 import "./index.css";
 
 migrateLegacyStorageKeys();
