@@ -185,8 +185,62 @@ export async function processAndNotifyWhales(
   env: Record<string, string | undefined>,
   admin: SupabaseClient,
   events: WhaleEventInput[],
-): Promise<{ stored: number; pushed: number }> {
+): Promise<{ stored: number; pushed: number; titanNotified: number }> {
   const stored = await insertWhaleEvents(admin, events);
   const pushed = await fanoutWhalePush(env, admin, stored);
-  return { stored: stored.length, pushed };
+
+  let titanNotified = 0;
+  try {
+    const { classifyEvent, shouldSendInstantPremium } = await import("../titan/classifyEvent.js");
+    const { sendPremiumAlert } = await import("../titan/sendPremiumAlert.js");
+
+    for (const event of stored) {
+      if (event.side !== "buy") continue;
+      const severity = classifyEvent({
+        type: "WHALE_BUY",
+        whaleMovementUsd: event.usd_amount,
+        transactionValueUsd: event.usd_amount,
+      });
+
+      const title = `Large ${event.symbol || "token"} purchase detected`;
+      const summary = `A wallet purchased approximately ${formatUsd(event.usd_amount)} of ${event.symbol || "token"}.`;
+
+      const { data: titanEvent } = await admin
+        .from("titan_events")
+        .insert({
+          type: "WHALE_BUY",
+          title,
+          summary,
+          symbol: event.symbol,
+          token_address: event.mint,
+          severity,
+          metadata: {
+            wallet: event.wallet,
+            usdValue: event.usd_amount,
+            transactionSignature: event.tx_signature,
+            source: event.source,
+          },
+        })
+        .select("id")
+        .maybeSingle();
+
+      if (shouldSendInstantPremium(severity) && titanEvent?.id) {
+        const fanout = await sendPremiumAlert(
+          admin,
+          {
+            eventId: titanEvent.id as string,
+            title: `TITAN ALERT · ${title}`,
+            message: summary,
+            priority: severity,
+          },
+          env,
+        );
+        titanNotified += fanout.notified;
+      }
+    }
+  } catch {
+    /* titan_events table may not exist yet */
+  }
+
+  return { stored: stored.length, pushed, titanNotified };
 }

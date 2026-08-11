@@ -98,9 +98,18 @@ async function upsertPaidPlan(
   const { error } = await supabase.from("profiles").upsert({
     id: userId,
     paid_plan: plan,
+    subscription_status: plan === "PRO" ? "active" : "free",
     updated_at: new Date().toISOString(),
   });
-  if (error) throw error;
+  if (error) {
+    // Older DBs may lack subscription_status — fall back
+    const { error: fallback } = await supabase.from("profiles").upsert({
+      id: userId,
+      paid_plan: plan,
+      updated_at: new Date().toISOString(),
+    });
+    if (fallback) throw fallback;
+  }
 }
 
 async function logSquareInvoicePayment(

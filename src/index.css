@@ -12238,3 +12238,41 @@ html[dir="rtl"] .lang-picker__panel {
   right: 0;
 }
 
+/* Live Titan realtime alert */
+.titan-live-alert {
+  position: fixed;
+  z-index: 85;
+  left: 50%;
+  top: calc(16px + env(safe-area-inset-top, 0px));
+  transform: translateX(-50%);
+  width: min(420px, calc(100vw - 24px));
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  background: linear-gradient(145deg, rgba(28, 18, 6, 0.96), rgba(12, 10, 6, 0.98));
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+  color: #fff7ed;
+  animation: whale-toast-in 0.35s ease-out;
+}
+
+.titan-live-alert__eyebrow {
+  margin: 0 0 4px;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fbbf24;
+}
+
+.titan-live-alert__title {
+  margin: 0 0 6px;
+  font-size: 0.98rem;
+  font-weight: 650;
+}
+
+.titan-live-alert__message {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.4;
+  opacity: 0.92;
+}
+

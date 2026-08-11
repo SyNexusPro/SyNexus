@@ -193,6 +193,8 @@ function validateBody(raw: unknown): TitanChatRequestBody | null {
       ? body.replyLanguage.trim().slice(0, 24)
       : "en";
 
+  const research = Array.isArray(body.research) ? body.research.slice(0, 20) : null;
+
   return {
     message,
     operatorName,
@@ -212,6 +214,7 @@ function validateBody(raw: unknown): TitanChatRequestBody | null {
     history,
     fastMode,
     replyLanguage,
+    research,
   };
 }
 

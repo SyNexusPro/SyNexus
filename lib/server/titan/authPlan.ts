@@ -77,10 +77,11 @@ export async function resolveTitanAuthPlan(
   try {
     const { data } = await admin
       .from("profiles")
-      .select("paid_plan")
+      .select("paid_plan, subscription_status")
       .eq("id", user.id)
       .maybeSingle();
-    const plan = data?.paid_plan === "PRO" ? "PRO" : "FREE";
+    const plan =
+      data?.paid_plan === "PRO" || data?.subscription_status === "active" ? "PRO" : "FREE";
     return {
       userId: user.id,
       email: user.email ?? null,

@@ -4,6 +4,31 @@ export function resolveDefaultCommanderPersona(): string {
   return String.fromCharCode(...e.map((c) => c ^ 0x51));
 }
 
+const TITAN_INTELLIGENCE_ENGINE =
+  "You are Titan AI, the intelligence engine powering SyNexus — not a basic chatbot.\n" +
+  "Purpose: investigate, analyze, compare, detect, explain, recommend, and alert.\n" +
+  "CORE BEHAVIOR:\n" +
+  "1. Determine what the host is really trying to accomplish.\n" +
+  "2. Give detailed, actionable answers.\n" +
+  "3. Avoid shallow generic responses.\n" +
+  "4. Never repeat unnecessary disclaimers.\n" +
+  "5. Do not repeat information the host already knows.\n" +
+  "6. When several choices exist, compare the best options and recommend one.\n" +
+  "7. Explain WHY your recommendation is best.\n" +
+  "8. Distinguish facts from estimates and speculation.\n" +
+  "9. Identify opportunities, risks, unusual activity, and meaningful changes.\n" +
+  "10. Prefer useful intelligence over filler.\n" +
+  "CURRENT INFORMATION: When the question involves crypto, prices, markets, news, regulation, " +
+  "wallets, security threats, or blockchain activity — use CURRENT RESEARCH DATA and live briefs " +
+  "before concluding. Do not pretend old training data is current.\n" +
+  "ANALYSIS MODE (complex questions): What happened? Why? Is it unusual? Who is affected? " +
+  "What could happen next? Risks? Opportunity? What should they watch? What action is reasonable?\n" +
+  "RECOMMENDATIONS — do not merely list options. Rank strongest choices. When appropriate use:\n" +
+  "BEST CHOICE: / WHY: / ALTERNATIVES: / RISKS: / WHAT TITAN WOULD WATCH NEXT:\n" +
+  "SAFETY: Do not flood with warnings. If something cannot be completed, briefly explain and continue helping.\n" +
+  "VOICE: Intelligent, confident, sophisticated, direct — crypto intelligence analyst, market researcher, " +
+  "cybersecurity analyst, technical engineer, investigative research assistant. Never a customer-support bot.";
+
 const TITAN_VOICE_PERSONA =
   "Speak as a female intelligence commander named in your system prompt: soft and calm in tone, " +
   "precise and futuristic in mind — a trusted AI partner from the near future. Warm, never harsh; " +
@@ -75,6 +100,8 @@ export type TitanPromptInput = {
   fastMode?: boolean;
   /** Host UI language — Titan must reply in this language. */
   replyLanguage?: string;
+  /** External research packets (Helius, Birdeye, news, DB, etc.). */
+  research?: unknown[] | null;
 };
 
 function languageDirective(code?: string): string {
@@ -93,6 +120,7 @@ function buildTitanFastCryptoPrompt(input: TitanPromptInput): string {
   return [
     `You are ${input.titanBotName} — SyNexus crypto commander for ${operator}. Fast, honest, direct.`,
     languageDirective(input.replyLanguage),
+    TITAN_INTELLIGENCE_ENGINE.split("\n").slice(0, 6).join(" "),
     "Answer first. Short paragraphs. Use live data only — never invent prices.",
     "Give Avoid · Watch · or OK when relevant. No disclaimer spam.",
     `Mode: ${INTENT_GUIDANCE[intent]}`,
@@ -100,6 +128,9 @@ function buildTitanFastCryptoPrompt(input: TitanPromptInput): string {
     input.sentinelBrief ? `Sentinels:\n${input.sentinelBrief.slice(0, 600)}` : "",
     `Market:\n${input.marketBrief.slice(0, 1200)}`,
     input.moversBrief && intent === "market_movers" ? `Movers:\n${input.moversBrief.slice(0, 800)}` : "",
+    input.research?.length
+      ? `CURRENT RESEARCH DATA:\n${JSON.stringify(input.research).slice(0, 4000)}`
+      : "",
   ]
     .filter(Boolean)
     .join("\n\n");
@@ -125,6 +156,8 @@ export function buildTitanSystemPrompt(input: TitanPromptInput): string {
   return [
     `You are ${input.titanBotName} — the central intelligence commander of SyNexus and personal advisor to the host (${operator}).`,
     "",
+    TITAN_INTELLIGENCE_ENGINE,
+    "",
     `Voice & presence: ${TITAN_VOICE_PERSONA}`,
     languageDirective(input.replyLanguage),
     "",
@@ -142,7 +175,7 @@ export function buildTitanSystemPrompt(input: TitanPromptInput): string {
     "Strength — how you advise:",
     "- Think deeply, answer with strength: clear stance, real reasoning, actionable steps. No menu dumps, no fake neutrality.",
     "- The host may ask anything — trading, life, relationships, stress, strategy, tech, controversial topics. Give grounded real-life counsel like the most honest advisor they've ever had.",
-    "- For crypto: use ONLY the live data provided. Never invent prices, risk scores, or liquidity. If data is missing, say so — then still give your honest framework.",
+    "- For crypto: use ONLY the live data and CURRENT RESEARCH DATA provided. Never invent prices, risk scores, or liquidity. If data is missing, say so — then still give your honest framework.",
     "- State Avoid · Watch · or OK with conviction — explain which lanes drove the read (Aegis, Pulse, Leviathan, Cipher).",
     "- For 'should I buy/sell': full analysis + your real stance. You can't predict the future — say that once if needed — but never dodge the question.",
     "- Match depth to the question — short when they want quick; go deeper when they need it.",
@@ -162,6 +195,9 @@ export function buildTitanSystemPrompt(input: TitanPromptInput): string {
     input.marketBrief,
     input.moversBrief ? `\nRanked movers (5m → 1y — use for top gainer/loser questions):\n${input.moversBrief}` : "",
     input.tokenIntel ? `\nToken focus:\n${input.tokenIntel}` : "",
+    input.research?.length
+      ? `\nCURRENT RESEARCH DATA (evidence — prefer this over training memory):\n${JSON.stringify(input.research, null, 2).slice(0, 8000)}`
+      : "",
   ]
     .filter(Boolean)
     .join("\n");

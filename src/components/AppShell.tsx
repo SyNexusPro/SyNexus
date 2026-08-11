@@ -9,6 +9,7 @@ import { TitanSheet } from "./TitanSheet";
 import { ProDemoBanner } from "./ProDemoBanner";
 import { BeginnerModeCoach } from "./BeginnerModeCoach";
 import { WhaleAlertToaster } from "./WhaleAlertToaster";
+import { TitanLiveAlerts } from "./TitanLiveAlerts";
 import { LanguagePicker } from "./LanguagePicker";
 import { SYNEXUS_VAULT_PATH, SYNEXUS_VAULT_PRODUCT_NAME } from "../config/walletComingSoon";
 
@@ -24,6 +25,7 @@ export function AppShell() {
       >
         {!isHome ? <ProDemoBanner /> : null}
         <WhaleAlertToaster />
+        <TitanLiveAlerts />
         <main className="app-main">
           {!isHome ? (
             <>

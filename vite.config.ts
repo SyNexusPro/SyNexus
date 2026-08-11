@@ -9,6 +9,8 @@ import { configureWhaleWebhookApi } from "./api/whale/webhook";
 import { configureWhalePollApi } from "./api/whale/poll";
 import { configureWhaleEventsApi } from "./api/whale/events";
 import { configurePushSubscribeApi } from "./api/push/subscribe";
+import { configureTitanEventApi } from "./api/titan/event";
+import { configureTitanDailyApi } from "./api/cron/titan-daily";
 
 /** Client bundle reads only VITE_* from import.meta.env; Vercel often sets SUPABASE_* without the prefix. */
 function resolveSupabaseForClientBuild(mode: string) {
@@ -74,6 +76,8 @@ export default defineConfig(({ mode }) => {
           configureWhalePollApi(server, env);
           configureWhaleEventsApi(server, env);
           configurePushSubscribeApi(server, env);
+          configureTitanEventApi(server, env);
+          configureTitanDailyApi(server, env);
         },
       },
     ],

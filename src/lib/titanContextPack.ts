@@ -172,6 +172,8 @@ export type TitanChatPayload = {
   history: TitanChatHistoryMessage[];
   /** BCP-47 language for Titan replies (any language). */
   replyLanguage?: string;
+  /** Optional evidence packets for CURRENT RESEARCH DATA. */
+  research?: unknown[] | null;
 };
 
 export function buildTitanChatPayload(
