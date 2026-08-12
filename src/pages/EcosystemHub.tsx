@@ -9,7 +9,7 @@ import {
   readStoredAffiliateHandle,
   saveAffiliateHandle,
 } from "../config/ecosystem";
-import { SYN_IS_LIVE, SYN_PUMPFUN_URL, SYN_SYMBOL, SYN_TOKEN_ID } from "../config/synToken";
+import { SYN_DEXSCREENER_URL, SYN_IS_LIVE, SYN_SYMBOL, SYN_TOKEN_ID } from "../config/synToken";
 
 export function EcosystemHub() {
   const [params] = useSearchParams();
@@ -145,8 +145,8 @@ export function EcosystemHub() {
         <h2>Token utility platform</h2>
         {SYN_IS_LIVE ? (
           <p className="ecosystem-hub__syn-live">
-            <strong>${SYN_SYMBOL}</strong> community is live on pump.fun — scan it in SyNexus before you buy, then trade in
-            your own wallet.
+            <strong>${SYN_SYMBOL}</strong> community token is live on Solana — scan it in SyNexus before you buy, then
+            trade in your own wallet.
           </p>
         ) : null}
         <p>
@@ -164,11 +164,11 @@ export function EcosystemHub() {
           <div className="ecosystem-hub__syn-actions">
             <a
               className="ecosystem-hub__syn-cta"
-              href={SYN_PUMPFUN_URL}
+              href={SYN_DEXSCREENER_URL}
               target="_blank"
               rel="noopener noreferrer"
             >
-              Open $SyN community
+              View ${SYN_SYMBOL} on DexScreener
             </a>
             <Link className="ecosystem-hub__link" to={`/token/${SYN_TOKEN_ID}`}>
               Scan {SYN_SYMBOL} →

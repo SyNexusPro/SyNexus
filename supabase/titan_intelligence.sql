@@ -5,6 +5,10 @@
 alter table public.profiles
   add column if not exists email text;
 
+-- Align with schema.sql when profiles was created without plan columns
+alter table public.profiles
+  add column if not exists paid_plan text not null default 'FREE';
+
 alter table public.profiles
   add column if not exists subscription_status text not null default 'free';
 
@@ -17,7 +21,7 @@ alter table public.profiles
 alter table public.profiles
   add column if not exists daily_digest boolean not null default true;
 
--- Keep subscription_status in sync with existing paid_plan
+-- Keep subscription_status in sync with paid_plan (safe if either column was just added)
 update public.profiles
 set subscription_status = 'active'
 where paid_plan = 'PRO'

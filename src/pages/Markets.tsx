@@ -2,6 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { TopMoversPanel } from "../components/TopMoversPanel";
 import { TokenCard } from "../components/TokenCard";
+import TitanMarketChart from "../components/TitanMarketChart";
+import {
+  TITAN_DEMO_BUY_SIGNALS,
+  TITAN_DEMO_CANDLES,
+  TITAN_DEMO_SELL_SIGNALS,
+} from "../data/titanChartDemo";
 import { useAppIsActive } from "../hooks/useAppIsActive";
 import { useOracleMarketFeed } from "../lib/useOracleMarketFeed";
 import {
@@ -154,6 +160,14 @@ export function Markets() {
       ) : (
         <section className="markets-page__intel marketing-panel">
           <h2>Market intelligence</h2>
+          <div className="markets-page__titan-chart">
+            <TitanMarketChart
+              symbol="SOL/USD"
+              candles={TITAN_DEMO_CANDLES}
+              buySignals={TITAN_DEMO_BUY_SIGNALS}
+              sellSignals={TITAN_DEMO_SELL_SIGNALS}
+            />
+          </div>
           <ul className="markets-page__intel-list">
             <li>
               <strong>Crypto beta</strong> — Solana movers and Sentinel risk reads before you size a swap.

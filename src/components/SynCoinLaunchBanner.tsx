@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
+  SYN_DEXSCREENER_URL,
   SYN_IS_LIVE,
-  SYN_PUMPFUN_URL,
   SYN_SYMBOL,
   SYN_TOKEN_ID,
   dismissSynLaunchBanner,
@@ -20,12 +20,12 @@ export function SynCoinLaunchBanner() {
   }
 
   return (
-    <section className="syn-launch-banner" role="region" aria-label="SYN token live on pump.fun">
+    <section className="syn-launch-banner" role="region" aria-label="SYN token is live">
       <div className="syn-launch-banner__glow" aria-hidden />
       <div className="syn-launch-banner__text">
         <p className="syn-launch-banner__eyebrow">Now live</p>
         <p className="syn-launch-banner__headline">
-          <strong>${SYN_SYMBOL}</strong> community is live on pump.fun
+          <strong>${SYN_SYMBOL}</strong> community token is live on Solana
         </p>
         <p className="syn-launch-banner__detail">
           Join the SyNexus community — scan the mint in-app before you buy, then trade in your wallet.
@@ -34,11 +34,11 @@ export function SynCoinLaunchBanner() {
       <div className="syn-launch-banner__actions">
         <a
           className="syn-launch-banner__cta"
-          href={SYN_PUMPFUN_URL}
+          href={SYN_DEXSCREENER_URL}
           target="_blank"
           rel="noopener noreferrer"
         >
-          Open $SyN community
+          View ${SYN_SYMBOL} on DexScreener
         </a>
         <Link className="syn-launch-banner__secondary" to={`/token/${SYN_TOKEN_ID}`}>
           Scan {SYN_SYMBOL}

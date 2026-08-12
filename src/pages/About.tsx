@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { AppScreenshotGallery } from "../components/AppScreenshotGallery";
 import { HOW_SYNEXUS_WORKS, SYN_COIN_ROADMAP } from "../config/site";
-import { SYN_PUMPFUN_URL, SYN_MINT, SYN_SYMBOL } from "../config/synToken";
+import { SYN_DEXSCREENER_URL, SYN_MINT, SYN_SYMBOL } from "../config/synToken";
 
 export function About() {
   return (
@@ -92,9 +92,9 @@ export function About() {
 
       <section className="about-page__section marketing-panel about-page__section--syn-live">
         <p className="about-page__eyebrow">Community token</p>
-        <h2>$SyN community is live on pump.fun</h2>
+        <h2>$SyN community token is live on Solana</h2>
         <p>
-          The SyNexus community token ({SYN_SYMBOL}) has a home on pump.fun. Paste the mint in{" "}
+          The SyNexus community token ({SYN_SYMBOL}) is live. Paste the mint in{" "}
           <strong>token scan</strong> for a Sentinel read before you ape — then buy only through your
           own wallet.
         </p>
@@ -104,11 +104,11 @@ export function About() {
         <div className="about-page__syn-actions">
           <a
             className="about-page__syn-cta"
-            href={SYN_PUMPFUN_URL}
+            href={SYN_DEXSCREENER_URL}
             target="_blank"
             rel="noopener noreferrer"
           >
-            Open $SyN community
+            View ${SYN_SYMBOL} on DexScreener
           </a>
           <Link className="about-page__link" to="/token/syn-sol">
             Scan {SYN_SYMBOL} in SyNexus →
@@ -119,7 +119,7 @@ export function About() {
       <section id="syn-roadmap" className="about-page__section marketing-panel about-page__section--roadmap">
         <h2>Syn coin roadmap</h2>
         <p className="about-page__roadmap-note">
-          SYN is live on pump.fun. Tokenomics, treasury routing, and legal availability for other jurisdictions
+          SYN is live on Solana. Tokenomics, treasury routing, and legal availability for other jurisdictions
           will be updated as the ecosystem matures. Nothing here is an offer of securities.
         </p>
         <div className="about-page__roadmap">

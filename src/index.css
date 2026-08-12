@@ -2411,6 +2411,13 @@ html:has(.app-shell--home) #root {
   overflow: hidden;
 }
 
+.detail-chart__line-wrap--titan {
+  min-height: 0;
+  border: none;
+  background: transparent;
+  overflow: visible;
+}
+
 .detail-chart__line {
   position: absolute;
   inset: 18px;
@@ -11472,6 +11479,10 @@ html.native-android .titan-sheet-backdrop {
   color: var(--risk-danger);
 }
 
+.markets-page__titan-chart {
+  margin: 14px 0 18px;
+}
+
 .markets-quote-list,
 .news-page__list,
 .tool-page__grid {
@@ -12274,5 +12285,74 @@ html[dir="rtl"] .lang-picker__panel {
   font-size: 0.84rem;
   line-height: 1.4;
   opacity: 0.92;
+}
+
+/* Titan market chart (lightweight-charts) */
+.titan-chart-shell {
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(45, 87, 180, 0.35);
+  border-radius: 18px;
+  background:
+    radial-gradient(
+      circle at 75% 20%,
+      rgba(10, 69, 160, 0.15),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at 15% 85%,
+      rgba(255, 0, 110, 0.08),
+      transparent 35%
+    ),
+    #060914;
+  box-shadow:
+    0 0 25px rgba(0, 112, 255, 0.1),
+    inset 0 0 35px rgba(0, 0, 0, 0.5);
+}
+
+.titan-chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px 10px;
+}
+
+.titan-chart-symbol {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.titan-chart-subtitle {
+  margin-top: 3px;
+  color: #647197;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.4px;
+}
+
+.titan-live-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #00ff38;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.titan-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #00ff38;
+  box-shadow:
+    0 0 6px #00ff38,
+    0 0 12px rgba(0, 255, 56, 0.65);
+}
+
+.titan-chart-container {
+  width: 100%;
+  min-height: 430px;
 }
 

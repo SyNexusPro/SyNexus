@@ -16,6 +16,8 @@ const MIGRATION_FILES = [
   "supabase/schema.sql",
   "supabase/site_analytics.sql",
   "supabase/security_events.sql",
+  "supabase/whale_alerts.sql",
+  "supabase/titan_intelligence.sql",
 ];
 
 function readEnvFile(path) {

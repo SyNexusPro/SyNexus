@@ -88,7 +88,7 @@ Complete **LLC formation first** (or in parallel), then file trademarks/patents 
 | **Oracle Supreme** | Maybe | Character name for AI layer |
 | **Aegis** | Maybe | Security subsystem name; check conflicts in software/security |
 | **SyNexusPro** | Yes (with P1) | Subscription tier name |
-| **$SyN / SyN** | Separate | Community token on pump.fun — likely **Class 36** or separate goods; distinct from app brand |
+| **$SyN / SyN** | Separate | Community token on Solana — likely **Class 36** or separate goods; distinct from app brand |
 
 ### Do **not** register as primary brand
 
@@ -531,7 +531,7 @@ Public brand is **SyNexus** only. Internal token id is `syn-sol`; storage keys u
 | **Bundle ID** | com.synexus.app |
 | **Platform** | Web, Android, iOS |
 | **Subscription** | SyNexusPro — $9.99/month (7-day free trial after sign-up) |
-| **Community token** | $SyN (pump.fun) — separate from app TM counsel |
+| **Community token** | $SyN (Solana) — separate from app TM counsel |
 
 ---
 

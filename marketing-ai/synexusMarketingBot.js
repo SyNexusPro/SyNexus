@@ -30,10 +30,14 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const TAGS = "#SyNexus #Solana #Crypto #TokenScan";
 const PRO_PRICE_LINE = PRO_LINE;
 const TRIAL_LINE = TRIAL_OFFER_SHORT;
-const SYN_PUMPFUN_URL =
-  process.env.SYN_PUMPFUN_URL?.trim() ||
-  "https://pump.fun/communities/9naVtLAGKWYuEcGehe1BZ3DpiSLHjSNsaeFr2JPHpump";
-const SYN_COIN_LINE = `🪙 $SyN community is live on pump.fun → ${SYN_PUMPFUN_URL}`;
+const SYN_MINT =
+  process.env.SYN_MINT?.trim() ||
+  process.env.VITE_SYN_MINT?.trim() ||
+  "8A85yBddPdbESwoRBZVnWJiAqRaK1Qyfa1txNPjiNray";
+const SYN_DEXSCREENER_URL =
+  process.env.SYN_DEXSCREENER_URL?.trim() ||
+  `https://dexscreener.com/solana/${SYN_MINT}`;
+const SYN_COIN_LINE = `🪙 $SyN is live on Solana → ${SYN_DEXSCREENER_URL}`;
 
 /** One-line hooks — rotate daily. Punchy, badass, female Sentinel voice. */
 const HOOKS = [

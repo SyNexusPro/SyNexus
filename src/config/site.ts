@@ -156,7 +156,7 @@ export const FAQ_ITEMS = [
   },
   {
     q: "Where is the SYN token?",
-    a: "SYN is live on pump.fun — join the $SyN community from the home feed banner or About page. Always verify the mint address in-app before trading. Utility roadmap is on the About page.",
+    a: "SYN is live on Solana — find the mint from the home feed banner or About page. Always verify the mint address in-app before trading. Utility roadmap is on the About page.",
   },
   {
     q: "Where is the SYN token roadmap?",
@@ -203,9 +203,9 @@ export const FAQ_ITEMS = [
 export const SYN_COIN_ROADMAP = [
   {
     phase: "Phase 1 · Foundation",
-    status: "Live on pump.fun",
+    status: "Live on Solana",
     items: [
-      "SYN community token launched on pump.fun",
+      "SYN community token live on Solana",
       "SyNexus app: feed, Sentinels, Titan, Pro subscriptions",
       "Transparent trading fee model and treasury allocation policy",
       "Community reports and Operator Link accounts",
