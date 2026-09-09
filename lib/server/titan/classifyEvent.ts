@@ -30,12 +30,11 @@ export function classifyEvent(event: MarketEventSignal): TitanSeverity {
   if (event.type === "LAUNCH_WATCH") {
     return "normal";
   }
-    if (risk >= 85 && momentum >= 70) return "critical";
-    if (discovery >= 70 || (risk >= 65 && discovery >= 55) || (discovery >= 60 && momentum >= 65)) {
-      return "high";
-    }
-    if (discovery >= 45 || momentum >= 55) return "normal";
+  if (risk >= 85 && momentum >= 70) return "critical";
+  if (discovery >= 70 || (risk >= 65 && discovery >= 55) || (discovery >= 60 && momentum >= 65)) {
+    return "high";
   }
+  if (discovery >= 45 || momentum >= 55) return "normal";
 
   if (event.securityThreat || Math.abs(event.priceChangePercent || 0) >= 15) {
     return "high";

@@ -442,7 +442,7 @@ async function* streamOpenAiChat(
   const system = buildTitanSystemPrompt(body);
   const messages = [
     { role: "system" as const, content: system },
-    ...body.history.map((turn) => ({ role: turn.role, content: turn.content })),
+    ...(body.history ?? []).map((turn) => ({ role: turn.role, content: turn.content })),
     { role: "user" as const, content: body.message },
   ];
 

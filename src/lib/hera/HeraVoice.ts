@@ -1,6 +1,7 @@
 import { heraFaceController } from "./HeraFaceController";
 import { HeraLipSync } from "./HeraLipSync";
-import { textForTitanSpeech } from "../titanVoice";
+import { charToViseme } from "./blendshapes";
+import { setTitanVoiceEnabled, speakTitan, stopTitanSpeech, textForTitanSpeech } from "../titanVoice";
 import type { HeraViseme } from "./types";
 
 export type HeraVoiceEvents = {
@@ -126,6 +127,7 @@ export class HeraVoice {
     }
     this.nextTime = this.ctx?.currentTime ?? 0;
     this.lipSync.clear();
+    stopTitanSpeech();
     this.setSpeaking(false);
     this.emitViseme("sil");
   }
@@ -151,7 +153,7 @@ export class HeraVoice {
         try {
           await this.playFallbackMp3(spoken, gen);
         } catch {
-          /* browser TTS is handled by the caller if this also fails */
+          await this.playBrowserSpeech(spoken, gen);
         }
       }
     } finally {
@@ -321,11 +323,56 @@ export class HeraVoice {
     this.lipSync.addTextOnClock({ clockStart: start, duration: audio.duration, text });
   }
 
+  /** Last resort: device speech, still locked to the shared viseme clock. */
+  private playBrowserSpeech(text: string, gen: number): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (gen !== this.generation) {
+        resolve();
+        return;
+      }
+      setTitanVoiceEnabled(true);
+      const ctx = this.ensureContext();
+      const start = ctx.currentTime;
+      const duration = Math.min(14, Math.max(0.85, text.length * 0.055));
+      this.lipSync.addTextOnClock({ clockStart: start, duration, text });
+      this.setSpeaking(true);
+      this.startFacePump();
+      speakTitan(text, {
+        onStart: () => {
+          if (gen === this.generation) this.setSpeaking(true);
+        },
+        onBoundary: (word) => {
+          if (gen !== this.generation) return;
+          const viseme = charToViseme(word[0] ?? "");
+          heraFaceController.setViseme(viseme);
+          this.emitViseme(viseme);
+        },
+        onEnd: () => {
+          if (gen !== this.generation) {
+            resolve();
+            return;
+          }
+          this.lipSync.clear();
+          this.setSpeaking(false);
+          this.emitViseme("sil");
+          resolve();
+        },
+        onError: () => {
+          this.lipSync.clear();
+          this.setSpeaking(false);
+          this.emitViseme("sil");
+          reject(new Error("Browser speech failed"));
+        },
+      });
+    });
+  }
+
   private waitUntilQuiet(gen: number): void {
     const tick = () => {
       if (gen !== this.generation) return;
       const ctx = this.ctx;
-      if (!ctx || this.nextTime > ctx.currentTime + 0.05 || this.sources.length) {
+      const audioBusy = Boolean(ctx && this.nextTime > ctx.currentTime + 0.05);
+      if (this.speaking || this.sources.length || audioBusy) {
         window.setTimeout(tick, 40);
         return;
       }

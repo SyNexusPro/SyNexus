@@ -130,12 +130,12 @@ export function OracleSupremeChat({
     },
   });
   const liveVoice = screenMode && realtime.connected;
-  const fallbackVoice = screenMode && realtime.unavailable;
+  const textTalk = screenMode && !liveVoice;
 
   const voiceOut = useHeraVoiceOutput({ ensureEnabled: voiceMode && !liveVoice });
   const voiceIn = useHeraVoiceInput({
-    enabled: voiceMode && (!screenMode || fallbackVoice),
-    autoRestart: fallbackVoice,
+    enabled: voiceMode && (!screenMode || textTalk),
+    autoRestart: textTalk,
     muted: thinking || voiceOut.speaking || speaking,
     onFinalTranscript: (text) => {
       void submitRef.current(text);
@@ -145,15 +145,15 @@ export function OracleSupremeChat({
   const avatar = useHeraAvatarState(
     {
       isActive: true,
-      listening: liveVoice ? realtime.listening : voiceIn.listening,
+      listening: liveVoice ? realtime.listening : voiceIn.listening || textTalk,
       thinking: liveVoice ? realtime.thinking : thinking,
       speaking: liveVoice ? realtime.speaking : speaking || voiceOut.speaking,
-      audioLevel: liveVoice ? realtime.mouthOpen : voiceIn.audioLevel,
+      audioLevel: liveVoice ? realtime.mouthOpen : Math.max(voiceIn.audioLevel, voiceOut.speaking ? 0.35 : 0),
       forceState: liveVoice
         ? realtime.state === "error" || realtime.state === "connecting"
           ? "listening"
           : realtime.state
-        : fallbackVoice
+        : textTalk
           ? speaking || voiceOut.speaking
             ? "speaking"
             : thinking
@@ -225,6 +225,7 @@ export function OracleSupremeChat({
   function speakReply(text: string) {
     if (!text.trim()) return;
     if (voiceMode) {
+      unlockTitanSpeech();
       void voiceOut.speak(text);
       return;
     }
@@ -250,7 +251,7 @@ export function OracleSupremeChat({
 
     stopTitanSpeech();
     voiceOut.stop();
-    if (screenMode && realtime.connected) {
+    if (liveVoice) {
       realtime.sendText(trimmed);
       setDraft("");
       setAwaitingDayReply(false);
@@ -331,14 +332,15 @@ export function OracleSupremeChat({
   }, [autoListen, screenMode, seedUtterance, wakePulse]);
 
   useEffect(() => {
-    if (!fallbackVoice || fallbackSeedRef.current) return;
+    if (!textTalk || fallbackSeedRef.current) return;
+    if (!realtime.unavailable && realtime.state === "connecting") return;
     fallbackSeedRef.current = true;
     unlockTitanSpeech();
     const seed = stripWakePrefix(seedUtterance?.trim() ?? "") || seedUtterance?.trim() || "";
     if (seed.length >= 6 && !isWakeOnlyUtterance(seed)) {
       void submitRef.current(seed);
     }
-  }, [fallbackVoice, seedUtterance]);
+  }, [realtime.state, realtime.unavailable, seedUtterance, textTalk]);
 
   useEffect(() => {
     if (mode === "chat") {
@@ -368,6 +370,7 @@ export function OracleSupremeChat({
   }
 
   function handleSend() {
+    unlockTitanSpeech();
     void submitQuery(draft);
   }
 
@@ -404,19 +407,15 @@ export function OracleSupremeChat({
   const condensedThread = hologramMode;
   const isActivelySpeaking = liveVoice ? realtime.speaking : speaking || voiceOut.speaking;
   const lastSpoken = [...visibleTurns].reverse().find((turn) => turn.role === "oracle" && turn.text.trim());
-  const liveCaption = fallbackVoice
-    ? thinking
+  const liveCaption = liveVoice
+    ? realtime.state === "thinking"
       ? lastSpoken?.text || "Thinking…"
-      : isActivelySpeaking
-        ? lastSpoken?.text ?? null
-        : "Listening…"
-    : realtime.state === "connecting"
-      ? "Connecting…"
-      : realtime.state === "error"
-        ? "Listening…"
-        : realtime.state === "thinking"
-          ? lastSpoken?.text || "Thinking…"
-          : lastSpoken?.text || (realtime.state === "speaking" ? null : "Listening…");
+      : lastSpoken?.text || (realtime.state === "speaking" ? null : "Listening…")
+    : thinking
+      ? "Thinking…"
+      : voiceIn.partial
+        ? voiceIn.partial
+        : lastSpoken?.text || "Listening…";
 
   if (screenMode) {
     return (
@@ -438,7 +437,7 @@ export function OracleSupremeChat({
 
         <div className="hera-screen__dock">
           {liveCaption ? (
-            <p className={`hera-screen__caption${(fallbackVoice || realtime.listening) && !isActivelySpeaking ? " hera-screen__caption--listen" : ""}`}>
+            <p className={`hera-screen__caption${(textTalk || realtime.listening) && !isActivelySpeaking ? " hera-screen__caption--listen" : ""}`}>
               {liveCaption}
             </p>
           ) : null}

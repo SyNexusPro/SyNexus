@@ -339,7 +339,7 @@ export function reactToFreeText(text: string, ctx: OracleConversationContext): s
     return buildTitanIdentityLine(ctx.titanBotName);
   }
 
-  return "Give me that again — I'll answer it properly this time.";
+  return "I'm with you. Say that one more way, or tell me what you want to do next — scan, trade, or just talk.";
 }
 
 export const DAY_MOOD_QUICK_REPLIES: { id: DayMoodReply; label: string }[] = [
