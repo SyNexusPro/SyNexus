@@ -22,7 +22,9 @@ public class MainActivity extends BridgeActivity {
   @Override
   public void onCreate(Bundle savedInstanceState) {
     Log.d(TAG, "onCreate: Starting app");
-    
+
+    registerPlugin(HeraWakeWordPlugin.class);
+
     // Enable Edge-to-Edge BEFORE super.onCreate to properly handle system bars
     EdgeToEdge.enable(this);
     

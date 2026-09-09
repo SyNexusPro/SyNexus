@@ -6,6 +6,7 @@ import {
   formatNewsTime,
   type CryptoNewsItem,
 } from "../lib/cryptoNews";
+import { formatHeraDataAsOf } from "../lib/hera/formatLiveStamp";
 
 type Filter = "all" | "high" | "medium" | "watch";
 
@@ -62,7 +63,7 @@ export function NewsIntelligence() {
           event impact so you can brief Titan or scan risk faster. Not financial advice.
         </p>
         {updatedAt ? (
-          <p className="news-page__updated">Updated {formatNewsTime(updatedAt)}</p>
+          <p className="news-page__updated">Updated {formatHeraDataAsOf(updatedAt)}</p>
         ) : null}
       </section>
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { hasStoredOwnerGrant, unlockOwnerAccess } from "../lib/ownerAccess";
+import { PasswordRevealToggle } from "./PasswordRevealToggle";
 
 type Props = {
   /** After unlock, navigate here (default /pulse). */
@@ -12,6 +13,7 @@ export function GodModeLogin({ redirectTo = "/pulse", compact = false }: Props) 
   const navigate = useNavigate();
   const [commandId, setCommandId] = useState("");
   const [commandKey, setCommandKey] = useState("");
+  const [showKey, setShowKey] = useState(false);
   const [busy, setBusy] = useState(false);
   const [active, setActive] = useState(() => hasStoredOwnerGrant());
   const [message, setMessage] = useState<{ tone: "info" | "success" | "error"; text: string } | null>(
@@ -79,7 +81,13 @@ export function GodModeLogin({ redirectTo = "/pulse", compact = false }: Props) 
         </p>
       ) : null}
 
-      <div className="god-mode-login__fields">
+      <form
+        className="god-mode-login__fields"
+        onSubmit={(event) => {
+          event.preventDefault();
+          void handleSubmit();
+        }}
+      >
         <label className="god-mode-login__field">
           <span>God mode ID</span>
           <input
@@ -87,26 +95,34 @@ export function GodModeLogin({ redirectTo = "/pulse", compact = false }: Props) 
             autoComplete="username"
             value={commandId}
             disabled={busy}
-            placeholder="owner-id@synexus.local"
+            placeholder="thesynexuspro@gmail.com"
             onChange={(event) => setCommandId(event.target.value)}
           />
         </label>
         <label className="god-mode-login__field">
           <span>God mode key</span>
-          <input
-            type="password"
-            autoComplete="current-password"
-            value={commandKey}
-            disabled={busy}
-            placeholder="••••••••••••••••"
-            onChange={(event) => setCommandKey(event.target.value)}
-          />
+          <div className="password-reveal">
+            <input
+              type={showKey ? "text" : "password"}
+              autoComplete="current-password"
+              value={commandKey}
+              disabled={busy}
+              placeholder="••••••••••••••••"
+              onChange={(event) => setCommandKey(event.target.value)}
+            />
+            <PasswordRevealToggle
+              revealed={showKey}
+              disabled={busy}
+              noun="key"
+              onToggle={() => setShowKey((v) => !v)}
+            />
+          </div>
         </label>
-      </div>
 
-      <button type="button" className="god-mode-login__submit" disabled={busy} onClick={() => void handleSubmit()}>
-        {busy ? "Verifying…" : "Enter god mode"}
-      </button>
+        <button type="submit" className="god-mode-login__submit" disabled={busy}>
+          {busy ? "Verifying…" : "Enter god mode"}
+        </button>
+      </form>
 
       <p className="god-mode-login__footnote">
         Use your server-configured god mode ID and key — not your regular SyNexus sign-in email unless

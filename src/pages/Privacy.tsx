@@ -42,6 +42,16 @@ export function Privacy() {
           <strong>Local storage.</strong> The Service may store preferences, plan flags, and conversation history
           locally on your device (for example via browser or app storage).
         </p>
+        <p>
+          <strong>Microphone and Hera wake word.</strong> If you enable Listen, SyNexus uses the microphone while
+          the app is in the foreground to detect the spoken wake word “Hera” (or “Titan”). That wake-word detection runs on
+          the device (web: browser speech engine; Android: on-device recognizer). We do not continuously upload
+          microphone audio to SyNexus servers for wake-word listening. After “Hera” is detected, Hera opens and
+          your question is handled by the existing Hera/Titan conversation system, which may use on-device
+          recognition or our speech APIs only for that active question. Background or always-on listening is not
+          enabled in this version. You can turn Listen off at any time. If microphone permission is denied, Hera
+          stays inactive for voice and you can type instead.
+        </p>
       </section>
 
       <section className="legal-section marketing-panel">

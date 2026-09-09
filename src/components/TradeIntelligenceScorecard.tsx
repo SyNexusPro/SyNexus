@@ -6,6 +6,7 @@ import {
   scorecardTone,
   type TradeScorecard,
 } from "../lib/tradeScorecard";
+import { evaluateTokenDiscovery } from "../lib/titanDiscovery";
 
 type Props = {
   token: Token;
@@ -59,6 +60,7 @@ function ScorecardGrid({ card }: { card: TradeScorecard }) {
 
 export function TradeIntelligenceScorecard({ token, compact = false }: Props) {
   const card = useMemo(() => buildTradeScorecard(token), [token]);
+  const discovery = useMemo(() => evaluateTokenDiscovery(token), [token]);
 
   if (compact) {
     return (
@@ -66,8 +68,8 @@ export function TradeIntelligenceScorecard({ token, compact = false }: Props) {
         <span className={`trade-scorecard__grade trade-scorecard__grade--${card.overallGrade.toLowerCase()}`}>
           {card.overallGrade}
         </span>
-        <span className="trade-scorecard__compact-risk">Risk {card.riskScore}</span>
-        <span className="trade-scorecard__compact-rug">{card.rugPullLabel}</span>
+        <span className="trade-scorecard__compact-risk">Risk {discovery.riskScore}</span>
+        <span className="trade-scorecard__compact-rug">Disc {discovery.discoveryScore}</span>
       </div>
     );
   }
@@ -86,8 +88,38 @@ export function TradeIntelligenceScorecard({ token, compact = false }: Props) {
           {card.overallGrade}
         </span>
       </div>
+      <div className="trade-scorecard__discovery" aria-label="Titan discovery scores">
+        <Metric
+          label="Discovery"
+          value={discovery.discoveryScore}
+          tone={scorecardTone(discovery.discoveryScore)}
+        />
+        <Metric
+          label="Risk"
+          value={discovery.riskScore}
+          tone={scorecardTone(100 - discovery.riskScore)}
+        />
+        <Metric
+          label="Momentum"
+          value={discovery.momentumScore}
+          tone={scorecardTone(discovery.momentumScore)}
+        />
+        <Metric
+          label="Confidence"
+          value={discovery.confidence}
+          tone={
+            discovery.confidence === "high" ? "good" : discovery.confidence === "medium" ? "mid" : "bad"
+          }
+        />
+      </div>
+      {discovery.highRiskReportable ? (
+        <p className="trade-scorecard__high-risk">HIGH RISK — still reported; not suppressed</p>
+      ) : null}
       <ScorecardGrid card={card} />
       <p className="trade-scorecard__note">{card.rugPullLabel}</p>
+      {discovery.whyMoving[0] ? (
+        <p className="trade-scorecard__why">Why moving: {discovery.whyMoving[0]}</p>
+      ) : null}
     </section>
   );
 }

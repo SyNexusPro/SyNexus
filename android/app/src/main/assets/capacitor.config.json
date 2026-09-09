@@ -7,6 +7,8 @@
 		"allowMixedContent": false
 	},
 	"server": {
-		"androidScheme": "https"
+		"androidScheme": "https",
+		"url": "https://www.synexus.pro",
+		"cleartext": false
 	}
 }

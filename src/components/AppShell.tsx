@@ -2,27 +2,41 @@ import { Link, Outlet, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { TitanShellProvider } from "../context/TitanShellContext";
 import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
+import { useTitanChatOpen } from "../hooks/useTitanChatOpen";
 import { RouteErrorBoundary } from "./RouteErrorBoundary";
 import { BottomNav } from "./BottomNav";
 import { UIModeToggle } from "./UIModeToggle";
 import { TitanSheet } from "./TitanSheet";
+import { HeraWakeWordHost } from "./HeraWakeWordHost";
 import { ProDemoBanner } from "./ProDemoBanner";
 import { BeginnerModeCoach } from "./BeginnerModeCoach";
 import { WhaleAlertToaster } from "./WhaleAlertToaster";
 import { TitanLiveAlerts } from "./TitanLiveAlerts";
 import { LanguagePicker } from "./LanguagePicker";
+import { OnboardingTour } from "./OnboardingTour";
 import { SYNEXUS_VAULT_PATH, SYNEXUS_VAULT_PRODUCT_NAME } from "../config/walletComingSoon";
+import { isTradingEnabled } from "../config/trading";
 
 export function AppShell() {
+  return (
+    <TitanShellProvider>
+      <AppShellFrame />
+    </TitanShellProvider>
+  );
+}
+
+function AppShellFrame() {
   const { t } = useTranslation();
   const { isSimple } = useSynexusUIMode();
   const isHome = useLocation().pathname === "/";
+  const heraOpen = useTitanChatOpen();
+  const trading = isTradingEnabled();
 
   return (
-    <TitanShellProvider>
-      <div
-        className={`app-shell${isSimple ? " app-shell--easy" : " app-shell--advanced"}${isHome ? " app-shell--home" : ""}`}
-      >
+    <div
+      className={`app-shell${isSimple ? " app-shell--easy" : " app-shell--advanced"}${isHome ? " app-shell--home" : ""}${heraOpen ? " app-shell--hera" : ""}`}
+    >
+      <div className="app-shell__dashboard">
         {!isHome ? <ProDemoBanner /> : null}
         <WhaleAlertToaster />
         <TitanLiveAlerts />
@@ -39,7 +53,6 @@ export function AppShell() {
             <Outlet />
           </RouteErrorBoundary>
         </main>
-        <TitanSheet />
         {isHome ? null : (
           <footer className="app-footer">
             <Link className="app-footer__link" to="/about">
@@ -63,6 +76,16 @@ export function AppShell() {
             <Link className="app-footer__link" to="/hub">
               {t("footer.hub")}
             </Link>
+            {trading ? (
+              <>
+                <span className="app-footer__sep" aria-hidden>
+                  ·
+                </span>
+                <Link className="app-footer__link" to="/trade">
+                  {t("footer.trade")}
+                </Link>
+              </>
+            ) : null}
             <span className="app-footer__sep" aria-hidden>
               ·
             </span>
@@ -74,6 +97,12 @@ export function AppShell() {
             </span>
             <Link className="app-footer__link" to="/pricing">
               {t("footer.pricing")}
+            </Link>
+            <span className="app-footer__sep" aria-hidden>
+              ·
+            </span>
+            <Link className="app-footer__link" to="/invite">
+              Invite and Earn
             </Link>
             <span className="app-footer__sep" aria-hidden>
               ·
@@ -138,8 +167,11 @@ export function AppShell() {
         <div className="lang-picker-dock" aria-label="Language">
           <LanguagePicker compact />
         </div>
-        <BottomNav />
       </div>
-    </TitanShellProvider>
+      <TitanSheet />
+      <HeraWakeWordHost />
+      <BottomNav />
+      <OnboardingTour />
+    </div>
   );
 }

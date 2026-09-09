@@ -11,6 +11,15 @@ import { configureWhaleEventsApi } from "./api/whale/events";
 import { configurePushSubscribeApi } from "./api/push/subscribe";
 import { configureTitanEventApi } from "./api/titan/event";
 import { configureTitanDailyApi } from "./api/cron/titan-daily";
+import { configureTitanDiscoveryApi } from "./api/cron/titan-discovery";
+import { configureTitanLaunchWatchApi } from "./api/cron/titan-launch-watch";
+import { configureInviteApi } from "./api/invite";
+import { configureHeraSttApi } from "./api/hera/stt";
+import { configureHeraTtsApi } from "./api/hera/tts";
+import { configureHeraVoiceStreamApi } from "./api/hera/voice-stream";
+import { configureHeraRealtimeSessionApi } from "./api/hera/realtime-session";
+import { configureHeraLiveTokenApi } from "./api/hera/live-token";
+import { configureHeraLaunchWatchApi } from "./api/hera/launch-watch";
 
 /** Client bundle reads only VITE_* from import.meta.env; Vercel often sets SUPABASE_* without the prefix. */
 function resolveSupabaseForClientBuild(mode: string) {
@@ -25,6 +34,9 @@ function resolveSupabaseForClientBuild(mode: string) {
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
+  for (const [key, value] of Object.entries(env)) {
+    if (value != null && process.env[key] == null) process.env[key] = value;
+  }
   const { url: supabaseUrl, anon: supabaseAnon } = resolveSupabaseForClientBuild(mode);
 
   return {
@@ -78,6 +90,15 @@ export default defineConfig(({ mode }) => {
           configurePushSubscribeApi(server, env);
           configureTitanEventApi(server, env);
           configureTitanDailyApi(server, env);
+          configureTitanDiscoveryApi(server, env);
+          configureTitanLaunchWatchApi(server, env);
+          configureInviteApi(server, env);
+          configureHeraSttApi(server, env);
+          configureHeraTtsApi(server, env);
+          configureHeraVoiceStreamApi(server, env);
+          configureHeraRealtimeSessionApi(server, env);
+          configureHeraLiveTokenApi(server);
+          configureHeraLaunchWatchApi(server);
         },
       },
     ],

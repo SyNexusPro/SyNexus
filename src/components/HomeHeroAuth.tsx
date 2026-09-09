@@ -7,6 +7,8 @@ import { attemptBiometricQuickSignIn } from "../lib/quickOperatorSignIn";
 import { syncProTrialForUser } from "../lib/proDemo";
 import { QuickOperatorLogin, type QuickOperatorAuthResult } from "./QuickOperatorLogin";
 import { SynexusSubscribeButton } from "./SynexusSubscribeButton";
+import { InviteEarnButton } from "./InviteEarnButton";
+import { attachPendingInvite, syncInviteRewardForUser } from "../lib/inviteEarn";
 
 type AuthPanel = null | "signup" | "signin";
 
@@ -75,8 +77,10 @@ export function HomeHeroAuth({ isSimple = false }: Props) {
     closePanel();
     if (result?.userId) {
       syncProTrialForUser(result.userId);
+      void attachPendingInvite();
+      void syncInviteRewardForUser();
     }
-    navigate("/pulse");
+    navigate(result?.mode === "signup" ? "/invite?onboard=1" : "/pulse");
   }
 
   if (linked) {
@@ -85,6 +89,7 @@ export function HomeHeroAuth({ isSimple = false }: Props) {
         <Link to="/pulse" className="landing-hero__actions--secondary">
           Open Pulse
         </Link>
+        <InviteEarnButton className="landing-hero__actions--secondary" />
         {!isSimple ? (
           <SynexusSubscribeButton className="landing-hero__actions--pro" label="SyNexusPro" />
         ) : null}

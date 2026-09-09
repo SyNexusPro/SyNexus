@@ -5,7 +5,8 @@ import { createClient } from "@supabase/supabase-js";
  * (or fallbacks `SUPABASE_*` / `SUPABASE_ANON_KEY` wired in vite.config.ts).
  *
  * For auth in production, add your site URL under Supabase → Authentication → URL configuration
- * (e.g. `https://your-project.vercel.app`).
+ * (e.g. `https://www.synexus.pro`) and `/pulse` on Redirect URLs. Enable the Google provider
+ * there for “Continue with Google”.
  */
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;

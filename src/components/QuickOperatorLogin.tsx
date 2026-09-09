@@ -8,10 +8,21 @@ import {
   signUpWithEmail,
   upsertSignupProfile,
 } from "../lib/supabaseData";
-import { isEmailVerified } from "../lib/emailVerification";
+import { isEmailVerified, savePendingVerificationEmail } from "../lib/emailVerification";
 import { SYNEXUS_BRAND_NAME } from "../config/brand";
 import { useOperatorAuth } from "../hooks/useOperatorAuth";
 import { applyGooglePlayReviewAccess } from "../lib/googlePlayReviewAccess";
+import { applySharedTesterAccess } from "../lib/testerAccess";
+import {
+  SIGNUP_WELCOME_ACTIVE,
+  markAwaitingSignupWelcome,
+  signupConfirmInboxMessage,
+} from "../lib/signupWelcome";
+import { describeAuthError } from "../lib/authErrors";
+import { attachPendingInvite, syncInviteRewardForUser } from "../lib/inviteEarn";
+import { syncProTrialForUser } from "../lib/proDemo";
+import { PasswordRevealToggle } from "./PasswordRevealToggle";
+import { GoogleAuthOption } from "./GoogleSignInButton";
 
 const DEMO_SESSION_KEY = "synexus_demo_session";
 
@@ -28,22 +39,10 @@ type Props = {
   showTabs?: boolean;
 };
 
-function describeAuthError(err: unknown): string {
-  const msg = err instanceof Error ? err.message : String(err);
-  const lower = msg.toLowerCase();
-  if (lower.includes("invalid login credentials") || lower.includes("invalid_grant")) {
-    return "Wrong email or password.";
-  }
-  if (lower.includes("email not confirmed")) {
-    return "Check your inbox — confirm your email before signing in.";
-  }
-  if (lower.includes("too many requests") || lower.includes("rate")) {
-    return "Too many attempts. Wait a minute and try again.";
-  }
-  if (lower.includes("user already registered")) {
-    return "Account exists — switch to Sign in.";
-  }
-  return msg || "Something went wrong. Try again.";
+function finishLinkedSession(userId: string) {
+  syncProTrialForUser(userId);
+  void attachPendingInvite();
+  void syncInviteRewardForUser();
 }
 
 export function QuickOperatorLogin({
@@ -57,6 +56,7 @@ export function QuickOperatorLogin({
   const [email, setEmail] = useState(() => loadRememberedEmail() ?? "");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ tone: "info" | "success" | "error"; text: string } | null>(
     null,
@@ -114,15 +114,24 @@ export function QuickOperatorLogin({
           }
         }
         setPassword("");
-        setMessage({
-          tone: "success",
-          text: user
-            ? "Welcome — you're signed in."
-            : `Check ${trimmedEmail} to verify your email, then sign in.`,
-        });
-        if (user && result.session && isEmailVerified(user)) {
-          onSuccess?.({ mode: "signup", userId: user.id, email: trimmedEmail });
+        markAwaitingSignupWelcome();
+
+        const verified = Boolean(user && result.session && isEmailVerified(user));
+        if (!verified) {
+          if (result.session && hasSupabaseEnv && supabase) {
+            await signOut();
+          }
+          savePendingVerificationEmail(trimmedEmail);
+          setMessage({
+            tone: "success",
+            text: signupConfirmInboxMessage(trimmedEmail),
+          });
+          return;
         }
+
+        finishLinkedSession(user!.id);
+        setMessage({ tone: "success", text: SIGNUP_WELCOME_ACTIVE });
+        onSuccess?.({ mode: "signup", userId: user!.id, email: trimmedEmail });
         return;
       }
 
@@ -138,6 +147,8 @@ export function QuickOperatorLogin({
       saveRememberedEmail(trimmedEmail);
       if (signedInUser?.id) {
         await applyGooglePlayReviewAccess(signedInUser.id, trimmedEmail);
+        await applySharedTesterAccess(signedInUser.id, trimmedEmail);
+        finishLinkedSession(signedInUser.id);
       }
       setPassword("");
       setMessage({ tone: "success", text: "Signed in." });
@@ -249,14 +260,21 @@ export function QuickOperatorLogin({
         ) : null}
         <label className="quick-login__field">
           <span>Password</span>
-          <input
-            type="password"
-            autoComplete={mode === "signup" ? "new-password" : "current-password"}
-            value={password}
-            disabled={busy}
-            placeholder="••••••••••"
-            onChange={(event) => setPassword(event.target.value)}
-          />
+          <div className="password-reveal">
+            <input
+              type={showPassword ? "text" : "password"}
+              autoComplete={mode === "signup" ? "new-password" : "current-password"}
+              value={password}
+              disabled={busy}
+              placeholder="••••••••••"
+              onChange={(event) => setPassword(event.target.value)}
+            />
+            <PasswordRevealToggle
+              revealed={showPassword}
+              disabled={busy}
+              onToggle={() => setShowPassword((v) => !v)}
+            />
+          </div>
           {passwordHint ? <span className="quick-login__hint">{passwordHint}</span> : null}
         </label>
       </div>
@@ -264,6 +282,13 @@ export function QuickOperatorLogin({
       <button type="button" className="quick-login__submit" disabled={busy} onClick={() => void handleSubmit()}>
         {busy ? "Working…" : mode === "signup" ? "Create account" : "Sign in"}
       </button>
+      <GoogleAuthOption disabled={busy} onError={(text) => setMessage({ tone: "error", text })} />
+      {mode === "signup" ? (
+        <p className="quick-login__hint">
+          After you confirm email, you must verify identity and add a valid debit or credit card. One person, one
+          account.
+        </p>
+      ) : null}
     </section>
   );
 }

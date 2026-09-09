@@ -27,25 +27,32 @@ import {
   savePendingVerificationEmail,
 } from "../lib/emailVerification";
 import { loadRememberedEmail, saveRememberedEmail } from "../lib/authRemember";
+import { AUTH_USER_FRIENDLY_ERROR, consumeAuthRedirectError, describeAuthError } from "../lib/authErrors";
 import {
   buildOracleSupremeDailyReport,
   buildSyntheticSentinels,
 } from "../data/syntheticWatchers";
 import { recordTrustedPlanGrant, enforceStoredPlan } from "../lib/securityBot";
 import { applyGooglePlayReviewAccess } from "../lib/googlePlayReviewAccess";
+import { applySharedTesterAccess } from "../lib/testerAccess";
+import { attachPendingInvite, syncInviteRewardForUser } from "../lib/inviteEarn";
 import {
+  clearOwnerAccess,
   hasStoredOwnerGrant,
+  OWNER_ACCESS_CHANGED,
   refreshOwnerAccess,
   unlockOwnerAccess,
 } from "../lib/ownerAccess";
 import { ProTrialBanner } from "../components/ProTrialBanner";
 import { ProDemoButton } from "../components/ProDemoButton";
+import { InviteEarnButton } from "../components/InviteEarnButton";
 import { ShouldIBuyPanel } from "../components/ShouldIBuyPanel";
 import { TopMoversPanel } from "../components/TopMoversPanel";
 import { SentinelAlertsHub } from "../components/SentinelAlertsHub";
 import { WalletPerformanceDashboard } from "../components/WalletPerformanceDashboard";
 import { OracleAdminControlCenter } from "../components/OracleAdminControlCenter";
 import { UIModeToggle } from "../components/UIModeToggle";
+import { HeraListenSettings } from "../components/HeraListenSettings";
 import { notifySynexusPlanChanged, SYNEXUS_PLAN_CHANGED } from "../hooks/useSynexusPlan";
 import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
 import { useBiometricLogin } from "../hooks/useBiometricLogin";
@@ -84,6 +91,13 @@ import {
 } from "../lib/androidSubscription";
 import { SYNEXUS_PRO_PRICE_LABEL, SYNEXUS_PRO_SUBSCRIBE_LABEL } from "../config/proPricing";
 import { SYNEXUS_PRO_TRIAL_DAYS, SYNEXUS_PRO_TRIAL_LABEL } from "../config/proTrial";
+import {
+  SIGNUP_WELCOME_ACTIVE,
+  consumeAwaitingSignupWelcome,
+  hasSignupWelcomeParam,
+  markAwaitingSignupWelcome,
+  signupConfirmInboxMessage,
+} from "../lib/signupWelcome";
 import { getSentinelIdleMessage, getSentinelMessage } from "../lib/watcherVoice";
 import type { Token } from "../data/tokens";
 import { fetchMvpTokenFeed } from "../services/marketDataService";
@@ -128,7 +142,7 @@ type AuthMessage = {
 const PLAN_STORAGE_KEY = "synexus_paid_plan";
 const DEMO_SESSION_KEY = "synexus_demo_session";
 const LOCAL_REPORTS_KEY = "synexus_pending_reports";
-const USER_FRIENDLY_ERROR = "Something went wrong. Please try again.";
+const USER_FRIENDLY_ERROR = AUTH_USER_FRIENDLY_ERROR;
 
 function normalizeStoredPlan(plan: string | null | undefined): AppPlan {
   if (plan === "PRO") return "PRO";
@@ -141,34 +155,6 @@ function formatPlanName(plan: AppPlan) {
   }
   if (plan === "PRO") return "SyNexusPro";
   return "Free";
-}
-
-function describeAuthError(err: unknown): string {
-  const msg = err instanceof Error ? err.message : String(err);
-  const lower = msg.toLowerCase();
-  if (lower.includes("invalid login credentials") || lower.includes("invalid_grant")) {
-    return "Wrong email or password.";
-  }
-  if (lower.includes("email not confirmed")) {
-    return "Confirm your email before signing in.";
-  }
-  if (lower.includes("too many requests") || lower.includes("rate")) {
-    return "Too many attempts. Wait a minute and try again.";
-  }
-  if (lower.includes("user already registered")) {
-    return "An account with this email already exists. Try signing in instead.";
-  }
-  if (
-    lower.includes("does not exist") ||
-    lower.includes("schema cache") ||
-    lower.includes("could not find the table") ||
-    lower.includes("pgrst205") ||
-    lower.includes("undefined_table") ||
-    lower.includes("42p01")
-  ) {
-    return USER_FRIENDLY_ERROR;
-  }
-  return USER_FRIENDLY_ERROR;
 }
 
 export function Pulse() {
@@ -194,16 +180,21 @@ export function Pulse() {
   const [plan, setPlan] = useState<AppPlan>(() =>
     normalizeStoredPlan(localStorage.getItem(PLAN_STORAGE_KEY)),
   );
+  const [ownerUnlocked, setOwnerUnlocked] = useState(() => hasStoredOwnerGrant());
   const [paidSignals, setPaidSignals] = useState<PaidSignal[]>([]);
   const [sentinelIdle, setSentinelIdle] = useState(getSentinelIdleMessage(Date.now()));
   const [authBusy, setAuthBusy] = useState(false);
   const [authLoadPhrase, setAuthLoadPhrase] = useState<"synexus" | "sentinel">("synexus");
   const appActive = useAppIsActive();
-  const [authMessage, setAuthMessage] = useState<AuthMessage>({
-    tone: "info",
-    text: hasSupabaseEnv
-      ? "Secure operator channel ready — link below to save your SyNexus data."
-      : "Demo mode active — link below for a local session.",
+  const [authMessage, setAuthMessage] = useState<AuthMessage>(() => {
+    const oauthError = consumeAuthRedirectError();
+    if (oauthError) return { tone: "error", text: oauthError };
+    return {
+      tone: "info",
+      text: hasSupabaseEnv
+        ? "Secure operator channel ready — link below to save your SyNexus data."
+        : "Demo mode active — link below for a local session.",
+    };
   });
   const [checkoutBusy, setCheckoutBusy] = useState(false);
   const [oracleSupremeReportStamp, setOracleSupremeReportStamp] = useState(() => Date.now());
@@ -244,8 +235,12 @@ export function Pulse() {
 
   useEffect(() => {
     void refreshOwnerAccess().then((active) => {
+      setOwnerUnlocked(active);
       if (active) setPlan("PRO");
     });
+    const syncOwner = () => setOwnerUnlocked(hasStoredOwnerGrant());
+    window.addEventListener(OWNER_ACCESS_CHANGED, syncOwner);
+    return () => window.removeEventListener(OWNER_ACCESS_CHANGED, syncOwner);
   }, []);
 
   useEffect(() => {
@@ -346,21 +341,24 @@ export function Pulse() {
 
       clearEmailVerificationPending();
       syncProTrialForUser(user.id);
+      void attachPendingInvite();
+      const inviteReward = await syncInviteRewardForUser();
 
       const playReviewPro = await applyGooglePlayReviewAccess(user.id, user.email);
+      const testerPro = await applySharedTesterAccess(user.id, user.email);
       const profile = await fetchProfile(user.id);
       if (profile?.titan_bot_name) {
         saveTitanBotName(profile.titan_bot_name);
       }
       setOperatorName(resolveOperatorDisplayName(profile, user.email));
       saveIntroOperatorName(resolveOperatorName(profile));
-      const hasPaidProfile = profile?.paid_plan === "PRO" || playReviewPro;
+      const hasPaidProfile = profile?.paid_plan === "PRO" || playReviewPro || testerPro || inviteReward;
       const trialActive = isProDemoActive();
       const rawPlan =
         hasPaidProfile || trialActive
           ? "PRO"
           : (profile?.paid_plan ?? localStorage.getItem(PLAN_STORAGE_KEY) ?? "FREE");
-      if (hasStoredOwnerGrant() || playReviewPro) {
+      if (hasStoredOwnerGrant() || playReviewPro || testerPro || inviteReward) {
         setPlan("PRO");
       } else {
         const normalizedPlan = enforceStoredPlan(rawPlan, hasPaidProfile);
@@ -449,10 +447,18 @@ export function Pulse() {
       if (event === "SIGNED_IN") {
         setPassword("");
         setRecoveryMode(false);
+        const showWelcome = hasSignupWelcomeParam() || consumeAwaitingSignupWelcome();
         window.history.replaceState(null, "", window.location.pathname);
-        const verifiedMessage = signedInUser.email
-          ? `Welcome back — ${signedInUser.email}.`
-          : "Synchronized with The SyNexus.";
+        const trialStarted = syncProTrialForUser(signedInUser.id);
+        if (trialStarted) {
+          setPlan("PRO");
+          notifySynexusPlanChanged();
+        }
+        const verifiedMessage = showWelcome
+          ? SIGNUP_WELCOME_ACTIVE
+          : signedInUser.email
+            ? `Welcome back — ${signedInUser.email}.`
+            : "Synchronized with The SyNexus.";
         setAuthMessage({
           tone: "success",
           text: verifiedMessage,
@@ -489,6 +495,20 @@ export function Pulse() {
     }, pollMs);
     return () => window.clearInterval(id);
   }, [appActive, plan]);
+
+  useEffect(() => {
+    if (!userId || userId.startsWith("demo-")) return;
+    const fromLink = hasSignupWelcomeParam();
+    const fromSignup = consumeAwaitingSignupWelcome();
+    if (!fromLink && !fromSignup) return;
+    const trialStarted = syncProTrialForUser(userId);
+    if (trialStarted) {
+      setPlan("PRO");
+      notifySynexusPlanChanged();
+    }
+    setAuthMessage({ tone: "success", text: SIGNUP_WELCOME_ACTIVE });
+    window.history.replaceState(null, "", window.location.pathname);
+  }, [userId]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -648,10 +668,11 @@ export function Pulse() {
         setUserId(null);
         setUserEmail(null);
         markEmailVerificationPending(signupEmail);
+        markAwaitingSignupWelcome();
         saveRememberedEmail(signupEmail);
         setAuthMessage({
           tone: "success",
-          text: `Check ${signupEmail} for a verification link. Operator Link stays locked until you confirm.`,
+          text: signupConfirmInboxMessage(signupEmail),
         });
         pendingAuthMethod.current = null;
         trackSiteEvent("sign_up", { path: "/pulse", meta: { pending_confirmation: true } });
@@ -668,31 +689,25 @@ export function Pulse() {
           /* profile row may already exist */
         }
       }
-      const message = "Welcome to The SyNexus. You are signed in.";
+      const message = SIGNUP_WELCOME_ACTIVE;
       if (result.session && signupUser) {
         const trialStarted = syncProTrialForUser(signupUser.id);
+        void attachPendingInvite();
+        void syncInviteRewardForUser();
         if (trialStarted) {
           setPlan("PRO");
           notifySynexusPlanChanged();
         }
         void loadData(signupUser);
         setAuthMessage({
-          tone: "info",
-          text: trialStarted
-            ? androidRequiresWebSubscription()
-              ? `${SYNEXUS_PRO_TRIAL_LABEL} started — subscribe at synexus.pro in your browser before trial ends.`
-              : `${SYNEXUS_PRO_TRIAL_LABEL} started — opening secure checkout…`
-            : androidRequiresWebSubscription()
-              ? "Account created — subscribe at synexus.pro when you're ready for Pro."
-              : "Account created — opening secure checkout…",
+          tone: "success",
+          text: message,
         });
         if (androidRequiresWebSubscription()) {
           await completeAuthWithBiometricOffer(result.session, signupEmail, message);
           setAuthMessage({
             tone: "success",
-            text: trialStarted
-              ? `${message} Your ${SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial is active. Subscribe at synexus.pro before it ends.`
-              : message,
+            text: message,
           });
           pendingAuthMethod.current = null;
           trackSiteEvent("sign_up", { path: "/pulse" });
@@ -707,9 +722,7 @@ export function Pulse() {
         await completeAuthWithBiometricOffer(result.session, signupEmail, message);
         setAuthMessage({
           tone: "success",
-          text: trialStarted
-            ? `${message} Your ${SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial is active. ${checkout.error}`
-            : `${message} ${checkout.error}`,
+          text: message,
         });
         pendingAuthMethod.current = null;
         trackSiteEvent("sign_up", { path: "/pulse" });
@@ -1000,8 +1013,16 @@ export function Pulse() {
   }
 
   async function handleSignOut() {
-    if (!userId) {
+    if (!userId && !hasStoredOwnerGrant()) {
       setAuthMessage({ tone: "error", text: "No active session to sign out." });
+      return;
+    }
+    if (hasStoredOwnerGrant()) {
+      clearOwnerAccess();
+      setPlan(normalizeStoredPlan(localStorage.getItem(PLAN_STORAGE_KEY)));
+    }
+    if (!userId) {
+      setAuthMessage({ tone: "success", text: "God mode closed on this device." });
       return;
     }
     const signingOutId = userId.startsWith("demo-") ? null : userId;
@@ -1126,6 +1147,8 @@ export function Pulse() {
             : `Sentinel grid, alerts, and operator tools — sign in via Login in the nav.`}
         </p>
       </section>
+
+      <HeraListenSettings />
 
       <ProTrialBanner />
 
@@ -1272,7 +1295,8 @@ export function Pulse() {
         onUpdatePassword={(next) => void handleUpdatePassword(next)}
         onResendVerification={() => void handleResendVerification()}
         onContinueToSignIn={handleContinueToSignIn}
-        ownerUnlocked={hasStoredOwnerGrant()}
+        onOauthError={(text) => setAuthMessage({ tone: "error", text })}
+        ownerUnlocked={ownerUnlocked}
         initialMode={godModeEntry ? "command" : undefined}
         />
       </div>
@@ -1414,6 +1438,7 @@ export function Pulse() {
             ) : (
               <p className="pulse-synexus-pro-promo__active">SyNexusPro is active on your account.</p>
             )}
+            <InviteEarnButton className="pulse-demo-button invite-earn-btn" />
           </div>
           <p className="pulse-synexus-pro-promo__disclaimer">
             Cancel anytime. No financial advice. Trade at your own risk.

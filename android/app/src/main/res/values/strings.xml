@@ -4,4 +4,6 @@
     <string name="title_activity_main">SyNexus</string>
     <string name="package_name">com.synexus.app</string>
     <string name="custom_url_scheme">com.synexus.app</string>
+    <string name="hera_mic_permission_title">Microphone</string>
+    <string name="hera_mic_permission_rationale">SyNexus uses the microphone only while the app is open, to hear the wake word “Titan” on this device. After “Titan,” Hera listens to your question. Audio for the wake word is not uploaded to SyNexus. Background listening is off.</string>
 </resources>

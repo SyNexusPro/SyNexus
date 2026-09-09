@@ -9,9 +9,8 @@ import { CircuitBoardBackdrop } from "../components/CircuitBoardBackdrop";
 import { SynCoinLaunchBanner } from "../components/SynCoinLaunchBanner";
 import { BeginnerQuickStart } from "../components/BeginnerQuickStart";
 import { SentinelAlertsHub } from "../components/SentinelAlertsHub";
-import { HomeEducationalHub } from "../components/HomeEducationalHub";
 import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
-import { useOpenTitanChat } from "../hooks/useOpenTitanChat";
+import { enableHeraWakeWordFromUi } from "../lib/hera/wakeWord";
 import { useAppIsActive } from "../hooks/useAppIsActive";
 import { useOracleMarketFeed } from "../lib/useOracleMarketFeed";
 import { isNativeAndroid } from "../lib/bootExperience";
@@ -36,7 +35,6 @@ function FeatureIcon({ children }: { children: ReactNode }) {
 
 export function HomeFeed() {
   const { isSimple } = useSynexusUIMode();
-  const openTitanChat = useOpenTitanChat();
   const appActive = useAppIsActive();
   const nativeAndroid = isNativeAndroid();
   const [searchParams] = useSearchParams();
@@ -132,8 +130,8 @@ export function HomeFeed() {
     {
       id: "ai",
       title: "AI Assistant",
-      body: "Your personal AI for anything.",
-      onClick: openTitanChat,
+      body: "Say “Hera” to talk to her.",
+      onClick: enableHeraWakeWordFromUi,
       icon: (
         <FeatureIcon>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
@@ -174,20 +172,6 @@ export function HomeFeed() {
       ),
     },
     {
-      id: "business",
-      title: "Business Tools",
-      body: "Analyze, optimize & grow your business.",
-      to: "/business",
-      icon: (
-        <FeatureIcon>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-            <rect x="4" y="8" width="16" height="11" rx="1.5" />
-            <path d="M9 8V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />
-          </svg>
-        </FeatureIcon>
-      ),
-    },
-    {
       id: "automations",
       title: "Automations",
       body: "Build AI workflows that work for you.",
@@ -203,9 +187,9 @@ export function HomeFeed() {
     },
     {
       id: "learning",
-      title: "Learning Hub",
-      body: "Learn, upskill & grow with AI tutors.",
-      to: "/learn",
+      title: "Journal",
+      body: "Guides for Solana research and scam defense.",
+      to: "/blog",
       icon: (
         <FeatureIcon>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
@@ -236,7 +220,7 @@ export function HomeFeed() {
       <CircuitBoardBackdrop alive={!nativeAndroid} />
 
       <section className="home-command" aria-label="SyNexus home">
-        <div className="home-command__brand">
+        <div className="home-command__brand" data-tour="welcome-brand">
           <img
             className="home-command__mark"
             src="/synexus-brand-mark.png"
@@ -268,6 +252,7 @@ export function HomeFeed() {
                   type="button"
                   className="home-feature-card"
                   role="listitem"
+                  data-tour={card.id === "ai" ? "home-feature-hera" : undefined}
                   onClick={card.onClick}
                 >
                   {inner}
@@ -312,10 +297,10 @@ export function HomeFeed() {
                 <h2>Wallet dashboard</h2>
                 <p>See wins, losses, and habits — your trading stats in one place.</p>
               </Link>
-              <button type="button" className="simple-launch-links__card" onClick={openTitanChat}>
+              <button type="button" className="simple-launch-links__card" onClick={enableHeraWakeWordFromUi}>
                 <p className="simple-launch-links__eyebrow">Bonus · Command</p>
-                <h2>Titan tools</h2>
-                <p>Ask questions and run Sentinels when you&apos;re ready to go deeper.</p>
+                <h2>Say Hera</h2>
+                <p>Turn on Listen, then say “Hera” — she opens and hears your question.</p>
               </button>
             </section>
 
@@ -332,8 +317,6 @@ export function HomeFeed() {
                 ))}
               </ul>
             </section>
-
-            <HomeEducationalHub />
           </>
         ) : (
           <>
@@ -421,8 +404,6 @@ export function HomeFeed() {
                 </section>
               </>
             )}
-
-            {nativeAndroid ? null : <HomeEducationalHub />}
           </>
         )}
 

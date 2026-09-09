@@ -4,6 +4,7 @@ import {
   normalizeAffiliateHandle,
   saveAffiliateHandle,
 } from "../config/ecosystem";
+import { saveInviteCode } from "../lib/inviteEarn";
 
 /** /ref/:handle → save handle and land on home (SyNexus affiliate preview links). */
 export function AffiliateReferralRedirect() {
@@ -14,6 +15,9 @@ export function AffiliateReferralRedirect() {
     const normalized = normalizeAffiliateHandle(handle);
     if (normalized && normalized !== "your-handle") {
       saveAffiliateHandle(normalized);
+      if (/^sn[a-z0-9]{6}$/i.test(normalized)) {
+        saveInviteCode(normalized);
+      }
     }
     navigate("/", { replace: true });
   }, [handle, navigate]);

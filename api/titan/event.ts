@@ -92,6 +92,9 @@ export async function handleTitanEvent(
           securityThreat: Boolean(metadata.securityThreat),
           exploitDetected: Boolean(metadata.exploitDetected),
           exchangeHack: Boolean(metadata.exchangeHack),
+          discoveryScore: Number(metadata.discoveryScore) || undefined,
+          riskScore: Number(metadata.riskScore) || undefined,
+          momentumScore: Number(metadata.momentumScore) || undefined,
         });
 
   const { data: event, error } = await admin

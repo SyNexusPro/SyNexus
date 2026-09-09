@@ -2,6 +2,7 @@ import type { Session, User } from "@supabase/supabase-js";
 import { authRedirectUrl, supabase } from "./supabaseClient";
 import { validateSignupPassword } from "./authCredentials";
 import { guardAuthAttempt } from "./securityBot";
+import { SIGNUP_CONFIRM_REDIRECT } from "./signupWelcome";
 
 export { validateSignupPassword };
 
@@ -94,7 +95,7 @@ export async function signUpWithEmail(
     email,
     password,
     options: {
-      emailRedirectTo: authRedirectUrl("/pulse"),
+      emailRedirectTo: authRedirectUrl(SIGNUP_CONFIRM_REDIRECT),
       ...(normalizedUsername ? { data: { username: normalizedUsername } } : {}),
     },
   });
@@ -112,7 +113,7 @@ export async function resendSignupVerificationEmail(email: string) {
     type: "signup",
     email: email.trim(),
     options: {
-      emailRedirectTo: authRedirectUrl("/pulse"),
+      emailRedirectTo: authRedirectUrl(SIGNUP_CONFIRM_REDIRECT),
     },
   });
   if (error) throwIfStructuralDbFailure(error);
@@ -148,6 +149,22 @@ export async function signInWithMagicLink(email: string) {
     options: {
       emailRedirectTo: authRedirectUrl("/pulse"),
       shouldCreateUser: false,
+    },
+  });
+  if (error) throwIfStructuralDbFailure(error);
+  return data;
+}
+
+export async function signInWithOAuth(provider: "google") {
+  if (!supabase) throw new Error("Supabase env vars are missing.");
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider,
+    options: {
+      redirectTo: authRedirectUrl("/pulse"),
+      queryParams: {
+        access_type: "offline",
+        prompt: "select_account",
+      },
     },
   });
   if (error) throwIfStructuralDbFailure(error);

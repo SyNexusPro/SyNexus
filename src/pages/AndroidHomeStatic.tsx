@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useOpenTitanChat } from "../hooks/useOpenTitanChat";
+import { enableHeraWakeWordFromUi } from "../lib/hera/wakeWord";
 
 /**
  * Android-only home: no canvas, overlays, market polls, or heavy tool panels.
@@ -8,18 +8,16 @@ import { useOpenTitanChat } from "../hooks/useOpenTitanChat";
 const LINKS: { id: string; title: string; body: string; to?: string; titan?: boolean }[] = [
   { id: "scan", title: "Scan", body: "Check a token before you buy.", to: "/pulse" },
   { id: "markets", title: "Markets", body: "Prices and movers.", to: "/markets" },
-  { id: "titan", title: "AI Assistant", body: "Ask Titan.", titan: true },
+  { id: "titan", title: "AI Assistant", body: "Say “Hera” to talk to her.", titan: true },
   { id: "security", title: "Cybersecurity", body: "Risk checks and alerts.", to: "/pulse" },
   { id: "news", title: "News", body: "Market headlines.", to: "/news" },
   { id: "hub", title: "Hub", body: "Tools and ecosystem.", to: "/hub" },
 ];
 
 export function AndroidHomeStatic() {
-  const openTitanChat = useOpenTitanChat();
-
   return (
     <div className="page page--android-static" aria-label="SyNexus home">
-      <header className="android-home__brand">
+      <header className="android-home__brand" data-tour="welcome-brand">
         <img
           className="android-home__mark"
           src="/synexus-brand-mark.png"
@@ -41,13 +39,19 @@ export function AndroidHomeStatic() {
               key={item.id}
               type="button"
               className="android-home__card"
-              onClick={openTitanChat}
+              data-tour="home-feature-hera"
+              onClick={enableHeraWakeWordFromUi}
             >
               <span className="android-home__card-title">{item.title}</span>
               <span className="android-home__card-body">{item.body}</span>
             </button>
           ) : (
-            <Link key={item.id} className="android-home__card" to={item.to ?? "/"}>
+            <Link
+              key={item.id}
+              className="android-home__card"
+              to={item.to ?? "/"}
+              data-tour={item.id === "scan" ? "android-scan-card" : undefined}
+            >
               <span className="android-home__card-title">{item.title}</span>
               <span className="android-home__card-body">{item.body}</span>
             </Link>

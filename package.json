@@ -61,6 +61,7 @@
     "birdeye:check": "node scripts/smoke-birdeye.mjs",
     "owner:generate": "node scripts/generate-owner-code.mjs",
     "play:provision-reviewer": "node scripts/provision-play-reviewer.mjs",
+    "tester:provision": "node scripts/provision-shared-tester.mjs",
     "vapid:generate": "node scripts/generate-vapid.mjs"
   },
   "dependencies": {

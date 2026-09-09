@@ -1,8 +1,9 @@
 import type { MoverTimeframe } from "./moverTimeframes";
 import { MOVER_TIMEFRAME_LABEL } from "./moverTimeframes";
-import type { SolanaMoversBoard, SolanaMoversResult, TokenMover } from "../services/marketDataService";
+import type { SolanaMoversBoard, SolanaMoversResult } from "../services/marketDataService";
 import { parseMoverTimeframeFromText } from "./moverTimeframes";
 import type { Token } from "../data/tokens";
+import { heraDataAsOfLine, heraRankReason } from "./hera/formatLiveStamp";
 
 function formatUsd(value: number | undefined): string {
   if (value == null || !Number.isFinite(value)) return "—";
@@ -14,7 +15,7 @@ function formatUsd(value: number | undefined): string {
 
 function formatPct(value: number): string {
   const sign = value >= 0 ? "+" : "";
-  return `${sign}${value.toFixed(2)}%`;
+  return `${sign}${value.toFixed(1)}%`;
 }
 
 function parseMoverCount(text: string): number {
@@ -22,17 +23,12 @@ function parseMoverCount(text: string): number {
   if (match?.[2]) return Math.min(10, Math.max(1, Number(match[2])));
   const reverse = text.match(/\b(\d{1,2})\s+(best|top|biggest|gainers?|losers?|movers?)\b/i);
   if (reverse?.[1]) return Math.min(10, Math.max(1, Number(reverse[1])));
-  return 5;
+  return 3;
 }
 
 function wantsLosers(text: string): boolean {
   const lower = text.toLowerCase();
   return /\b(loser|losers|dump|dumping|bleed|bleeding|down|falling|declin)\b/.test(lower);
-}
-
-function formatMoverLine(mover: TokenMover, index: number): string {
-  const liq = mover.liquidityUsd != null ? ` · liq ${formatUsd(mover.liquidityUsd)}` : "";
-  return `${index + 1}. ${mover.symbol} (${mover.name}) — ${formatPct(mover.changePct)} · ${formatUsd(mover.priceUsd)}${liq}`;
 }
 
 export function formatTopMoversAnswerFromResult(
@@ -48,34 +44,46 @@ export function formatTopMoversAnswerFromResult(
 export function formatTopMoversAnswer(
   text: string,
   board: SolanaMoversBoard,
-  operatorName: string,
+  _operatorName: string,
 ): string {
   const timeframe = parseMoverTimeframeFromText(text);
   const slice = board[timeframe];
   if (!slice) return "";
 
-  const count = parseMoverCount(text);
+  const count = Math.min(5, parseMoverCount(text));
   const losers = wantsLosers(text);
   const list = (losers ? slice.losers : slice.gainers).slice(0, count);
   const label = MOVER_TIMEFRAME_LABEL[timeframe];
-  const kind = losers ? "losers" : "gainers";
-  const sourceNote = slice.source === "live" ? "DexScreener + Birdeye" : "demo data";
+  const sourceNote = slice.source === "live" ? "live markets" : "demo data";
 
   if (!list.length) {
-    return `No clear ${kind} in the ${label} window right now, ${operatorName}. Liquidity filters may have trimmed thin pairs — try 24h or ask me to widen the scan.`;
+    return `I don't have a clean ${losers ? "losers" : "leaders"} list for ${label} right now. Live filters may have trimmed thin pairs — try 24h or ask me to widen the scan.\n\n${heraDataAsOfLine(slice.updatedAt, sourceNote)}`;
   }
 
-  const lines = list.map((m, i) => formatMoverLine(m, i));
-  const header = `Top ${list.length} Solana ${kind} — ${label} (${sourceNote}):`;
+  const lines = list.map((m, i) => {
+    const why = heraRankReason({
+      index: i,
+      changePct: m.changePct,
+      volumeUsd: undefined,
+      liquidityUsd: m.liquidityUsd,
+      losers,
+    });
+    const nameBit = m.name && m.name !== m.symbol ? ` ${m.name}` : "";
+    return `${i + 1}. $${m.symbol}${nameBit} (${formatPct(m.changePct)}) — ${why}`;
+  });
 
-  return `${header}\n${lines.join("\n")}\n\nPulse lane leaders — verify Aegis before you sign.`;
+  const opener = losers
+    ? `Here are the weakest prints on the ${label} board right now based on momentum and volume:`
+    : `Here are the top performing tokens right now based on momentum, volume, liquidity, and safety score (${label}):`;
+
+  return `${opener}\n\n${lines.join("\n")}\n\n${heraDataAsOfLine(slice.updatedAt, sourceNote)}`;
 }
 
 /** Instant movers from the in-memory live pool (no Dex/Birdeye round-trip). */
 export function formatLocalPoolMoversAnswer(
   text: string,
   tokens: Token[],
-  operatorName: string,
+  _operatorName: string,
 ): string | null {
   if (!tokens.length) return null;
 
@@ -85,13 +93,22 @@ export function formatLocalPoolMoversAnswer(
     losers ? a.change24hPct - b.change24hPct : b.change24hPct - a.change24hPct,
   );
   const list = sorted.slice(0, count);
-  const kind = losers ? "losers" : "gainers";
-  const lines = list.map(
-    (t, i) =>
-      `${i + 1}. ${t.symbol} (${t.name}) — ${formatPct(t.change24hPct)} · ${formatUsd(t.priceUsd)} · liq ${formatUsd(t.liquidityUsd)}`,
-  );
+  const lines = list.map((t, i) => {
+    const why = heraRankReason({
+      index: i,
+      changePct: t.change24hPct,
+      volumeUsd: t.volume24hUsd,
+      liquidityUsd: t.liquidityUsd,
+      losers,
+    });
+    return `${i + 1}. $${t.symbol}${t.name ? ` ${t.name}` : ""} (${formatPct(t.change24hPct)}) — ${why}`;
+  });
 
-  return `Top ${list.length} Solana ${kind} — live pool (instant), ${operatorName}:\n${lines.join("\n")}\n\nFull ${parseMoverTimeframeFromText(text)} board may still be syncing — this is your fastest read.`;
+  const opener = losers
+    ? `Here are the softest prints from the live pool right now:`
+    : `Here are the top performing tokens right now based on momentum, volume, liquidity, and safety score:`;
+
+  return `${opener}\n\n${lines.join("\n")}\n\n${heraDataAsOfLine(new Date(), "live pool")}`;
 }
 
 /** Compact brief for Titan LLM context — all timeframes. */
@@ -99,9 +116,11 @@ export function buildTitanMoversBrief(board: SolanaMoversBoard | null | undefine
   if (!board) return null;
 
   const sections: string[] = [];
+  let newest = 0;
   for (const tf of ["5m", "24h", "7d", "30d", "365d"] as MoverTimeframe[]) {
     const slice = board[tf];
     if (!slice?.gainers.length) continue;
+    newest = Math.max(newest, slice.updatedAt || 0);
     const top = slice.gainers
       .slice(0, 5)
       .map((m) => `${m.symbol}${formatPct(m.changePct)}`)
@@ -109,7 +128,9 @@ export function buildTitanMoversBrief(board: SolanaMoversBoard | null | undefine
     sections.push(`${MOVER_TIMEFRAME_LABEL[tf]} gainers: ${top} [${slice.source}]`);
   }
 
-  return sections.length ? sections.join("\n") : null;
+  if (!sections.length) return null;
+  if (newest) sections.unshift(heraDataAsOfLine(newest, "movers board"));
+  return sections.join("\n");
 }
 
 export function buildTitanMoversBriefForTimeframe(result: SolanaMoversResult): string {

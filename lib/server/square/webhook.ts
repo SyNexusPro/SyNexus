@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { logRevenue } from "../../treasury/treasuryCore.mjs";
 import { readSquareConfig, type SquareEnv } from "./config.js";
+import { applyCardPaymentObject } from "./cardVerify.js";
 
 type PaidPlan = "PRO";
 
@@ -202,6 +203,18 @@ export async function processSquareWebhookEvent(
       await logSquareInvoicePayment(event, object);
     } catch (treasuryError) {
       console.error("[treasury]", treasuryError);
+    }
+  }
+
+  if (
+    eventType === "payment.created" ||
+    eventType === "payment.updated" ||
+    eventType === "payment.completed"
+  ) {
+    try {
+      await applyCardPaymentObject(object, env);
+    } catch (inviteError) {
+      console.error("[invite-card]", inviteError);
     }
   }
 }

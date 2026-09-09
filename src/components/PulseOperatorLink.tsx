@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import type { BiometricSupport } from "../lib/biometricLogin";
 import { SYNEXUS_PRO_TRIAL_DAYS } from "../config/proTrial";
 import { useTitanBotName } from "../hooks/useTitanBotName";
+import { PasswordRevealToggle } from "./PasswordRevealToggle";
+import { GoogleAuthOption } from "./GoogleSignInButton";
 
 type AuthTone = "info" | "success" | "error";
 type SignInMethod = "magic" | "password";
@@ -39,6 +41,7 @@ type PulseOperatorLinkProps = {
   onUpdatePassword: (password: string) => void;
   onResendVerification: () => void;
   onContinueToSignIn: () => void;
+  onOauthError?: (message: string) => void;
   ownerUnlocked?: boolean;
   variant?: "default" | "oracle";
   initialMode?: "return" | "link" | "command";
@@ -95,6 +98,7 @@ export function PulseOperatorLink({
   onUpdatePassword,
   onResendVerification,
   onContinueToSignIn,
+  onOauthError,
   ownerUnlocked = false,
   variant = "default",
   initialMode,
@@ -107,6 +111,7 @@ export function PulseOperatorLink({
   const [showPassword, setShowPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
   const linked = Boolean(userId);
+  const sessionActive = linked || ownerUnlocked;
   const isDemo = userId?.startsWith("demo-") ?? false;
   const biometricLabel = biometricSupport?.label ?? "Biometrics";
   const canUseBiometric = Boolean(biometricSupport?.available && hasSupabaseEnv && !isDemo);
@@ -147,15 +152,11 @@ export function PulseOperatorLink({
                 placeholder="••••••••••"
                 onChange={(event) => onPasswordChange(event.target.value)}
               />
-              <button
-                type="button"
-                className="operator-link__password-toggle"
+              <PasswordRevealToggle
+                revealed={showPassword}
                 disabled={authBusy}
-                aria-pressed={showPassword}
-                onClick={() => setShowPassword((v) => !v)}
-              >
-                {showPassword ? "Hide" : "Show"}
-              </button>
+                onToggle={() => setShowPassword((v) => !v)}
+              />
             </div>
             {signupPasswordHint ? (
               <span className="operator-link__password-hint">{signupPasswordHint}</span>
@@ -163,14 +164,21 @@ export function PulseOperatorLink({
           </label>
           <label className="operator-link__field">
             <span>Confirm access key</span>
-            <input
-              type={showPassword ? "text" : "password"}
-              autoComplete="new-password"
-              value={confirmPassword}
-              disabled={authBusy}
-              placeholder="••••••••••"
-              onChange={(event) => setConfirmPassword(event.target.value)}
-            />
+            <div className="operator-link__password-wrap">
+              <input
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                value={confirmPassword}
+                disabled={authBusy}
+                placeholder="••••••••••"
+                onChange={(event) => setConfirmPassword(event.target.value)}
+              />
+              <PasswordRevealToggle
+                revealed={showPassword}
+                disabled={authBusy}
+                onToggle={() => setShowPassword((v) => !v)}
+              />
+            </div>
           </label>
         </div>
 
@@ -186,7 +194,7 @@ export function PulseOperatorLink({
     );
   }
 
-  if (emailVerificationPending && hasSupabaseEnv) {
+  if (emailVerificationPending && hasSupabaseEnv && !ownerUnlocked) {
     const maskedPending = pendingVerificationEmail ? maskEmail(pendingVerificationEmail) : "your inbox";
     return (
       <section className="operator-link operator-link--pending" aria-label="Verify your email">
@@ -194,8 +202,8 @@ export function PulseOperatorLink({
           <p className="operator-link__eyebrow">Security check</p>
           <h2 className="operator-link__title">Verify your email</h2>
           <p className="operator-link__lede">
-            We sent a confirmation link to <strong>{maskedPending}</strong>. Operator Link stays locked until
-            you verify — this keeps your watchlists and Pro status tied to a real inbox.
+            We sent a confirmation link to <strong>{maskedPending}</strong>. Open that email to activate
+            your account. After you confirm, your subscription is active.
           </p>
         </header>
 
@@ -228,20 +236,26 @@ export function PulseOperatorLink({
     );
   }
 
-  if (linked) {
+  if (sessionActive) {
     return (
       <section className="operator-link operator-link--active" aria-label="Operator link status">
         <div className="operator-link__scanline" aria-hidden="true" />
         <header className="operator-link__head">
-          <p className="operator-link__eyebrow">Operator link · active</p>
+          <p className="operator-link__eyebrow">
+            {ownerUnlocked ? "God mode · active" : "Operator link · active"}
+          </p>
           <div className="operator-link__profile">
             <div className="operator-link__orb" aria-hidden="true">
-              <span>{initials}</span>
+              <span>{ownerUnlocked && !linked ? "GM" : initials}</span>
               <i className="operator-link__orb-ring" />
             </div>
             <div className="operator-link__identity">
-              <h2 className="operator-link__name">{operatorName}</h2>
-              <p className="operator-link__email">{displayEmail}</p>
+              <h2 className="operator-link__name">
+                {ownerUnlocked && !linked ? "Owner" : operatorName}
+              </h2>
+              <p className="operator-link__email">
+                {ownerUnlocked && !linked ? "Full access on this device" : displayEmail}
+              </p>
             </div>
             <span className={`operator-link__plan operator-link__plan--${plan.toLowerCase()}`}>
               {ownerUnlocked ? "God mode · full access" : plan === "PRO" ? "SyNexusPro" : "Free tier"}
@@ -302,7 +316,7 @@ export function PulseOperatorLink({
         ) : null}
 
         <button type="button" className="operator-link__disconnect" disabled={authBusy} onClick={onSignOut}>
-          Disconnect link
+          {ownerUnlocked && !linked ? "Exit god mode" : "Disconnect link"}
         </button>
       </section>
     );
@@ -336,7 +350,7 @@ export function PulseOperatorLink({
           {variant === "oracle" ? (
             <>
               Sign up to enter {titanBotName} and start a{" "}
-              <strong>{SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial</strong> — card required at signup. Already
+              <strong>{SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial</strong> — card and identity required. Already
               linked? Switch to Return.
             </>
           ) : (
@@ -461,15 +475,11 @@ export function PulseOperatorLink({
                 placeholder="••••••••••"
                 onChange={(event) => onPasswordChange(event.target.value)}
               />
-              <button
-                type="button"
-                className="operator-link__password-toggle"
+              <PasswordRevealToggle
+                revealed={showPassword}
                 disabled={authBusy}
-                aria-pressed={showPassword}
-                onClick={() => setShowPassword((v) => !v)}
-              >
-                {showPassword ? "Hide" : "Show"}
-              </button>
+                onToggle={() => setShowPassword((v) => !v)}
+              />
             </div>
             {mode === "link" && signupPasswordHint ? (
               <span className="operator-link__password-hint">{signupPasswordHint}</span>
@@ -509,6 +519,9 @@ export function PulseOperatorLink({
       >
         {authBusy ? "Linking…" : submitLabel}
       </button>
+      {mode !== "command" ? (
+        <GoogleAuthOption disabled={authBusy} onError={onOauthError} />
+      ) : null}
 
       {mode === "command" ? (
         <p className="operator-link__footnote">

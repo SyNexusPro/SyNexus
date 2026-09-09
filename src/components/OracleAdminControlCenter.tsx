@@ -81,7 +81,7 @@ export function OracleAdminControlCenter({
       aria-labelledby="oracle-admin-title"
     >
       <div className="oracle-admin__dock">
-        <SynexusSymbolMark className="oracle-admin__dock-logo oracle-admin__dock-logo--pulse" size="chat" />
+        <SynexusSymbolMark className="oracle-admin__dock-logo" size="chat" />
         <div className="oracle-admin__dock-copy">
           <p className="oracle-admin__dock-title" id="oracle-admin-title">
             {loggedIn ? titanBotName : titanBotName}

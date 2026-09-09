@@ -108,12 +108,17 @@ export const SECURITY_POINTS = [
 
 export const PRIVACY_HIGHLIGHTS = [
   "We collect account email and usage logs to operate Pulse, Pro, and Operator Link.",
+  "If you enable Listen, the microphone is used on-device to hear the wake word “Hera” (or “Titan”) while SyNexus is open. Wake-word audio is not uploaded to SyNexus. Background listening is off.",
   "Payment metadata comes from our subscription platform; we do not store full card numbers.",
   "Some preferences and chat history may stay on your device via local storage.",
   "We do not sell personal information. See the full Privacy Policy for retention and your rights.",
 ] as const;
 
 export const FAQ_ITEMS = [
+  {
+    q: "How do I talk to Hera / Titan?",
+    a: "Turn on Listen in the bottom bar once. After that, Listen leaves the nav and lives under Hera Listen on Pulse (Account). While SyNexus is open, say “Hera.” She comes on screen and answers out loud. “Titan” still works. The wake word stays on this device. Background listening is off.",
+  },
   {
     q: "What is the token scan?",
     a: "Paste any Solana mint or symbol and SyNexus returns Avoid, Watch, or OK in plain English — plus risk score, whale activity, liquidity, and rug-pull flags. It is a research shortcut, not a buy order.",
@@ -156,7 +161,7 @@ export const FAQ_ITEMS = [
   },
   {
     q: "Where is the SYN token?",
-    a: "SYN is live on Solana — find the mint from the home feed banner or About page. Always verify the mint address in-app before trading. Utility roadmap is on the About page.",
+    a: "SYN is live on pump.fun — buy it from the Hub. Always verify the mint address in-app before trading. Utility roadmap is on the About page.",
   },
   {
     q: "Where is the SYN token roadmap?",
@@ -184,7 +189,7 @@ export const FAQ_ITEMS = [
   },
   {
     q: "Where can I learn Solana wallet safety?",
-    a: "See the SyNexus Journal: Solana Wallet Security Basics and Phantom Wallet Safety Checklist at /blog. Our homepage also links education articles on scams, verification, and memecoin risk.",
+    a: "See the SyNexus Journal: Solana Wallet Security Basics and Phantom Wallet Safety Checklist at /blog.",
   },
   {
     q: "Does SyNexus publish market analysis?",
@@ -226,7 +231,7 @@ export const SYN_COIN_ROADMAP = [
     items: [
       "Expanded Sentinel data partnerships and whale tracking depth",
       "Governance placeholders as the community matures",
-      "Cross-ecosystem affiliate and content hub payouts",
+      "Cross-ecosystem affiliate payouts",
     ],
   },
 ] as const;

@@ -4,6 +4,7 @@ import { AppShell } from "./components/AppShell";
 import { GoogleAnalytics } from "./components/GoogleAnalytics";
 import { NativePerformanceInit } from "./components/NativePerformanceInit";
 import { SiteAnalyticsListener } from "./components/SiteAnalyticsListener";
+import { TRADING_BUILD_ENABLED } from "./config/trading";
 import { isNativeAndroid } from "./lib/bootExperience";
 import { lazyWithRetry } from "./lib/lazyWithRetry";
 
@@ -55,14 +56,8 @@ const Markets = lazy(() => import("./pages/Markets").then((m) => ({ default: m.M
 const NewsIntelligence = lazy(() =>
   import("./pages/NewsIntelligence").then((m) => ({ default: m.NewsIntelligence })),
 );
-const BusinessTools = lazy(() =>
-  import("./pages/BusinessTools").then((m) => ({ default: m.BusinessTools })),
-);
 const Automations = lazy(() =>
   import("./pages/Automations").then((m) => ({ default: m.Automations })),
-);
-const LearningHub = lazy(() =>
-  import("./pages/LearningHub").then((m) => ({ default: m.LearningHub })),
 );
 const Watchlist = lazy(() => import("./pages/Watchlist").then((m) => ({ default: m.Watchlist })));
 const SiteAnalytics = lazy(() =>
@@ -76,6 +71,10 @@ const RefundPolicy = lazy(() =>
 const WalletComingSoon = lazy(() =>
   import("./pages/WalletComingSoon").then((m) => ({ default: m.WalletComingSoon })),
 );
+const InviteEarn = lazy(() => import("./pages/InviteEarn").then((m) => ({ default: m.InviteEarn })));
+const Trade = TRADING_BUILD_ENABLED
+  ? lazyWithRetry(() => import("./pages/Trade").then((m) => ({ default: m.Trade })), "Trade")
+  : null;
 const AffiliateReferralRedirect = lazy(() =>
   import("./pages/AffiliateReferralRedirect").then((m) => ({ default: m.AffiliateReferralRedirect })),
 );
@@ -107,6 +106,8 @@ export default function App() {
             <Route path="disclaimer" element={<Disclaimer />} />
             <Route path="pulse" element={<Pulse />} />
             <Route path="god" element={<GodMode />} />
+            <Route path="invite" element={<InviteEarn />} />
+            <Route path="invite/:code" element={<InviteEarn />} />
             <Route path="pricing" element={<Pricing />} />
             <Route path="refund-policy" element={<RefundPolicy />} />
             <Route path="terms" element={<Terms />} />
@@ -125,11 +126,12 @@ export default function App() {
             <Route path="blog/:slug" element={<BlogPostView />} />
             <Route path="markets" element={<Markets />} />
             <Route path="news" element={<NewsIntelligence />} />
-            <Route path="business" element={<BusinessTools />} />
+            <Route path="business" element={<Navigate to="/hub" replace />} />
             <Route path="automations" element={<Automations />} />
-            <Route path="learn" element={<LearningHub />} />
+            <Route path="learn" element={<Navigate to="/blog" replace />} />
             <Route path="watchlist" element={<Watchlist />} />
             <Route path="token/:tokenId" element={<TokenDetail />} />
+            {Trade ? <Route path="trade" element={<Trade />} /> : null}
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

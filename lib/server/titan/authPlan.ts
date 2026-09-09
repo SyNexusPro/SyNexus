@@ -77,11 +77,33 @@ export async function resolveTitanAuthPlan(
   try {
     const { data } = await admin
       .from("profiles")
-      .select("paid_plan, subscription_status")
+      .select("paid_plan, subscription_status, invite_reward_until")
       .eq("id", user.id)
       .maybeSingle();
-    const plan =
+
+    let plan: "FREE" | "PRO" =
       data?.paid_plan === "PRO" || data?.subscription_status === "active" ? "PRO" : "FREE";
+
+    const inviteUntil = data?.invite_reward_until
+      ? Date.parse(String(data.invite_reward_until))
+      : NaN;
+    if (Number.isFinite(inviteUntil) && Date.now() < inviteUntil) {
+      plan = "PRO";
+    }
+
+    // Shared tester login — honor metadata expiry (30-day window)
+    const email = (user.email || "").trim().toLowerCase();
+    const metaUntil = user.user_metadata?.tester_pro_until;
+    const untilMs =
+      typeof metaUntil === "string"
+        ? Date.parse(metaUntil)
+        : typeof metaUntil === "number"
+          ? metaUntil
+          : NaN;
+    if (email === "tester@synexus.pro") {
+      plan = Number.isFinite(untilMs) && Date.now() < untilMs ? "PRO" : "FREE";
+    }
+
     return {
       userId: user.id,
       email: user.email ?? null,

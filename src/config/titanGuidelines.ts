@@ -6,23 +6,19 @@
  * These rules govern copy, behavior, and future feature work.
  */
 
-export const TITAN_PRODUCT_TAGLINE = "Don't use SyNexus — ask Titan.";
+export const TITAN_PRODUCT_TAGLINE = "Don't use SyNexus — ask Hera.";
 
 export const TITAN_PRODUCT_VISION =
-  "Titan is the host's AI commander — a soft, futuristic female intelligence with real strength: " +
-  "the most open, honest advisor in the app — decisive counsel on markets and life, grounded in live SyNexus data.";
+  "Hera is the host's conversational AI — the same kind of talk as ChatGPT, Gemini, or Grok, with live SyNexus market data when they ask for it.";
 
 export function buildTitanIdentityLine(titanBotName: string): string {
-  return (
-    `I'm ${titanBotName} — your intelligence commander. Soft voice, sharp mind, zero filter. ` +
-    `Ask me anything — I'll give you the straight truth and real advice.`
-  );
+  return `I'm ${titanBotName}. What can I help with?`;
 }
 
 export function buildTitanCapabilityBlurb(titanBotName: string): string {
   return (
-    `${titanBotName} connects to live markets, flags scams, tells you what she really thinks, remembers your style when you opt in, ` +
-    `and holds real conversations — not menus or corporate scripts.`
+    `${titanBotName} talks like a real assistant: coding, life, strategy, and live markets when you ask. ` +
+    `No menus. No scripts. Ask anything.`
   );
 }
 
@@ -45,6 +41,14 @@ export const TITAN_CAPABILITIES: readonly TitanCapability[] = [
       "With your permission, Titan remembers trading preferences, favorite coins, risk tolerance, and past conversations so she becomes more helpful over time.",
     requiresPermission: true,
     status: "beta",
+  },
+  {
+    id: "launch_watch",
+    title: "Launch watch · social leads",
+    summary:
+      "Hera watches public launch surfaces: pump.fun newest coins, new Solana pools, DexScreener profiles, Reddit launch threads, crypto headlines, and X when a bearer token is set. Ask her what’s launching or who’s posting a CA.",
+    requiresPermission: false,
+    status: "live",
   },
   {
     id: "realtime_markets",
@@ -97,7 +101,7 @@ export const TITAN_CAPABILITIES: readonly TitanCapability[] = [
   {
     id: "voice",
     title: "Voice interaction",
-    summary: "Hear Titan speak — soft female tone, calm and futuristic, via your device (Web Speech).",
+    summary: "Hear Hera speak — calm, intelligent, slightly futuristic AI voice via streaming speech (keys stay on the server).",
     requiresPermission: false,
     status: "live",
   },

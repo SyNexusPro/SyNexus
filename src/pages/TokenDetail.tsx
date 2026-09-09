@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { TokenLogo } from "../components/TokenLogo";
 import { ScanHealthPanel } from "../components/ScanHealthPanel";
 import { ShouldIBuyVerdict } from "../components/ShouldIBuyPanel";
+import { TradeIntelligenceScorecard } from "../components/TradeIntelligenceScorecard";
 import { TradeIntelBuyLink } from "../components/TradeIntelBuyLink";
 import {
   TitanMarketChart,
@@ -15,6 +16,8 @@ import { trackSiteEvent } from "../lib/siteAnalytics";
 import { dexScreenerTokenUrl, jupiterBuyWithSolUrl, jupiterSellForSolUrl } from "../lib/solanaTradeLinks";
 import { getTradingFeeBps } from "../lib/tradingFees";
 import { useSynexusPlan } from "../hooks/useSynexusPlan";
+import { isTradingEnabled, tradePath } from "../config/trading";
+import { SYN_MINT, SYN_PUMPFUN_URL } from "../config/synToken";
 import type { Token } from "../data/tokens";
 import {
   fetchTokenDetailById,
@@ -188,9 +191,10 @@ export function TokenDetail() {
     );
   }
 
-  const dexscreenerUrl = dexScreenerTokenUrl(token.mintAddress, token.symbol);
-  const buySwapUrl = jupiterBuyWithSolUrl(token.mintAddress, swapOpts) ?? dexscreenerUrl;
-  const sellSwapUrl = jupiterSellForSolUrl(token.mintAddress, swapOpts) ?? dexscreenerUrl;
+  const isSynMint = token.mintAddress === SYN_MINT;
+  const chartUrl = isSynMint ? SYN_PUMPFUN_URL : dexScreenerTokenUrl(token.mintAddress, token.symbol);
+  const buySwapUrl = isSynMint ? SYN_PUMPFUN_URL : jupiterBuyWithSolUrl(token.mintAddress, swapOpts) ?? chartUrl;
+  const sellSwapUrl = isSynMint ? SYN_PUMPFUN_URL : jupiterSellForSolUrl(token.mintAddress, swapOpts) ?? chartUrl;
   const explorerUrl = token.mintAddress
     ? `https://solscan.io/token/${token.mintAddress}`
     : "https://solscan.io";
@@ -215,7 +219,14 @@ export function TokenDetail() {
               {token.name} ({token.symbol})
             </h1>
             <p className="detail-header__contract">
-              Contract: <span>{token.mintAddress ?? "Not available"}</span>
+              Contract:{" "}
+              {isSynMint ? (
+                <a href={SYN_PUMPFUN_URL} target="_blank" rel="noopener noreferrer">
+                  {token.mintAddress}
+                </a>
+              ) : (
+                <span>{token.mintAddress ?? "Not available"}</span>
+              )}
             </p>
           </div>
         </div>
@@ -287,29 +298,41 @@ export function TokenDetail() {
       </section>
 
       <ScanHealthPanel token={token} />
+      <TradeIntelligenceScorecard token={token} />
       <ShouldIBuyVerdict token={token} />
 
       <section className="detail-trade-panel">
         <div>
           <h2>Trade actions</h2>
           <p>
-            Jupiter opens with SOL swaps prefilled — connect your wallet and confirm. Charts stay on DexScreener.
+            {isTradingEnabled()
+              ? isSynMint
+                ? "Swap in SyNexus uses Jupiter routes plus Titan safety. $SYN still trades on pump.fun until it graduates."
+                : "Swap in SyNexus uses Jupiter routes plus Titan safety. External Jupiter and DexScreener stay available."
+              : isSynMint
+                ? "Buy and sell $SYN on pump.fun — connect your wallet there."
+                : "Jupiter opens with SOL swaps prefilled — connect your wallet and confirm. Charts stay on DexScreener."}
           </p>
         </div>
         <div className="detail-trade-panel__actions">
+          {isTradingEnabled() && token.mintAddress ? (
+            <Link to={tradePath({ mint: token.mintAddress, side: "buy" })} className="detail-trade-panel__buy">
+              Swap in SyNexus
+            </Link>
+          ) : null}
           <TradeIntelBuyLink
             token={token}
             href={buySwapUrl}
             className="detail-trade-panel__buy"
             side="buy"
           >
-            Buy {token.symbol}
+            {isSynMint ? `Buy ${token.symbol} on pump.fun` : `Buy ${token.symbol}`}
           </TradeIntelBuyLink>
           <TradeIntelBuyLink token={token} href={sellSwapUrl} side="sell">
-            Sell {token.symbol}
+            {isSynMint ? `Sell ${token.symbol} on pump.fun` : `Sell ${token.symbol}`}
           </TradeIntelBuyLink>
-          <a href={dexscreenerUrl} target="_blank" rel="noopener noreferrer" className="detail-trade-panel__charts">
-            Charts
+          <a href={chartUrl} target="_blank" rel="noopener noreferrer" className="detail-trade-panel__charts">
+            {isSynMint ? "pump.fun" : "Charts"}
           </a>
         </div>
       </section>
@@ -359,8 +382,8 @@ export function TokenDetail() {
 
       <section className="detail-links">
         <h2>External links</h2>
-        <a href={dexscreenerUrl} target="_blank" rel="noopener noreferrer">
-          Open DexScreener
+        <a href={chartUrl} target="_blank" rel="noopener noreferrer">
+          {isSynMint ? "Open pump.fun" : "Open DexScreener"}
         </a>
         <a href={explorerUrl} target="_blank" rel="noopener noreferrer">
           Open Solana explorer

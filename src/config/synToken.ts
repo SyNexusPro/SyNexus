@@ -1,15 +1,16 @@
 /** SyN / SYN community token — Solana mint + trade links. */
 
+/** Live SyNexus SyN mint (pump.fun bonding curve). The 8A85… address is not on mainnet. */
 export const SYN_MINT =
   (import.meta.env.VITE_SYN_MINT as string | undefined)?.trim() ||
-  "8A85yBddPdbESwoRBZVnWJiAqRaK1Qyfa1txNPjiNray";
+  "9naVtLAGKWYuEcGehe1BZ3DpiSLHjSNsaeFr2JPHpump";
 
 export const SYN_SYMBOL = "SYN";
 
 export const SYN_TOKEN_ID = "syn-sol";
 
-/** DexScreener pair / token page for SYN. */
-export const SYN_DEXSCREENER_URL = `https://dexscreener.com/solana/${SYN_MINT}`;
+/** pump.fun coin page for the live SyN mint. */
+export const SYN_PUMPFUN_URL = `https://pump.fun/coin/${SYN_MINT}`;
 
 /** Jupiter swap URL (buy SYN with SOL). */
 export const SYN_JUPITER_URL = `https://jup.ag/swap/SOL-${SYN_MINT}`;

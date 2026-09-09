@@ -1,9 +1,27 @@
 {
   "functions": {
-    "api/checkout.ts": {
+    "api/invite.ts": {
       "includeFiles": "lib/server/**"
     },
     "api/analytics.ts": {
+      "includeFiles": "lib/server/**"
+    },
+    "api/hera/tts.ts": {
+      "includeFiles": "lib/server/**"
+    },
+    "api/hera/stt.ts": {
+      "includeFiles": "lib/server/**"
+    },
+    "api/hera/voice-stream.ts": {
+      "includeFiles": "lib/server/**"
+    },
+    "api/hera/realtime-session.ts": {
+      "includeFiles": "{lib/server/**,src/lib/hera/**}"
+    },
+    "api/hera/session.ts": {
+      "includeFiles": "{lib/server/**,src/lib/hera/**}"
+    },
+    "api/hera/launch-watch.ts": {
       "includeFiles": "lib/server/**"
     },
     "api/titan/chat.ts": {
@@ -16,6 +34,12 @@
       "includeFiles": "lib/server/**"
     },
     "api/cron/titan-daily.ts": {
+      "includeFiles": "lib/server/**"
+    },
+    "api/cron/titan-discovery.ts": {
+      "includeFiles": "lib/server/**"
+    },
+    "api/cron/titan-launch-watch.ts": {
       "includeFiles": "lib/server/**"
     },
     "api/whale/webhook.ts": {
@@ -48,6 +72,14 @@
     {
       "path": "/api/cron/titan-daily",
       "schedule": "0 13 * * *"
+    },
+    {
+      "path": "/api/cron/titan-discovery",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/titan-launch-watch",
+      "schedule": "*/2 * * * *"
     }
   ],
   "rewrites": [

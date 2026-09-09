@@ -1,5 +1,5 @@
-/** Default name for the user's synthetic commander bot (formerly Oracle Supreme). */
-export const DEFAULT_TITAN_BOT_NAME = "Titan";
+/** Default name for the user's synthetic commander bot. */
+export const DEFAULT_TITAN_BOT_NAME = "Hera";
 
 export { TITAN_PRODUCT_TAGLINE, TITAN_PRODUCT_VISION } from "./titanGuidelines";
 

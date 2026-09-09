@@ -3,6 +3,7 @@ import { notifySynexusPlanChanged } from "../hooks/useSynexusPlan";
 import { PLAN_STORAGE_KEY } from "./tradingFees";
 
 export const OWNER_GRANT_KEY = "synexus_owner_grant";
+export const OWNER_ACCESS_CHANGED = "synexus-owner-access-changed";
 
 type OwnerGrantRecord = {
   grant: string;
@@ -22,6 +23,11 @@ function writeStoredGrant(record: OwnerGrantRecord | null) {
   try {
     if (!record) localStorage.removeItem(OWNER_GRANT_KEY);
     else localStorage.setItem(OWNER_GRANT_KEY, JSON.stringify(record));
+  } catch {
+    /* ignore */
+  }
+  try {
+    window.dispatchEvent(new Event(OWNER_ACCESS_CHANGED));
   } catch {
     /* ignore */
   }
@@ -61,8 +67,11 @@ export async function unlockOwnerAccess(
       error?: string;
     };
 
+    if (response.status === 503) {
+      return { ok: false, message: data.error ?? "God mode is not configured on this local server. Restart npm run dev." };
+    }
     if (!response.ok || !data.ok || !data.grant || !data.expiresAt) {
-      return { ok: false, message: data.error ?? "Invalid command ID or key." };
+      return { ok: false, message: data.error ?? "Invalid god mode ID or key." };
     }
 
     writeStoredGrant({ grant: data.grant, expiresAt: data.expiresAt });

@@ -33,10 +33,11 @@ const TRIAL_LINE = TRIAL_OFFER_SHORT;
 const SYN_MINT =
   process.env.SYN_MINT?.trim() ||
   process.env.VITE_SYN_MINT?.trim() ||
-  "8A85yBddPdbESwoRBZVnWJiAqRaK1Qyfa1txNPjiNray";
+  "9naVtLAGKWYuEcGehe1BZ3DpiSLHjSNsaeFr2JPHpump";
 const SYN_DEXSCREENER_URL =
   process.env.SYN_DEXSCREENER_URL?.trim() ||
-  `https://dexscreener.com/solana/${SYN_MINT}`;
+  process.env.SYN_LIVE_CHART_URL?.trim() ||
+  `https://www.geckoterminal.com/solana/tokens/${SYN_MINT}`;
 const SYN_COIN_LINE = `🪙 $SyN is live on Solana → ${SYN_DEXSCREENER_URL}`;
 
 /** One-line hooks — rotate daily. Punchy, badass, female Sentinel voice. */

@@ -35,14 +35,7 @@ export function scrollTitanGateIntoView(): void {
   });
 }
 
-/** Scroll to inline auth panel on the home hero. */
-export function scrollHomeSignInIntoView(): void {
-  requestAnimationFrame(() => {
-    document.getElementById("home-auth-panel")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  });
-}
-
-/** Open the global Titan chat panel (AppShell OracleSupremePresence). */
+/** Open the global Titan / Hera chat panel (TitanSheet). */
 export function openTitanChat(): void {
   window.dispatchEvent(new Event(ORACLE_OPEN_CHAT_EVENT));
 }

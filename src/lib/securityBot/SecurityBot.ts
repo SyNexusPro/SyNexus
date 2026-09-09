@@ -25,6 +25,7 @@ const TRUSTED_PLAN_SOURCES = [
   "admin",
   "owner",
   "play_review",
+  "tester_30d",
 ];
 
 type PlanGrant = { plan: "PRO" | "FREE"; source: string; at: number };

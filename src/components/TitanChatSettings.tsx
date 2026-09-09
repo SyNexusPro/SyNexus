@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useHeraVersion } from "../hooks/useHeraVersion";
 import { TITAN_GUARDRAILS } from "../config/titanGuidelines";
 import {
   hasTitanMemoryConsent,
@@ -13,6 +14,7 @@ import {
   isTitanVoiceSupported,
   setTitanVoiceEnabled,
 } from "../lib/titanVoice";
+import { useHeraWakeWordSetting } from "../hooks/useHeraWakeWordSetting";
 
 type Props = {
   titanBotName: string;
@@ -21,13 +23,18 @@ type Props = {
 };
 
 export function TitanChatSettings({ titanBotName, voiceOnly = false }: Props) {
+  const { labeledName } = useHeraVersion(titanBotName);
   const [memoryOn, setMemoryOn] = useState(hasTitanMemoryConsent);
   const [feedbackOn, setFeedbackOn] = useState(hasTitanFeedbackConsent);
   const [voiceOn, setVoiceOn] = useState(hasTitanVoiceEnabled);
+  const { enabled: wakeOn, toggle: toggleWake } = useHeraWakeWordSetting();
   const voiceSupported = isTitanVoiceSupported();
 
   return (
     <div className="titan-chat-settings" aria-label={`${titanBotName} preferences`}>
+      <p className="titan-chat-settings__generation">
+        {labeledName}
+      </p>
       {!voiceOnly ? <p className="titan-chat-settings__disclaimer">{TITAN_GUARDRAILS.disclaimer}</p> : null}
       {voiceSupported ? (
         <label className="titan-chat-settings__toggle">
@@ -45,6 +52,14 @@ export function TitanChatSettings({ titanBotName, voiceOnly = false }: Props) {
           </span>
         </label>
       ) : null}
+      <label className="titan-chat-settings__toggle">
+        <input
+          type="checkbox"
+          checked={wakeOn}
+          onChange={() => toggleWake()}
+        />
+        <span>Listen for “Hera” — also under Hera Listen on Pulse</span>
+      </label>
       {!voiceOnly ? (
         <>
           <label className="titan-chat-settings__toggle">

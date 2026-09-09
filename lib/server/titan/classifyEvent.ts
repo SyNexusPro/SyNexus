@@ -8,15 +8,33 @@ export type MarketEventSignal = {
   exploitDetected?: boolean;
   exchangeHack?: boolean;
   whaleMovementUsd?: number;
+  discoveryScore?: number;
+  riskScore?: number;
+  momentumScore?: number;
 };
 
 /**
  * Severity gate so Titan does not spam Pro for noise (e.g. BTC ±0.4%).
  * Only high/critical should trigger instant premium push fanout.
+ * High-risk discoveries remain reportable (not suppressed).
  */
 export function classifyEvent(event: MarketEventSignal): TitanSeverity {
   if (event.exploitDetected || event.exchangeHack) {
     return "critical";
+  }
+
+  const discovery = event.discoveryScore ?? 0;
+  const risk = event.riskScore ?? 0;
+  const momentum = event.momentumScore ?? 0;
+
+  if (event.type === "LAUNCH_WATCH") {
+    return "normal";
+  }
+    if (risk >= 85 && momentum >= 70) return "critical";
+    if (discovery >= 70 || (risk >= 65 && discovery >= 55) || (discovery >= 60 && momentum >= 65)) {
+      return "high";
+    }
+    if (discovery >= 45 || momentum >= 55) return "normal";
   }
 
   if (event.securityThreat || Math.abs(event.priceChangePercent || 0) >= 15) {

@@ -50,4 +50,7 @@ export function recordTitanFeedback(rating: TitanFeedbackRating, topic: string):
   } catch {
     /* ignore */
   }
+  if (rating === "helpful") {
+    void import("./hera/growth").then((m) => m.recordHeraGrowth("helpful"));
+  }
 }

@@ -1,4 +1,7 @@
-import { isTopMoversQuestion, parseMoverTimeframeFromText, type MoverTimeframe } from "./moverTimeframes";
+import { isTopMoversQuestion, parseMoverTimeframeFromText } from "./moverTimeframes";
+import { publishHeraLiveMeta, type HeraLiveMeta } from "./hera/liveIntel";
+import { rememberHeraFocus, resolveHeraFocus } from "./hera/heraSessionFocus";
+import { recordHeraGrowth } from "./hera/growth";
 import { fetchSolanaTopMovers } from "../services/marketDataService";
 import { formatLocalPoolMoversAnswer, formatTopMoversAnswer, formatTopMoversAnswerFromResult } from "./titanMoversAnswer";
 import { softenTitanResponse } from "./titanGuardrails";
@@ -22,29 +25,48 @@ import { normalizeSynexusPlan, PLAN_STORAGE_KEY } from "./tradingFees";
 export type TitanStreamHandlers = {
   onDelta?: (text: string) => void;
   signal?: AbortSignal;
+  fastMode?: boolean;
+  /** Spoken Hera session — conversational, no markdown. */
+  spokenReply?: boolean;
 };
-
-const CRYPTO_INTENTS = new Set([
-  "trade_decision",
-  "comparison",
-  "token_lookup",
-  "strategy",
-  "explain",
-  "market_movers",
-]);
 
 const WHALE_ASK =
   /\b(whale|whales|large buy|big buy|leviathan alert|whale alert|who(?:'s| is) buying)\b/i;
 
-function turnsToHistory(turns: ConversationTurn[], cryptoFast: boolean): TitanChatHistoryMessage[] {
-  const limit = cryptoFast ? 4 : 8;
+function turnsToHistory(turns: ConversationTurn[]): TitanChatHistoryMessage[] {
   return turns
-    .slice(-limit)
+    .slice(-16)
     .map((turn) => ({
       role: turn.role === "user" ? ("user" as const) : ("assistant" as const),
-      content: turn.text.slice(0, cryptoFast ? 1200 : 2000),
+      content: turn.text.slice(0, 2500),
     }))
     .filter((turn) => turn.content.trim());
+}
+
+function normalizeForCompare(text: string): string {
+  return text.toLowerCase().replace(/\s+/g, " ").replace(/[^\p{L}\p{N} $%+.-]/gu, "").trim();
+}
+
+function tooSimilarToRecent(reply: string, turns: ConversationTurn[]): boolean {
+  const next = normalizeForCompare(reply);
+  if (next.length < 40) return false;
+  const recent = turns
+    .filter((t) => t.role === "oracle")
+    .slice(-3)
+    .map((t) => normalizeForCompare(t.text))
+    .filter((t) => t.length > 24);
+  for (const prior of recent) {
+    if (next === prior) return true;
+    if (next.slice(0, 72) === prior.slice(0, 72)) return true;
+    const aw = new Set(next.split(" ").filter((w) => w.length > 3));
+    const bw = new Set(prior.split(" ").filter((w) => w.length > 3));
+    if (aw.size < 6 || bw.size < 6) continue;
+    let inter = 0;
+    for (const w of aw) if (bw.has(w)) inter += 1;
+    const union = aw.size + bw.size - inter;
+    if (union > 0 && inter / union > 0.92) return true;
+  }
+  return false;
 }
 
 /** Pre-warm Titan + LLM connection when chat opens (cuts first-token latency). */
@@ -96,8 +118,18 @@ async function streamTitanChatApi(
         .trim();
       if (!line) continue;
       try {
-        const parsed = JSON.parse(line) as { delta?: string; error?: string };
+        const parsed = JSON.parse(line) as { delta?: string; error?: string; live?: HeraLiveMeta };
         if (parsed.error) throw new Error(parsed.error);
+        if (parsed.live && typeof parsed.live.capturedAt === "number") {
+          publishHeraLiveMeta(parsed.live);
+          if (parsed.live.symbol && parsed.live.mint) {
+            rememberHeraFocus({
+              symbol: parsed.live.symbol,
+              name: parsed.live.name || parsed.live.symbol,
+              mintAddress: parsed.live.mint,
+            });
+          }
+        }
         if (parsed.delta) {
           full += parsed.delta;
           handlers.onDelta?.(full);
@@ -112,7 +144,7 @@ async function streamTitanChatApi(
 }
 
 /**
- * Titan brain: instant crypto reads → streaming LLM for everything else.
+ * Titan brain: live ticker snapshots stay instant. Everything else thinks via the LLM.
  */
 export async function respondToTitanMessage(
   text: string,
@@ -121,9 +153,10 @@ export async function respondToTitanMessage(
   handlers: TitanStreamHandlers = {},
 ): Promise<string> {
   const trimmed = text.trim();
-  if (!trimmed) return "What's on your mind? I'm ready.";
+  if (!trimmed) return "What can I help with?";
+  recordHeraGrowth("reply");
 
-  const instant = tryInstantCryptoAnswer(trimmed, ctx);
+  const instant = handlers.spokenReply ? null : tryInstantCryptoAnswer(trimmed, ctx);
   if (instant) return instant;
 
   let plan: "FREE" | "PRO" = "FREE";
@@ -138,24 +171,7 @@ export async function respondToTitanMessage(
     if (brief) return brief;
   }
 
-  if (isTopMoversQuestion(trimmed)) {
-    const timeframe = parseMoverTimeframeFromText(trimmed);
-    const cached = ctx.moversBoard?.[timeframe];
-    if (cached?.gainers.length) {
-      const moversAnswer = formatTopMoversAnswer(trimmed, ctx.moversBoard!, ctx.operatorName);
-      if (moversAnswer) return moversAnswer;
-    }
-    const local = formatLocalPoolMoversAnswer(trimmed, ctx.tokens, ctx.operatorName);
-    if (local) return local;
-
-    const needsHistorical = (["7d", "30d", "365d"] as MoverTimeframe[]).includes(timeframe);
-    if (needsHistorical) {
-      const slice = await fetchSolanaTopMovers(timeframe);
-      const moversAnswer = formatTopMoversAnswerFromResult(trimmed, slice, ctx.operatorName);
-      if (moversAnswer) return moversAnswer;
-    }
-  }
-
+  let mintIntel: string | null = null;
   const mintMatch = trimmed.match(/\b([1-9A-HJ-NP-Za-km-z]{32,44})\b/);
   if (mintMatch && !resolveOracleTokenQuery(trimmed, ctx.tokens)) {
     try {
@@ -181,7 +197,7 @@ export async function respondToTitanMessage(
           const priceLabel = Number.isFinite(price) ? `$${price}` : "—";
           const chLabel = Number.isFinite(ch) ? `${ch >= 0 ? "+" : ""}${ch.toFixed(2)}%` : "—";
           const liqLabel = Number.isFinite(liq) ? `$${Math.round(liq).toLocaleString()}` : "—";
-          return `${pair.baseToken.symbol}: ${priceLabel} · 24h ${chLabel} · liq ${liqLabel} · mint verified on DexScreener. Ask for Avoid/Watch/OK when it's in your live pool.`;
+          mintIntel = `${pair.baseToken.symbol}: ${priceLabel} · 24h ${chLabel} · liq ${liqLabel} · mint verified on DexScreener.`;
         }
       }
     } catch {
@@ -190,29 +206,66 @@ export async function respondToTitanMessage(
   }
 
   const intent = classifyTitanIntent(trimmed);
-  const cryptoFast = CRYPTO_INTENTS.has(intent) || isInstantCryptoPath(trimmed);
-
-  const token = resolveOracleTokenQuery(trimmed, ctx.tokens);
-  if (token && hasTitanMemoryConsent()) rememberFavoriteSymbol(token.symbol);
+  const token = resolveHeraFocus(trimmed, ctx.tokens, turns.map((t) => ({ role: t.role, text: t.text })));
+  if (token && "id" in token && hasTitanMemoryConsent()) rememberFavoriteSymbol(token.symbol);
 
   const memory = hasTitanMemoryConsent() ? loadTitanMemoryProfile() : null;
-  const basePayload = buildTitanChatPayload(trimmed, ctx, turnsToHistory(turns, cryptoFast), memory);
-  const payload = cryptoFast
-    ? {
-        ...basePayload,
-        fastMode: true,
-        marketBrief: basePayload.marketBrief.split("\n").slice(0, 8).join("\n"),
-        moversBrief: intent === "market_movers" ? basePayload.moversBrief : null,
-        operatorBrief: null,
-        watchlistBrief: null,
-      }
-    : { ...basePayload, fastMode: false };
+  const historyTurns = turnsToHistory(turns);
+  const basePayload = buildTitanChatPayload(trimmed, ctx, historyTurns, memory);
+  const payload = {
+    ...basePayload,
+    fastMode: handlers.fastMode === true,
+    spokenReply: handlers.spokenReply === true,
+    intentHint:
+      basePayload.intentHint === "launch_watch"
+        ? "launch_watch"
+        : isTopMoversQuestion(trimmed)
+          ? "market_movers"
+          : basePayload.intentHint ?? intent,
+    tokenIntel: [basePayload.tokenIntel, mintIntel].filter(Boolean).join("\n") || basePayload.tokenIntel,
+  };
+
+  const askLlm = (nextPayload: typeof payload) => streamTitanChatApi(nextPayload, handlers);
 
   try {
-    const llm = await streamTitanChatApi(payload, handlers);
+    const llm = await askLlm(payload);
+    if (llm && tooSimilarToRecent(llm, turns)) {
+      const retry = await askLlm({
+        ...payload,
+        history: [
+          ...payload.history,
+          { role: "assistant", content: llm },
+          {
+            role: "user",
+            content:
+              "You repeated yourself. Answer my last question again with a new angle — no recycled opener, closer, or ranked-list intro.",
+          },
+        ],
+      });
+      if (retry) return retry;
+    }
     if (llm) return llm;
   } catch {
     /* fall through */
+  }
+
+  // Live ranking fallback if Hera's LLM path fails
+  if (isTopMoversQuestion(trimmed)) {
+    const timeframe = parseMoverTimeframeFromText(trimmed);
+    const cached = ctx.moversBoard?.[timeframe];
+    if (cached?.gainers.length) {
+      const moversAnswer = formatTopMoversAnswer(trimmed, ctx.moversBoard!, ctx.operatorName);
+      if (moversAnswer) return moversAnswer;
+    }
+    const local = formatLocalPoolMoversAnswer(trimmed, ctx.tokens, ctx.operatorName);
+    if (local) return local;
+    try {
+      const slice = await fetchSolanaTopMovers(timeframe);
+      const moversAnswer = formatTopMoversAnswerFromResult(trimmed, slice, ctx.operatorName);
+      if (moversAnswer) return moversAnswer;
+    } catch {
+      /* ignore */
+    }
   }
 
   return reactToFreeText(trimmed, ctx);
@@ -226,5 +279,5 @@ export function shouldUseTitanLlm(_text: string, fastBrainReply: string): boolea
 export { isInstantCryptoPath };
 
 export function isGenericTitanFallback(reply: string): boolean {
-  return /Got it|thinking out loud|What's the real question/.test(reply);
+  return /Got it|thinking out loud|What's the real question|I'll answer it properly this time/.test(reply);
 }

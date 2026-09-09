@@ -6,6 +6,7 @@ import { answerHelixQuestion } from "../config/sentinelHelix";
 import { SENTINEL_LANE_IDS, sentinelLaneLabel, type SentinelLaneId } from "../config/sentinels";
 import { isInstantTitanPath } from "./titanRouting";
 import { rememberFavoriteSymbol } from "./titanMemory";
+import { evaluateTokenDiscovery, formatDiscoveryBrief } from "./titanDiscovery";
 
 export type OracleSentinelDirective = {
   lane: SentinelLaneId;
@@ -46,26 +47,63 @@ export function searchOracleTokens(query: string, pool: Token[]): Token[] {
   });
 }
 
+const COMMON_WORD =
+  /^(what|whats|going|with|about|the|and|for|how|much|tell|me|price|of|on|is|are|was|this|that|your|our|best|today|right|now)$/i;
+
 export function resolveOracleTokenQuery(text: string, pool: Token[]): Token | null {
   const cleaned = text
     .replace(/^(search|find|scan|check|look up|lookup|what about|tell me about|analyze|analyse)\s+/i, "")
     .replace(/\?/g, "")
     .trim();
+  if (!cleaned) return null;
 
-  const symbolMatch = cleaned.match(/\b([A-Za-z]{2,12})\b/);
-  const query = symbolMatch?.[1] ?? cleaned;
-  const hits = searchOracleTokens(query, pool);
-  return hits[0] ?? null;
+  const mintMatch = cleaned.match(/\b([1-9A-HJ-NP-Za-km-z]{32,44})\b/);
+  if (mintMatch) {
+    const mint = mintMatch[1]!;
+    const byMint = pool.find((t) => t.mintAddress === mint);
+    if (byMint) return byMint;
+  }
+
+  const dollar = cleaned.match(/\$([A-Za-z]{2,12})\b/);
+  if (dollar?.[1]) {
+    const sym = dollar[1].toUpperCase();
+    const hit = pool.find((t) => t.symbol.toUpperCase() === sym);
+    if (hit) return hit;
+  }
+
+  if (/\b(synexus|syn[- ]coin|syn[- ]token|syn)\b/i.test(cleaned)) {
+    const syn = pool.find((t) => t.symbol.toUpperCase() === "SYN" || t.id === "syn-sol");
+    if (syn) return syn;
+  }
+
+  const byLen = [...pool].sort((a, b) => b.symbol.length - a.symbol.length);
+  for (const token of byLen) {
+    const sym = token.symbol.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    if (token.symbol.length <= 2) {
+      if (new RegExp(`\\$${sym}\\b|^${sym}$`, "i").test(cleaned)) return token;
+      continue;
+    }
+    if (new RegExp(`(?:\\$${sym}\\b|\\b${sym}\\b)`, "i").test(cleaned)) return token;
+  }
+
+  const hits = searchOracleTokens(cleaned, pool);
+  const first = cleaned.split(/\s+/)[0] ?? "";
+  if (hits[0] && !COMMON_WORD.test(first) && !COMMON_WORD.test(hits[0].symbol)) return hits[0];
+  return (
+    hits.find((h) => !COMMON_WORD.test(h.symbol) && cleaned.toLowerCase().includes(h.symbol.toLowerCase())) ?? null
+  );
 }
 
 export function buildTokenIntelBrief(token: Token): string {
+  const discovery = evaluateTokenDiscovery(token);
   const lines = [
     `${token.symbol} (${token.name}) · ${synexusRiskBandLabel(token.guardianRisk)} band`,
     `Price ${formatUsd(token.priceUsd)} · 24h ${formatPct(token.change24hPct)}${token.priceMove1hPct != null ? ` · 1h ${formatPct(token.priceMove1hPct)}` : ""}`,
     `Liquidity ${formatUsd(token.liquidityUsd)} · Volume 24h ${formatUsd(token.volume24hUsd)}${token.marketCapUsd != null ? ` · MCap ${formatUsd(token.marketCapUsd)}` : ""}`,
+    `Titan discovery ${discovery.discoveryScore}/100 · risk ${discovery.riskScore}/100 · momentum ${discovery.momentumScore}/100 · confidence ${discovery.confidence}${discovery.highRiskReportable ? " · HIGH RISK (reportable)" : ""}`,
   ];
 
-  if (token.riskScore != null) lines.push(`Risk score ${token.riskScore}/100 · confidence ${token.confidence ?? "—"}%`);
+  if (token.riskScore != null) lines.push(`Guardian risk ${token.riskScore}/100 · confidence ${token.confidence ?? "—"}%`);
   if (token.topWalletPct != null) {
     lines.push(
       `Holders: top ${token.topWalletPct}%${token.top5WalletsPct != null ? ` · top5 ${token.top5WalletsPct}%` : ""}${token.tokenAgeHours != null ? ` · age ${token.tokenAgeHours}h` : ""}`,
@@ -74,9 +112,29 @@ export function buildTokenIntelBrief(token: Token): string {
   if (token.riskReasons?.length) lines.push(`Flags: ${token.riskReasons.slice(0, 4).join("; ")}`);
   if (token.sharpPumpThenDump) lines.push("Pattern: sharp pump-then-dump signal");
   if (token.highVolumeLowLiquidity) lines.push("Pattern: high volume vs thin liquidity");
+  if (discovery.whyMoving[0]) lines.push(`Why moving: ${discovery.whyMoving[0]}`);
   lines.push(`Sentinel read: ${token.guardianMessage}`);
 
   return lines.join("\n");
+}
+
+export function buildDiscoveryResearchPacket(token: Token): Record<string, unknown> {
+  const evaluation = evaluateTokenDiscovery(token);
+  return {
+    type: "DISCOVERY_SCORE",
+    brief: formatDiscoveryBrief(evaluation),
+    discoveryScore: evaluation.discoveryScore,
+    riskScore: evaluation.riskScore,
+    momentumScore: evaluation.momentumScore,
+    confidence: evaluation.confidence,
+    facts: evaluation.facts,
+    speculation: evaluation.speculation,
+    whyMoving: evaluation.whyMoving,
+    unusualSignals: evaluation.unusualSignals,
+    highRiskReportable: evaluation.highRiskReportable,
+    contractAddress: evaluation.contractAddress,
+    chain: evaluation.chain,
+  };
 }
 
 function pickFocus(pool: Token[], lane: SentinelLaneId): Token | null {

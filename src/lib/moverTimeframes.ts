@@ -10,10 +10,10 @@ export const MOVER_TIMEFRAME_LABEL: Record<MoverTimeframe, string> = {
   "365d": "last 365 days (year)",
 };
 
-/** Parse user phrasing → timeframe (default 24h for generic "top gainers"). */
+/** Parse user phrasing → timeframe (default 24h for generic "top gainers" / "best today"). */
 export function parseMoverTimeframeFromText(text: string): MoverTimeframe {
   const lower = text.toLowerCase();
-  if (/\b(5\s*m(in(ute)?s?)?|five\s*min)\b/.test(lower)) return "5m";
+  if (/\b(5\s*m(in(ute)?s?)?|five\s*min|right now|rn\b)\b/.test(lower)) return "5m";
   if (/\b(365|year|yearly|12\s*month|past\s*year|last\s*year|ytd)\b/.test(lower)) return "365d";
   if (/\b(30\s*d(ay)?s?|month|monthly|past\s*month|last\s*month)\b/.test(lower)) return "30d";
   if (/\b(7\s*d(ay)?s?|week|weekly|past\s*week|last\s*week)\b/.test(lower)) return "7d";
@@ -23,8 +23,19 @@ export function parseMoverTimeframeFromText(text: string): MoverTimeframe {
 
 export function isTopMoversQuestion(text: string): boolean {
   const lower = text.toLowerCase().trim();
+  if (
+    /\b(top|best|biggest|leading|highest|strongest)\b/.test(lower) &&
+    /\b(gainer|gainers|loser|losers|mover|movers|pump|pumping|rally|rallying|winner|winners|coin|coins|token|tokens|ones?)\b/.test(
+      lower,
+    )
+  ) {
+    return true;
+  }
   return (
-    /\b(top|best|biggest|leading|highest)\b/.test(lower) &&
-    /\b(gainer|gainers|loser|losers|mover|movers|pump|pumping|rally|rallying|winner|winners)\b/.test(lower)
-  ) || /\bwhat('?s| is) (pumping|moving|hot)\b/.test(lower);
+    /\bwhat('?s| is) (pumping|moving|hot|strong)\b/.test(lower) ||
+    /\bwhat should i watch\b/.test(lower) ||
+    /\bwhich (tokens?|coins?) (look|are) strong/.test(lower) ||
+    /\bbest (ones?|coins?|tokens?) (today|right now|rn)\b/.test(lower) ||
+    /\b(moving|watch) (right now|today)\b/.test(lower)
+  );
 }

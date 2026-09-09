@@ -1,9 +1,7 @@
 import { Link } from "react-router-dom";
-import { useOpenTitanChat } from "../hooks/useOpenTitanChat";
+import { enableHeraWakeWordFromUi } from "../lib/hera/wakeWord";
 
 export function Automations() {
-  const openTitan = useOpenTitanChat();
-
   return (
     <div className="page tool-page">
       <section className="tool-page__hero marketing-panel">
@@ -24,10 +22,10 @@ export function Automations() {
           </Link>
         </li>
         <li>
-          <button type="button" className="tool-card marketing-panel" onClick={openTitan}>
+          <button type="button" className="tool-card marketing-panel" onClick={enableHeraWakeWordFromUi}>
             <h2>Titan workflows</h2>
-            <p>Ask Titan to watch narratives, summarize movers, or brief a mint.</p>
-            <span>Open Titan →</span>
+            <p>Say “Hera” to watch narratives, summarize movers, or brief a mint.</p>
+            <span>Say Hera →</span>
           </button>
         </li>
         <li>
