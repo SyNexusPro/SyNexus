@@ -1,0 +1,41 @@
+{
+  "slug": "weekly-solana-market-outlook-july-2026",
+  "title": "Weekly Solana Market Outlook — July 2026",
+  "excerpt": "Macro context, memecoin season rhythms, and how to use Sentinel reads in choppy weeks.",
+  "date": "2026-07-16",
+  "author": "SyNexus Editorial",
+  "origin": "https://www.synexus.pro",
+  "trustLine": "Non-custodial · You sign every trade · Not financial advice.",
+  "blocks": [
+    {
+      "type": "h2",
+      "text": "Environment scan"
+    },
+    {
+      "type": "p",
+      "text": "Solana activity remains dominated by launch velocity and short holding periods. That rewards operators who scan before they sign — not after CT discovers the ticker."
+    },
+    {
+      "type": "h2",
+      "text": "Risk posture this week"
+    },
+    {
+      "type": "p",
+      "text": "When launch density rises, impersonation scams and liquidity traps rise with it. Tighten position sizing, favor mint verification, and treat Watch verdicts as pause buttons — not invitations."
+    },
+    {
+      "type": "h2",
+      "text": "How we write these outlooks"
+    },
+    {
+      "type": "p",
+      "text": "SyNexus weekly notes are educational framing — not price targets or trade signals. Pair them with your own chart work and on-chain verification."
+    }
+  ],
+  "cta": "Run a free Sentinel scan → https://www.synexus.pro",
+  "tags": [
+    "market analysis",
+    "Solana",
+    "weekly"
+  ]
+}

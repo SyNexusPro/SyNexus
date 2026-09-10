@@ -1,9 +1,9 @@
--- Synexus apply-all (SQL Editor)
+-- SyNexus apply-all (SQL Editor)
 -- https://supabase.com/dashboard/project/zyroyqcyjmcgdcywnjxn/sql/new
 
 -- >>> schema.sql
 -- =============================================================================
--- HiveMind — complete Supabase schema (HiveMind web app + Stripe webhook)
+-- SyNexus — complete Supabase schema (SyNexus web app + payment webhooks)
 -- Run in Supabase SQL Editor (requires auth schema). Safe to re-run: uses
 -- IF NOT EXISTS / DROP POLICY IF EXISTS where appropriate.
 -- =============================================================================
@@ -186,7 +186,7 @@ begin
 
     dname := trim(both from replace(replace(local_part, '.', ' '), '_', ' '));
     if dname = '' or dname is null then
-      dname := 'HiveMind member';
+      dname := 'SyNexus member';
     end if;
   end if;
 
@@ -361,11 +361,11 @@ create index if not exists treasury_revenue_created_at_idx on public.treasury_re
 
 alter table public.treasury_revenue enable row level security;
 
-comment on table public.treasury_revenue is 'Synexus growth-phase revenue ledger. Stripe webhook inserts via service role; 100% reinvest allocation.';
+comment on table public.treasury_revenue is 'SyNexus growth-phase revenue ledger. Stripe webhook inserts via service role; 100% reinvest allocation.';
 
 
 -- >>> site_analytics.sql
--- Synexus site analytics — page views, auth events, token views
+-- SyNexus site analytics — page views, auth events, token views
 -- Run in Supabase SQL editor after main schema.
 
 create table if not exists public.site_analytics_events (
@@ -411,11 +411,11 @@ create policy "Public insert analytics events"
   with check (user_id is null or auth.uid() = user_id);
 
 comment on table public.site_analytics_events is
-  'Synexus client analytics — inserts only from app; reads via service role / owner API';
+  'SyNexus client analytics — inserts only from app; reads via service role / owner API';
 
 
 -- >>> security_events.sql
--- Synexus Aegis — security event log (optional server-side audit trail)
+-- SyNexus Aegis — security event log (optional server-side audit trail)
 -- Run in Supabase SQL editor after main schema.
 
 create table if not exists public.security_events (
@@ -449,4 +449,49 @@ create policy "Users read own security events"
   to authenticated
   using (auth.uid() = user_id);
 
-comment on table public.security_events is 'Synexus Aegis — client-reported abuse and block events';
+comment on table public.security_events is 'SyNexus Aegis — client-reported abuse and block events';
+
+
+-- >>> swap_history.sql
+-- SyNexus in-app swap history (public on-chain facts only)
+-- NEVER store private keys, seed phrases, or wallet secrets.
+
+create table if not exists public.swap_history (
+  id uuid primary key default gen_random_uuid(),
+  wallet_address text not null,
+  tx_signature text,
+  input_mint text not null,
+  output_mint text not null,
+  input_symbol text,
+  output_symbol text,
+  input_amount text,
+  output_amount_est text,
+  status text not null default 'pending' check (status in ('pending', 'confirmed', 'failed')),
+  price_impact_pct double precision,
+  created_at timestamptz not null default now()
+);
+
+create unique index if not exists swap_history_sig_uidx
+  on public.swap_history (tx_signature)
+  where tx_signature is not null;
+
+create index if not exists swap_history_wallet_idx
+  on public.swap_history (wallet_address, created_at desc);
+
+alter table public.swap_history enable row level security;
+
+drop policy if exists swap_history_insert on public.swap_history;
+create policy swap_history_insert on public.swap_history
+  for insert to anon, authenticated
+  with check (
+    char_length(wallet_address) between 32 and 64
+    and (tx_signature is null or char_length(tx_signature) between 64 and 128)
+  );
+
+drop policy if exists swap_history_select on public.swap_history;
+create policy swap_history_select on public.swap_history
+  for select to anon, authenticated
+  using (true);
+
+comment on table public.swap_history is
+  'Public Jupiter swap records only — wallet, signature, pair, amount, time, status. No keys.';

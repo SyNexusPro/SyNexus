@@ -1,0 +1,41 @@
+{
+  "slug": "using-titan-ai-for-crypto-research",
+  "title": "Using Titan AI for Crypto Research Without Over-Trusting It",
+  "excerpt": "Prompt patterns, Sentinel context, and when to stop chatting and open a block explorer.",
+  "date": "2026-07-13",
+  "author": "SyNexus Editorial",
+  "origin": "https://www.synexus.pro",
+  "trustLine": "Non-custodial · You sign every trade · Not financial advice.",
+  "blocks": [
+    {
+      "type": "h2",
+      "text": "Ask specific questions"
+    },
+    {
+      "type": "p",
+      "text": "Instead of 'moon?', ask 'why did this token flag Watch on Aegis?' or 'explain whale concentration on this mint.' Specific prompts get useful, auditable answers."
+    },
+    {
+      "type": "h2",
+      "text": "Rename Titan if you want"
+    },
+    {
+      "type": "p",
+      "text": "Titan is the default commander persona — you can rename it in settings. The four Sentinels keep fixed names for consistent lane reporting."
+    },
+    {
+      "type": "h2",
+      "text": "Voice and accessibility"
+    },
+    {
+      "type": "p",
+      "text": "Titan supports read-aloud briefings on supported devices. Pair voice summaries with the written scan so you do not trade on audio alone in noisy markets."
+    }
+  ],
+  "cta": "Run a free Sentinel scan → https://www.synexus.pro",
+  "tags": [
+    "Titan",
+    "AI",
+    "research"
+  ]
+}

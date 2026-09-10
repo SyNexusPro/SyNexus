@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Synexus SEO blog — trust-building articles, auto-published to public/blog/.
+ * SyNexus SEO blog — trust-building articles, auto-published to public/blog/.
  */
 
 import { readFile, writeFile, mkdir } from "node:fs/promises";
@@ -19,12 +19,12 @@ const OUTPUT_BLOG = join(__dirname, "output", "blog");
 const TOPICS = [
   {
     slug: "sentinel-risk-read-explained",
-    title: "How the Synexus Sentinel Risk Read Works",
-    excerpt: "What Avoid, Watch, and OK actually mean — and what Synexus does not do.",
+    title: "How the SyNexus Sentinel Risk Read Works",
+    excerpt: "What Avoid, Watch, and OK actually mean — and what SyNexus does not do.",
     sections: [
       {
         h2: "One question, one answer",
-        body: "Synexus is built around a single operator question: should I buy this? Paste a Solana mint or symbol. The Sentinel engine fuses liquidity health, whale concentration, momentum drift, and rug-pattern heuristics into one plain-English verdict.",
+        body: "SyNexus is built around a single operator question: should I buy this? Paste a Solana mint or symbol. The Sentinel engine fuses liquidity health, whale concentration, momentum drift, and rug-pattern heuristics into one plain-English verdict.",
       },
       {
         h2: "Avoid · Watch · OK",
@@ -32,7 +32,7 @@ const TOPICS = [
       },
       {
         h2: "Non-custodial by design",
-        body: "Synexus never holds your SOL or tokens. We do not execute trades. You sign every swap in your own wallet. The read is informational — always verify the mint address and do your own research.",
+        body: "SyNexus never holds your SOL or tokens. We do not execute trades. You sign every swap in your own wallet. The read is informational — always verify the mint address and do your own research.",
       },
     ],
   },
@@ -46,8 +46,8 @@ const TOPICS = [
         body: "Retail often sees green candles. Sentinels see who holds supply, how deep the pool is, and whether early wallets are distributing into strength. Exit liquidity is when your buy becomes someone else's exit.",
       },
       {
-        h2: "Signals Synexus tracks",
-        body: "Top-wallet percentage, sudden liquidity drains, velocity without volume support, and repeat scam motifs across launch seasons. Synexus surfaces these before you sign — not after the timeline screams.",
+        h2: "Signals SyNexus tracks",
+        body: "Top-wallet percentage, sudden liquidity drains, velocity without volume support, and repeat scam motifs across launch seasons. SyNexus surfaces these before you sign — not after the timeline screams.",
       },
       {
         h2: "Use the read, keep control",
@@ -57,12 +57,12 @@ const TOPICS = [
   },
   {
     slug: "should-i-buy-this-methodology",
-    title: "Should I Buy This? The Synexus Methodology",
+    title: "Should I Buy This? The SyNexus Methodology",
     excerpt: "Plain English token intelligence for Solana — built for speed, not hype.",
     sections: [
       {
         h2: "Built for decision speed",
-        body: "Memecoin cycles move in minutes. Synexus compresses hours of manual chart and wallet research into seconds — one paste, one Sentinel fusion, one verdict.",
+        body: "Memecoin cycles move in minutes. SyNexus compresses hours of manual chart and wallet research into seconds — one paste, one Sentinel fusion, one verdict.",
       },
       {
         h2: "Four Sentinel lanes",
@@ -70,13 +70,13 @@ const TOPICS = [
       },
       {
         h2: "Pro when you need depth",
-        body: "Free tier covers the core scan. Synexus Pro unlocks full Sentinel grid refresh, Oracle briefings, and reduced trading fees — for operators who live on-chain daily.",
+        body: "Free tier covers the core scan. SyNexusPro unlocks full Sentinel grid refresh, Oracle briefings, and reduced trading fees — for operators who live on-chain daily.",
       },
     ],
   },
   {
     slug: "synexus-pro-worth-it",
-    title: "When Synexus Pro Pays for Itself",
+    title: "When SyNexusPro Pays for Itself",
     excerpt: "Who Pro is for — and how fee savings compound.",
     sections: [
       {
@@ -96,15 +96,15 @@ const TOPICS = [
   {
     slug: "rug-pull-patterns-2026",
     title: "Solana Rug Patterns That Repeat Every Season",
-    excerpt: "Synexus pattern library — what Aegis flags before mints blow up.",
+    excerpt: "SyNexus pattern library — what Aegis flags before mints blow up.",
     sections: [
       {
         h2: "The launch playbook",
-        body: "New mint, synthetic volume, influencer push, liquidity looks fine for twenty minutes — then concentration reveals the exit. Synexus pattern scans catch structural tells early.",
+        body: "New mint, synthetic volume, influencer push, liquidity looks fine for twenty minutes — then concentration reveals the exit. SyNexus pattern scans catch structural tells early.",
       },
       {
         h2: "What to do",
-        body: "Paste before you connect Phantom. Read Avoid or Watch. Check the mint on-chain yourself. Never share seed phrases with anyone claiming to be Synexus support.",
+        body: "Paste before you connect Phantom. Read Avoid or Watch. Check the mint on-chain yourself. Never share seed phrases with anyone claiming to be SyNexus support.",
       },
       {
         h2: "Community layer",
@@ -138,12 +138,12 @@ export function buildBlogPost(topic, date = new Date()) {
     title: topic.title,
     excerpt: topic.excerpt,
     date: dateIso,
-    author: "Synexus Sentinel",
+    author: "SyNexus Sentinel",
     origin,
     trustLine: TRUST_LINE,
     blocks: paragraphs,
     cta: `Run a free Sentinel scan → ${origin}`,
-    tags: ["Synexus", "Solana", "Sentinel", "crypto", "risk"],
+    tags: ["SyNexus", "Solana", "Sentinel", "crypto", "risk"],
   };
 }
 
@@ -204,7 +204,7 @@ export async function generateDailyBlog({ dayOffset = 0 } = {}) {
 
 export function buildBlogTelegramTeaser(post) {
   return [
-    `**Synexus Journal** · ${post.title}`,
+    `**SyNexus Journal** · ${post.title}`,
     "",
     post.excerpt,
     "",
@@ -217,7 +217,7 @@ export function buildBlogTelegramTeaser(post) {
 async function main() {
   const args = process.argv.slice(2);
   if (args.includes("--help")) {
-    console.log(`Synexus blog generator
+    console.log(`SyNexus blog generator
 
   npm run blog:generate     Publish today's article to public/blog/
   node blogGenerator.js --list

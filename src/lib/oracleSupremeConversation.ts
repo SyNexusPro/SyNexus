@@ -1,9 +1,7 @@
 import { buildTitanIdentityLine } from "../config/titanGuidelines";
-import { answerAegisSecurityPrivacyQuestion } from "../config/sentinelAegis";
-import { hasTitanMemoryConsent, titanMemoryContextLine } from "./titanMemory";
-import { softenTitanResponse } from "./titanGuardrails";
-import { oracleRespondToMessage } from "./oracleCryptoBrain";
+import { titanMemoryContextLine } from "./titanMemory";
 import type { Token } from "../data/tokens";
+import type { SolanaMoversBoard } from "../services/marketDataService";
 
 export type TimeBand = "morning" | "afternoon" | "evening" | "night";
 
@@ -20,6 +18,8 @@ export type OracleConversationContext = {
   daysSinceLastVisit: number;
   tokens: Token[];
   feedSource: "live" | "mock";
+  /** Pre-fetched multi-timeframe gainers/losers for Titan instant answers. */
+  moversBoard?: SolanaMoversBoard | null;
 };
 
 export type ConversationTurn = {
@@ -27,6 +27,8 @@ export type ConversationTurn = {
   role: "oracle" | "user";
   text: string;
   at: number;
+  /** Unique Hera realtime response id — one committed assistant turn per response. */
+  responseId?: string;
 };
 
 export const ORACLE_CONVO_HISTORY_KEY = "oracle_supreme_convo_history";
@@ -178,7 +180,7 @@ export function loadConversationHistory(): ConversationTurn[] {
     const raw = localStorage.getItem(ORACLE_CONVO_HISTORY_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw) as ConversationTurn[];
-    return Array.isArray(parsed) ? parsed.slice(-24) : [];
+    return Array.isArray(parsed) ? parsed.slice(-40) : [];
   } catch {
     return [];
   }
@@ -186,7 +188,16 @@ export function loadConversationHistory(): ConversationTurn[] {
 
 export function saveConversationHistory(turns: ConversationTurn[]): void {
   try {
-    localStorage.setItem(ORACLE_CONVO_HISTORY_KEY, JSON.stringify(turns.slice(-24)));
+    localStorage.setItem(ORACLE_CONVO_HISTORY_KEY, JSON.stringify(turns.slice(-40)));
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Wipe the active Titan thread (used after archiving on close). */
+export function clearConversationHistory(): void {
+  try {
+    localStorage.removeItem(ORACLE_CONVO_HISTORY_KEY);
   } catch {
     /* ignore */
   }
@@ -214,8 +225,8 @@ function oracleWelcomeLead(name: string, skipWelcomeLine?: boolean): string {
   }
   return withOptionalName(
     name,
-    "Welcome to The Synexus, {name}. How may I be of service?",
-    "Welcome to The Synexus. How may I be of service?",
+    "Welcome to The SyNexus, {name}. How may I be of service?",
+    "Welcome to The SyNexus. How may I be of service?",
   );
 }
 
@@ -259,8 +270,8 @@ export function buildFollowUpAfterMood(mood: DayMoodReply, ctx: OracleConversati
         )
       : withOptionalName(
           name,
-          "Good to hear, {name}. I'll run the Sentinels while you're up — Synexus Pro lets me brief you personally when you're ready.",
-          "Good to hear. I'll run the Sentinels while you're up — Synexus Pro lets me brief you personally when you're ready.",
+          "Good to hear, {name}. I'll run the Sentinels while you're up — SyNexusPro lets me brief you personally when you're ready.",
+          "Good to hear. I'll run the Sentinels while you're up — SyNexusPro lets me brief you personally when you're ready.",
         );
   }
 
@@ -306,9 +317,6 @@ export function buildFollowUpAfterMood(mood: DayMoodReply, ctx: OracleConversati
 }
 
 export function reactToFreeText(text: string, ctx: OracleConversationContext): string {
-  const brain = oracleRespondToMessage(text, ctx);
-  if (brain) return brain;
-
   const lower = text.toLowerCase().trim();
   if (!lower) return "I'm listening. What's on your mind?";
 
@@ -323,37 +331,7 @@ export function reactToFreeText(text: string, ctx: OracleConversationContext): s
     );
   }
 
-  if (/good|great|fine|solid|well|not bad|pretty good|alright|okay|ok\b/.test(lower)) {
-    return buildFollowUpAfterMood("good", ctx);
-  }
-
-  if (/bad|rough|tired|exhausted|awful|terrible|stressed|hard day|not great/.test(lower)) {
-    return buildFollowUpAfterMood("rough", ctx);
-  }
-
-  if (/trade|trading|chart|ape|sol|token|market|position/.test(lower)) {
-    return buildFollowUpAfterMood("trading", ctx);
-  }
-
-  if (/long|busy|hectic|work|grind/.test(lower)) {
-    return buildFollowUpAfterMood("long", ctx);
-  }
-
-  if (/alert|warning|danger|rug|scam|privacy|security|phish/.test(lower)) {
-    if (/privacy|security|phish|seed|private key|my data/.test(lower)) {
-      const aegis = answerAegisSecurityPrivacyQuestion(text);
-      if (aegis) return aegis;
-    }
-    return ctx.alertCount > 0
-      ? withOptionalName(
-          ctx.operatorName,
-          `I'm on it, {name}. You have ${ctx.alertCount} active alert${ctx.alertCount === 1 ? "" : "s"} — I'll break them down on Pulse.`,
-          `I'm on it. You have ${ctx.alertCount} active alert${ctx.alertCount === 1 ? "" : "s"} — I'll break them down on Pulse.`,
-        )
-      : "No live alerts right now. I'll flag you the second something looks off.";
-  }
-
-  if (/thank|thanks|ty\b/.test(lower)) {
+  if (/^(thanks|thank you|ty)\b/.test(lower)) {
     return withOptionalName(ctx.operatorName, "Always, {name}. That's what I'm here for.", "Always. That's what I'm here for.");
   }
 
@@ -361,20 +339,7 @@ export function reactToFreeText(text: string, ctx: OracleConversationContext): s
     return buildTitanIdentityLine(ctx.titanBotName);
   }
 
-  if (/what can you do|help me|capabilities/.test(lower)) {
-    const memory = hasTitanMemoryConsent()
-      ? "Personalized memory is on — I'll remember your favorites and risk style."
-      : "Turn on personalized memory in chat settings if you want me to remember your preferences.";
-    return softenTitanResponse(
-      `${buildTitanIdentityLine(ctx.titanBotName)}\n\nLive market scans, scam analysis, Sentinel commands, and trading coaching — ${memory}`,
-    );
-  }
-
-  return withOptionalName(
-    ctx.operatorName,
-    `Got it, {name}. I'm here for whatever you need — markets, decisions, or just thinking out loud. What's the real question?`,
-    "Got it. I'm here for whatever you need — markets, decisions, or just thinking out loud. What's the real question?",
-  );
+  return "I'm with you. Say that one more way, or tell me what you want to do next — scan, trade, or just talk.";
 }
 
 export const DAY_MOOD_QUICK_REPLIES: { id: DayMoodReply; label: string }[] = [

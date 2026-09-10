@@ -12,7 +12,7 @@ export function RefundPolicy() {
       <p className="legal-page__eyebrow">{EFFECTIVE_LABEL}</p>
       <h1 className="legal-page__title">Refund Policy</h1>
       <p className="legal-page__summary">
-        This Refund Policy explains how refunds, cancellations, and billing disputes work for Synexus Pro and
+        This Refund Policy explains how refunds, cancellations, and billing disputes work for SyNexusPro and
         other paid features offered by {OPERATOR_LABEL} (&quot;we,&quot; &quot;us&quot;). It supplements our{" "}
         <Link to="/terms">Terms of Service</Link> and should be read with our{" "}
         <Link to="/privacy">Privacy Policy</Link>.
@@ -21,7 +21,7 @@ export function RefundPolicy() {
       <section className="legal-section marketing-panel">
         <h2>Overview</h2>
         <p>
-          Synexus Pro is a recurring subscription billed at{" "}
+          SyNexusPro is a recurring subscription billed at{" "}
           <strong>{SYNEXUS_PRO_PRICE_LABEL}</strong> (plus applicable taxes where required). Checkout and
           recurring billing are processed by our third-party subscription and payment platform (the provider
           shown at checkout). That provider may appear on your card or bank statement for your subscription.
@@ -31,7 +31,7 @@ export function RefundPolicy() {
       <section className="legal-section marketing-panel">
         <h2>Free trial</h2>
         <p>
-          Where offered, Synexus Pro includes a <strong>{SYNEXUS_PRO_TRIAL_DAYS}-day free trial</strong> after
+          Where offered, SyNexusPro includes a <strong>{SYNEXUS_PRO_TRIAL_DAYS}-day free trial</strong> after
           you create and verify your account and add a payment method at checkout. You will not be charged the
           subscription price during the trial if you cancel before the trial ends. If you do not cancel before
           the trial ends, your payment method will be charged {SYNEXUS_PRO_PRICE_LABEL} and billing will
@@ -42,7 +42,7 @@ export function RefundPolicy() {
       <section className="legal-section marketing-panel">
         <h2>Cancellation</h2>
         <p>
-          You may cancel Synexus Pro at any time through the billing portal or subscription tools linked
+          You may cancel SyNexusPro at any time through the billing portal or subscription tools linked
           from Pulse and your account settings. Cancellation stops future renewals; it does not automatically
           refund charges already processed. Paid access typically continues until the end of the current billing
           period unless otherwise stated at checkout or required by law.
@@ -73,7 +73,7 @@ export function RefundPolicy() {
         <h2>How to request a refund</h2>
         <p>
           Email{" "}
-          <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a> from the address tied to your Synexus account
+          <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a> from the address tied to your SyNexus account
           within <strong>14 days</strong> of the charge. Include the date and amount charged, the email on your
           account, and a brief description of the issue. We will review your request and respond within a
           reasonable time. Approved refunds are processed through the original payment method; timing

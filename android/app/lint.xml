@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<lint>
+    <!-- Capacitor/Cordova bridge resources referenced at runtime, not always visible to lint. -->
+    <issue id="UnusedResources" severity="ignore">
+        <ignore path="res/values/strings.xml" />
+        <ignore path="res/xml/config.xml" />
+    </issue>
+</lint>

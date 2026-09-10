@@ -20,15 +20,15 @@ export function SynCoinLaunchBanner() {
   }
 
   return (
-    <section className="syn-launch-banner" role="region" aria-label="SYN token live on pump.fun">
+    <section className="syn-launch-banner" role="region" aria-label="SYN token is live">
       <div className="syn-launch-banner__glow" aria-hidden />
       <div className="syn-launch-banner__text">
         <p className="syn-launch-banner__eyebrow">Now live</p>
         <p className="syn-launch-banner__headline">
-          <strong>${SYN_SYMBOL}</strong> community is live on pump.fun
+          <strong>${SYN_SYMBOL}</strong> community token is live on Solana
         </p>
         <p className="syn-launch-banner__detail">
-          Join the SyNexus community — scan the mint in-app before you buy, then trade in your wallet.
+          Buy ${SYN_SYMBOL} on pump.fun — scan the mint in-app first, then trade in your wallet.
         </p>
       </div>
       <div className="syn-launch-banner__actions">
@@ -38,7 +38,7 @@ export function SynCoinLaunchBanner() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Open $SyN community
+          Buy ${SYN_SYMBOL} on pump.fun
         </a>
         <Link className="syn-launch-banner__secondary" to={`/token/${SYN_TOKEN_ID}`}>
           Scan {SYN_SYMBOL}

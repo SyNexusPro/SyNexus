@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-/** Synexus Pro mark — used as watermark on every rendered scene. */
+/** SyNexusPro mark — used as watermark on every rendered scene. */
 const LOGO_CANDIDATES = [
   join(__dirname, "..", "public", "synexus-symbol.png"),
   join(__dirname, "..", "public", "synexus-logo.png"),
@@ -22,7 +22,7 @@ function resolveLogoPath() {
     }
   }
   throw new Error(
-    `Synexus logo not found. Expected one of:\n${LOGO_CANDIDATES.join("\n")}`,
+    `SyNexus logo not found. Expected one of:\n${LOGO_CANDIDATES.join("\n")}`,
   );
 }
 
@@ -55,7 +55,7 @@ export function renderLogoWatermark(frameW = 1080, frameH = 1920) {
     <circle cx="${cx}" cy="${cy}" r="${size / 2 + 10}" fill="#020806" fill-opacity="0.78"/>
     <circle cx="${cx}" cy="${cy}" r="${size / 2 + 8}" fill="none" stroke="#89ff2f" stroke-opacity="0.65" stroke-width="2"/>
     <image href="${uri}" x="${x}" y="${y}" width="${size}" height="${size}" preserveAspectRatio="xMidYMid meet"/>
-    <text x="${cx}" y="${y + size + 28}" font-size="18" fill="#89ff2f" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-weight="700" letter-spacing="0.14em">SYNEXUS PRO</text>
+    <text x="${cx}" y="${y + size + 28}" font-size="18" fill="#89ff2f" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-weight="700" letter-spacing="0.14em">SyNexusPro</text>
   </g>`;
 }
 

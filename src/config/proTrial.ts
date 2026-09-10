@@ -1,4 +1,4 @@
-/** Synexus Pro trial — starts after sign-up with card on file for billing after trial. */
+/** SyNexusPro trial — starts after sign-up with card on file for billing after trial. */
 export const SYNEXUS_PRO_TRIAL_DAYS = 7;
 
 export const SYNEXUS_PRO_TRIAL_MS = SYNEXUS_PRO_TRIAL_DAYS * 24 * 60 * 60 * 1000;

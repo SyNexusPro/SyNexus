@@ -38,7 +38,7 @@ export function SentinelAlertsHub({ tokens, extraAlerts = [] }: Props) {
           Sentinel alerts
         </h2>
         <p className="sentinel-alerts__lede">
-          The heart of Synexus — live hits from Aegis, Pulse, Titan, and Cipher before you trade.
+          The heart of SyNexus — live hits from Aegis, Pulse, Titan, and Cipher before you trade.
         </p>
       </div>
 

@@ -1,14 +1,9 @@
 import { escapeXml, wrapLines } from "./videoUtils.js";
 import { renderLogoFooterMark, renderLogoHero, renderLogoWatermark } from "./videoLogo.js";
-import { renderSynBunnyInline } from "./synBunny.js";
 import { MATTE_BLACK, ACCENT, NEON, SUBSTRATE, HIGHLIGHT, MUTED, CYAN, DANGER } from "./brandPalette.js";
 
 const W = 1080;
 const H = 1920;
-
-function showVideoMascot() {
-  return process.env.VIDEO_MASCOT?.trim() === "1" || process.env.SHOW_SYN_BUNNY === "1";
-}
 
 /** Brand palette — matte black + electric purple neon (SyNexus v1.0). */
 const PCB_GREEN = ACCENT;
@@ -319,7 +314,6 @@ export function renderSceneSvg(scene) {
   ${baseBackground()}
   <text x="540" y="130" font-size="26" fill="${ACCENT}" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-weight="700" letter-spacing="0.26em" opacity="0.9">${kicker.toUpperCase()}</text>
   ${body}
-  ${showVideoMascot() ? renderSynBunnyInline({ sceneId: scene.id }) : ""}
   ${renderLogoWatermark(W, H)}
   ${renderLogoFooterMark()}
   ${footerBar(scene.id === "cta" ? sub : "synexus.pro · you control your funds")}

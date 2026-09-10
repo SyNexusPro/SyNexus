@@ -123,7 +123,7 @@ export function cropForAsset(asset) {
 }
 
 export function buildCaptions(asset, origin = "https://synexus.pro") {
-  const tags = "#Synexus #Solana #Crypto #AI #ShouldIBuyThis #Shorts";
+  const tags = "#SyNexus #Solana #Crypto #AI #ShouldIBuyThis #Shorts";
   const telegram = [
     `**${asset.headline}** · ${asset.tagline}`,
     "",

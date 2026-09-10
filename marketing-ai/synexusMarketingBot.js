@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Synexus Marketing Bot — template copy generator (CLI).
- * Voice: simple, grabby, plain English. Lead with "Should I buy this?"
+ * SyNexus Marketing Bot — template copy generator (CLI).
+ * Voice: simple, grabby, plain English. Lead with "Scan a token"
  *
  * Usage:
  *   node synexusMarketingBot.js              # print full daily pack
@@ -24,33 +24,37 @@ import {
   buildTikTokCaption as buildPremiumTikTokCaption,
   appOrigin,
 } from "./marketingCopy.js";
-import { mascotSignOff } from "./synBunny.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const TAGS = "#Synexus #Solana #Crypto #ShouldIBuyThis";
+const TAGS = "#SyNexus #Solana #Crypto #TokenScan";
 const PRO_PRICE_LINE = PRO_LINE;
 const TRIAL_LINE = TRIAL_OFFER_SHORT;
-const SYN_PUMPFUN_URL =
-  process.env.SYN_PUMPFUN_URL?.trim() ||
-  "https://pump.fun/communities/9naVtLAGKWYuEcGehe1BZ3DpiSLHjSNsaeFr2JPHpump";
-const SYN_COIN_LINE = `🪙 $SyN community is live on pump.fun → ${SYN_PUMPFUN_URL}`;
+const SYN_MINT =
+  process.env.SYN_MINT?.trim() ||
+  process.env.VITE_SYN_MINT?.trim() ||
+  "9naVtLAGKWYuEcGehe1BZ3DpiSLHjSNsaeFr2JPHpump";
+const SYN_DEXSCREENER_URL =
+  process.env.SYN_DEXSCREENER_URL?.trim() ||
+  process.env.SYN_LIVE_CHART_URL?.trim() ||
+  `https://www.geckoterminal.com/solana/tokens/${SYN_MINT}`;
+const SYN_COIN_LINE = `🪙 $SyN is live on Solana → ${SYN_DEXSCREENER_URL}`;
 
 /** One-line hooks — rotate daily. Punchy, badass, female Sentinel voice. */
 const HOOKS = [
-  "Stop. Paste the mint before you ape. Synexus reads it in seconds.",
+  "Stop. Paste the mint before you ape. SyNexus reads it in seconds.",
   "You're one blind ape away from exit liquidity. Scan first.",
-  "Should I buy this? I answer that before you touch Phantom.",
+  "Scan any Solana token before you touch Phantom.",
   "The chart is bait. Paste the token — get Avoid, Watch, or OK.",
   "Memecoin pumping? Freeze. I read liquidity and whales before you sign.",
-  "Three seconds. One verdict. No cope. Synexus Sentinel is live.",
+  "Three seconds. One verdict. No cope. SyNexus Sentinel is live.",
 ];
 
 /** Supporting lines — still simple, no operator jargon. */
 const SUPPORT = [
   "Sign up free → 7-day Pro trial, no card. Then $9.99/mo if you keep it.",
   "Free scan on every token. Pro unlocks Titan briefings + full Sentinel grid.",
-  "Your wallet signs every trade — Synexus just shows you the risk first.",
+  "Your wallet signs every trade — SyNexus just shows you the risk first.",
   "Trade journal tracks entries, exits, and P/L so you see your habits.",
   "Live alerts when whales move or risk spikes — before the timeline screams.",
 ];
@@ -87,18 +91,18 @@ export function generateTikTokScript(now = Date.now()) {
   const s = salt(Math.floor(now / 1000));
   const onScreen =
     s < 0.33
-      ? "SHOULD I BUY THIS?"
+      ? "SCAN ANY TOKEN"
       : s < 0.66
         ? "PASTE TOKEN → GET VERDICT"
         : "AVOID · WATCH · OK";
 
   return [
-    `Synexus — Hook: Big text "${onScreen}" — VO: ${hook}`,
+    `SyNexus — Hook: Big text "${onScreen}" — VO: ${hook}`,
     "",
     `[0–3s] Show paste box + instant verdict card (Avoid / Watch / OK).`,
     `[3–7s] Flash scorecard: risk · whales · momentum · liquidity · rug warning.`,
     `[7–11s] One line: "Not financial advice — you still sign in your wallet."`,
-    `[11–15s] Syn the bunny floats in corner. CTA: Try free · ${appOrigin()} · ${TRIAL_LINE}`,
+    `[11–15s] SyNexus logo + CTA: Try free · ${appOrigin()} · ${TRIAL_LINE}`,
     "",
     `Tags: ${TAGS}`,
   ].join("\n");
@@ -108,7 +112,7 @@ export function generateTelegramUpdate(now = Date.now()) {
   const origin = appOrigin();
   const hook = pick(HOOKS, dayOffset(now));
   return [
-    "**Synexus Sentinel** · Daily brief",
+    "**SyNexus Sentinel** · Daily brief",
     "",
     hook,
     "",
@@ -132,8 +136,8 @@ export function generateRedditPost(now = Date.now()) {
   const origin = appOrigin();
   const seed = dayOffset(now);
   const titles = [
-    "I built a free \"Should I buy this?\" scanner for Solana — paste a mint, get Avoid/Watch/OK in plain English",
-    "Before you ape: paste any SOL token and get a risk score + plain-English read (Synexus)",
+    "I built a free Solana token scanner — paste a mint, get Avoid/Watch/OK in plain English",
+    "Before you ape: paste any SOL token and get a risk score + plain-English read (SyNexus)",
     "Anyone else tired of TG hype? Made a simple Solana token scanner — paste → verdict → you decide",
   ];
   const title = pick(titles, seed);
@@ -156,7 +160,7 @@ export function generateRedditPost(now = Date.now()) {
     "",
     `Try it: ${origin}`,
     "",
-    mascotSignOff().replace(/\*\*(.+?)\*\*/g, "$1"),
+    "SyNexus · paste before you ape",
   ].join("\n");
 
   return `TITLE:\n${title}\n\nBODY:\n${body}`;
@@ -170,7 +174,7 @@ export function generateReferralBlurb(now = Date.now()) {
     "",
     hook,
     "",
-    "Send them Synexus — paste a token, get a clear answer, trade on their own terms.",
+    "Send them SyNexus — paste a token, get a clear answer, trade on their own terms.",
     "",
     TRIAL_LINE,
     PRO_PRICE_LINE,
@@ -183,17 +187,17 @@ export function growthMissionLine(date = new Date()) {
   const missions = [
     'Post a reel: on-screen text "7-day Pro free when you sign up" + paste → Avoid/Watch demo.',
     'Post a 15s clip: paste a trending ticker → show the "Avoid" or "Watch" verdict on screen.',
-    "Screen record: sign up → show 7-day Pro trial banner → scan BONK in Should I buy?",
+    "Screen record: sign up → show 7-day Pro trial banner → scan BONK in token scan",
     'TikTok text overlay: "7 days Pro free · $9.99/mo after · no card to start."',
     "X thread (3 tweets): aping blind → paste verdict fix → 7-day free trial link.",
     "Telegram: pin the offer — 7-day Pro trial, sign up free, $9.99/mo after.",
     "Discord: share one Avoid verdict + trial offer in footer — educational not hype.",
     "Reddit comment: mention free scan + 7-day Pro trial after sign-up — no spam.",
     "Film wallet journal stats — people love seeing their own win rate.",
-    "Compare: influencer \"100x gem\" vs Synexus Danger band on the same token.",
+    "Compare: influencer \"100x gem\" vs SyNexus Danger band on the same token.",
     "Short: \"3 seconds to paste. 5 seconds to know if you should touch it.\"",
     "Carousel: Avoid vs Watch vs OK — what each means in one sentence each.",
-    "Story/Reel: Titan sign-up gate + Should I buy? demo — end card with trial offer.",
+    "Story/Reel: Titan sign-up gate + token scan demo — end card with trial offer.",
   ];
   const start = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
   const idx = Math.floor(start / 86_400_000) % missions.length;
@@ -274,7 +278,7 @@ export function generateXCaptions(now = Date.now(), count = 3) {
       "",
       "Sentinel read · Avoid · Watch · OK",
       `Scan → ${origin}`,
-      "#Synexus #Solana",
+      "#SyNexus #Solana",
     ].join("\n");
   });
 }
@@ -283,7 +287,7 @@ export function parseRedditPost(text) {
   const titleMatch = String(text).match(/TITLE:\n([\s\S]*?)\n\nBODY:/);
   const bodyMatch = String(text).match(/BODY:\n([\s\S]*)/);
   return {
-    title: titleMatch?.[1]?.trim() ?? "Should I buy this? — Synexus Solana scanner",
+    title: titleMatch?.[1]?.trim() ?? "Scan a token — SyNexus Solana scanner",
     body: bodyMatch?.[1]?.trim() ?? String(text),
   };
 }
@@ -347,7 +351,7 @@ function parseArgs(argv) {
 }
 
 function printHelp() {
-  console.log(`Synexus Marketing Bot — copy templates only (no posting).
+  console.log(`SyNexus Marketing Bot — copy templates only (no posting).
 
 Commands:
   node synexusMarketingBot.js

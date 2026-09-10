@@ -1,1 +1,1 @@
-export { default, config } from "../subscription/webhook";
+export { default, config } from "../subscription/webhook.js";

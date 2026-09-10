@@ -1,6 +1,6 @@
 /**
- * Synexus 7-Day Viral Launch Plan — day themes, volume targets, and KPIs.
- * Brand: Synexus (strict). Community hub: Telegram.
+ * SyNexus 7-Day Viral Launch Plan — day themes, volume targets, and KPIs.
+ * Brand: SyNexus (strict). Community hub: Telegram.
  */
 
 export const LAUNCH_GOAL = {
@@ -47,10 +47,10 @@ export const LAUNCH_DAYS = [
     code: "hook",
     emoji: "🔴",
     title: "SET THE HOOK (LAUNCH DAY)",
-    objective: "Make people understand Synexus in 5 seconds.",
+    objective: "Make people understand SyNexus in 5 seconds.",
     videoTarget: { min: 6, max: 8 },
     visualStyle: "dark UI · glitch text · urgent tone",
-    telegramAction: "Launch channel — post: Synexus AI is now live",
+    telegramAction: "Launch channel — post: SyNexus AI is now live",
     strategy: ["High-energy hooks", "Fake AI dashboard clips", "Launch CTA to synexus.pro"],
   },
   {
@@ -70,7 +70,7 @@ export const LAUNCH_DAYS = [
     code: "authority",
     emoji: "🟡",
     title: "AI AUTHORITY DAY",
-    objective: 'Position Synexus as "the system".',
+    objective: 'Position SyNexus as "the system".',
     videoTarget: { min: 6, max: 8 },
     visualStyle: "dashboards · charts · AI scanning UI",
     telegramAction: "Demo paste → verdict flow",
@@ -84,8 +84,8 @@ export const LAUNCH_DAYS = [
     objective: "Build narrative trust.",
     videoTarget: { min: 4, max: 6 },
     visualStyle: "slower pacing · emotional tone",
-    telegramAction: "Founder story + why Synexus exists",
-    strategy: ["Why I built Synexus", "Pattern recognition origin"],
+    telegramAction: "Founder story + why SyNexus exists",
+    strategy: ["Why I built SyNexus", "Pattern recognition origin"],
   },
   {
     day: 5,

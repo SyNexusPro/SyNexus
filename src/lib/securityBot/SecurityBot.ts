@@ -16,7 +16,17 @@ import type {
 } from "./types";
 
 const PLAN_GRANT_KEY = "synexus_aegis_plan_grant";
-const TRUSTED_PLAN_SOURCES = ["subscription_checkout", "square_checkout", "supabase_profile", "demo_session", "trial_7d", "admin", "owner"];
+const TRUSTED_PLAN_SOURCES = [
+  "subscription_checkout",
+  "square_checkout",
+  "supabase_profile",
+  "demo_session",
+  "trial_7d",
+  "admin",
+  "owner",
+  "play_review",
+  "tester_30d",
+];
 
 type PlanGrant = { plan: "PRO" | "FREE"; source: string; at: number };
 
@@ -115,7 +125,7 @@ class SecurityBotCore {
     const verdict = this.verifyPlanIntegrity(storedPlan, hasPaidProfile);
     if (!verdict.allowed && storedPlan === "PRO") {
       try {
-        localStorage.setItem("hivemind_paid_plan", "FREE");
+        localStorage.setItem("synexus_paid_plan", "FREE");
       } catch {
         /* ignore */
       }
@@ -304,12 +314,12 @@ class SecurityBotCore {
 
     if (import.meta.env.DEV) {
       const tag = opts.blocked ? "BLOCKED" : "LOG";
-      console.warn(`[Synexus Aegis] ${tag} ${opts.code}: ${opts.message}`);
+      console.warn(`[SyNexus Aegis] ${tag} ${opts.code}: ${opts.message}`);
     }
   }
 
   private installPlanTamperWatch() {
-    const key = "hivemind_paid_plan";
+    const key = "synexus_paid_plan";
     const original = localStorage.setItem.bind(localStorage);
     localStorage.setItem = (k: string, value: string) => {
       if (k === key && value === "PRO") {
@@ -342,7 +352,7 @@ class SecurityBotCore {
 
   private installCrossTabPlanWatch() {
     window.addEventListener("storage", (e) => {
-      if (e.key !== "hivemind_paid_plan" || e.newValue !== "PRO") return;
+      if (e.key !== "synexus_paid_plan" || e.newValue !== "PRO") return;
       this.record({
         action: "plan_check",
         code: "PLAN_TAMPER",
@@ -363,6 +373,6 @@ export function initSecurityBot() {
 
 export function guardOrThrow(verdict: SecurityVerdict): void {
   if (!verdict.allowed) {
-    throw new Error(verdict.message ?? "Action blocked by Synexus security.");
+    throw new Error(verdict.message ?? "Action blocked by SyNexus security.");
   }
 }

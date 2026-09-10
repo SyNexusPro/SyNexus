@@ -26,6 +26,7 @@ const SENTINELS = [
   { name: "Sentinel Pulse", role: "Reads momentum as it breaks." },
   { name: "Sentinel Leviathan", role: "Shadows the whale wallets." },
   { name: "Sentinel Cipher", role: "Decodes patterns with AI." },
+  { name: "Sentinel Helix", role: "Guards SyN Wallet keys and every signature." },
 ] as const;
 
 type Props = {

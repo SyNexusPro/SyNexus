@@ -213,7 +213,7 @@ export function TradeJournalPanel({ embedded = false }: { embedded?: boolean }) 
         </ul>
       ) : (
         <p className="trade-journal__empty">
-          No journal entries yet. Tap <strong>Buy</strong> or <strong>Sell</strong> on any token — Synexus logs entry,
+          No journal entries yet. Tap <strong>Buy</strong> or <strong>Sell</strong> on any token — SyNexus logs entry,
           exit, and P/L automatically.
         </p>
       )}

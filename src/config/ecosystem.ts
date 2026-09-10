@@ -1,6 +1,8 @@
 /** Documented ecosystem parameters (UI + future program design). Adjust before mainnet. */
 
-export const HIVE_DOMAIN = "https://hivemindtoken.ai";
+import { PUBLIC_SITE_URL } from "./site";
+
+export const SYNEXUS_SITE_URL = PUBLIC_SITE_URL;
 
 export const STAKING_STATUS: "planned" | "live" = "planned";
 
@@ -26,7 +28,7 @@ export const AFFILIATE_TIERS = [
     exampleRevSharePct: "10%",
   },
   {
-    tier: "Hive",
+    tier: "Ranger",
     qualifiedVolumeUsd: "$500 – $4,999",
     exampleRevSharePct: "15%",
   },
@@ -38,5 +40,27 @@ export const AFFILIATE_TIERS = [
 ] as const;
 
 export const STORAGE_KEYS = {
-  affiliateHandle: "hivemind-affiliate-handle",
+  affiliateHandle: "synexus-affiliate-handle",
 } as const;
+
+export function normalizeAffiliateHandle(raw: string): string {
+  return raw.trim().replace(/\s+/g, "-").toLowerCase().replace(/[^a-z0-9-_]/g, "");
+}
+
+/** Public referral URL: https://www.synexus.pro/ref/{handle} */
+export function buildAffiliateReferralUrl(handle = ""): string {
+  const base = PUBLIC_SITE_URL.replace(/\/$/, "");
+  const normalized = normalizeAffiliateHandle(handle);
+  if (!normalized) return `${base}/ref/your-handle`;
+  return `${base}/ref/${encodeURIComponent(normalized)}`;
+}
+
+export function readStoredAffiliateHandle(): string {
+  if (typeof localStorage === "undefined") return "";
+  return localStorage.getItem(STORAGE_KEYS.affiliateHandle) ?? "";
+}
+
+export function saveAffiliateHandle(handle: string): void {
+  if (typeof localStorage === "undefined") return;
+  localStorage.setItem(STORAGE_KEYS.affiliateHandle, handle);
+}

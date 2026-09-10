@@ -71,7 +71,8 @@ npm run android:bundle
 - [ ] **Data safety:** declare email (account), usage/diagnostics, payment metadata (Stripe); link Privacy Policy.
 - [ ] **Financial features:** declare crypto/token information app; not a wallet or exchange.
 - [ ] **Target audience:** 18+ (matches Terms).
-- [ ] **Ads:** No if you do not show third-party ads.
+- [ ] **Ads:** Yes if AdSense runs on the home feed (`VITE_ADSENSE_HOME_SLOT`).
+- [ ] **Subscriptions:** Android app opens synexus.pro in the browser for billing (see `src/lib/androidSubscription.ts`); declare accordingly in Play Console.
 - [ ] **Content rating:** complete IARC questionnaire (likely low maturity; crypto info may add flags).
 
 ## Operations
@@ -91,4 +92,4 @@ npm run android:bundle
 
 **Short:** Safer token discovery with Sentinels, Oracle Supreme briefings, and live risk scans.
 
-**Full (excerpt):** Synexus helps you explore tokens with AI-powered Sentinels (Aegis, Pulse, Titan, Cipher), Oracle Supreme daily briefings, watchlists, and community reports. Not financial advice. Synexus Pro unlocks deeper lanes and voice briefings. Subscriptions billed through Google Play or web per your purchase path.
+**Full (excerpt):** SyNexus helps you explore tokens with AI-powered Sentinels (Aegis, Pulse, Titan, Cipher), Oracle Supreme daily briefings, watchlists, and community reports. Not financial advice. SyNexusPro unlocks deeper lanes and voice briefings. Subscriptions billed through Google Play or web per your purchase path.

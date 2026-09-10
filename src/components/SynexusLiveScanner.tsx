@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import type { Token } from "../data/tokens";
+import { SENTINEL_LANE_IDS, SENTINEL_LANES } from "../config/sentinels";
 import { synexusRiskBandLabel } from "../data/tokens";
+import { useAppIsActive } from "../hooks/useAppIsActive";
+import { isNativeAndroid } from "../lib/bootExperience";
+import { nativePollIntervalMs } from "../lib/nativePerformance";
 
 type Props = {
   tokens: Token[];
@@ -11,14 +15,14 @@ type Props = {
   error: string | null;
 };
 
-const SENTINEL_LANES = [
-  { id: "aegis", label: "Aegis", role: "Security & privacy", pro: false },
-  { id: "pulse", label: "Pulse", role: "Momentum", pro: false },
-  { id: "titan", label: "Leviathan", role: "Whales", pro: true },
-  { id: "cipher", label: "Cipher", role: "Patterns", pro: true },
-] as const;
+const SENTINEL_LANES_UI = SENTINEL_LANE_IDS.map((id) => ({
+  id,
+  label: SENTINEL_LANES[id].shortName,
+  role: SENTINEL_LANES[id].role,
+  pro: SENTINEL_LANES[id].proPrecisionBoost,
+}));
 
-function laneStatus(token: Token, laneId: (typeof SENTINEL_LANES)[number]["id"]): string {
+function laneStatus(token: Token, laneId: (typeof SENTINEL_LANE_IDS)[number]): string {
   switch (laneId) {
     case "aegis":
       return synexusRiskBandLabel(token.guardianRisk);
@@ -26,10 +30,12 @@ function laneStatus(token: Token, laneId: (typeof SENTINEL_LANES)[number]["id"])
       return token.change24hPct >= 0
         ? `+${token.change24hPct.toFixed(1)}% 24h`
         : `${token.change24hPct.toFixed(1)}% 24h`;
-    case "titan":
+    case "leviathan":
       return token.topWalletPct != null ? `Top ${token.topWalletPct}%` : "Tracking…";
     case "cipher":
       return token.riskScore != null ? `Score ${token.riskScore}` : "Analyzing…";
+    case "helix":
+      return "Vault watch";
     default:
       return "—";
   }
@@ -42,20 +48,20 @@ function riskClass(risk: Token["guardianRisk"]): string {
 }
 
 export function SynexusLiveScanner({ tokens, feedSource, dexLiveCount, loading, error }: Props) {
+  const appActive = useAppIsActive();
+  const nativeStatic = isNativeAndroid();
   const [scanIndex, setScanIndex] = useState(0);
-  const [tick, setTick] = useState(0);
 
   const scanQueue = useMemo(() => (tokens.length ? tokens : []).slice(0, 12), [tokens]);
   const active = scanQueue[scanIndex % Math.max(scanQueue.length, 1)];
 
   useEffect(() => {
-    if (!scanQueue.length) return;
+    if (nativeStatic || !appActive || !scanQueue.length) return;
     const id = window.setInterval(() => {
       setScanIndex((i) => (i + 1) % scanQueue.length);
-      setTick((t) => t + 1);
-    }, 2200);
+    }, nativePollIntervalMs(8_000));
     return () => window.clearInterval(id);
-  }, [scanQueue.length]);
+  }, [appActive, nativeStatic, scanQueue.length]);
 
   const sourceLabel = feedSource === "live" ? "DexScreener · Live feed" : "Sample feed";
 
@@ -71,7 +77,7 @@ export function SynexusLiveScanner({ tokens, feedSource, dexLiveCount, loading, 
         <span className="synexus-scanner__source">{sourceLabel}</span>
       </header>
 
-      <div className="synexus-scanner__viewport" key={active ? `${active.id}-${tick}` : "empty"}>
+      <div className="synexus-scanner__viewport" key={active?.id ?? "empty"}>
         {active ? (
           <>
             <div className="synexus-scanner__token">
@@ -83,7 +89,7 @@ export function SynexusLiveScanner({ tokens, feedSource, dexLiveCount, loading, 
             </div>
 
             <ul className="synexus-scanner__lanes">
-              {SENTINEL_LANES.map((lane, laneIndex) => {
+              {SENTINEL_LANES_UI.map((lane, laneIndex) => {
                 const locked = lane.pro;
                 const stagger = laneIndex * 0.12;
                 return (
@@ -122,7 +128,7 @@ export function SynexusLiveScanner({ tokens, feedSource, dexLiveCount, loading, 
             : "Preview mode — connect live feed in production"}
         </p>
         <Link className="synexus-scanner__pro-cta" to="/pulse#synexus-pro">
-          Full Sentinel scans on Synexus Pro →
+          Full Sentinel scans on SyNexusPro →
         </Link>
         {error ? <p className="synexus-scanner__error">{error}</p> : null}
       </footer>

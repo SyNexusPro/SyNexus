@@ -6,7 +6,7 @@ export function isEmailVerified(user: Pick<User, "email_confirmed_at" | "confirm
   return Boolean(user.email_confirmed_at ?? user.confirmed_at);
 }
 
-const PENDING_VERIFY_KEY = "hivemind_pending_verification_email";
+const PENDING_VERIFY_KEY = "synexus_pending_verification_email";
 
 export function loadPendingVerificationEmail(): string | null {
   if (typeof window === "undefined") return null;

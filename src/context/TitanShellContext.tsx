@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -13,6 +14,7 @@ import {
   ORACLE_OPEN_CHAT_EVENT,
   ORACLE_OPEN_LOGIN_EVENT,
 } from "../lib/openOracleLogin";
+import { archiveActiveConversationAndReset } from "../lib/titanChatLibrary";
 
 export type TitanSheetMode = "chat" | "login";
 
@@ -24,12 +26,24 @@ type TitanShellContextValue = {
   closeSheet: () => void;
 };
 
+function endActiveChatSession() {
+  try {
+    archiveActiveConversationAndReset();
+  } catch {
+    /* still close the sheet */
+  }
+}
+
 const TitanShellContext = createContext<TitanShellContextValue | null>(null);
 
 export function TitanShellProvider({ children }: { children: ReactNode }) {
   const location = useLocation();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetMode, setSheetMode] = useState<TitanSheetMode>("chat");
+  const sheetOpenRef = useRef(sheetOpen);
+  const sheetModeRef = useRef(sheetMode);
+  sheetOpenRef.current = sheetOpen;
+  sheetModeRef.current = sheetMode;
 
   const openChat = useCallback(() => {
     setSheetMode("chat");
@@ -37,15 +51,14 @@ export function TitanShellProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const openLogin = useCallback(() => {
-    if (location.pathname === "/") {
-      window.dispatchEvent(new Event(ORACLE_OPEN_LOGIN_EVENT));
-      return;
-    }
     setSheetMode("login");
     setSheetOpen(true);
-  }, [location.pathname]);
+  }, []);
 
   const closeSheet = useCallback(() => {
+    if (sheetOpenRef.current && sheetModeRef.current === "chat") {
+      endActiveChatSession();
+    }
     setSheetOpen(false);
     window.dispatchEvent(new Event(ORACLE_CLOSE_CHAT_EVENT));
   }, []);
@@ -56,7 +69,6 @@ export function TitanShellProvider({ children }: { children: ReactNode }) {
       setSheetOpen(true);
     }
     function onOpenLogin() {
-      if (location.pathname === "/") return;
       setSheetMode("login");
       setSheetOpen(true);
     }
@@ -66,9 +78,12 @@ export function TitanShellProvider({ children }: { children: ReactNode }) {
       window.removeEventListener(ORACLE_OPEN_CHAT_EVENT, onOpenChat);
       window.removeEventListener(ORACLE_OPEN_LOGIN_EVENT, onOpenLogin);
     };
-  }, [location.pathname]);
+  }, []);
 
   useEffect(() => {
+    if (sheetOpenRef.current && sheetModeRef.current === "chat") {
+      endActiveChatSession();
+    }
     setSheetOpen(false);
   }, [location.pathname]);
 

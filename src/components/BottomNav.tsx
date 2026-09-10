@@ -1,62 +1,61 @@
 import { NavLink } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useTitanShell } from "../context/TitanShellContext";
 import { useOpenTitanGate } from "../hooks/useOpenTitanGate";
-import { useOpenTitanChat } from "../hooks/useOpenTitanChat";
 import { useOperatorAuth } from "../hooks/useOperatorAuth";
-import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
-import { useTitanChatOpen } from "../hooks/useTitanChatOpen";
 import { useTitanLoginOpen } from "../hooks/useTitanChatOpen";
+import { isTradingEnabled } from "../config/trading";
+import { HeraWakeWordControl } from "./HeraWakeWordControl";
+import { useHeraWakeWordSetting } from "../hooks/useHeraWakeWordSetting";
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   `bottom-nav__link${isActive ? " is-active" : ""}`;
 
 export function BottomNav() {
-  const { isSimple } = useSynexusUIMode();
+  const { t } = useTranslation();
   const { closeSheet } = useTitanShell();
   const openLoginGate = useOpenTitanGate();
-  const openTitanChat = useOpenTitanChat();
   const { linked } = useOperatorAuth();
-  const chatOpen = useTitanChatOpen();
   const loginOpen = useTitanLoginOpen();
   const loginActive = loginOpen;
-  const titanActive = chatOpen;
+  const trading = isTradingEnabled();
+  const { docked: listenDocked } = useHeraWakeWordSetting();
 
   return (
-    <nav className="bottom-nav" aria-label="Primary">
+    <nav className={`bottom-nav${trading ? " bottom-nav--trade" : ""}`} aria-label={t("nav.primary")}>
       <button
         type="button"
         className={`bottom-nav__link${loginActive ? " is-active" : ""}`}
+        data-tour="nav-login"
         onClick={openLoginGate}
         aria-current={loginActive ? "page" : undefined}
       >
         <span className="bottom-nav__icon bottom-nav__icon--login" aria-hidden>
           {linked ? "◉" : "⎔"}
         </span>
-        {linked ? "Account" : "Login"}
+        {linked ? t("nav.account") : t("nav.login")}
       </button>
-      <NavLink to="/" end className={linkClass} onClick={closeSheet}>
+      <NavLink to="/" end className={linkClass} onClick={closeSheet} data-tour="nav-scan">
         <span className="bottom-nav__icon" aria-hidden>
-          {isSimple ? "◎" : "⌂"}
+          ◎
         </span>
-        {isSimple ? "Scan" : "Feed"}
+        {t("nav.scan")}
       </NavLink>
-      <NavLink to="/hub" className={linkClass} onClick={closeSheet}>
+      <NavLink to="/hub" className={linkClass} onClick={closeSheet} data-tour="nav-hub">
         <span className="bottom-nav__icon" aria-hidden>
           ⧉
         </span>
-        Hub
+        {t("nav.hub")}
       </NavLink>
-      <button
-        type="button"
-        className={`bottom-nav__link${titanActive ? " is-active" : ""}`}
-        onClick={openTitanChat}
-        aria-current={titanActive ? "page" : undefined}
-      >
-        <span className="bottom-nav__icon bottom-nav__icon--oracle" aria-hidden>
-          {isSimple ? "◉" : "∿"}
-        </span>
-        {isSimple ? "Titan" : "Sentinels"}
-      </button>
+      {trading ? (
+        <NavLink to="/trade" className={linkClass} onClick={closeSheet}>
+          <span className="bottom-nav__icon" aria-hidden>
+            ⇄
+          </span>
+          {t("nav.trade")}
+        </NavLink>
+      ) : null}
+      {listenDocked ? null : <HeraWakeWordControl />}
     </nav>
   );
 }

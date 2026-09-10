@@ -5,12 +5,17 @@ import { SYNEXUS_PRO_PRICE_LABEL } from "../config/proPricing";
 import { hasStoredOwnerGrant } from "../lib/ownerAccess";
 import { isProTrialActive } from "../lib/proDemo";
 import { getCurrentUser } from "../lib/supabaseData";
+import {
+  ANDROID_WEB_SUBSCRIBE_HINT,
+  androidRequiresWebSubscription,
+  resolveSubscribeLabel,
+} from "../lib/androidSubscription";
 import { redirectToProCheckout, startProCheckout } from "../lib/squareCheckout";
 import { useOperatorAuth } from "../hooks/useOperatorAuth";
 import { ProDemoButton } from "./ProDemoButton";
 
-const PLAN_STORAGE_KEY = "hivemind_paid_plan";
-const BANNER_DISMISS_KEY = "hivemind_pro_banner_dismissed";
+const PLAN_STORAGE_KEY = "synexus_paid_plan";
+const BANNER_DISMISS_KEY = "synexus_pro_banner_dismissed";
 
 function isSynexusProPlan(): boolean {
   try {
@@ -68,14 +73,16 @@ export function ProTrialBanner() {
 
   const detail = error
     ? "Checkout couldn't open. Tap Subscribe to retry."
-    : !linked
-      ? `${SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial · card at checkout · then ${SYNEXUS_PRO_PRICE_LABEL}`
-      : `${SYNEXUS_PRO_TRIAL_LABEL} active or available · ${SYNEXUS_PRO_PRICE_LABEL} after trial · cancel anytime`;
+    : androidRequiresWebSubscription()
+      ? ANDROID_WEB_SUBSCRIBE_HINT
+      : !linked
+        ? `${SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial · card at checkout · then ${SYNEXUS_PRO_PRICE_LABEL}`
+        : `${SYNEXUS_PRO_TRIAL_LABEL} active or available · ${SYNEXUS_PRO_PRICE_LABEL} after trial · cancel anytime`;
 
   return (
-    <div className="pro-trial-banner" role="region" aria-label="Synexus Pro subscription">
+    <div className="pro-trial-banner" role="region" aria-label="SyNexusPro subscription">
       <div className="pro-trial-banner__text">
-        <span className="pro-trial-banner__headline">Synexus Pro</span>
+        <span className="pro-trial-banner__headline">SyNexusPro</span>
         <span className="pro-trial-banner__detail">{detail}</span>
       </div>
       <ProDemoButton
@@ -88,7 +95,7 @@ export function ProTrialBanner() {
         disabled={busy}
         onClick={() => void startCheckout()}
       >
-        {busy ? "Opening…" : "Subscribe"}
+        {busy ? "Opening…" : resolveSubscribeLabel("Subscribe")}
       </button>
       <button type="button" className="pro-trial-banner__close" onClick={dismiss} aria-label="Dismiss offer">
         ×

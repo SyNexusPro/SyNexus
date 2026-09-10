@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { fetchGuardianAlerts, fetchProfile, fetchWatchlistTokens, getCurrentUser } from "../lib/supabaseData";
 import { hasSupabaseEnv } from "../lib/supabaseClient";
-import { useOpenTitanChat } from "../hooks/useOpenTitanChat";
 import { useTitanShell } from "../context/TitanShellContext";
+import { consumeHeraWakeLaunch, type HeraWakeLaunch } from "../lib/hera/wakeWord";
 import { useTitanBotName } from "../hooks/useTitanBotName";
 import { DEFAULT_TITAN_BOT_NAME } from "../config/titanBot";
 import { resolveTitanBotName } from "../lib/titanBotName";
@@ -16,13 +16,16 @@ import {
   type OracleConversationContext,
 } from "../lib/oracleSupremeConversation";
 import { useOracleMarketFeed } from "../lib/useOracleMarketFeed";
+import { useSolanaMoversBoard } from "../lib/useSolanaMoversBoard";
 import { isSynexusBootComplete, subscribeSynexusBootComplete } from "../lib/synexusBootComplete";
+import { isNativeAndroid } from "../lib/bootExperience";
 import { SYNEXUS_PLAN_CHANGED } from "../hooks/useSynexusPlan";
-import { OracleSupremeChat } from "./OracleSupremeChat";
+import { HeraScreen } from "./hera/HeraScreen";
+import { warmTitanBrain } from "../lib/titanConversation";
 import { QuickOperatorLogin } from "./QuickOperatorLogin";
 import { SynexusSymbolMark } from "./SynexusSymbolMark";
 
-const PLAN_STORAGE_KEY = "hivemind_paid_plan";
+const PLAN_STORAGE_KEY = "synexus_paid_plan";
 
 function normalizePlan(raw: string | null | undefined): "FREE" | "PRO" {
   return raw === "PRO" ? "PRO" : "FREE";
@@ -30,7 +33,6 @@ function normalizePlan(raw: string | null | undefined): "FREE" | "PRO" {
 
 export function TitanSheet() {
   const { sheetOpen, sheetMode, closeSheet } = useTitanShell();
-  const openTitanChat = useOpenTitanChat();
   const { name: titanBotName } = useTitanBotName();
   const commanderLabel = titanBotName || resolveTitanBotName() || DEFAULT_TITAN_BOT_NAME;
   const [bootReady, setBootReady] = useState(isSynexusBootComplete());
@@ -41,7 +43,29 @@ export function TitanSheet() {
   const [plan, setPlan] = useState<"FREE" | "PRO">(() =>
     normalizePlan(localStorage.getItem(PLAN_STORAGE_KEY)),
   );
-  const { tokens, feedSource } = useOracleMarketFeed(plan === "PRO" ? 8_000 : 10_000);
+  const titanChatActive = sheetOpen && sheetMode === "chat";
+  const [wakeLaunch, setWakeLaunch] = useState<HeraWakeLaunch | null>(null);
+
+  const { tokens, feedSource } = useOracleMarketFeed({
+    enabled: titanChatActive,
+    intervalMs: plan === "PRO" ? 15_000 : 20_000,
+  });
+  const { board: moversBoard } = useSolanaMoversBoard({
+    enabled: titanChatActive,
+    intervalMs: 300_000,
+  });
+
+  useEffect(() => {
+    if (sheetOpen) warmTitanBrain();
+  }, [sheetOpen]);
+
+  useEffect(() => {
+    if (sheetOpen && sheetMode === "chat") {
+      setWakeLaunch(consumeHeraWakeLaunch());
+    } else {
+      setWakeLaunch(null);
+    }
+  }, [sheetOpen, sheetMode]);
 
   useEffect(() => subscribeSynexusBootComplete(() => setBootReady(true)), []);
 
@@ -56,6 +80,8 @@ export function TitanSheet() {
   }, []);
 
   useEffect(() => {
+    // Android: no boot network/greeting — only when the sheet is actually opened.
+    if (isNativeAndroid() && !sheetOpen) return;
     if (!bootReady || hasGreetedThisSession()) return;
 
     let cancelled = false;
@@ -102,7 +128,7 @@ export function TitanSheet() {
     return () => {
       cancelled = true;
     };
-  }, [bootReady]);
+  }, [bootReady, sheetOpen]);
 
   const context = useMemo<OracleConversationContext>(
     () => ({
@@ -115,17 +141,28 @@ export function TitanSheet() {
       daysSinceLastVisit: readDaysSinceLastVisit(),
       tokens,
       feedSource,
+      moversBoard,
     }),
-    [alertCount, feedSource, operatorName, plan, commanderLabel, tokens, watchlistCount, watchlistSymbols],
+    [alertCount, feedSource, operatorName, plan, commanderLabel, tokens, watchlistCount, watchlistSymbols, moversBoard],
   );
 
-  function handleFabToggle() {
-    openTitanChat();
-  }
+  const fromWake = Boolean(wakeLaunch);
+  const seed = wakeLaunch?.remainder?.trim() ?? "";
+  const autoListen = fromWake && seed.length < 6;
 
   return (
     <>
-      {sheetOpen ? (
+      {sheetOpen && sheetMode === "chat" ? (
+        <HeraScreen
+          context={context}
+          onClose={closeSheet}
+          autoListen={autoListen}
+          seedUtterance={fromWake && seed.length >= 6 ? seed : null}
+          wakePulse={fromWake}
+        />
+      ) : null}
+
+      {sheetOpen && sheetMode === "login" ? (
         <>
           <button
             type="button"
@@ -134,61 +171,31 @@ export function TitanSheet() {
             onClick={closeSheet}
           />
           <div
-            className={`titan-sheet titan-sheet--${sheetMode}`}
+            className="titan-sheet titan-sheet--login"
             role="dialog"
             aria-modal="true"
-            aria-label={sheetMode === "login" ? "Sign in" : `Talk to ${commanderLabel}`}
+            aria-label="Sign in"
           >
             <header className="titan-sheet__head">
               <div className="titan-sheet__brand">
                 <SynexusSymbolMark size="chat" />
                 <div>
-                  <p className="titan-sheet__title">
-                    {sheetMode === "login" ? "Sign in" : commanderLabel}
-                  </p>
-                  {sheetMode === "login" ? (
-                    <p className="titan-sheet__subtitle">Access watchlists, alerts, and Pro.</p>
-                  ) : null}
+                  <p className="titan-sheet__title">Sign in</p>
+                  <p className="titan-sheet__subtitle">Access watchlists, alerts, and Pro.</p>
                 </div>
               </div>
-              <button type="button" className="titan-sheet__close" onClick={closeSheet} aria-label="Close">
-                ×
-              </button>
+              <div className="titan-sheet__actions">
+                <button type="button" className="titan-sheet__close" onClick={closeSheet} aria-label="Close">
+                  ×
+                </button>
+              </div>
             </header>
-
             <div className="titan-sheet__body">
-              {sheetMode === "login" ? (
-                <QuickOperatorLogin onSuccess={closeSheet} />
-              ) : (
-                <OracleSupremeChat context={context} variant="overlay" minimal />
-              )}
+              <QuickOperatorLogin onSuccess={closeSheet} />
             </div>
           </div>
         </>
       ) : null}
-
-      <button
-        type="button"
-        className={`oracle-presence-fab${sheetOpen && sheetMode === "chat" ? " oracle-presence-fab--open" : ""}`}
-        onClick={handleFabToggle}
-        aria-expanded={sheetOpen && sheetMode === "chat"}
-        aria-label={
-          sheetOpen && sheetMode === "chat"
-            ? `Minimize ${commanderLabel} chat`
-            : `Talk to ${commanderLabel}`
-        }
-        title={commanderLabel}
-      >
-        <span className="oracle-presence-fab__ring" aria-hidden />
-        <span className="oracle-presence-fab__avatar" aria-hidden>
-          <SynexusSymbolMark size="fab" />
-        </span>
-        {!sheetOpen || sheetMode !== "chat" ? (
-          <span className="oracle-presence-fab__copy">
-            <span className="oracle-presence-fab__label">{commanderLabel}</span>
-          </span>
-        ) : null}
-      </button>
     </>
   );
 }

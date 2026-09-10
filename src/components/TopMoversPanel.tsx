@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useAppIsActive } from "../hooks/useAppIsActive";
+import { nativePollIntervalMs } from "../lib/nativePerformance";
 import {
   fetchSolana5mMovers,
   type Solana5mMoversResult,
   type TokenMover5m,
 } from "../services/marketDataService";
 
-const REFRESH_MS = 45_000;
+const REFRESH_MS = nativePollIntervalMs(45_000);
 
 type Tab = "gainers" | "losers";
 
@@ -49,8 +51,11 @@ export function TopMoversPanel() {
   const [tab, setTab] = useState<Tab>("gainers");
   const [data, setData] = useState<Solana5mMoversResult | null>(null);
   const [loading, setLoading] = useState(true);
+  const appActive = useAppIsActive();
 
   useEffect(() => {
+    if (!appActive) return;
+
     let cancelled = false;
 
     async function load() {
@@ -71,7 +76,7 @@ export function TopMoversPanel() {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, []);
+  }, [appActive]);
 
   const rows = tab === "gainers" ? (data?.gainers ?? []) : (data?.losers ?? []);
   const emptyLabel =

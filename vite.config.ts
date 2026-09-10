@@ -5,6 +5,21 @@ import { configureOwnerUnlockApi } from "./api/ownerUnlock";
 import { configureAnalyticsApi } from "./api/analytics";
 import { configureTitanChatApi } from "./api/titan/chat";
 import { configureSubscriptionWebhookApi } from "./api/subscription/webhook";
+import { configureWhaleWebhookApi } from "./api/whale/webhook";
+import { configureWhalePollApi } from "./api/whale/poll";
+import { configureWhaleEventsApi } from "./api/whale/events";
+import { configurePushSubscribeApi } from "./api/push/subscribe";
+import { configureTitanEventApi } from "./api/titan/event";
+import { configureTitanDailyApi } from "./api/cron/titan-daily";
+import { configureTitanDiscoveryApi } from "./api/cron/titan-discovery";
+import { configureTitanLaunchWatchApi } from "./api/cron/titan-launch-watch";
+import { configureInviteApi } from "./api/invite";
+import { configureHeraSttApi } from "./api/hera/stt";
+import { configureHeraTtsApi } from "./api/hera/tts";
+import { configureHeraVoiceStreamApi } from "./api/hera/voice-stream";
+import { configureHeraRealtimeSessionApi } from "./api/hera/realtime-session";
+import { configureHeraLiveTokenApi } from "./api/hera/live-token";
+import { configureHeraLaunchWatchApi } from "./api/hera/launch-watch";
 
 /** Client bundle reads only VITE_* from import.meta.env; Vercel often sets SUPABASE_* without the prefix. */
 function resolveSupabaseForClientBuild(mode: string) {
@@ -19,12 +34,19 @@ function resolveSupabaseForClientBuild(mode: string) {
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
+  for (const [key, value] of Object.entries(env)) {
+    if (value != null && process.env[key] == null) process.env[key] = value;
+  }
   const { url: supabaseUrl, anon: supabaseAnon } = resolveSupabaseForClientBuild(mode);
 
   return {
     define: {
       "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(supabaseUrl),
       "import.meta.env.VITE_SUPABASE_ANON_KEY": JSON.stringify(supabaseAnon),
+      global: "globalThis",
+    },
+    optimizeDeps: {
+      include: ["buffer", "bs58", "@solana/web3.js", "@scure/bip39", "ed25519-hd-key"],
     },
     build: {
       rollupOptions: {
@@ -32,6 +54,9 @@ export default defineConfig(({ mode }) => {
           manualChunks(id) {
             if (!id.includes("node_modules")) {
               return;
+            }
+            if (id.includes("@solana") || id.includes("@scure") || id.includes("ed25519-hd-key") || id.includes("bs58")) {
+              return "solana";
             }
             if (id.includes("@supabase")) {
               return "supabase";
@@ -59,6 +84,21 @@ export default defineConfig(({ mode }) => {
           configureOwnerUnlockApi(server, env);
           configureAnalyticsApi(server);
           configureTitanChatApi(server, env);
+          configureWhaleWebhookApi(server, env);
+          configureWhalePollApi(server, env);
+          configureWhaleEventsApi(server, env);
+          configurePushSubscribeApi(server, env);
+          configureTitanEventApi(server, env);
+          configureTitanDailyApi(server, env);
+          configureTitanDiscoveryApi(server, env);
+          configureTitanLaunchWatchApi(server, env);
+          configureInviteApi(server, env);
+          configureHeraSttApi(server, env);
+          configureHeraTtsApi(server, env);
+          configureHeraVoiceStreamApi(server, env);
+          configureHeraRealtimeSessionApi(server, env);
+          configureHeraLiveTokenApi(server);
+          configureHeraLaunchWatchApi(server);
         },
       },
     ],

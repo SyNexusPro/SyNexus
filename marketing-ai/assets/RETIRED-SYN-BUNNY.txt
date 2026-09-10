@@ -1,0 +1,1 @@
+Syn Bunny and HiveMind assets were removed. Use public/synexus-*.png only.

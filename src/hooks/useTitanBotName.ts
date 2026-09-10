@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { DEFAULT_TITAN_BOT_NAME } from "../config/titanBot";
 import {
   readStoredTitanBotName,
   resetTitanBotName,
+  resolveInternalCommanderPersona,
   resolveTitanBotName,
   saveTitanBotName,
   TITAN_BOT_NAME_CHANGED,
@@ -29,7 +29,7 @@ export function useTitanBotName() {
     setNameState(resetTitanBotName());
   }, []);
 
-  const isCustom = name !== DEFAULT_TITAN_BOT_NAME;
+  const isCustom = name !== resolveInternalCommanderPersona();
 
   return {
     name,

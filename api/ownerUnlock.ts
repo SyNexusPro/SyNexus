@@ -95,7 +95,7 @@ async function handleOwnerUnlock(
   const email = payload.email?.trim().toLowerCase() ?? "";
   const password = payload.password ?? "";
   const expectedEmail = env.SYNEXUS_OWNER_EMAIL!.trim().toLowerCase();
-  const expectedPassword = env.SYNEXUS_OWNER_PASSWORD!;
+  const expectedPassword = env.SYNEXUS_OWNER_PASSWORD!.trim();
 
   if (!email || !password) {
     return { statusCode: 400, body: { error: "Enter your command ID and key." } };

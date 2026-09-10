@@ -1,0 +1,41 @@
+{
+  "slug": "whale-wallets-and-exit-liquidity",
+  "title": "Whale Wallets and Exit Liquidity: Reading Leviathan Lane",
+  "excerpt": "Why your green candle might fund someone else's exit — and how to scan holder concentration first.",
+  "date": "2026-07-09",
+  "author": "SyNexus Editorial",
+  "origin": "https://www.synexus.pro",
+  "trustLine": "Non-custodial · You sign every trade · Not financial advice.",
+  "blocks": [
+    {
+      "type": "h2",
+      "text": "Exit liquidity defined"
+    },
+    {
+      "type": "p",
+      "text": "Retail buys often provide the liquidity insiders need to sell into strength. Leviathan lane surfaces whale concentration and large-wallet movements so you see distribution early."
+    },
+    {
+      "type": "h2",
+      "text": "Holder charts lie slowly"
+    },
+    {
+      "type": "p",
+      "text": "By the time social feeds scream, on-chain concentration may already be extreme. Paste the mint in Should I buy this? before you FOMO."
+    },
+    {
+      "type": "h2",
+      "text": "Combine lanes"
+    },
+    {
+      "type": "p",
+      "text": "Whale data alone is not a verdict. Pulse momentum, Aegis security, and Cipher patterns fuse into one plain-English read on SyNexus."
+    }
+  ],
+  "cta": "Run a free Sentinel scan → https://www.synexus.pro",
+  "tags": [
+    "whales",
+    "Leviathan",
+    "trading"
+  ]
+}

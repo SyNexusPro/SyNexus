@@ -28,12 +28,12 @@ export function TradingFeeDisclosure({
   const feeRate = formatTradingFeeRate(plan);
   const feeUsd = calculateTradeFeeUsd(notionalUsd, plan);
   const allocation = allocateTradingFeeRevenue(feeUsd);
-  const planLabel = plan === "PRO" ? "Synexus Pro" : "Free";
+  const planLabel = plan === "PRO" ? "SyNexusPro" : "Free";
 
   if (compact) {
     return (
       <p className={`trading-fee-disclosure trading-fee-disclosure--compact ${className}`.trim()} role="note">
-        Synexus fee: <strong>{feeRate}</strong> ({planLabel})
+        SyNexus fee: <strong>{feeRate}</strong> ({planLabel})
         {plan === "FREE" ? (
           <>
             {" "}
@@ -48,18 +48,18 @@ export function TradingFeeDisclosure({
   return (
     <div className={`trading-fee-disclosure ${className}`.trim()} role="note">
       <div className="trading-fee-disclosure__head">
-        <p className="trading-fee-disclosure__eyebrow">Synexus trading fee</p>
+        <p className="trading-fee-disclosure__eyebrow">SyNexus trading fee</p>
         <p className="trading-fee-disclosure__rate">
           <strong>{feeRate}</strong> per swap · {planLabel}
         </p>
       </div>
       <p className="trading-fee-disclosure__example">
         Example on {formatFeeUsd(notionalUsd)} trade:{" "}
-        <strong>{formatFeeUsd(feeUsd)}</strong> Synexus fee
+        <strong>{formatFeeUsd(feeUsd)}</strong> SyNexus fee
         {plan === "FREE" ? (
           <>
             {" "}
-            — <Link to="/pulse">Synexus Pro</Link> pays {formatTradingFeeRate("PRO")}
+            — <Link to="/pulse">SyNexusPro</Link> pays {formatTradingFeeRate("PRO")}
           </>
         ) : null}
       </p>
@@ -86,7 +86,7 @@ export function TradingFeeDisclosure({
       ) : (
         <p className="trading-fee-disclosure__fineprint">
           Fees support liquidity, product development, and security —{" "}
-          <Link to="/liquidity-treasury">Synexus Coin Liquidity Treasury</Link>.
+          <Link to="/liquidity-treasury">SyNexus Coin Liquidity Treasury</Link>.
         </p>
       )}
     </div>

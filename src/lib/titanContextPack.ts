@@ -4,11 +4,18 @@ import type { TitanMemoryProfile } from "./titanMemory";
 import type { OracleConversationContext } from "./oracleSupremeConversation";
 import {
   buildAllOracleDirectives,
+  buildDiscoveryResearchPacket,
   buildTokenIntelBrief,
   resolveOracleTokenQuery,
   searchOracleTokens,
 } from "./oracleCryptoBrain";
+import { SENTINEL_LANE_IDS, sentinelLaneLabel } from "../config/sentinels";
 import { buildOperatorStrengthBrief } from "./titanOperatorBrief";
+import { buildTitanMoversBrief } from "./titanMoversAnswer";
+import { isTopMoversQuestion } from "./moverTimeframes";
+import { getReplyLanguage } from "../i18n";
+import { formatHeraDataAsOf, hostTimeZone } from "./hera/formatLiveStamp";
+import { focusMintOf, isTokenFollowUp, resolveHeraFocus } from "./hera/heraSessionFocus";
 
 function formatUsd(value: number | undefined): string {
   if (value == null || !Number.isFinite(value)) return "—";
@@ -29,18 +36,47 @@ export type TitanIntent =
   | "strategy"
   | "life_counsel"
   | "explain"
+  | "market_movers"
+  | "launch_watch"
   | "general";
+
+const CRYPTOISH =
+  /\b(solana|sol\b|crypto|token|coin|memecoin|defi|nft|wallet|liquidity|rug|whale|pump|dex|mint|trade|market|gainer|\$[A-Za-z]{2,12})\b/i;
 
 /** Lightweight intent tag so the LLM picks the right reasoning mode. */
 export function classifyTitanIntent(text: string): TitanIntent {
   const lower = text.toLowerCase().trim();
+  if (isTopMoversQuestion(text)) return "market_movers";
+  if (
+    /\b(launch(ing|ed)?|stealth launch|fair launch|going live|new (coin|token)|pump\.fun|bonding curve|anyone posting|launch watch|social scan|alpha leads?)\b/.test(
+      lower,
+    )
+  ) {
+    return "launch_watch";
+  }
   if (/should i (buy|sell|ape|exit|hold)|worth (buying|it)|good entry|take profit|cut loss/.test(lower)) {
     return "trade_decision";
   }
-  if (/compare|versus|\bvs\b|better between|which one|or \w+\?/.test(lower)) return "comparison";
-  if (/^(scan|find|look up|lookup|what is|tell me about)\b|\$[a-z]{2,12}\b/i.test(text)) return "token_lookup";
-  if (/strategy|portfolio|allocate|position size|diversify|risk manage/.test(lower)) return "strategy";
-  if (/feel|stress|anxious|relationship|life|sleep|work|lonely|overwhelm/.test(lower)) return "life_counsel";
+  if (/compare|versus|\bvs\b|better between|which one/.test(lower)) return "comparison";
+  if (
+    /\b(best|strongest|top|watch|moving|pumping|gainers?|hot)\b/.test(lower) &&
+    /\b(coin|coins|token|tokens|crypto|ones?|today|now)\b/.test(lower)
+  ) {
+    return "market_movers";
+  }
+  if (isTokenFollowUp(text)) return "token_lookup";
+  if (/^(scan|find|look up|lookup)\b/i.test(text) || /\$[a-z]{2,12}\b/i.test(text)) return "token_lookup";
+  if (/\b(synexus|syn)\b/i.test(lower) && /\b(price|liq|liquidity|volume|holders?|going on|how.?s|status|cap)\b/i.test(lower)) {
+    return "token_lookup";
+  }
+  if (/\bwhat'?s going on with\b/.test(lower) || /\b(price|liquidity|volume|holders?|mcap) (of|for)\b/.test(lower)) {
+    return "token_lookup";
+  }
+  if (/^(what is|tell me about)\b/i.test(text) && CRYPTOISH.test(text)) return "token_lookup";
+  if (/strategy|portfolio|allocate|position size|diversify|risk manage/.test(lower) && CRYPTOISH.test(lower)) {
+    return "strategy";
+  }
+  if (/feel|stress|anxious|relationship|life|sleep|lonely|overwhelm/.test(lower)) return "life_counsel";
   if (/^why\b|^how does|^explain|^what happens/.test(lower)) return "explain";
   return "general";
 }
@@ -78,13 +114,11 @@ function resolveMultiTokenIntel(message: string, tokens: Token[]): string | null
 export function buildTitanSentinelBrief(tokens: Token[]): string {
   if (!tokens.length) return "Sentinels on standby — no live targets yet.";
   const dirs = buildAllOracleDirectives(tokens);
-  return (["aegis", "pulse", "titan", "cipher"] as const)
-    .map((lane) => {
-      const d = dirs[lane];
-      const target = d.targetSymbol ? ` → ${d.targetSymbol}` : "";
-      return `${lane.charAt(0).toUpperCase() + lane.slice(1)}${target}: ${d.order}`;
-    })
-    .join("\n");
+  return SENTINEL_LANE_IDS.map((lane) => {
+    const d = dirs[lane];
+    const target = d.targetSymbol ? ` → ${d.targetSymbol}` : "";
+    return `${sentinelLaneLabel(lane)}${target}: ${d.order}`;
+  }).join("\n");
 }
 
 /** Watchlist symbols matched against the live pool. */
@@ -127,6 +161,7 @@ export function buildTitanMarketBrief(tokens: Token[]): string {
   const riskiest = [...tokens].sort((a, b) => (b.riskScore ?? 0) - (a.riskScore ?? 0))[0];
 
   const sections = [
+    `As of ${formatHeraDataAsOf()}`,
     `${tokens.length} pairs · ${dangerTokens.length} danger · ${warningTokens.length} warning`,
     dangerList.length
       ? `Danger zone: ${dangerList.map((t) => `${t.symbol}(${t.riskScore ?? "?"})`).join(", ")}`
@@ -158,6 +193,7 @@ export type TitanChatPayload = {
   watchlistCount: number;
   feedSource: "live" | "mock";
   marketBrief: string;
+  moversBrief?: string | null;
   operatorBrief?: string | null;
   sentinelBrief?: string | null;
   watchlistBrief?: string | null;
@@ -165,6 +201,19 @@ export type TitanChatPayload = {
   tokenIntel?: string | null;
   memory?: Pick<TitanMemoryProfile, "favoriteSymbols" | "riskTolerance" | "tradingNotes"> | null;
   history: TitanChatHistoryMessage[];
+  /** BCP-47 language for Titan replies (any language). */
+  replyLanguage?: string;
+  /** Optional evidence packets for CURRENT RESEARCH DATA. */
+  research?: unknown[] | null;
+  /** Slim crypto path — currently unused; Hera thinks on every real question. */
+  fastMode?: boolean;
+  /** Spoken Hera — keep the reply conversational and list-friendly. */
+  spokenReply?: boolean;
+  /** IANA timezone of the host, for second-accurate as-of stamps. */
+  hostTimeZone?: string;
+  /** Last-discussed Solana mint so follow-ups keep the same token. */
+  focusMint?: string;
+  focusSymbol?: string;
 };
 
 export function buildTitanChatPayload(
@@ -173,6 +222,24 @@ export function buildTitanChatPayload(
   history: TitanChatHistoryMessage[],
   memory: TitanMemoryProfile | null,
 ): TitanChatPayload {
+  const focusToken = resolveHeraFocus(message, ctx.tokens, history);
+  const intent = classifyTitanIntent(message);
+  const marketAsk =
+    intent === "trade_decision" ||
+    intent === "token_lookup" ||
+    intent === "market_movers" ||
+    intent === "launch_watch" ||
+    intent === "comparison" ||
+    intent === "strategy" ||
+    CRYPTOISH.test(message);
+
+  const research: unknown[] = [];
+  if (marketAsk) {
+    if (focusToken && "id" in focusToken) {
+      research.push(buildDiscoveryResearchPacket(focusToken));
+    }
+  }
+
   return {
     message,
     operatorName: ctx.operatorName,
@@ -181,12 +248,18 @@ export function buildTitanChatPayload(
     alertCount: ctx.alertCount,
     watchlistCount: ctx.watchlistCount,
     feedSource: ctx.feedSource,
-    marketBrief: buildTitanMarketBrief(ctx.tokens),
+    marketBrief: marketAsk ? buildTitanMarketBrief(ctx.tokens) : "No market question this turn.",
+    moversBrief: marketAsk ? buildTitanMoversBrief(ctx.moversBoard) : null,
     operatorBrief: buildOperatorStrengthBrief(ctx),
-    sentinelBrief: buildTitanSentinelBrief(ctx.tokens),
-    watchlistBrief: buildTitanWatchlistBrief(ctx.watchlistSymbols ?? [], ctx.tokens),
-    intentHint: classifyTitanIntent(message),
-    tokenIntel: resolveTitanTokenIntel(message, ctx.tokens),
+    sentinelBrief: marketAsk ? buildTitanSentinelBrief(ctx.tokens) : null,
+    watchlistBrief: marketAsk ? buildTitanWatchlistBrief(ctx.watchlistSymbols ?? [], ctx.tokens) : null,
+    intentHint: intent,
+    tokenIntel: marketAsk
+      ? resolveTitanTokenIntel(message, ctx.tokens) ??
+        (focusToken && "id" in focusToken ? buildTokenIntelBrief(focusToken) : null)
+      : null,
+    focusMint: focusMintOf(focusToken) ?? undefined,
+    focusSymbol: focusToken?.symbol,
     memory: memory
       ? {
           favoriteSymbols: memory.favoriteSymbols,
@@ -194,6 +267,9 @@ export function buildTitanChatPayload(
           tradingNotes: memory.tradingNotes,
         }
       : null,
-    history: history.slice(-10),
+    history: history.slice(-16),
+    replyLanguage: getReplyLanguage(),
+    hostTimeZone: hostTimeZone(),
+    research: research.length ? research : null,
   };
 }

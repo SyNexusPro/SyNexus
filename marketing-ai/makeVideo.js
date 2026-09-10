@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Synexus Daily Video — hands-off Shorts/Reels generator.
+ * SyNexus Daily Video — hands-off Shorts/Reels generator.
  *
  *   node makeVideo.js              # today's video (skip if already exists)
  *   node makeVideo.js --upload     # render + upload to YouTube (if connected)
@@ -15,7 +15,6 @@ import { fileURLToPath } from "node:url";
 import { loadMarketingEnv } from "./loadEnv.js";
 import { buildVideoJob, todayDirName } from "./videoBlueprint.js";
 import { renderSceneSvg } from "./videoArt.js";
-import { renderSynBunnyStandaloneSvg, clearSynBunnyCache } from "./synBunny.js";
 import {
   composeVideo,
   fileExists,
@@ -64,14 +63,6 @@ async function renderDailyVideo({ force = false, quiet = false, upload = false }
     const scenesDir = join(dayDir, "scenes");
     await mkdir(scenesDir, { recursive: true });
 
-    if (process.env.VIDEO_MASCOT?.trim() === "1") {
-      const bunnySvg = renderSynBunnyStandaloneSvg(512);
-      const bunnyPng = join(dayDir, "syn-bunny.png");
-      await writeFile(join(dayDir, "syn-bunny.svg"), bunnySvg, "utf8");
-      await renderSvgToPng(bunnySvg, bunnyPng);
-      clearSynBunnyCache();
-    }
-
     const scenePngPaths = [];
     for (let i = 0; i < job.scenes.length; i += 1) {
       const scene = job.scenes[i];
@@ -119,7 +110,7 @@ async function renderDailyVideo({ force = false, quiet = false, upload = false }
 }
 
 function printHelp() {
-  console.log(`Synexus Daily Video
+  console.log(`SyNexus Daily Video
 
   node makeVideo.js              Render today
   node makeVideo.js --upload     Render + YouTube upload
@@ -134,7 +125,7 @@ async function runWatch(upload) {
       console.log(`\n[${new Date().toLocaleString()}] ${label}`);
       await renderDailyVideo({ quiet: false, upload });
     } catch (err) {
-      console.error("[Synexus video]", err.message || err);
+      console.error("[SyNexus video]", err.message || err);
     }
   };
 

@@ -6,6 +6,7 @@ import { TokenLogo } from "./TokenLogo";
 import { ScanHealthPanel } from "./ScanHealthPanel";
 import { TradeIntelBuyLink } from "./TradeIntelBuyLink";
 import { type GuardianRisk, type Token, synexusRiskBandLabel } from "../data/tokens";
+import { SYN_MINT, SYN_PUMPFUN_URL } from "../config/synToken";
 
 const riskStyles: Record<
   GuardianRisk,
@@ -61,9 +62,10 @@ export function TokenCard({ token }: Props) {
   const swapOpts = { feeBps };
   const risk = riskStyles[token.guardianRisk];
   const up = token.change24hPct >= 0;
-  const chartUrl = dexScreenerTokenUrl(token.mintAddress, token.symbol);
-  const buyUrl = jupiterBuyWithSolUrl(token.mintAddress, swapOpts) ?? chartUrl;
-  const sellUrl = jupiterSellForSolUrl(token.mintAddress, swapOpts) ?? chartUrl;
+  const isSynMint = token.mintAddress === SYN_MINT;
+  const chartUrl = isSynMint ? SYN_PUMPFUN_URL : dexScreenerTokenUrl(token.mintAddress, token.symbol);
+  const buyUrl = isSynMint ? SYN_PUMPFUN_URL : jupiterBuyWithSolUrl(token.mintAddress, swapOpts) ?? chartUrl;
+  const sellUrl = isSynMint ? SYN_PUMPFUN_URL : jupiterSellForSolUrl(token.mintAddress, swapOpts) ?? chartUrl;
 
   return (
     <article className="token-card">
@@ -83,7 +85,7 @@ export function TokenCard({ token }: Props) {
             className="token-card__risk-dot"
             style={{ background: risk.dot }}
           />
-          The Synexus · {synexusRiskBandLabel(token.guardianRisk)}
+          The SyNexus · {synexusRiskBandLabel(token.guardianRisk)}
         </div>
       </div>
       <div className="token-card__bottom">
@@ -103,7 +105,14 @@ export function TokenCard({ token }: Props) {
       <ScanHealthPanel token={token} compact />
       {token.mintAddress ? (
         <p className="token-card__mint">
-          Mint: <span>{token.mintAddress}</span>
+          Mint:{" "}
+          {isSynMint ? (
+            <a href={SYN_PUMPFUN_URL} target="_blank" rel="noopener noreferrer">
+              {token.mintAddress}
+            </a>
+          ) : (
+            <span>{token.mintAddress}</span>
+          )}
         </p>
       ) : null}
       <div className="token-card__actions">

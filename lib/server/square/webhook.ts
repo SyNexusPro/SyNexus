@@ -1,7 +1,8 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { logRevenue } from "../../treasury/treasuryCore.mjs";
-import { readSquareConfig, type SquareEnv } from "./config";
+import { readSquareConfig, type SquareEnv } from "./config.js";
+import { applyCardPaymentObject } from "./cardVerify.js";
 
 type PaidPlan = "PRO";
 
@@ -98,9 +99,18 @@ async function upsertPaidPlan(
   const { error } = await supabase.from("profiles").upsert({
     id: userId,
     paid_plan: plan,
+    subscription_status: plan === "PRO" ? "active" : "free",
     updated_at: new Date().toISOString(),
   });
-  if (error) throw error;
+  if (error) {
+    // Older DBs may lack subscription_status — fall back
+    const { error: fallback } = await supabase.from("profiles").upsert({
+      id: userId,
+      paid_plan: plan,
+      updated_at: new Date().toISOString(),
+    });
+    if (fallback) throw fallback;
+  }
 }
 
 async function logSquareInvoicePayment(
@@ -137,34 +147,33 @@ async function logSquareInvoicePayment(
   return { logged: true, amountUsd: result.entry?.amountUsd };
 }
 
-export async function handleSquareWebhookRequest(
+export async function processSquareWebhookEvent(
   rawBody: Buffer,
   signature: string | undefined,
   env: WebhookEnv,
-): Promise<{ statusCode: number; body: Record<string, unknown> }> {
+): Promise<void> {
   const { webhookSignatureKey, webhookNotificationUrl } = readSquareConfig(env);
   const supabaseUrl = env.SUPABASE_URL || env.VITE_SUPABASE_URL;
   const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!webhookSignatureKey || !webhookNotificationUrl || !supabaseUrl || !serviceRoleKey) {
-    return {
-      statusCode: 500,
-      body: {
-        error:
-          "Webhook env is missing. Set SQUARE_WEBHOOK_SIGNATURE_KEY, SQUARE_WEBHOOK_NOTIFICATION_URL, VITE_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY.",
-      },
-    };
+    console.warn(
+      "[webhook] Missing env — set SQUARE_WEBHOOK_SIGNATURE_KEY, SQUARE_WEBHOOK_NOTIFICATION_URL, VITE_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY.",
+    );
+    return;
   }
 
   if (!verifySquareSignature(rawBody, signature, webhookSignatureKey, webhookNotificationUrl)) {
-    return { statusCode: 401, body: { error: "Invalid Square webhook signature" } };
+    console.warn("[webhook] Invalid Square webhook signature");
+    return;
   }
 
   let event: SquareWebhookEvent;
   try {
     event = JSON.parse(rawBody.toString("utf8")) as SquareWebhookEvent;
   } catch {
-    return { statusCode: 400, body: { error: "Invalid JSON payload" } };
+    console.warn("[webhook] Invalid JSON payload");
+    return;
   }
 
   const eventType = event.type ?? "";
@@ -189,23 +198,33 @@ export async function handleSquareWebhookRequest(
     }
   }
 
-  let treasury: Awaited<ReturnType<typeof logSquareInvoicePayment>> | undefined;
   if (eventType === "invoice.payment_made") {
     try {
-      treasury = await logSquareInvoicePayment(event, object);
+      await logSquareInvoicePayment(event, object);
     } catch (treasuryError) {
       console.error("[treasury]", treasuryError);
-      treasury = { logged: false, reason: "treasury_error" };
     }
   }
 
-  return {
-    statusCode: 200,
-    body: {
-      received: true,
-      type: eventType,
-      eventId: event.event_id,
-      treasury,
-    },
-  };
+  if (
+    eventType === "payment.created" ||
+    eventType === "payment.updated" ||
+    eventType === "payment.completed"
+  ) {
+    try {
+      await applyCardPaymentObject(object, env);
+    } catch (inviteError) {
+      console.error("[invite-card]", inviteError);
+    }
+  }
+}
+
+/** @deprecated Use processSquareWebhookEvent — HTTP layer always returns 200. */
+export async function handleSquareWebhookRequest(
+  rawBody: Buffer,
+  signature: string | undefined,
+  env: WebhookEnv,
+): Promise<{ statusCode: number; body: Record<string, unknown> }> {
+  await processSquareWebhookEvent(rawBody, signature, env);
+  return { statusCode: 200, body: { received: true } };
 }

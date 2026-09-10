@@ -48,11 +48,12 @@ export function BlogIndex() {
   return (
     <div className="page blog-page">
       <section className="blog-page__hero marketing-panel">
-        <p className="blog-page__eyebrow">Synexus Journal</p>
+        <p className="blog-page__eyebrow">SyNexus Journal</p>
         <h1 className="blog-page__title">Sentinel intelligence, in writing</h1>
         <p className="blog-page__lede">
-          Daily articles on Solana risk reads, exit liquidity, and how Synexus helps operators decide before they
-          sign. Auto-published by the growth engine — trust-first, no hype.
+          Original guides on Solana security, scam prevention, wallet safety, AI-assisted research, token
+          verification, and weekly market context — written specifically for SyNexus traders. Educational only, not
+          financial advice.
         </p>
       </section>
 
@@ -60,7 +61,10 @@ export function BlogIndex() {
       {error && <p className="blog-page__status blog-page__status--error">{error}</p>}
 
       {!loading && !error && posts.length === 0 && (
-        <p className="blog-page__status">First article publishing soon. Run the growth engine to seed content.</p>
+        <p className="blog-page__status">
+          Articles loading from the journal index. If this persists, run{" "}
+          <code>npm run blog:seed</code> to regenerate content.
+        </p>
       )}
 
       <ul className="blog-page__list">

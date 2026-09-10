@@ -34,7 +34,7 @@ async function main() {
   }
 
   const block = `
-# Synexus owner command code (server-only — add same vars on Vercel for production)
+# SyNexus owner command code (server-only — add same vars on Vercel for production)
 SYNEXUS_OWNER_EMAIL=${email}
 SYNEXUS_OWNER_PASSWORD=${password}
 SYNEXUS_OWNER_SIGNING_KEY=${signingKey}
@@ -52,7 +52,7 @@ SYNEXUS_OWNER_SIGNING_KEY=${signingKey}
   console.log(`Command key: ${password}`);
   console.log("═".repeat(44));
   console.log("\nSaved to .env (gitignored). Also add these to Vercel env vars for production.");
-  console.log("Use on Pulse → Operator link → Command code tab.\n");
+  console.log("Use on /god or Pulse → Operator link → God mode tab.\n");
 }
 
 main().catch((err) => {

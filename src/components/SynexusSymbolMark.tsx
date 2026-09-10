@@ -1,24 +1,15 @@
-import { BrainCircuitPulse } from "./BrainCircuitPulse";
-
 type SynexusSymbolMarkProps = {
   className?: string;
   size?: "panel" | "chat" | "fab";
-  /** Heartbeat + circuit animation (fab keeps pulse only). */
+  /** Kept for API compatibility — logo no longer heartbeats. */
   alive?: boolean;
 };
 
-/** Synexus emblem only — cropped from the full logo asset, scaled to fit the box. */
-export function SynexusSymbolMark({ className = "", size = "panel", alive = true }: SynexusSymbolMarkProps) {
-  const showCircuits = alive && size === "panel";
-
+/** SyNexus emblem only — static mark (no heartbeat animation). */
+export function SynexusSymbolMark({ className = "", size = "panel" }: SynexusSymbolMarkProps) {
   return (
-    <div
-      className={`synexus-symbol-box synexus-symbol-box--${size}${alive ? " synexus-symbol-box--alive" : ""}${className ? ` ${className}` : ""}`}
-      aria-hidden="true"
-    >
-      <BrainCircuitPulse variant="symbol" alive={alive} circuits={showCircuits}>
-        <img className="synexus-symbol-box__img" src="/synexus-symbol.png?v=5" alt="" />
-      </BrainCircuitPulse>
+    <div className={`synexus-symbol-box synexus-symbol-box--${size}${className ? ` ${className}` : ""}`} aria-hidden="true">
+      <img className="synexus-symbol-box__img" src="/synexus-symbol.png?v=5" alt="" />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useState, type ButtonHTMLAttributes } from "react";
+import { resolveSubscribeLabel } from "../lib/androidSubscription";
 import { getCurrentUser } from "../lib/supabaseData";
 import { redirectToProCheckout, startProCheckout } from "../lib/squareCheckout";
 
@@ -8,7 +9,7 @@ type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
   onCheckoutError?: (message: string) => void;
 };
 
-/** One-click Synexus Pro subscribe — opens Square checkout (sign-in optional). */
+/** One-click SyNexusPro subscribe — opens Square checkout (sign-in optional). */
 export function SynexusSubscribeButton({
   label,
   busyLabel = "Opening…",
@@ -42,9 +43,11 @@ export function SynexusSubscribeButton({
     }
   }
 
+  const displayLabel = resolveSubscribeLabel(label);
+
   return (
     <button type="button" {...rest} disabled={disabled || busy} onClick={(e) => void handleClick(e)}>
-      {busy ? busyLabel : label}
+      {busy ? busyLabel : displayLabel}
     </button>
   );
 }

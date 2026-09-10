@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Synexus daily YouTube pipeline — render + upload, hands-off.
+ * SyNexus daily YouTube pipeline — render + upload, hands-off.
  *
  *   node dailyYouTube.js              # today: render if needed, then upload
  *   node dailyYouTube.js --watch      # run now + every local midnight
@@ -50,7 +50,7 @@ async function publishDaily({ force = false, quiet = false } = {}) {
 }
 
 function printHelp() {
-  console.log(`Synexus Daily YouTube — automated render + publish
+  console.log(`SyNexus Daily YouTube — automated render + publish
 
 Usage:
   node dailyYouTube.js              Publish today's Short
@@ -81,7 +81,7 @@ async function runWatch() {
       console.log(`\n[${new Date().toLocaleString()}] ${label}`);
       await publishDaily({ quiet: false });
     } catch (err) {
-      console.error("[Synexus YouTube]", err.message || err);
+      console.error("[SyNexus YouTube]", err.message || err);
     }
   };
 

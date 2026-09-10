@@ -11,8 +11,8 @@ export function NonCustodialDisclaimer({ className = "" }: Props) {
     >
       <p className="non-custodial-disclaimer__title">You control your funds</p>
       <p className="non-custodial-disclaimer__body">
-        Synexus is <strong>non-custodial</strong>. We never hold your SOL, tokens, or seed phrase. Every swap
-        is initiated by you and signed in your wallet (Phantom, Solflare, Backpack, etc.). Synexus provides
+        SyNexus is <strong>non-custodial</strong>. We never hold your SOL, tokens, or seed phrase. Every swap
+        is initiated by you and signed in your wallet (Phantom, Solflare, Backpack, etc.). SyNexusProvides
         intelligence and shortcuts — not custody, brokerage, or investment advice.
       </p>
     </aside>

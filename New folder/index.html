@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#071007" />
+    <title>SyNexus</title>
+    <style>
+      :root {
+        --bg0: #071007;
+        --bg1: #0f1f12;
+        --ink: #e8f5e9;
+        --muted: #9bb59f;
+        --accent: #3dce6a;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+      }
+
+      body {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 2rem;
+        color: var(--ink);
+        font-family: "Segoe UI", "Avenir Next", Georgia, serif;
+        background:
+          radial-gradient(ellipse 80% 60% at 50% 0%, rgba(61, 206, 106, 0.18), transparent 55%),
+          linear-gradient(165deg, var(--bg1), var(--bg0) 55%);
+      }
+
+      main {
+        text-align: center;
+        max-width: 28rem;
+      }
+
+      h1 {
+        margin: 0 0 0.75rem;
+        font-size: clamp(2.5rem, 8vw, 3.75rem);
+        letter-spacing: 0.04em;
+        font-weight: 700;
+      }
+
+      p {
+        margin: 0 0 1.75rem;
+        color: var(--muted);
+        font-size: 1.05rem;
+        line-height: 1.5;
+      }
+
+      a {
+        display: inline-block;
+        padding: 0.85rem 1.4rem;
+        color: var(--bg0);
+        background: var(--accent);
+        text-decoration: none;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+      }
+
+      a:hover,
+      a:focus-visible {
+        filter: brightness(1.08);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>SyNexus</h1>
+      <p>AI-powered Solana trading intelligence.</p>
+      <a href="https://www.synexus.pro">Open app</a>
+    </main>
+  </body>
+</html>

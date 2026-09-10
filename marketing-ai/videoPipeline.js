@@ -228,7 +228,7 @@ export async function fileExists(path) {
 
 export function logSummary({ videoPath, metadataPath, audioSec, totalSec, quiet }) {
   if (quiet) return;
-  console.log("\n✓ Synexus daily video ready");
+  console.log("\n✓ SyNexus daily video ready");
   console.log(`  Duration: ~${formatDuration(totalSec)} (voice ${formatDuration(audioSec)})`);
   console.log(`  Video:    ${videoPath}`);
   console.log(`  Upload:   ${metadataPath}`);

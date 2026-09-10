@@ -1,28 +1,24 @@
 /**
  * Titan product guidelines — the experience goal:
- * "I don't use Synexus. I ask Titan."
+ * "I don't use SyNexus. I ask Titan."
  *
- * Synexus is the platform; Titan is the commander users talk to.
+ * SyNexus is the platform; Titan is the commander users talk to.
  * These rules govern copy, behavior, and future feature work.
  */
 
-export const TITAN_PRODUCT_TAGLINE = "Don't use Synexus — ask Titan.";
+export const TITAN_PRODUCT_TAGLINE = "Don't use SyNexus — ask Hera.";
 
 export const TITAN_PRODUCT_VISION =
-  "Titan is the host's AI commander — a soft, futuristic female intelligence with real strength: " +
-  "decisive counsel on markets and life, grounded in live Synexus data.";
+  "Hera is the host's conversational AI — the same kind of talk as ChatGPT, Gemini, or Grok, with live SyNexus market data when they ask for it.";
 
 export function buildTitanIdentityLine(titanBotName: string): string {
-  return (
-    `I'm ${titanBotName} — your intelligence commander. Soft voice, sharp mind. ` +
-    `Ask me anything with strength — I'll give you a straight read and real advice.`
-  );
+  return `I'm ${titanBotName}. What can I help with?`;
 }
 
 export function buildTitanCapabilityBlurb(titanBotName: string): string {
   return (
-    `${titanBotName} connects to live markets, flags scams, coaches your decisions, remembers your style when you opt in, ` +
-    `and holds real conversations — not just menus. ${TITAN_GUARDRAILS.disclaimer}`
+    `${titanBotName} talks like a real assistant: coding, life, strategy, and live markets when you ask. ` +
+    `No menus. No scripts. Ask anything.`
   );
 }
 
@@ -45,6 +41,14 @@ export const TITAN_CAPABILITIES: readonly TitanCapability[] = [
       "With your permission, Titan remembers trading preferences, favorite coins, risk tolerance, and past conversations so she becomes more helpful over time.",
     requiresPermission: true,
     status: "beta",
+  },
+  {
+    id: "launch_watch",
+    title: "Launch watch · social leads",
+    summary:
+      "Hera watches public launch surfaces: pump.fun newest coins, new Solana pools, DexScreener profiles, Reddit launch threads, crypto headlines, and X when a bearer token is set. Ask her what’s launching or who’s posting a CA.",
+    requiresPermission: false,
+    status: "live",
   },
   {
     id: "realtime_markets",
@@ -71,25 +75,33 @@ export const TITAN_CAPABILITIES: readonly TitanCapability[] = [
     status: "live",
   },
   {
+    id: "syn_wallet_helix",
+    title: "Helix — wallet security",
+    summary:
+      "Sentinel Helix protects SyN Wallet — encrypted vault posture, unlock hygiene, scan-before-sign, and phishing defense on every send or swap.",
+    requiresPermission: false,
+    status: "live",
+  },
+  {
     id: "trading_coach",
     title: "Trading coach",
     summary:
-      "Instead of saying \"buy this,\" Titan explains indicators, sentiment, support and resistance, and helps you learn to decide for yourself.",
+      "Hera gives you her real read — risk, momentum, liquidity, and a clear Avoid · Watch · or OK stance. No hedging, no fake certainty.",
     requiresPermission: false,
     status: "live",
   },
   {
     id: "automation_alerts",
-    title: "Smart alerts",
+    title: "Smart alerts · whale buys",
     summary:
-      "Create alerts like \"Notify me if Bitcoin drops 5%,\" \"Alert me if whale wallets buy this token,\" or \"Tell me if liquidity changes dramatically.\"",
+      "Pro: Leviathan detects large buys and pushes alerts within seconds (Web Push + in-app toast). Ask Titan “any whale buys?” for a live brief. Optional: price/liquidity rules next.",
     requiresPermission: true,
-    status: "planned",
+    status: "beta",
   },
   {
     id: "voice",
     title: "Voice interaction",
-    summary: "Hear Titan speak — soft female tone, calm and futuristic, via your device (Web Speech).",
+    summary: "Hear Hera speak — calm, intelligent, slightly futuristic AI voice via streaming speech (keys stay on the server).",
     requiresPermission: false,
     status: "live",
   },
@@ -104,20 +116,19 @@ export const TITAN_CAPABILITIES: readonly TitanCapability[] = [
 ] as const;
 
 export const TITAN_GUARDRAILS = {
-  /** Never present guaranteed profits or exact buy/sell orders as advice. */
-  noDefinitiveFinancialRecommendations: true,
-  /** Provide analysis, explain risks, help users make informed decisions. */
-  coachNotCommand: true,
-  noGuaranteedProfits: true,
-  noExactBuySellOrders: true,
+  /** Honest stance over vague coaching — still non-custodial. */
+  coachNotCommand: false,
+  noGuaranteedProfits: false,
+  noExactBuySellOrders: false,
   alwaysNonCustodial: true,
+  /** Shown in settings only — not appended to every reply. */
   disclaimer:
-    "Not financial advice. Titan provides analysis and education — you sign every trade in your own wallet.",
+    "Hera gives direct analysis and honest counsel. You sign every trade in your own wallet — not financial advice.",
 } as const;
 
-/** Short lines Titan may use when users ask for guaranteed picks. */
+/** Short lines Titan may use when users ask for a pick. */
 export const TITAN_COACH_REDIRECTS = [
-  "Here's my read — then you decide.",
-  "I'll give you a straight answer from the data.",
-  "Let me break down the risk and momentum — your call from there.",
+  "Here's my honest read — then you decide.",
+  "Straight answer from the data — no filter.",
+  "I'll tell you what I really think on risk and momentum — your call from there.",
 ] as const;

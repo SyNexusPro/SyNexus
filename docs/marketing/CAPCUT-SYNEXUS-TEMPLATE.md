@@ -1,4 +1,4 @@
-# CapCut Template — Synexus Launch Shorts
+# CapCut Template — SyNexus Launch Shorts
 
 Use this alongside auto-rendered MP4s in `marketing-ai/output/launch/day-XX/`. Auto renders are post-ready; CapCut is for polish or manual variants.
 
@@ -37,7 +37,6 @@ Use this alongside auto-rendered MP4s in `marketing-ai/output/launch/day-XX/`. A
 
 Source files:
 - Auto-rendered scenes: `output/launch/day-XX/scenes/{script-id}/`
-- Syn-Bunny overlay: `output/launch/day-XX/syn-bunny.png`
 - App screen record: synexus.pro Pulse scan (optional B-roll)
 
 ## Audio
@@ -61,7 +60,7 @@ Source files:
 
 ## Signature formats (repeat winners)
 
-1. **AI Detection** — dashboard scan + “Synexus is watching…”  
+1. **AI Detection** — dashboard scan + “SyNexus is watching…”  
 2. **Exposed Scam** — storytelling + fear hook  
 3. **Before It Happens** — prediction hook + chart tease  
 4. **Founder Story** — slower VO + emotional build  

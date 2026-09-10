@@ -29,9 +29,8 @@ export async function exportAdCreatives({ dayDir, slot = 0, captions = {}, quiet
   // Square crop variant — reuse intro for FB/IG feed ads
   await copyFile(adStory, adSquare);
 
-  const bunny = join(dayDir, "syn-bunny.png");
   const checklist = [
-    "Synexus daily ad bundle",
+    "SyNexus daily ad bundle",
     `Slot: ${slot + 1}`,
     "",
     "Videos (vertical 9:16):",
@@ -44,7 +43,6 @@ export async function exportAdCreatives({ dayDir, slot = 0, captions = {}, quiet
     "Images:",
     `  synexus-ad-story${suffix}.png  → Stories / Reels cover`,
     `  synexus-ad-square${suffix}.png  → Feed ads`,
-    `  syn-bunny.png                   → Telegram / avatar`,
     "",
     "Captions:",
     `  facebook-caption${suffix}.txt`,
@@ -70,5 +68,5 @@ export async function exportAdCreatives({ dayDir, slot = 0, captions = {}, quiet
     console.log(`  Checklist: ${checklistPath}`);
   }
 
-  return { adStory, adSquare, bunny: (await fileExists(bunny)) ? bunny : null, checklistPath };
+  return { adStory, adSquare, checklistPath };
 }

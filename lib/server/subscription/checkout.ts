@@ -1,10 +1,10 @@
-import { createSquareCheckoutResponse } from "../square/checkout";
+import { createSquareCheckoutResponse } from "../square/checkout.js";
 import {
   isSubscriptionConfigured,
   SUBSCRIPTION_NOT_CONFIGURED_MESSAGE,
   type SubscriptionEnv,
-} from "./config";
-import type { CheckoutPayload, JsonResponse } from "./types";
+} from "./config.js";
+import type { CheckoutPayload, JsonResponse } from "./types.js";
 
 export type { CheckoutPayload, JsonResponse };
 

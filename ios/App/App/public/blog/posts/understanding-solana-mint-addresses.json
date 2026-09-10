@@ -1,0 +1,41 @@
+{
+  "slug": "understanding-solana-mint-addresses",
+  "title": "Understanding Solana Mint Addresses (And Why Copy-Paste Errors Cost Money)",
+  "excerpt": "What a mint is, how to verify it, and how SyNexus uses mints in Should I buy this?",
+  "date": "2026-07-06",
+  "author": "SyNexus Editorial",
+  "origin": "https://www.synexus.pro",
+  "trustLine": "Non-custodial · You sign every trade · Not financial advice.",
+  "blocks": [
+    {
+      "type": "h2",
+      "text": "Mint vs ticker"
+    },
+    {
+      "type": "p",
+      "text": "BONK is a symbol; the mint address is the unique on-chain identifier. Two tokens can share similar names — only the mint is authoritative."
+    },
+    {
+      "type": "h2",
+      "text": "Where to verify"
+    },
+    {
+      "type": "p",
+      "text": "Cross-check mints on Solscan or Solana Explorer before swapping. SyNexus accepts symbols for convenience but always resolves to a mint for scanning."
+    },
+    {
+      "type": "h2",
+      "text": "Shareable scan links"
+    },
+    {
+      "type": "p",
+      "text": "When you scan a token on SyNexus, you can share the URL so friends see the same Sentinel read. That helps groups align on the same contract — not the same ticker on a random chart."
+    }
+  ],
+  "cta": "Run a free Sentinel scan → https://www.synexus.pro",
+  "tags": [
+    "Solana",
+    "research",
+    "beginners"
+  ]
+}

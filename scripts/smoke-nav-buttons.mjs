@@ -7,11 +7,13 @@ import { chromium } from "../marketing-ai/node_modules/playwright/index.mjs";
 const BASE = process.env.SMOKE_BASE_URL ?? "http://localhost:5175";
 
 async function skipBoot(page) {
-  const skip = page.locator(".synexus-boot");
-  if (await skip.isVisible({ timeout: 2000 }).catch(() => false)) {
-    await skip.click();
-    await skip.waitFor({ state: "hidden", timeout: 8000 }).catch(() => {});
-  }
+  await page.addInitScript(() => {
+    try {
+      localStorage.setItem("synexus_boot_intro_seen", "1");
+    } catch {
+      /* ignore */
+    }
+  });
 }
 
 async function main() {
@@ -21,8 +23,9 @@ async function main() {
 
   page.on("pageerror", (err) => errors.push(String(err)));
 
-  await page.goto(BASE, { waitUntil: "networkidle" });
   await skipBoot(page);
+  await page.goto(BASE, { waitUntil: "domcontentloaded" });
+  await page.getByRole("navigation", { name: "Primary" }).waitFor({ timeout: 15000 });
 
   const nav = page.getByRole("navigation", { name: "Primary" });
   const loginBtn = nav.getByRole("button", { name: /Login|Account/ });
@@ -42,7 +45,7 @@ async function main() {
 
   // Login opens login sheet
   await loginBtn.click();
-  await page.getByRole("dialog", { name: "Sign in" }).waitFor({ timeout: 5000 });
+  await page.getByRole("dialog", { name: /Sign in/i }).waitFor({ timeout: 10000 });
   await page.getByRole("tab", { name: "Sign in" }).waitFor();
   await page.getByRole("tab", { name: "Create account" }).click();
   await page.getByLabel("Username").waitFor();
@@ -54,7 +57,7 @@ async function main() {
 
   // Login switches back from Titan
   await loginBtn.click();
-  await page.getByRole("dialog", { name: "Sign in" }).waitFor({ timeout: 5000 });
+  await page.getByRole("dialog", { name: /Sign in/i }).waitFor({ timeout: 10000 });
 
   // Login toggles closed
   await loginBtn.click();

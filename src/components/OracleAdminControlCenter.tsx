@@ -11,6 +11,11 @@ import {
 import { oracleSupremeMoodLabel } from "../data/syntheticWatchers";
 import { SYNEXUS_PRO_PRICE_LABEL } from "../config/proPricing";
 import { SYNEXUS_PRO_TRIAL_DAYS } from "../config/proTrial";
+import {
+  ANDROID_WEB_SUBSCRIBE_HINT,
+  androidRequiresWebSubscription,
+  resolveSubscribeLabel,
+} from "../lib/androidSubscription";
 import { scrollTitanGateIntoView } from "../lib/openOracleLogin";
 import { useTitanShell } from "../context/TitanShellContext";
 import { ProDemoButton } from "./ProDemoButton";
@@ -51,7 +56,7 @@ export function OracleAdminControlCenter({
   const { openLogin } = useTitanShell();
   const { name: titanBotName } = useTitanBotName();
   const [open, setOpen] = useState(() => loggedIn && window.location.hash === "#oracle-admin");
-  const lanes = syntheticSentinels.filter((s) => !s.isOracleSupreme);
+  const lanes = syntheticSentinels.filter((s) => !s.isCommander && !s.isOracleSupreme);
 
   useEffect(() => {
     if (!loggedIn) {
@@ -76,7 +81,7 @@ export function OracleAdminControlCenter({
       aria-labelledby="oracle-admin-title"
     >
       <div className="oracle-admin__dock">
-        <SynexusSymbolMark className="oracle-admin__dock-logo oracle-admin__dock-logo--pulse" size="chat" />
+        <SynexusSymbolMark className="oracle-admin__dock-logo" size="chat" />
         <div className="oracle-admin__dock-copy">
           <p className="oracle-admin__dock-title" id="oracle-admin-title">
             {loggedIn ? titanBotName : titanBotName}
@@ -109,7 +114,7 @@ export function OracleAdminControlCenter({
                   <p className="oracle-admin__eyebrow">Command center</p>
                   <h2 className="oracle-admin__title">{titanBotName}</h2>
                   <p className="oracle-admin__lede">
-                    Aegis, Pulse, Leviathan, and Cipher — your private operator console.
+                    Aegis, Pulse, Leviathan, Cipher, and Helix — your private operator console.
                   </p>
                 </div>
               </div>
@@ -167,15 +172,19 @@ export function OracleAdminControlCenter({
               ) : (
                 <div className="oracle-admin__unlock">
                   <p>
-                    Unlock {titanBotName} briefings with Synexus Pro — {SYNEXUS_PRO_PRICE_LABEL}. Your{" "}
-                    {SYNEXUS_PRO_TRIAL_DAYS}-day trial starts when you add a card at checkout.
+                    Unlock {titanBotName} briefings with SyNexusPro — {SYNEXUS_PRO_PRICE_LABEL}.{" "}
+                    {androidRequiresWebSubscription()
+                      ? ANDROID_WEB_SUBSCRIBE_HINT
+                      : `Your ${SYNEXUS_PRO_TRIAL_DAYS}-day trial starts when you add a card at checkout.`}
                   </p>
                   <ProDemoButton
                     className="oracle-admin__demo pulse-demo-button"
                     label={`Start ${SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial`}
                   />
                   <button type="button" disabled={checkoutBusy} onClick={onUpgrade}>
-                    {checkoutBusy ? "Opening checkout…" : `Subscribe · ${SYNEXUS_PRO_PRICE_LABEL}`}
+                    {checkoutBusy
+                      ? "Opening…"
+                      : resolveSubscribeLabel(`Subscribe · ${SYNEXUS_PRO_PRICE_LABEL}`)}
                   </button>
                 </div>
               )}

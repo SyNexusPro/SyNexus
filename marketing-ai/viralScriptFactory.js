@@ -117,7 +117,7 @@ export function generateDailyLong({ dateKey }) {
       shock: "I tested an AI crypto assistant for thirty days — here's what actually happened.",
       problem: "Most traders still ape blind. Charts lie. Wallets don't.",
       solution: "Every trade needs one question answered first: should I buy this?",
-      synexus: "Synexus fuses Sentinel lanes into Avoid, Watch, or OK — before you sign. Pro adds Oracle briefings and full grid refresh.",
+      synexus: "SyNexus fuses Sentinel lanes into Avoid, Watch, or OK — before you sign. Pro adds Oracle briefings and full grid refresh.",
       tease: "Next: the scam pattern that repeats every launch season.",
     },
   });

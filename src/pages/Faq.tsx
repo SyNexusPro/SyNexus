@@ -9,7 +9,7 @@ export function Faq() {
         <p className="contact-page__eyebrow">FAQ</p>
         <h1 className="contact-page__title">Frequently asked questions</h1>
         <p className="contact-page__lede">
-          Quick answers about Synexus, Pro, wallets, and risk tooling. Still stuck?{" "}
+          Quick answers about SyNexus, Pro, wallets, and risk tooling. Still stuck?{" "}
           <Link to="/contact">Contact support</Link> or email{" "}
           <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>.
         </p>

@@ -1,0 +1,50 @@
+{
+  "slug": "how-to-spot-crypto-scams-on-solana",
+  "title": "How to Spot Crypto Scams on Solana Before You Connect Your Wallet",
+  "excerpt": "Practical red flags every Solana trader should know — from fake mints to impersonator support accounts.",
+  "date": "2026-07-01",
+  "author": "SyNexus Editorial",
+  "origin": "https://www.synexus.pro",
+  "trustLine": "Non-custodial · You sign every trade · Not financial advice.",
+  "blocks": [
+    {
+      "type": "h2",
+      "text": "Scams move at block speed"
+    },
+    {
+      "type": "p",
+      "text": "On Solana, a malicious token can look legitimate for the first ten minutes: green candles, a slick website, and a Telegram full of hype. The difference between a fun trade and a drained wallet often comes down to what you check before you sign. SyNexus is built around that moment — paste a mint, read the Sentinel verdict, then decide in your own wallet."
+    },
+    {
+      "type": "h2",
+      "text": "Mint impersonation and name traps"
+    },
+    {
+      "type": "p",
+      "text": "Scammers copy popular tickers and mint addresses with one character changed. Always verify the full mint address in a block explorer — not just the symbol on a chart. SyNexus Cipher lane flags naming traps and repeat scam motifs seen across prior launch seasons."
+    },
+    {
+      "type": "h2",
+      "text": "Fake support and approval drains"
+    },
+    {
+      "type": "p",
+      "text": "No legitimate project asks for your seed phrase. Support accounts that DM you first on X or Telegram are almost always impersonators. Never approve unlimited token allowances to unknown sites. If someone promises to 'recover' lost funds, it is a second scam."
+    },
+    {
+      "type": "h2",
+      "text": "What SyNexus does — and does not do"
+    },
+    {
+      "type": "p",
+      "text": "Sentinel scans surface liquidity risk, whale concentration, and pattern matches associated with rugs. That is research assistance, not a guarantee. You still verify contracts, check socials yourself, and size positions responsibly. Avoid means multiple lanes flagged harm; Watch means mixed signals; OK means lanes are within normal bounds for current data — none of these are buy recommendations."
+    }
+  ],
+  "cta": "Run a free Sentinel scan → https://www.synexus.pro",
+  "tags": [
+    "scams",
+    "Solana",
+    "security",
+    "beginners"
+  ]
+}

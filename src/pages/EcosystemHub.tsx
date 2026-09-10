@@ -2,30 +2,29 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   AFFILIATE_TIERS,
-  HIVE_DOMAIN,
   STAKING_FEE_BPS,
   STAKING_STATUS,
-  STORAGE_KEYS,
   bpsToLabel,
+  buildAffiliateReferralUrl,
+  readStoredAffiliateHandle,
+  saveAffiliateHandle,
 } from "../config/ecosystem";
-import { SYN_IS_LIVE, SYN_PUMPFUN_URL, SYN_SYMBOL, SYN_TOKEN_ID } from "../config/synToken";
+import { SYN_IS_LIVE, SYN_MINT, SYN_PUMPFUN_URL, SYN_SYMBOL, SYN_TOKEN_ID } from "../config/synToken";
+import { isTradingEnabled } from "../config/trading";
 
 export function EcosystemHub() {
   const [params] = useSearchParams();
   const intent = params.get("intent");
   const symbol = params.get("symbol");
-  const [affiliateHandle, setAffiliateHandle] = useState(() =>
-    typeof localStorage !== "undefined" ? localStorage.getItem(STORAGE_KEYS.affiliateHandle) ?? "" : "",
-  );
+  const [affiliateHandle, setAffiliateHandle] = useState(() => readStoredAffiliateHandle());
   const [payoutHintOpen, setPayoutHintOpen] = useState(false);
 
   const payoutPortalUrl = (import.meta.env.VITE_AFFILIATE_PAYOUT_URL ?? "").trim() || undefined;
 
-  const referralPreview = useMemo(() => {
-    const handle = affiliateHandle.trim().replace(/\s+/g, "-").toLowerCase().replace(/[^a-z0-9-_]/g, "");
-    if (!handle) return `${HIVE_DOMAIN}/?ref=your-handle`;
-    return `${HIVE_DOMAIN}/?ref=${encodeURIComponent(handle)}`;
-  }, [affiliateHandle]);
+  const referralPreview = useMemo(
+    () => buildAffiliateReferralUrl(affiliateHandle),
+    [affiliateHandle],
+  );
 
   useEffect(() => {
     if (intent === "stake" || symbol) {
@@ -35,25 +34,25 @@ export function EcosystemHub() {
   }, [intent, symbol]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.affiliateHandle, affiliateHandle);
+    saveAffiliateHandle(affiliateHandle);
   }, [affiliateHandle]);
 
   return (
     <div className="page ecosystem-hub">
-      <section className="ecosystem-hub__hero marketing-panel">
-        <p className="ecosystem-hub__eyebrow">Synexus ecosystem</p>
-        <h1 className="ecosystem-hub__title">Content hub · Affiliates · Token utility · Staking</h1>
+      <section className="ecosystem-hub__hero marketing-panel" data-tour="hub-hero">
+        <p className="ecosystem-hub__eyebrow">SyNexus ecosystem</p>
+        <h1 className="ecosystem-hub__title">Affiliates · $SYN · Staking</h1>
         <p className="ecosystem-hub__lede">
-          One home for market discovery, partner growth, and planned on-chain staking with transparent protocol
+          Partner growth, the community token, and planned on-chain staking with transparent protocol
           fees—always subject to wallet connection, program audits, and your own research.
         </p>
       </section>
 
       <nav className="ecosystem-hub__subnav" aria-label="Ecosystem sections">
-        <a href="#hub-content">Content hub</a>
         <a href="#hub-affiliate">Affiliates</a>
-        <a href="#hub-utility">Token utility</a>
+        <a href="#hub-utility">$SYN</a>
         <Link to="/liquidity-treasury">Liquidity treasury</Link>
+        {isTradingEnabled() ? <Link to="/trade">Trade</Link> : null}
         <a href="#hub-staking">Staking &amp; fees</a>
       </nav>
 
@@ -63,26 +62,10 @@ export function EcosystemHub() {
         </p>
       ) : null}
 
-      <section id="hub-content" className="ecosystem-hub__section marketing-panel">
-        <h2>Content hub</h2>
-        <p>
-          Centralize discovery with The Synexus: live token feed, search, risk snapshots, and Pulse for accounts and
-          Synexus Pro.
-        </p>
-        <ul className="ecosystem-hub__links">
-          <li>
-            <Link to="/">Token feed &amp; search</Link>
-          </li>
-          <li>
-            <Link to="/pulse">Pulse · accounts &amp; Synexus Pro</Link>
-          </li>
-        </ul>
-      </section>
-
       <section id="hub-affiliate" className="ecosystem-hub__section marketing-panel">
         <h2>Affiliate ecosystem</h2>
         <p>
-          Share Synexus with your audience. Final commission rules, cookie windows, and payout rails ship with the
+          Share SyNexus with your audience. Final commission rules, cookie windows, and payout rails ship with the
           affiliate program launch. Example tiers below are illustrative only.
         </p>
         <div className="ecosystem-hub__tiers">
@@ -104,7 +87,7 @@ export function EcosystemHub() {
           className="ecosystem-hub__input"
           value={affiliateHandle}
           onChange={(e) => setAffiliateHandle(e.target.value)}
-          placeholder="e.g. cryptosara"
+          placeholder="e.g. synexuspro"
           autoComplete="off"
         />
         <p className="ecosystem-hub__ref-url">
@@ -147,18 +130,19 @@ export function EcosystemHub() {
         <h2>Token utility platform</h2>
         {SYN_IS_LIVE ? (
           <p className="ecosystem-hub__syn-live">
-            <strong>${SYN_SYMBOL}</strong> community is live on pump.fun — scan it in Synexus before you buy, then trade in
-            your own wallet.
+            <strong>${SYN_SYMBOL}</strong> is live on pump.fun. Mint:{" "}
+            <a href={SYN_PUMPFUN_URL} target="_blank" rel="noopener noreferrer">
+              <code>{SYN_MINT}</code>
+            </a>
           </p>
         ) : null}
         <p>
-          Synexus token utility is designed around access, incentives, and alignment: unlock deeper feeds from
-          The Synexus Sentinels,
-          fee discounts, partner campaigns, and staking participation. See the About page for the full utility
-          roadmap.
+          SyNexus token utility is designed around access, incentives, and alignment: unlock deeper feeds from
+          The SyNexus Sentinels,
+          fee discounts, partner campaigns, and staking participation. Roadmap lives on About.
         </p>
         <ul className="ecosystem-hub__bullets">
-          <li>Synexus Pro intelligence surfaces in-app</li>
+          <li>SyNexusPro intelligence surfaces in-app</li>
           <li>Partnership tooling via this hub</li>
           <li>Governance placeholders as the community matures</li>
         </ul>
@@ -170,7 +154,7 @@ export function EcosystemHub() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              Open $SyN community
+              Buy ${SYN_SYMBOL} on pump.fun
             </a>
             <Link className="ecosystem-hub__link" to={`/token/${SYN_TOKEN_ID}`}>
               Scan {SYN_SYMBOL} →
@@ -182,7 +166,7 @@ export function EcosystemHub() {
       <section id="hub-staking" className="ecosystem-hub__section marketing-panel ecosystem-hub__section--stakes">
         <h2>Staking &amp; protocol fees</h2>
         <p>
-          Planned staking pools let users lock eligible assets to support Synexus liquidity or emissions programs while
+          Planned staking pools let users lock eligible assets to support SyNexus liquidity or emissions programs while
           the protocol collects transparent fees—not financial advice; smart-contract risk applies.
         </p>
         <p className="ecosystem-hub__status">

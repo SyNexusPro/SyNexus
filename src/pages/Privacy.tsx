@@ -11,7 +11,7 @@ export function Privacy() {
       <h1 className="legal-page__title">Privacy Policy</h1>
       <p className="legal-page__summary">
         This Privacy Policy describes how {OPERATOR_LABEL} (&quot;we,&quot; &quot;us&quot;) collects, uses, and
-        shares information when you use the Synexus mobile and web application and related services (the
+        shares information when you use the SyNexus mobile and web application and related services (the
         &quot;Service&quot;). It should be read with our{" "}
         <Link to="/terms">Terms of Service</Link>.
       </p>
@@ -41,6 +41,16 @@ export function Privacy() {
         <p>
           <strong>Local storage.</strong> The Service may store preferences, plan flags, and conversation history
           locally on your device (for example via browser or app storage).
+        </p>
+        <p>
+          <strong>Microphone and Hera wake word.</strong> If you enable Listen, SyNexus uses the microphone while
+          the app is in the foreground to detect the spoken wake word “Hera” (or “Titan”). That wake-word detection runs on
+          the device (web: browser speech engine; Android: on-device recognizer). We do not continuously upload
+          microphone audio to SyNexus servers for wake-word listening. After “Hera” is detected, Hera opens and
+          your question is handled by the existing Hera/Titan conversation system, which may use on-device
+          recognition or our speech APIs only for that active question. Background or always-on listening is not
+          enabled in this version. You can turn Listen off at any time. If microphone permission is denied, Hera
+          stays inactive for voice and you can type instead.
         </p>
       </section>
 
@@ -100,9 +110,11 @@ export function Privacy() {
           Depending on where you live, you may have rights to access, correct, delete, or export personal
           information, or to object to or restrict certain processing. You may update account details where the
           Service allows, cancel subscriptions through checkout or processor tools, and disconnect your operator
-          link. To exercise privacy rights, contact us through channels published in the Service. We may verify
-          your request before responding. We will not discriminate against you for exercising applicable privacy
-          rights.
+          link. To delete some or all personal data while keeping your account, use{" "}
+          <Link to="/data-deletion">Data deletion</Link>. To close the account entirely, use{" "}
+          <Link to="/account-deletion">Account deletion</Link>. To exercise other privacy rights, contact us
+          through channels published in the Service. We may verify your request before responding. We will not
+          discriminate against you for exercising applicable privacy rights.
         </p>
       </section>
 
@@ -111,6 +123,10 @@ export function Privacy() {
         <p>
           Privacy questions or data requests:{" "}
           <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>
+          {" · "}
+          <Link to="/data-deletion">Delete data</Link>
+          {" · "}
+          <Link to="/account-deletion">Delete account</Link>
           {" · "}
           <Link to="/contact">Contact page</Link>
         </p>
@@ -135,6 +151,10 @@ export function Privacy() {
         <Link to="/trust">Trust &amp; privacy summary</Link>
         {" · "}
         <Link to="/contact">Contact</Link>
+        {" · "}
+        <Link to="/data-deletion">Delete data</Link>
+        {" · "}
+        <Link to="/account-deletion">Delete account</Link>
         {" · "}
         <Link to="/disclaimer">Disclaimer</Link>
         {" · "}

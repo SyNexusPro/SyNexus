@@ -17,10 +17,10 @@ export function LiquidityTreasury() {
 
   return (
     <div className="page legal-page treasury-page">
-      <p className="legal-page__eyebrow">Transparency · Synexus ecosystem</p>
-      <h1 className="legal-page__title">Synexus Coin Liquidity Treasury</h1>
+      <p className="legal-page__eyebrow">Transparency · SyNexus ecosystem</p>
+      <h1 className="legal-page__title">SyNexus Coin Liquidity Treasury</h1>
       <p className="legal-page__summary">
-        When you swap through Synexus shortcuts (for example, Jupiter links with platform fees enabled), a small
+        When you swap through SyNexus shortcuts (for example, Jupiter links with platform fees enabled), a small
         platform fee may apply. This page shows where that revenue goes — mostly back into SyNexus coin liquidity and
         treasury, plus development, security, and resilience.
       </p>
@@ -37,7 +37,7 @@ export function LiquidityTreasury() {
         <h2>Platform fee tiers</h2>
         <p>
           Fees are calculated on swap notional value and are separate from network gas, DEX spread, slippage, and
-          Jupiter routing costs. Synexus Pro subscribers pay a reduced rate.
+          Jupiter routing costs. SyNexusPro subscribers pay a reduced rate.
         </p>
         <div className="ecosystem-hub__fee-grid ecosystem-hub__fee-grid--two">
           <article>
@@ -46,7 +46,7 @@ export function LiquidityTreasury() {
             <p className="ecosystem-hub__fee-note">{bpsToLabel(TRADING_FEE_BPS.FREE)} per swap notional</p>
           </article>
           <article>
-            <p className="ecosystem-hub__fee-label">Synexus Pro</p>
+            <p className="ecosystem-hub__fee-label">SyNexusPro</p>
             <p className="ecosystem-hub__fee-value">{formatTradingFeeRate("PRO")}</p>
             <p className="ecosystem-hub__fee-note">{bpsToLabel(TRADING_FEE_BPS.PRO)} per swap notional</p>
           </article>
@@ -55,7 +55,7 @@ export function LiquidityTreasury() {
           Example on {formatFeeUsd(EXAMPLE_NOTIONAL_USD)} swap:{" "}
           <strong>{formatFeeUsd(freeFee)}</strong> (free) or{" "}
           <strong>{formatFeeUsd(proFee)}</strong> (Pro).{" "}
-          <Link to="/pulse">Upgrade to Synexus Pro</Link> for the lower tier.
+          <Link to="/pulse">Upgrade to SyNexusPro</Link> for the lower tier.
         </p>
       </section>
 
@@ -102,7 +102,7 @@ export function LiquidityTreasury() {
       </section>
 
       <p className="legal-page__note">
-        This is a transparency page for traders who want to see how platform fees support the Synexus ecosystem. It is
+        This is a transparency page for traders who want to see how platform fees support the SyNexus ecosystem. It is
         not financial advice. Fee details also appear in our{" "}
         <Link to="/terms">Terms of Service</Link>.
       </p>

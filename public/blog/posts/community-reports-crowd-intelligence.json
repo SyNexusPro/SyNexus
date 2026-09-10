@@ -1,0 +1,33 @@
+{
+  "slug": "community-reports-crowd-intelligence",
+  "title": "Community Reports and Crowd Intelligence on SyNexus",
+  "excerpt": "How operator reports improve Sentinel awareness — without replacing your own verification.",
+  "date": "2026-07-19",
+  "author": "SyNexus Editorial",
+  "origin": "https://www.synexus.pro",
+  "trustLine": "Non-custodial · You sign every trade · Not financial advice.",
+  "blocks": [
+    {
+      "type": "h2",
+      "text": "Operators see scams first"
+    },
+    {
+      "type": "p",
+      "text": "Signed-in users can report suspicious tokens from detail pages. Reports feed Cipher and broader scoring so repeat motifs surface faster for everyone."
+    },
+    {
+      "type": "h2",
+      "text": "Reports are not verdicts"
+    },
+    {
+      "type": "p",
+      "text": "Crowd flags can be wrong or malicious. SyNexus weighs reports alongside on-chain heuristics — never treat a report count as proof by itself."
+    }
+  ],
+  "cta": "Run a free Sentinel scan → https://www.synexus.pro",
+  "tags": [
+    "community",
+    "Sentinel",
+    "reports"
+  ]
+}

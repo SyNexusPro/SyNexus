@@ -3,4 +3,4 @@ export {
   configureSubscriptionWebhookApi as configureWebhookApi,
   default,
   config,
-} from "./subscription/webhook";
+} from "./subscription/webhook.js";

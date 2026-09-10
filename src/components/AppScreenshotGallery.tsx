@@ -11,7 +11,7 @@ function ScreenshotFrame({ id, title, caption }: FrameProps) {
     <figure className="app-screenshot">
       <div className="app-screenshot__device" data-screenshot={id}>
         <div className="app-screenshot__statusbar">
-          <span>Synexus</span>
+          <span>SyNexus</span>
           <span>9:41</span>
         </div>
         <div className="app-screenshot__screen">

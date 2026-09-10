@@ -4,6 +4,11 @@ import { SYNEXUS_PRO_PRICE_SHORT } from "../config/proPricing";
 import { SYNEXUS_PRO_TRIAL_LABEL } from "../config/proTrial";
 import { DEFAULT_TITAN_BOT_NAME } from "../config/titanBot";
 import { getCurrentUser } from "../lib/supabaseData";
+import {
+  ANDROID_WEB_SUBSCRIBE_HINT,
+  androidRequiresWebSubscription,
+  resolveSubscribeLabel,
+} from "../lib/androidSubscription";
 import { redirectToProCheckout, startProCheckout } from "../lib/squareCheckout";
 import { useProDemo } from "../hooks/useProDemo";
 
@@ -38,12 +43,16 @@ export function ProDemoBanner() {
         <strong>{SYNEXUS_PRO_TRIAL_LABEL} active</strong>
         <span>
           {remainingLabel} — {DEFAULT_TITAN_BOT_NAME}, Sentinels, and full Pulse unlocked.
-          {checkoutError ? " Checkout couldn't open — tap Subscribe to retry." : " Add a card before trial ends to keep Pro access."}
+          {checkoutError
+            ? " Checkout couldn't open — tap Subscribe to retry."
+            : androidRequiresWebSubscription()
+              ? ` ${ANDROID_WEB_SUBSCRIBE_HINT}`
+              : " Add a card before trial ends to keep Pro access."}
         </span>
       </div>
       <div className="pro-demo-banner__actions">
         <button type="button" className="pro-demo-banner__cta" disabled={checkoutBusy} onClick={() => void subscribe()}>
-          {checkoutBusy ? "Opening…" : `Subscribe ${SYNEXUS_PRO_PRICE_SHORT}`}
+          {checkoutBusy ? "Opening…" : resolveSubscribeLabel(`Subscribe ${SYNEXUS_PRO_PRICE_SHORT}`)}
         </button>
         <Link className="pro-demo-banner__link" to="/pulse">
           Open Pulse

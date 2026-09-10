@@ -1,4 +1,4 @@
--- Synexus Aegis — security event log (optional server-side audit trail)
+-- SyNexus Aegis — security event log (optional server-side audit trail)
 -- Run in Supabase SQL editor after main schema.
 
 create table if not exists public.security_events (
@@ -32,4 +32,4 @@ create policy "Users read own security events"
   to authenticated
   using (auth.uid() = user_id);
 
-comment on table public.security_events is 'Synexus Aegis — client-reported abuse and block events';
+comment on table public.security_events is 'SyNexus Aegis — client-reported abuse and block events';

@@ -4,6 +4,7 @@ import { NonCustodialDisclaimer } from "../components/NonCustodialDisclaimer";
 import { SupportedWallets } from "../components/SupportedWallets";
 import { TrustIndicators } from "../components/TrustIndicators";
 import { HOW_SYNEXUS_WORKS, PRIVACY_HIGHLIGHTS, SECURITY_POINTS } from "../config/site";
+import { SYNEXUS_VAULT_PATH, SYNEXUS_VAULT_PRODUCT_NAME } from "../config/walletComingSoon";
 
 export function Trust() {
   return (
@@ -12,8 +13,8 @@ export function Trust() {
         <p className="trust-page__eyebrow">Trust &amp; safety</p>
         <h1 className="trust-page__title">Built for transparency. You stay in control.</h1>
         <p className="trust-page__lede">
-          Synexus is a non-custodial intelligence app. These pages explain how we handle security, privacy,
-          wallets, and risk — so you know exactly what Synexus does and does not do with your funds.
+          SyNexus is a non-custodial intelligence app. These pages explain how we handle security, privacy,
+          wallets, and risk — so you know exactly what SyNexus does and does not do with your funds.
         </p>
         <TrustIndicators />
       </section>
@@ -31,8 +32,8 @@ export function Trust() {
       <section id="trust-security" className="trust-page__section marketing-panel">
         <h2>Security</h2>
         <p>
-          <strong>Sentinel Aegis</strong> is Synexus&apos;s security &amp; privacy lane — token scams and rug
-          heuristics on-chain, plus non-custodial operator hygiene off-chain. Ask Titan or Aegis about privacy,
+          <strong>Sentinel Aegis</strong> is SyNexus&apos;s security &amp; privacy lane — token scams and rug
+          heuristics on-chain, plus non-custodial operator hygiene off-chain. Talk to Titan or Aegis about privacy,
           phishing, or a suspicious mint before you sign anything.
         </p>
         <ul className="trust-page__bullets">
@@ -48,7 +49,7 @@ export function Trust() {
 
       <section id="trust-privacy" className="trust-page__section marketing-panel">
         <h2>Privacy</h2>
-        <p>Summary of how Synexus handles data. The full policy lives on a dedicated page.</p>
+        <p>Summary of how SyNexus handles data. The full policy lives on a dedicated page.</p>
         <ul className="trust-page__bullets">
           {PRIVACY_HIGHLIGHTS.map((point) => (
             <li key={point}>{point}</li>
@@ -60,7 +61,7 @@ export function Trust() {
       </section>
 
       <section id="trust-how" className="trust-page__section marketing-panel">
-        <h2>How Synexus works</h2>
+        <h2>How SyNexus works</h2>
         <ol className="trust-page__steps">
           {HOW_SYNEXUS_WORKS.map((step) => (
             <li key={step.step}>
@@ -80,8 +81,10 @@ export function Trust() {
       <section id="trust-wallets" className="trust-page__section marketing-panel">
         <h2>Supported wallets</h2>
         <p>
-          Synexus opens Jupiter swap flows in your browser. Connect with any Solana wallet that supports those
-          transactions — we do not maintain a proprietary wallet.
+          SyNexus opens Jupiter swap flows in your browser. Connect with any Solana wallet that supports those
+          transactions.{" "}
+          <Link to={SYNEXUS_VAULT_PATH}>{SYNEXUS_VAULT_PRODUCT_NAME}</Link> is coming soon —
+          Sentinel Helix will guard those keys on-device.
         </p>
         <SupportedWallets />
       </section>
@@ -98,7 +101,7 @@ export function Trust() {
       <section className="trust-page__section marketing-panel legal-section--risk">
         <h2>Not financial advice</h2>
         <p>
-          Synexus does not recommend any trade. Risk scores, Sentinel bands, alerts, and AI chat are automated
+          SyNexus does not recommend any trade. Risk scores, Sentinel bands, alerts, and AI chat are automated
           summaries that may be wrong. Digital assets can lose all value. You are solely responsible for wallet
           security and every transaction you sign.
         </p>

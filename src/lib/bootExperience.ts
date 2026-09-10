@@ -37,6 +37,8 @@ export function readPrefersReducedMotion(): boolean {
 
 /** skip = return visit on native · fast = first native launch · full = desktop web */
 export function resolveBootProfile(reducedMotion = readPrefersReducedMotion()): BootProfile {
+  // Android WebView: never run the boot theatre — it freezes low-end devices.
+  if (isNativeAndroid()) return "skip";
   if (isNativeMobile() && hasSeenBootIntro()) return "skip";
   if (reducedMotion || isNativeMobile()) return "fast";
   return "full";

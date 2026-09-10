@@ -1,12 +1,14 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useBiometricLogin } from "../hooks/useBiometricLogin";
 import { useOperatorAuth } from "../hooks/useOperatorAuth";
 import { useTitanBotName } from "../hooks/useTitanBotName";
-import { ORACLE_OPEN_LOGIN_EVENT } from "../lib/openOracleLogin";
 import { attemptBiometricQuickSignIn } from "../lib/quickOperatorSignIn";
-import { QuickOperatorLogin } from "./QuickOperatorLogin";
+import { syncProTrialForUser } from "../lib/proDemo";
+import { QuickOperatorLogin, type QuickOperatorAuthResult } from "./QuickOperatorLogin";
 import { SynexusSubscribeButton } from "./SynexusSubscribeButton";
+import { InviteEarnButton } from "./InviteEarnButton";
+import { attachPendingInvite, syncInviteRewardForUser } from "../lib/inviteEarn";
 
 type AuthPanel = null | "signup" | "signin";
 
@@ -28,16 +30,6 @@ export function HomeHeroAuth({ isSimple = false }: Props) {
   const [panel, setPanel] = useState<AuthPanel>(null);
   const [enterBusy, setEnterBusy] = useState(false);
   const [hint, setHint] = useState<string | null>(null);
-
-  useEffect(() => {
-    function onOpenLogin() {
-      if (linked) return;
-      setPanel("signin");
-      scrollAuthPanelIntoView();
-    }
-    window.addEventListener(ORACLE_OPEN_LOGIN_EVENT, onOpenLogin);
-    return () => window.removeEventListener(ORACLE_OPEN_LOGIN_EVENT, onOpenLogin);
-  }, [linked]);
 
   function openSignup() {
     setHint(null);
@@ -81,9 +73,14 @@ export function HomeHeroAuth({ isSimple = false }: Props) {
     }
   }
 
-  function handleAuthSuccess() {
+  function handleAuthSuccess(result?: QuickOperatorAuthResult) {
     closePanel();
-    navigate("/pulse");
+    if (result?.userId) {
+      syncProTrialForUser(result.userId);
+      void attachPendingInvite();
+      void syncInviteRewardForUser();
+    }
+    navigate(result?.mode === "signup" ? "/invite?onboard=1" : "/pulse");
   }
 
   if (linked) {
@@ -92,8 +89,9 @@ export function HomeHeroAuth({ isSimple = false }: Props) {
         <Link to="/pulse" className="landing-hero__actions--secondary">
           Open Pulse
         </Link>
+        <InviteEarnButton className="landing-hero__actions--secondary" />
         {!isSimple ? (
-          <SynexusSubscribeButton className="landing-hero__actions--pro" label="Synexus Pro" />
+          <SynexusSubscribeButton className="landing-hero__actions--pro" label="SyNexusPro" />
         ) : null}
       </div>
     );
@@ -118,7 +116,7 @@ export function HomeHeroAuth({ isSimple = false }: Props) {
           Future {titanName}
         </button>
         {!isSimple ? (
-          <SynexusSubscribeButton className="landing-hero__actions--pro" label="Synexus Pro" />
+          <SynexusSubscribeButton className="landing-hero__actions--pro" label="SyNexusPro" />
         ) : null}
       </div>
 

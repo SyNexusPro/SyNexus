@@ -1,11 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import type { Token } from "../data/tokens";
+import { DEEP_SCAN_FREE_LIMIT } from "../config/deepScanDemo";
+import { SYNEXUS_PRO_TRIAL_DAYS } from "../config/proTrial";
+import { useDeepScanDemo } from "../hooks/useDeepScanDemo";
+import { useOpenTitanGate } from "../hooks/useOpenTitanGate";
 import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
+import {
+  hasDeepScanAccess,
+  recordDeepScan,
+} from "../lib/deepScanDemo";
 import { guardTokenScan } from "../lib/securityBot";
 import { analyzeShouldIBuy, verdictBeginnerMeta, verdictTone } from "../lib/shouldIBuy";
 import { lookupTokenByQuery } from "../services/marketDataService";
 import { ShareScanButton } from "./ShareScanButton";
+import { ResearchTokenTutorialButton } from "./ResearchTokenTutorial";
 import { ScanHealthPanel } from "./ScanHealthPanel";
 import { TokenLogo } from "./TokenLogo";
 
@@ -31,14 +40,14 @@ export function ShouldIBuyVerdict({ token }: { token: Token }) {
             {beginner.icon}
           </span>
           <div>
-            <p className="should-i-buy__verdict-label">Should I buy {token.symbol}?</p>
+            <p className="should-i-buy__verdict-label">{token.symbol} scan</p>
             <p className="should-i-buy__verdict-headline">{beginner.label}</p>
             <p className="should-i-buy__verdict-copy">{beginner.hint}</p>
           </div>
         </div>
       ) : (
         <>
-          <p className="should-i-buy__verdict-label">Should I buy {token.symbol}?</p>
+          <p className="should-i-buy__verdict-label">{token.symbol} scan</p>
           <p className="should-i-buy__verdict-headline">{result.headline}</p>
           <p className="should-i-buy__verdict-copy">{result.explanation}</p>
         </>
@@ -50,10 +59,13 @@ export function ShouldIBuyVerdict({ token }: { token: Token }) {
 
 export function ShouldIBuyPanel({ poolTokens = [], initialScan = "" }: Props) {
   const { isSimple } = useSynexusUIMode();
+  const { linked, unlimited, remaining } = useDeepScanDemo();
+  const openSignup = useOpenTitanGate();
   const [query, setQuery] = useState(initialScan);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<ReturnType<typeof analyzeShouldIBuy> | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [scanGate, setScanGate] = useState(false);
   const ranInitialScan = useRef(false);
   const clearScanFromUrl = useRef(Boolean(initialScan.trim()));
 
@@ -77,6 +89,7 @@ export function ShouldIBuyPanel({ poolTokens = [], initialScan = "" }: Props) {
 
     setBusy(true);
     setError(null);
+    setScanGate(false);
     setResult(null);
     try {
       const token = await lookupTokenByQuery(q, poolTokens);
@@ -84,7 +97,12 @@ export function ShouldIBuyPanel({ poolTokens = [], initialScan = "" }: Props) {
         setError("Token not found. Paste a Solana mint or try a symbol like BONK.");
         return;
       }
+      if (!hasDeepScanAccess(linked, token)) {
+        setScanGate(true);
+        return;
+      }
       setResult(analyzeShouldIBuy(token));
+      recordDeepScan(token, linked);
       if (clearScanFromUrl.current && typeof window !== "undefined") {
         clearScanFromUrl.current = false;
         window.history.replaceState(null, "", window.location.pathname);
@@ -108,21 +126,30 @@ export function ShouldIBuyPanel({ poolTokens = [], initialScan = "" }: Props) {
     <section
       className={`should-i-buy${isSimple ? " should-i-buy--easy" : ""}`}
       aria-labelledby="should-i-buy-title"
+      data-tour="scan-panel"
     >
       <div className="should-i-buy__scan-ring" aria-hidden />
       <div className="should-i-buy__head">
+        <ResearchTokenTutorialButton />
         <p className="should-i-buy__eyebrow">{isSimple ? "Step 1 · Scan" : "Instant read"}</p>
         <h2 className="should-i-buy__title" id="should-i-buy-title">
-          Should I buy this?
+          Scan a token
         </h2>
         <p className="should-i-buy__lede">
           {isSimple
-            ? "Paste any Solana token below. Synexus answers in plain English — no charts required."
-            : "Paste a token mint or symbol. Synexus answers in plain English — watch, high risk, or avoid."}
+            ? "Paste any Solana token below. SyNexus returns Avoid, Watch, or OK in plain English."
+            : "Paste a token mint or symbol. SyNexus returns Avoid, Watch, or OK — plus risk, whales, and liquidity."}
         </p>
+        {!unlimited ? (
+          <p className="should-i-buy__demo-count" aria-live="polite">
+            {remaining > 0
+              ? `${remaining} of ${DEEP_SCAN_FREE_LIMIT} free deep scans left — sign up for unlimited.`
+              : `Free deep scans used — sign up to keep scanning.`}
+          </p>
+        ) : null}
       </div>
       {isSimple ? (
-        <div className="should-i-buy__examples" role="group" aria-label="Try an example token">
+        <div className="should-i-buy__examples" role="group" aria-label="Try an example token" data-tour="scan-examples">
           <span className="should-i-buy__examples-label">Try an example</span>
           {EASY_EXAMPLES.map((symbol) => (
             <button
@@ -140,6 +167,7 @@ export function ShouldIBuyPanel({ poolTokens = [], initialScan = "" }: Props) {
       <div className="should-i-buy__form">
         <input
           className="should-i-buy__input"
+          data-tour="scan-input"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={isSimple ? "Paste token name or mint address…" : "Mint address or symbol (e.g. BONK)"}
@@ -148,11 +176,27 @@ export function ShouldIBuyPanel({ poolTokens = [], initialScan = "" }: Props) {
             if (e.key === "Enter") void handleAnalyze();
           }}
         />
-        <button type="button" className="should-i-buy__button" disabled={busy} onClick={() => void handleAnalyze()}>
+        <button type="button" className="should-i-buy__button" data-tour="scan-submit" disabled={busy} onClick={() => void handleAnalyze()}>
           {busy ? "Scanning…" : isSimple ? "Scan now" : "Analyze"}
         </button>
       </div>
       {error ? <p className="should-i-buy__error">{error}</p> : null}
+      {scanGate ? (
+        <div className="should-i-buy__demo-gate" role="region" aria-label="Sign up to continue scanning">
+          <p className="should-i-buy__demo-gate-title">You&apos;ve used your {DEEP_SCAN_FREE_LIMIT} free deep scans</p>
+          <p className="should-i-buy__demo-gate-copy">
+            Sign up free to unlock unlimited Sentinel reads, watchlists, and a {SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial with card on file.
+          </p>
+          <div className="should-i-buy__demo-gate-actions">
+            <button type="button" className="should-i-buy__button" onClick={openSignup}>
+              Sign up free
+            </button>
+            <Link to="/pricing" className="should-i-buy__demo-gate-link">
+              See Pro →
+            </Link>
+          </div>
+        </div>
+      ) : null}
       {result && beginner ? (
         <div className={`should-i-buy__result should-i-buy__result--${tone}${isSimple ? " should-i-buy__result--easy" : ""}`}>
           <div className={isSimple ? "should-i-buy__result-easy-top" : "should-i-buy__result-top should-i-buy__result-top--scan"}>

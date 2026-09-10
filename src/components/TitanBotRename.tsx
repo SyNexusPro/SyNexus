@@ -100,7 +100,7 @@ export function TitanBotRename({ className = "", compact = false }: Props) {
         </button>
         {isCustom ? (
           <button type="button" className="titan-bot-rename__reset" onClick={() => resetName()}>
-            Reset to {DEFAULT_TITAN_BOT_NAME}
+            Reset name
           </button>
         ) : null}
       </div>

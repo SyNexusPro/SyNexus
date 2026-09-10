@@ -2,6 +2,7 @@ import type { Session, User } from "@supabase/supabase-js";
 import { authRedirectUrl, supabase } from "./supabaseClient";
 import { validateSignupPassword } from "./authCredentials";
 import { guardAuthAttempt } from "./securityBot";
+import { SIGNUP_CONFIRM_REDIRECT } from "./signupWelcome";
 
 export { validateSignupPassword };
 
@@ -83,7 +84,7 @@ export async function signUpWithEmail(
 ) {
   const authGuard = guardAuthAttempt("sign_up", email, password);
   if (!authGuard.allowed) {
-    throw new Error(authGuard.message ?? "Sign-up blocked by Synexus security.");
+    throw new Error(authGuard.message ?? "Sign-up blocked by SyNexus security.");
   }
   const passwordCheck = validateSignupPassword(password);
   if (!passwordCheck.ok) {
@@ -94,7 +95,7 @@ export async function signUpWithEmail(
     email,
     password,
     options: {
-      emailRedirectTo: authRedirectUrl("/pulse"),
+      emailRedirectTo: authRedirectUrl(SIGNUP_CONFIRM_REDIRECT),
       ...(normalizedUsername ? { data: { username: normalizedUsername } } : {}),
     },
   });
@@ -105,14 +106,14 @@ export async function signUpWithEmail(
 export async function resendSignupVerificationEmail(email: string) {
   const authGuard = guardAuthAttempt("sign_in", email);
   if (!authGuard.allowed) {
-    throw new Error(authGuard.message ?? "Verification resend blocked by Synexus security.");
+    throw new Error(authGuard.message ?? "Verification resend blocked by SyNexus security.");
   }
   if (!supabase) throw new Error("Supabase env vars are missing.");
   const { data, error } = await supabase.auth.resend({
     type: "signup",
     email: email.trim(),
     options: {
-      emailRedirectTo: authRedirectUrl("/pulse"),
+      emailRedirectTo: authRedirectUrl(SIGNUP_CONFIRM_REDIRECT),
     },
   });
   if (error) throwIfStructuralDbFailure(error);
@@ -122,7 +123,7 @@ export async function resendSignupVerificationEmail(email: string) {
 export async function signInWithEmail(email: string, password: string) {
   const authGuard = guardAuthAttempt("sign_in", email, password);
   if (!authGuard.allowed) {
-    throw new Error(authGuard.message ?? "Sign-in blocked by Synexus security.");
+    throw new Error(authGuard.message ?? "Sign-in blocked by SyNexus security.");
   }
   if (!supabase) throw new Error("Supabase env vars are missing.");
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -140,7 +141,7 @@ export async function signInWithEmail(email: string, password: string) {
 export async function signInWithMagicLink(email: string) {
   const authGuard = guardAuthAttempt("sign_in", email);
   if (!authGuard.allowed) {
-    throw new Error(authGuard.message ?? "Sign-in blocked by Synexus security.");
+    throw new Error(authGuard.message ?? "Sign-in blocked by SyNexus security.");
   }
   if (!supabase) throw new Error("Supabase env vars are missing.");
   const { data, error } = await supabase.auth.signInWithOtp({
@@ -154,10 +155,26 @@ export async function signInWithMagicLink(email: string) {
   return data;
 }
 
+export async function signInWithOAuth(provider: "google") {
+  if (!supabase) throw new Error("Supabase env vars are missing.");
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider,
+    options: {
+      redirectTo: authRedirectUrl("/pulse"),
+      queryParams: {
+        access_type: "offline",
+        prompt: "select_account",
+      },
+    },
+  });
+  if (error) throwIfStructuralDbFailure(error);
+  return data;
+}
+
 export async function requestPasswordReset(email: string) {
   const authGuard = guardAuthAttempt("sign_in", email);
   if (!authGuard.allowed) {
-    throw new Error(authGuard.message ?? "Reset blocked by Synexus security.");
+    throw new Error(authGuard.message ?? "Reset blocked by SyNexus security.");
   }
   if (!supabase) throw new Error("Supabase env vars are missing.");
   const { data, error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
@@ -211,7 +228,7 @@ export function normalizeSignupUsername(raw: string): string {
 
 function displayNameFromUsernameSlug(slug: string): string {
   const words = slug.split("_").filter(Boolean);
-  if (!words.length) return "Synexus member";
+  if (!words.length) return "SyNexus member";
   return words
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
     .join(" ");
@@ -242,7 +259,7 @@ export function buildFallbackProfileFields(
   slug = slug.slice(0, 24);
   const username = `${slug}_${shortId}`;
   const displayName =
-    local.replace(/\./g, " ").replace(/_/g, " ").trim() || "Synexus member";
+    local.replace(/\./g, " ").replace(/_/g, " ").trim() || "SyNexus member";
   return { username, displayName };
 }
 

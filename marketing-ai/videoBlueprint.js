@@ -22,7 +22,7 @@ function stripStageDirections(text) {
   return String(text)
     .replace(/\*\*/g, "")
     .replace(/\[.+?\]/g, "")
-    .replace(/Synexus — /g, "")
+    .replace(/SyNexus — /g, "")
     .replace(/Hook:\s*/gi, "")
     .replace(/VO:\s*/gi, "")
     .replace(/Big text "[^"]+" — /gi, "")
@@ -51,7 +51,7 @@ export function buildYouTubeMetadata(pack, now = Date.now()) {
   const title = buildYouTubeTitle({ hook, id: todayDirName(date) });
 
   const description = [
-    "Synexus Sentinel — Solana risk reads before you sign.",
+    "SyNexus Sentinel — Solana risk reads before you sign.",
     "",
     hook,
     "",
@@ -61,12 +61,12 @@ export function buildYouTubeMetadata(pack, now = Date.now()) {
     "",
     "Not financial advice.",
     "",
-    "#Synexus #Solana #ShouldIBuyThis #Crypto #Shorts #Trading",
+    "#SyNexus #Solana #TokenScan #Crypto #Shorts #Trading",
   ].join("\n");
 
   const tags = [
-    "Synexus",
-    "Should I buy this",
+    "SyNexus",
+    "Token scan",
     "Solana",
     "crypto trading",
     "token scanner",
@@ -82,8 +82,8 @@ export function buildScenes(pack) {
   return [
     {
       id: "intro",
-      kicker: "Synexus",
-      headline: "SHOULD I BUY THIS?",
+      kicker: "SyNexus",
+      headline: "SCAN ANY TOKEN",
       sub: "Paste · Scan · Decide",
       durationRatio: 0.22,
     },

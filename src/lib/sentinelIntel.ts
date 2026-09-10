@@ -1,13 +1,18 @@
 import type { Token } from "../data/tokens";
 import type { SyntheticSentinel } from "../data/syntheticWatchers";
-import { AEGIS_STATUS_IDLE } from "../config/sentinelAegis";
+import {
+  SENTINEL_LANES,
+  normalizeSentinelLaneId,
+  type SentinelLaneId,
+} from "../config/sentinels";
 import {
   buildOracleSentinelDirective,
   buildSentinelReportToOracle,
   type OracleSentinelDirective,
 } from "./oracleCryptoBrain";
 
-export type SentinelLaneId = "aegis" | "pulse" | "titan" | "cipher";
+export type { SentinelLaneId } from "../config/sentinels";
+export { normalizeSentinelLaneId } from "../config/sentinels";
 
 export type SentinelLiveIntel = {
   liveStatus: string;
@@ -70,64 +75,72 @@ export function buildSentinelLiveIntel({
 
   const aegisSentinel = sentinelById(sentinels, "aegis");
   const pulseSentinel = sentinelById(sentinels, "pulse");
-  const titanSentinel = sentinelById(sentinels, "titan");
+  const leviathanSentinel = sentinelById(sentinels, "leviathan");
   const cipherSentinel = sentinelById(sentinels, "cipher");
+  const helixSentinel = sentinelById(sentinels, "helix");
 
   const baseScans = Math.max(48, pool.length * 14 + sentinelAlerts.length * 6);
 
   const aegisFocus = danger[0] ?? warning[0] ?? null;
   const pulseFocus = movers[0] ?? null;
-  const titanFocus = whales[0] ?? null;
+  const leviathanFocus = whales[0] ?? null;
   const cipherFocus = fused[0] ?? danger[0] ?? movers[0] ?? null;
 
   const aegisHits = danger.length + warning.length;
   const pulseHits = movers.length;
-  const titanHits = whales.length;
+  const leviathanHits = whales.length;
   const cipherHits = fused.length;
+
+  // Helix watches key/signing hygiene; SyN Wallet UI is parked — idle hits for now.
+  const helixHits = 0;
 
   function computeStats(sentinel: SyntheticSentinel | undefined, hits: number, scansBoost: number) {
     const level = sentinel?.level ?? 1;
     const confidence = sentinel?.confidence ?? 70;
+    const lanePro = sentinel?.laneId ? SENTINEL_LANES[sentinel.laneId].proPrecisionBoost : false;
     return {
-      precision: Math.min(99, confidence + (pro ? 4 : 0) + Math.min(6, hits)),
-      responseMs: Math.max(38, Math.round(148 - level * 14 - (pro ? 22 : 0) - Math.min(18, hits * 2))),
-      scansPerMin: baseScans + scansBoost + level * 12 + (pro ? 40 : 0),
+      precision: Math.min(99, confidence + (pro && lanePro ? 6 : pro ? 3 : 0) + Math.min(6, hits)),
+      responseMs: Math.max(32, Math.round(140 - level * 14 - (pro ? 24 : 0) - Math.min(20, hits * 2))),
+      scansPerMin: baseScans + scansBoost + level * 12 + (pro ? 44 : 0),
       hits,
     };
   }
 
-  const aegisStats = computeStats(aegisSentinel, aegisHits, 20);
-  const pulseStats = computeStats(pulseSentinel, pulseHits, 28);
-  const titanStats = computeStats(titanSentinel, titanHits, 16);
-  const cipherStats = computeStats(cipherSentinel, cipherHits, 22);
+  const aegisStats = computeStats(aegisSentinel, aegisHits, 22);
+  const pulseStats = computeStats(pulseSentinel, pulseHits, 30);
+  const leviathanStats = computeStats(leviathanSentinel, leviathanHits, 18);
+  const cipherStats = computeStats(cipherSentinel, cipherHits, 24);
+  const helixStats = computeStats(helixSentinel, helixHits, 26);
 
   const aegisStatus =
     pool.length === 0
-      ? AEGIS_STATUS_IDLE
+      ? SENTINEL_LANES.aegis.idleStatus
       : aegisHits > 0
         ? `${aegisHits} security hit${aegisHits === 1 ? "" : "s"} · ${danger.length} danger · ${warning.length} warning${aegisFocus ? ` · focus ${aegisFocus.symbol}` : ""}`
         : `Security lane clear on ${pool.length} pair${pool.length === 1 ? "" : "s"} — contracts, liquidity, and rug heuristics green.`;
 
   const pulseStatus =
     pool.length === 0
-      ? "Pulse ready — will separate real momentum from fake pumps."
+      ? SENTINEL_LANES.pulse.idleStatus
       : pulseFocus
-        ? `${pulseFocus.symbol} ${formatPct(pulseFocus.change24hPct)} 24h · ${pulseHits} mover${pulseHits === 1 ? "" : "s"} tracked · noise filtered`
-        : `No major breakouts — monitoring ${pool.length} pair${pool.length === 1 ? "" : "s"} for volume spikes.`;
+        ? `${pulseFocus.symbol} ${formatPct(pulseFocus.change24hPct)} 24h · ${pulseHits} mover${pulseHits === 1 ? "" : "s"} · volume cross-checked`
+        : `No major breakouts — monitoring ${pool.length} pair${pool.length === 1 ? "" : "s"} for integrity.`;
 
-  const titanStatus =
+  const leviathanStatus =
     pool.length === 0
-      ? "Titan watching for whale-sized wallet shifts."
-      : titanFocus
-        ? `${titanFocus.symbol} top wallet ${titanFocus.topWalletPct ?? "?"}% · ${titanHits} concentration flag${titanHits === 1 ? "" : "s"}`
+      ? SENTINEL_LANES.leviathan.idleStatus
+      : leviathanFocus
+        ? `${leviathanFocus.symbol} top holder ${leviathanFocus.topWalletPct ?? "?"}% · ${leviathanHits} concentration flag${leviathanHits === 1 ? "" : "s"}`
         : `Whale lanes calm across ${pool.length} pair${pool.length === 1 ? "" : "s"}.`;
 
   const cipherStatus =
     pool.length === 0
-      ? "Cipher correlates weak signals into one precise read."
+      ? SENTINEL_LANES.cipher.idleStatus
       : cipherFocus
-        ? `${cipherHits} multi-lane match${cipherHits === 1 ? "" : "es"} · ${cipherFocus.symbol} flagged across risk + flow`
-        : `Patterns quiet — cross-checking ${pool.length} pair${pool.length === 1 ? "" : "s"} for stacked signals.`;
+        ? `${cipherHits} multi-lane match${cipherHits === 1 ? "" : "es"} · ${cipherFocus.symbol} stacked across lanes`
+        : `Patterns quiet — cross-checking ${pool.length} pair${pool.length === 1 ? "" : "s"}.`;
+
+  const helixStatus = SENTINEL_LANES.helix.idleStatus;
 
   function laneIntel(
     lane: SentinelLaneId,
@@ -158,17 +171,22 @@ export function buildSentinelLiveIntel({
     };
   }
 
-  return {
-    aegis: laneIntel("aegis", aegisFocus, aegisStats, aegisStatus, aegisHits, aegisSentinel),
-    pulse: laneIntel("pulse", pulseFocus, pulseStats, pulseStatus, pulseHits, pulseSentinel),
-    titan: laneIntel("titan", titanFocus, titanStats, titanStatus, titanHits, titanSentinel),
-    cipher: laneIntel("cipher", cipherFocus, cipherStats, cipherStatus, cipherHits, cipherSentinel),
-  };
+  const out = {} as Record<SentinelLaneId, SentinelLiveIntel>;
+  out.aegis = laneIntel("aegis", aegisFocus, aegisStats, aegisStatus, aegisHits, aegisSentinel);
+  out.pulse = laneIntel("pulse", pulseFocus, pulseStats, pulseStatus, pulseHits, pulseSentinel);
+  out.leviathan = laneIntel(
+    "leviathan",
+    leviathanFocus,
+    leviathanStats,
+    leviathanStatus,
+    leviathanHits,
+    leviathanSentinel,
+  );
+  out.cipher = laneIntel("cipher", cipherFocus, cipherStats, cipherStatus, cipherHits, cipherSentinel);
+  out.helix = laneIntel("helix", null, helixStats, helixStatus, helixHits, helixSentinel);
+  return out;
 }
 
 export function sentinelLaneIdFromSentinel(sentinelId: string): SentinelLaneId | null {
-  if (sentinelId === "aegis" || sentinelId === "pulse" || sentinelId === "titan" || sentinelId === "cipher") {
-    return sentinelId;
-  }
-  return null;
+  return normalizeSentinelLaneId(sentinelId);
 }

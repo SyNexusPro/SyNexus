@@ -8,7 +8,7 @@ import { bpsToLabel } from "../config/ecosystem";
 
 export type { SynexusPlan, TradingFeeAllocationId };
 
-export const PLAN_STORAGE_KEY = "hivemind_paid_plan";
+export const PLAN_STORAGE_KEY = "synexus_paid_plan";
 
 export function normalizeSynexusPlan(plan: string | null | undefined): SynexusPlan {
   return plan === "PRO" ? "PRO" : "FREE";

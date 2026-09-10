@@ -2,6 +2,10 @@ import type { DeepPartial, GuardianEngineConfig } from "../data/guardianEngine";
 import { buildSampleTokens, buildTokenFromPartial, type Token } from "../data/tokens";
 import { SYN_MINT } from "../config/synToken";
 import { guardApiFetch, guardTokenScan } from "../lib/securityBot";
+import { isNativeAndroid } from "../lib/bootExperience";
+import { nativeFeedCacheTtlMs } from "../lib/nativePerformance";
+import { dedupeInFlight, readMoversCache, writeMoversCache } from "../lib/moversCache";
+import type { MoverTimeframe } from "../lib/moverTimeframes";
 import { loadGuardianConfigOverride } from "./guardianConfigService";
 
 type TokenPatch = {
@@ -24,16 +28,28 @@ type DexPair = {
   fdv?: number;
 };
 
-export type TokenMover5m = {
+export type TokenMover = {
   id: string;
   symbol: string;
   name: string;
   mintAddress: string;
   priceUsd: number;
-  change5mPct: number;
+  changePct: number;
   logoUrl?: string;
   liquidityUsd?: number;
 };
+
+export type TokenMover5m = TokenMover & { change5mPct: number };
+
+export type SolanaMoversResult = {
+  timeframe: MoverTimeframe;
+  gainers: TokenMover[];
+  losers: TokenMover[];
+  source: FeedSource;
+  updatedAt: number;
+};
+
+export type SolanaMoversBoard = Record<MoverTimeframe, SolanaMoversResult>;
 
 export type Solana5mMoversResult = {
   gainers: TokenMover5m[];
@@ -45,6 +61,23 @@ export type Solana5mMoversResult = {
 const MIN_MOVER_LIQUIDITY_USD = 3_000;
 const MOVER_POOL_SIZE = 30;
 const MOVER_LIST_SIZE = 5;
+const HISTORY_MOVER_POOL = 6;
+const BIRDEYE_CONCURRENCY = 2;
+const BIRDEYE_STAGGER_MS = 400;
+
+const MOVER_CACHE_TTL_MS: Record<MoverTimeframe, number> = {
+  "5m": 60_000,
+  "24h": 120_000,
+  "7d": 900_000,
+  "30d": 900_000,
+  "365d": 900_000,
+};
+
+const MOVER_HISTORY_CONFIG: Record<"7d" | "30d" | "365d", { seconds: number; type: string }> = {
+  "7d": { seconds: 7 * 86400, type: "1H" },
+  "30d": { seconds: 30 * 86400, type: "1D" },
+  "365d": { seconds: 365 * 86400, type: "1W" },
+};
 
 type FeedSource = "live" | "mock";
 
@@ -183,16 +216,15 @@ async function fetchDexScreenerPatches(baseTokens: Token[]): Promise<{
   try {
     const patches: Record<string, TokenPatch> = {};
     let liveCount = 0;
-    await Promise.all(
-      baseTokens.map(async (token) => {
-        const pair = token.mintAddress
-          ? await fetchDexPairByAddress(token.mintAddress)
-          : await fetchDexPairBySearch(token.symbol, token.name);
-        if (!pair) return;
-        patches[token.symbol.toUpperCase()] = patchFromDexPair(pair);
-        liveCount += 1;
-      }),
-    );
+    const dexConcurrency = isNativeAndroid() ? 2 : 6;
+    await mapWithConcurrency(baseTokens, dexConcurrency, async (token) => {
+      const pair = token.mintAddress
+        ? await fetchDexPairByAddress(token.mintAddress)
+        : await fetchDexPairBySearch(token.symbol, token.name);
+      if (!pair) return;
+      patches[token.symbol.toUpperCase()] = patchFromDexPair(pair);
+      liveCount += 1;
+    });
     if (!liveCount) {
       throw new Error("DexScreener returned no matching pairs");
     }
@@ -203,7 +235,7 @@ async function fetchDexScreenerPatches(baseTokens: Token[]): Promise<{
       source: "mock",
       liveCount: 0,
       patches: {
-        HIVE: {
+        SYN: {
           priceUsd: 0.00432,
           change24hPct: 5.92,
           volume24hUsd: 482364,
@@ -222,7 +254,7 @@ async function fetchBirdeyePatches(): Promise<Record<string, TokenPatch>> {
   const apiKey = import.meta.env.VITE_BIRDEYE_API_KEY;
   if (!apiKey) {
     return {
-      HIVE: { liquidityUsd: 1285730, marketCapUsd: 43198122 },
+      SYN: { liquidityUsd: 1285730, marketCapUsd: 43198122 },
       SOL: { liquidityUsd: 156000000, marketCapUsd: 89200000000 },
     };
   }
@@ -353,20 +385,23 @@ export async function fetchTokenPriceHistory(
   };
 }
 
-export async function fetchMvpTokenFeed() {
+const MVP_FEED_CACHE_KEY = "mvp:feed";
+const MVP_FEED_TTL_MS = nativeFeedCacheTtlMs(45_000);
+
+async function fetchMvpTokenFeedUncached() {
   const guardianOverride = await loadGuardianConfigOverride();
   const baseTokens = buildSampleTokens(guardianOverride);
   const [dexResult, birdeyePatches, solanaPatch] = await Promise.all([
     fetchDexScreenerPatches(baseTokens),
-    fetchBirdeyePatches(),
-    fetchSolanaRpcPatch(),
+    isNativeAndroid() ? Promise.resolve({} as Record<string, TokenPatch>) : fetchBirdeyePatches(),
+    isNativeAndroid() ? Promise.resolve({ mintAddress: SYN_MINT } as TokenPatch) : fetchSolanaRpcPatch(),
   ]);
 
   const mergedPatches: Record<string, TokenPatch> = { ...dexResult.patches };
   for (const [symbol, patch] of Object.entries(birdeyePatches)) {
     mergedPatches[symbol] = { ...mergedPatches[symbol], ...patch };
   }
-  mergedPatches.HIVE = { ...mergedPatches.HIVE, ...solanaPatch };
+  mergedPatches.SYN = { ...mergedPatches.SYN, ...solanaPatch };
 
   const all = applyPatches(baseTokens, mergedPatches);
   const trending = all
@@ -384,6 +419,18 @@ export async function fetchMvpTokenFeed() {
     source: dexResult.source,
     dexLiveCount: dexResult.liveCount,
   };
+}
+
+export async function fetchMvpTokenFeed() {
+  const cached = readMoversCache<Awaited<ReturnType<typeof fetchMvpTokenFeedUncached>>>(MVP_FEED_CACHE_KEY);
+  if (cached) return cached;
+
+  return dedupeInFlight(MVP_FEED_CACHE_KEY, async () => {
+    const fresh = readMoversCache<Awaited<ReturnType<typeof fetchMvpTokenFeedUncached>>>(MVP_FEED_CACHE_KEY);
+    if (fresh) return fresh;
+    const result = await fetchMvpTokenFeedUncached();
+    return writeMoversCache(MVP_FEED_CACHE_KEY, result, MVP_FEED_TTL_MS);
+  });
 }
 
 function tokenFromDexPair(pair: DexPair, idHint: string): Token {
@@ -467,12 +514,11 @@ type DexBoostEntry = {
   tokenAddress?: string;
 };
 
-function moverFromDexPair(pair: DexPair): TokenMover5m | null {
+function moverFromDexPair(pair: DexPair, changePct: number): TokenMover | null {
   const mintAddress = pair.baseToken?.address?.trim();
-  const change5mPct = toFiniteNumber(pair.priceChange?.m5);
   const priceUsd = toFiniteNumber(pair.priceUsd) ?? 0;
   const liquidityUsd = toFiniteNumber(pair.liquidity?.usd);
-  if (!mintAddress || change5mPct === undefined) return null;
+  if (!mintAddress || !Number.isFinite(changePct)) return null;
   if ((liquidityUsd ?? 0) < MIN_MOVER_LIQUIDITY_USD) return null;
 
   const symbol = pair.baseToken?.symbol?.trim() || "???";
@@ -485,13 +531,16 @@ function moverFromDexPair(pair: DexPair): TokenMover5m | null {
     name,
     mintAddress,
     priceUsd,
-    change5mPct,
+    changePct,
     liquidityUsd,
     logoUrl: imageUrl?.startsWith("http") ? imageUrl : undefined,
   };
 }
 
-function pickBestMoverPairs(pairs: DexPair[]): TokenMover5m[] {
+function pickBestMoverPairs(
+  pairs: DexPair[],
+  readChangePct: (pair: DexPair) => number | undefined,
+): TokenMover[] {
   const bestByMint = new Map<string, DexPair>();
   for (const pair of pairs) {
     const mint = pair.baseToken?.address?.trim();
@@ -502,27 +551,53 @@ function pickBestMoverPairs(pairs: DexPair[]): TokenMover5m[] {
     }
   }
   return [...bestByMint.values()]
-    .map(moverFromDexPair)
-    .filter((mover): mover is TokenMover5m => Boolean(mover));
+    .map((pair) => {
+      const changePct = readChangePct(pair);
+      return changePct === undefined ? null : moverFromDexPair(pair, changePct);
+    })
+    .filter((mover): mover is TokenMover => Boolean(mover));
 }
 
-function mockSolana5mMovers(): Solana5mMoversResult {
+function rankMovers(movers: TokenMover[], listSize = MOVER_LIST_SIZE): Pick<SolanaMoversResult, "gainers" | "losers"> {
+  const gainers = movers
+    .filter((mover) => mover.changePct > 0)
+    .sort((a, b) => b.changePct - a.changePct)
+    .slice(0, listSize);
+  const losers = movers
+    .filter((mover) => mover.changePct < 0)
+    .sort((a, b) => a.changePct - b.changePct)
+    .slice(0, listSize);
+  return { gainers, losers };
+}
+
+function toMover5m(mover: TokenMover): TokenMover5m {
+  return { ...mover, change5mPct: mover.changePct };
+}
+
+function mockSolanaMovers(timeframe: MoverTimeframe): SolanaMoversResult {
   const now = Date.now();
-  const gainers: TokenMover5m[] = [
-    { id: "bonk-m5", symbol: "BONK", name: "Bonk", mintAddress: "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263", priceUsd: 0.000034, change5mPct: 4.82 },
-    { id: "wif-m5", symbol: "WIF", name: "dogwifhat", mintAddress: "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm", priceUsd: 2.41, change5mPct: 3.15 },
-    { id: "popcat-m5", symbol: "POPCAT", name: "Popcat", mintAddress: "7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr", priceUsd: 1.12, change5mPct: 2.44 },
-    { id: "mew-m5", symbol: "MEW", name: "cat in a dogs world", mintAddress: "MEW1gQWJ3nEXg2qgERiKu7FAFj79PHvVUB6kiqq9p6p", priceUsd: 0.0089, change5mPct: 1.98 },
-    { id: "syn-m5", symbol: "SYN", name: "Synexus", mintAddress: SYN_MINT, priceUsd: 0.00432, change5mPct: 1.21 },
+  const scale =
+    timeframe === "5m" ? 1 :
+    timeframe === "24h" ? 2.4 :
+    timeframe === "7d" ? 8 :
+    timeframe === "30d" ? 18 :
+    42;
+
+  const gainers: TokenMover[] = [
+    { id: "bonk-m", symbol: "BONK", name: "Bonk", mintAddress: "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263", priceUsd: 0.000034, changePct: 4.82 * scale },
+    { id: "wif-m", symbol: "WIF", name: "dogwifhat", mintAddress: "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm", priceUsd: 2.41, changePct: 3.15 * scale },
+    { id: "popcat-m", symbol: "POPCAT", name: "Popcat", mintAddress: "7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr", priceUsd: 1.12, changePct: 2.44 * scale },
+    { id: "mew-m", symbol: "MEW", name: "cat in a dogs world", mintAddress: "MEW1gQWJ3nEXg2qgERiKu7FAFj79PHvVUB6kiqq9p6p", priceUsd: 0.0089, changePct: 1.98 * scale },
+    { id: "syn-m", symbol: "SYN", name: "SyNexus", mintAddress: SYN_MINT, priceUsd: 0.00432, changePct: 1.21 * scale },
   ];
-  const losers: TokenMover5m[] = [
-    { id: "pepe-m5", symbol: "PEPE", name: "Pepe", mintAddress: "pepe-mint", priceUsd: 0.0000107, change5mPct: -3.44 },
-    { id: "myro-m5", symbol: "MYRO", name: "Myro", mintAddress: "myro-mint", priceUsd: 0.21, change5mPct: -2.87 },
-    { id: "slerf-m5", symbol: "SLERF", name: "Slerf", mintAddress: "slerf-mint", priceUsd: 0.38, change5mPct: -2.11 },
-    { id: "bome-m5", symbol: "BOME", name: "BOOK OF MEME", mintAddress: "bome-mint", priceUsd: 0.012, change5mPct: -1.76 },
-    { id: "jup-m5", symbol: "JUP", name: "Jupiter", mintAddress: "jup-mint", priceUsd: 1.02, change5mPct: -0.92 },
+  const losers: TokenMover[] = [
+    { id: "pepe-m", symbol: "PEPE", name: "Pepe", mintAddress: "pepe-mint", priceUsd: 0.0000107, changePct: -3.44 * scale },
+    { id: "myro-m", symbol: "MYRO", name: "Myro", mintAddress: "myro-mint", priceUsd: 0.21, changePct: -2.87 * scale },
+    { id: "slerf-m", symbol: "SLERF", name: "Slerf", mintAddress: "slerf-mint", priceUsd: 0.38, changePct: -2.11 * scale },
+    { id: "bome-m", symbol: "BOME", name: "BOOK OF MEME", mintAddress: "bome-mint", priceUsd: 0.012, changePct: -1.76 * scale },
+    { id: "jup-m", symbol: "JUP", name: "Jupiter", mintAddress: "jup-mint", priceUsd: 1.02, changePct: -0.92 * scale },
   ];
-  return { gainers, losers, source: "mock", updatedAt: now };
+  return { timeframe, gainers, losers, source: "mock", updatedAt: now };
 }
 
 async function fetchDexBoostAddresses(): Promise<string[]> {
@@ -557,38 +632,185 @@ async function fetchDexPairsBatch(addresses: string[]): Promise<DexPair[]> {
   return data.pairs ?? [];
 }
 
-export async function fetchSolana5mMovers(): Promise<Solana5mMoversResult> {
-  const apiGuard = guardApiFetch("dex-5m-movers");
-  if (!apiGuard.allowed) {
-    return mockSolana5mMovers();
-  }
-
-  try {
+async function fetchDexMoverPool(): Promise<{ pairs: DexPair[]; source: FeedSource }> {
+  return dedupeInFlight("dex:mover-pool", async () => {
     const addresses = await fetchDexBoostAddresses();
     if (!addresses.length) throw new Error("No boosted Solana tokens");
-
     const pairs = await fetchDexPairsBatch(addresses);
     if (!pairs.length) throw new Error("DexScreener returned no pairs");
+    return { pairs, source: "live" as FeedSource };
+  });
+}
 
-    const movers = pickBestMoverPairs(pairs);
-    if (!movers.length) throw new Error("No movers passed liquidity filter");
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
-    const gainers = movers
-      .filter((mover) => mover.change5mPct > 0)
-      .sort((a, b) => b.change5mPct - a.change5mPct)
-      .slice(0, MOVER_LIST_SIZE);
-    const losers = movers
-      .filter((mover) => mover.change5mPct < 0)
-      .sort((a, b) => a.change5mPct - b.change5mPct)
-      .slice(0, MOVER_LIST_SIZE);
+async function mapWithConcurrency<T>(
+  items: T[],
+  concurrency: number,
+  fn: (item: T, index: number) => Promise<void>,
+): Promise<void> {
+  let index = 0;
+  const workers = Array.from({ length: Math.min(concurrency, items.length) }, async () => {
+    while (index < items.length) {
+      const i = index++;
+      await fn(items[i]!, i);
+    }
+  });
+  await Promise.all(workers);
+}
 
-    return {
-      gainers,
-      losers,
-      source: "live",
-      updatedAt: Date.now(),
-    };
+async function fetchPeriodChangePct(mintAddress: string, seconds: number, type: string): Promise<number | null> {
+  const apiKey = import.meta.env.VITE_BIRDEYE_API_KEY;
+  if (!apiKey) return null;
+
+  const now = Math.floor(Date.now() / 1000);
+  const from = now - seconds;
+  const params = new URLSearchParams({
+    address: mintAddress,
+    address_type: "token",
+    type,
+    time_from: String(from),
+    time_to: String(now),
+  });
+
+  try {
+    const response = await fetch(`https://public-api.birdeye.so/defi/history_price?${params}`, {
+      headers: {
+        "X-API-KEY": apiKey,
+        "x-chain": "solana",
+      },
+    });
+    if (!response.ok) return null;
+    const data = (await response.json()) as { data?: { items?: Record<string, unknown>[] } };
+    const items = data.data?.items ?? [];
+    if (items.length < 2) return null;
+
+    const firstPrice = readHistoryPrice(items[0]!);
+    const lastPrice = readHistoryPrice(items[items.length - 1]!);
+    if (!firstPrice || !lastPrice || firstPrice <= 0) return null;
+    return ((lastPrice - firstPrice) / firstPrice) * 100;
   } catch {
-    return mockSolana5mMovers();
+    return null;
   }
+}
+
+async function fetchHistoricalMovers(
+  pairs: DexPair[],
+  timeframe: "7d" | "30d" | "365d",
+): Promise<TokenMover[]> {
+  const config = MOVER_HISTORY_CONFIG[timeframe];
+  const candidates = pickBestMoverPairs(pairs, (pair) => toFiniteNumber(pair.priceChange?.h24) ?? 0)
+    .sort((a, b) => (b.liquidityUsd ?? 0) - (a.liquidityUsd ?? 0))
+    .slice(0, HISTORY_MOVER_POOL);
+
+  const movers: TokenMover[] = [];
+  await mapWithConcurrency(candidates, BIRDEYE_CONCURRENCY, async (base, index) => {
+    if (index > 0) await sleep(BIRDEYE_STAGGER_MS);
+    const changePct = await fetchPeriodChangePct(base.mintAddress, config.seconds, config.type);
+    if (changePct == null || !Number.isFinite(changePct)) return;
+    movers.push({ ...base, changePct });
+  });
+
+  return movers;
+}
+
+export async function fetchSolanaTopMovers(timeframe: MoverTimeframe): Promise<SolanaMoversResult> {
+  const cacheKey = `movers:${timeframe}`;
+  const cached = readMoversCache<SolanaMoversResult>(cacheKey);
+  if (cached) return cached;
+
+  return dedupeInFlight(cacheKey, async () => {
+    const apiGuard = guardApiFetch(`dex-movers-${timeframe}`);
+    if (!apiGuard.allowed) {
+      return writeMoversCache(cacheKey, mockSolanaMovers(timeframe), nativeFeedCacheTtlMs(MOVER_CACHE_TTL_MS[timeframe]));
+    }
+
+    try {
+      const { pairs } = await fetchDexMoverPool();
+
+      if (timeframe === "5m" || timeframe === "24h") {
+        const readChange =
+          timeframe === "5m"
+            ? (pair: DexPair) => toFiniteNumber(pair.priceChange?.m5)
+            : (pair: DexPair) => toFiniteNumber(pair.priceChange?.h24);
+        const movers = pickBestMoverPairs(pairs, readChange);
+        if (!movers.length) throw new Error("No movers passed liquidity filter");
+        const ranked = rankMovers(movers);
+        return writeMoversCache(
+          cacheKey,
+          { timeframe, ...ranked, source: "live", updatedAt: Date.now() },
+          nativeFeedCacheTtlMs(MOVER_CACHE_TTL_MS[timeframe]),
+        );
+      }
+
+      const movers = await fetchHistoricalMovers(pairs, timeframe);
+      if (!movers.length) throw new Error("No historical movers");
+      const ranked = rankMovers(movers);
+      return writeMoversCache(
+        cacheKey,
+        { timeframe, ...ranked, source: "live", updatedAt: Date.now() },
+        MOVER_CACHE_TTL_MS[timeframe],
+      );
+    } catch {
+      return writeMoversCache(cacheKey, mockSolanaMovers(timeframe), nativeFeedCacheTtlMs(MOVER_CACHE_TTL_MS[timeframe]));
+    }
+  });
+}
+
+function buildBoardFromCaches(): SolanaMoversBoard {
+  return {
+    "5m": readMoversCache("movers:5m") ?? mockSolanaMovers("5m"),
+    "24h": readMoversCache("movers:24h") ?? mockSolanaMovers("24h"),
+    "7d": readMoversCache("movers:7d") ?? mockSolanaMovers("7d"),
+    "30d": readMoversCache("movers:30d") ?? mockSolanaMovers("30d"),
+    "365d": readMoversCache("movers:365d") ?? mockSolanaMovers("365d"),
+  };
+}
+
+/** Load week/month/year movers in the background — never blocks UI. */
+function hydrateHistoricalMoversBoard(): void {
+  void dedupeInFlight("movers:hydrate", async () => {
+    for (const timeframe of ["7d", "30d", "365d"] as const) {
+      if (readMoversCache(`movers:${timeframe}`)) continue;
+      await fetchSolanaTopMovers(timeframe);
+      await sleep(1200);
+    }
+    writeMoversCache("movers:board", buildBoardFromCaches(), MOVER_CACHE_TTL_MS["7d"]);
+  });
+}
+
+export async function fetchSolanaMoversBoard(): Promise<SolanaMoversBoard> {
+  const cached = readMoversCache<SolanaMoversBoard>("movers:board");
+  if (cached) return cached;
+
+  return dedupeInFlight("movers:board", async () => {
+    const [fiveM, day] = await Promise.all([
+      fetchSolanaTopMovers("5m"),
+      fetchSolanaTopMovers("24h"),
+    ]);
+
+    const board: SolanaMoversBoard = {
+      "5m": fiveM,
+      "24h": day,
+      "7d": readMoversCache("movers:7d") ?? mockSolanaMovers("7d"),
+      "30d": readMoversCache("movers:30d") ?? mockSolanaMovers("30d"),
+      "365d": readMoversCache("movers:365d") ?? mockSolanaMovers("365d"),
+    };
+
+    writeMoversCache("movers:board", board, 120_000);
+    hydrateHistoricalMoversBoard();
+    return board;
+  });
+}
+
+export async function fetchSolana5mMovers(): Promise<Solana5mMoversResult> {
+  const result = await fetchSolanaTopMovers("5m");
+  return {
+    gainers: result.gainers.map(toMover5m),
+    losers: result.losers.map(toMover5m),
+    source: result.source,
+    updatedAt: result.updatedAt,
+  };
 }

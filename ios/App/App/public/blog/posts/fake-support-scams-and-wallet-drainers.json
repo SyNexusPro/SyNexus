@@ -1,0 +1,41 @@
+{
+  "slug": "fake-support-scams-and-wallet-drainers",
+  "title": "Fake Support Scams and Wallet Drainers: What Solana Traders Miss",
+  "excerpt": "How impersonators exploit urgency — and the habits that keep your keys safe.",
+  "date": "2026-07-03",
+  "author": "SyNexus Editorial",
+  "origin": "https://www.synexus.pro",
+  "trustLine": "Non-custodial · You sign every trade · Not financial advice.",
+  "blocks": [
+    {
+      "type": "h2",
+      "text": "The playbook never changes"
+    },
+    {
+      "type": "p",
+      "text": "Urgency plus authority equals compromise. Fake 'SyNexus support,' fake Phantom help desks, and fake airdrop claim sites all push you to connect a wallet and sign a malicious transaction. Real support never asks for seed phrases or remote access to your device."
+    },
+    {
+      "type": "h2",
+      "text": "Drainer sites mimic real dApps"
+    },
+    {
+      "type": "p",
+      "text": "Bookmark official URLs. Use wallet transaction previews and read what you are approving. Revoke suspicious token approvals periodically through your wallet's security tools."
+    },
+    {
+      "type": "h2",
+      "text": "If you think you were drained"
+    },
+    {
+      "type": "p",
+      "text": "SyNexus cannot reverse blockchain transactions or recover seed phrases. Move remaining assets to a new wallet with a fresh seed phrase, document the incident, and report phishing URLs to your wallet provider and community channels."
+    }
+  ],
+  "cta": "Run a free Sentinel scan → https://www.synexus.pro",
+  "tags": [
+    "scams",
+    "wallet",
+    "security"
+  ]
+}

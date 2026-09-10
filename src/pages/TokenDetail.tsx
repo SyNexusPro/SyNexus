@@ -3,21 +3,30 @@ import { Link, useParams } from "react-router-dom";
 import { TokenLogo } from "../components/TokenLogo";
 import { ScanHealthPanel } from "../components/ScanHealthPanel";
 import { ShouldIBuyVerdict } from "../components/ShouldIBuyPanel";
+import { TradeIntelligenceScorecard } from "../components/TradeIntelligenceScorecard";
 import { TradeIntelBuyLink } from "../components/TradeIntelBuyLink";
+import {
+  TitanMarketChart,
+  type TitanChartCandle,
+  type TitanChartLinePoint,
+} from "../components/TitanMarketChart";
 import { submitSynexusReport } from "../lib/reportSubmission";
 import { recordTokenView } from "../lib/walletHealth";
 import { trackSiteEvent } from "../lib/siteAnalytics";
 import { dexScreenerTokenUrl, jupiterBuyWithSolUrl, jupiterSellForSolUrl } from "../lib/solanaTradeLinks";
 import { getTradingFeeBps } from "../lib/tradingFees";
 import { useSynexusPlan } from "../hooks/useSynexusPlan";
-import { SYN_IS_LIVE, SYN_MINT, SYN_PUMPFUN_COIN_URL } from "../config/synToken";
+import { isTradingEnabled, tradePath } from "../config/trading";
+import { SYN_MINT, SYN_PUMPFUN_URL } from "../config/synToken";
 import type { Token } from "../data/tokens";
 import {
   fetchTokenDetailById,
   fetchTokenPriceHistory,
+  type PriceHistoryPoint,
   type PriceHistoryRange,
   type PriceHistoryResult,
 } from "../services/marketDataService";
+import type { UTCTimestamp } from "lightweight-charts";
 
 function formatUsd(n: number): string {
   return n.toLocaleString("en-US", {
@@ -25,22 +34,6 @@ function formatUsd(n: number): string {
     currency: "USD",
     maximumFractionDigits: n >= 1 ? 2 : 8,
   });
-}
-
-function formatChartTime(timestamp: number, range: PriceHistoryRange) {
-  const date = new Date(timestamp);
-  if (range === "1H") {
-    return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-  }
-  if (range === "24H") {
-    return date.toLocaleString("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  }
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 const CHART_RANGE_META: Record<PriceHistoryRange, { button: string; refreshMs: number }> = {
@@ -51,33 +44,28 @@ const CHART_RANGE_META: Record<PriceHistoryRange, { button: string; refreshMs: n
 
 const chartRanges: PriceHistoryRange[] = ["1H", "24H", "1MO"];
 
-function getChartGeometry(points: PriceHistoryResult["points"]) {
-  const width = 1000;
-  const height = 320;
-  if (points.length < 2) {
-    return { path: "", latestX: width, latestY: height / 2 };
+/** Build OHLC candles from close-only history for TitanMarketChart. */
+function historyToChartSeries(points: PriceHistoryPoint[]): {
+  candles: TitanChartCandle[];
+  lineData: TitanChartLinePoint[];
+} {
+  const candles: TitanChartCandle[] = [];
+  const lineData: TitanChartLinePoint[] = [];
+  let prevClose: number | null = null;
+
+  for (const point of points) {
+    const time = Math.floor(point.timestamp / 1000) as UTCTimestamp;
+    const close = point.priceUsd;
+    if (!Number.isFinite(close) || close <= 0) continue;
+    const open = prevClose ?? close;
+    const high = Math.max(open, close);
+    const low = Math.min(open, close);
+    candles.push({ time, open, high, low, close });
+    lineData.push({ time, value: close });
+    prevClose = close;
   }
 
-  const prices = points.map((point) => point.priceUsd);
-  const min = Math.min(...prices);
-  const max = Math.max(...prices);
-  const priceRange = max - min || max || 1;
-
-  const coordinates = points.map((point, index) => {
-    const x = (index / (points.length - 1)) * width;
-    const normalized = (point.priceUsd - min) / priceRange;
-    const y = height - normalized * height;
-    return { x, y };
-  });
-  const latest = coordinates[coordinates.length - 1];
-
-  return {
-    path: coordinates
-      .map(({ x, y }, index) => `${index === 0 ? "M" : "L"} ${x.toFixed(2)} ${y.toFixed(2)}`)
-      .join(" "),
-    latestX: latest.x,
-    latestY: latest.y,
-  };
+  return { candles, lineData };
 }
 
 export function TokenDetail() {
@@ -169,7 +157,7 @@ export function TokenDetail() {
       if (result.ok) {
         setReportNote(
           result.channel === "supabase"
-            ? "Report submitted to Synexus."
+            ? "Report submitted to SyNexus."
             : "Report saved on this device.",
         );
       setReportDetails("");
@@ -203,18 +191,14 @@ export function TokenDetail() {
     );
   }
 
-  const dexscreenerUrl = dexScreenerTokenUrl(token.mintAddress, token.symbol);
-  const buySwapUrl = jupiterBuyWithSolUrl(token.mintAddress, swapOpts) ?? dexscreenerUrl;
-  const sellSwapUrl = jupiterSellForSolUrl(token.mintAddress, swapOpts) ?? dexscreenerUrl;
-  const isSynToken = token.id === "hivemind-sol" || token.mintAddress === SYN_MINT;
-  const showPumpFun = SYN_IS_LIVE && isSynToken;
+  const isSynMint = token.mintAddress === SYN_MINT;
+  const chartUrl = isSynMint ? SYN_PUMPFUN_URL : dexScreenerTokenUrl(token.mintAddress, token.symbol);
+  const buySwapUrl = isSynMint ? SYN_PUMPFUN_URL : jupiterBuyWithSolUrl(token.mintAddress, swapOpts) ?? chartUrl;
+  const sellSwapUrl = isSynMint ? SYN_PUMPFUN_URL : jupiterSellForSolUrl(token.mintAddress, swapOpts) ?? chartUrl;
   const explorerUrl = token.mintAddress
     ? `https://solscan.io/token/${token.mintAddress}`
     : "https://solscan.io";
-  const chartGeometry = priceHistory
-    ? getChartGeometry(priceHistory.points)
-    : { path: "", latestX: 1000, latestY: 160 };
-  const chartPath = chartGeometry.path;
+  const chartSeries = historyToChartSeries(priceHistory?.points ?? []);
   const latestPoint = priceHistory?.points.at(-1);
   const firstPoint = priceHistory?.points[0];
   const latestPrice = latestPoint?.priceUsd ?? token.priceUsd;
@@ -223,13 +207,6 @@ export function TokenDetail() {
   const secondsSinceUpdate = priceHistory
     ? Math.max(0, Math.floor((chartTick - priceHistory.updatedAt) / 1000))
     : 0;
-  const middlePoint = priceHistory?.points[Math.floor((priceHistory?.points.length ?? 0) / 2)];
-  const chartLabels =
-    priceHistory && priceHistory.points.length >= 2
-      ? [priceHistory.points[0], middlePoint, latestPoint]
-          .filter((point): point is NonNullable<typeof point> => Boolean(point))
-          .map((point) => formatChartTime(point.timestamp, priceHistory.range))
-      : [];
 
   return (
     <div className="page">
@@ -242,7 +219,14 @@ export function TokenDetail() {
               {token.name} ({token.symbol})
             </h1>
             <p className="detail-header__contract">
-              Contract: <span>{token.mintAddress ?? "Not available"}</span>
+              Contract:{" "}
+              {isSynMint ? (
+                <a href={SYN_PUMPFUN_URL} target="_blank" rel="noopener noreferrer">
+                  {token.mintAddress}
+                </a>
+              ) : (
+                <span>{token.mintAddress ?? "Not available"}</span>
+              )}
             </p>
           </div>
         </div>
@@ -272,39 +256,17 @@ export function TokenDetail() {
             </button>
           ))}
         </div>
-        <div className="detail-chart__line-wrap">
+        <div className="detail-chart__line-wrap detail-chart__line-wrap--titan">
           {chartState === "error" ? (
             <p className="detail-chart__empty">Could not load chart history.</p>
           ) : chartState === "loading" && !priceHistory ? (
-            <p className="detail-chart__empty">Loading precise trading line...</p>
+            <p className="detail-chart__empty">Loading Titan market chart...</p>
           ) : (
-            <svg
-              className="detail-chart__line"
-              viewBox="0 0 1000 320"
-              preserveAspectRatio="none"
-              role="img"
-              aria-label={`${token.symbol} ${chartRange} price line chart`}
-            >
-              <defs>
-                <linearGradient id="chartGlow" x1="0" x2="1" y1="0" y2="0">
-                  <stop offset="0%" stopColor="#89ff2f" />
-                  <stop offset="55%" stopColor="#dcffbe" />
-                  <stop offset="100%" stopColor="#5ee7ff" />
-                </linearGradient>
-                <linearGradient id="chartFill" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0%" stopColor="rgba(137, 255, 47, 0.32)" />
-                  <stop offset="100%" stopColor="rgba(137, 255, 47, 0)" />
-                </linearGradient>
-              </defs>
-              <path className="detail-chart__area" d={`${chartPath} L 1000 320 L 0 320 Z`} />
-              <path className="detail-chart__stroke" d={chartPath} />
-              <circle
-                className="detail-chart__last-dot"
-                cx={chartGeometry.latestX}
-                cy={chartGeometry.latestY}
-                r="7"
-              />
-            </svg>
+            <TitanMarketChart
+              symbol={`${token.symbol}/USD`}
+              candles={chartSeries.candles}
+              lineData={chartSeries.lineData}
+            />
           )}
           <div className="detail-chart__value">
             <p>{formatUsd(latestPrice)}</p>
@@ -313,11 +275,6 @@ export function TokenDetail() {
               {chartChangePct.toFixed(2)}%
             </span>
           </div>
-        </div>
-        <div className="detail-chart__axis">
-          {chartLabels.map((label) => (
-            <span key={label}>{label}</span>
-          ))}
         </div>
       </section>
 
@@ -341,25 +298,27 @@ export function TokenDetail() {
       </section>
 
       <ScanHealthPanel token={token} />
+      <TradeIntelligenceScorecard token={token} />
       <ShouldIBuyVerdict token={token} />
 
       <section className="detail-trade-panel">
         <div>
           <h2>Trade actions</h2>
           <p>
-            Jupiter opens with SOL swaps prefilled — connect your wallet and confirm. Charts stay on DexScreener.
+            {isTradingEnabled()
+              ? isSynMint
+                ? "Swap in SyNexus uses Jupiter routes plus Titan safety. $SYN still trades on pump.fun until it graduates."
+                : "Swap in SyNexus uses Jupiter routes plus Titan safety. External Jupiter and DexScreener stay available."
+              : isSynMint
+                ? "Buy and sell $SYN on pump.fun — connect your wallet there."
+                : "Jupiter opens with SOL swaps prefilled — connect your wallet and confirm. Charts stay on DexScreener."}
           </p>
         </div>
         <div className="detail-trade-panel__actions">
-          {showPumpFun ? (
-            <a
-              href={SYN_PUMPFUN_COIN_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="detail-trade-panel__buy detail-trade-panel__pumpfun"
-            >
-              Buy on pump.fun
-            </a>
+          {isTradingEnabled() && token.mintAddress ? (
+            <Link to={tradePath({ mint: token.mintAddress, side: "buy" })} className="detail-trade-panel__buy">
+              Swap in SyNexus
+            </Link>
           ) : null}
           <TradeIntelBuyLink
             token={token}
@@ -367,19 +326,19 @@ export function TokenDetail() {
             className="detail-trade-panel__buy"
             side="buy"
           >
-            Buy {token.symbol}
+            {isSynMint ? `Buy ${token.symbol} on pump.fun` : `Buy ${token.symbol}`}
           </TradeIntelBuyLink>
           <TradeIntelBuyLink token={token} href={sellSwapUrl} side="sell">
-            Sell {token.symbol}
+            {isSynMint ? `Sell ${token.symbol} on pump.fun` : `Sell ${token.symbol}`}
           </TradeIntelBuyLink>
-          <a href={dexscreenerUrl} target="_blank" rel="noopener noreferrer" className="detail-trade-panel__charts">
-            Charts
+          <a href={chartUrl} target="_blank" rel="noopener noreferrer" className="detail-trade-panel__charts">
+            {isSynMint ? "pump.fun" : "Charts"}
           </a>
         </div>
       </section>
 
       <section className="detail-guardian">
-        <h2>The Synexus</h2>
+        <h2>The SyNexus</h2>
         <p className="detail-guardian__lede">Sentinel intelligence for this token</p>
         <p>{token.guardianMessage}</p>
       </section>
@@ -423,8 +382,8 @@ export function TokenDetail() {
 
       <section className="detail-links">
         <h2>External links</h2>
-        <a href={dexscreenerUrl} target="_blank" rel="noopener noreferrer">
-          Open DexScreener
+        <a href={chartUrl} target="_blank" rel="noopener noreferrer">
+          {isSynMint ? "Open pump.fun" : "Open DexScreener"}
         </a>
         <a href={explorerUrl} target="_blank" rel="noopener noreferrer">
           Open Solana explorer

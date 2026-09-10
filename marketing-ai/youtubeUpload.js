@@ -75,7 +75,7 @@ export async function readYouTubeMetadata(metadataPath) {
 
 function shortsTitle(title) {
   const base = title.trim();
-  if (!base) return "Synexus Daily #Shorts";
+  if (!base) return "SyNexus Daily #Shorts";
   if (base.toLowerCase().includes("#shorts")) return base.slice(0, 100);
   const withTag = `${base} #Shorts`;
   return withTag.length <= 100 ? withTag : `${base.slice(0, 91)} #Shorts`;
@@ -131,7 +131,7 @@ export async function uploadVideoToYouTube({
     title = shortsTitle(tagged);
   }
   const description = metadata.description;
-  const tags = metadata.tags.length ? metadata.tags : ["Synexus", "Solana", "Shorts"];
+  const tags = metadata.tags.length ? metadata.tags : ["SyNexus", "Solana", "Shorts"];
 
   if (!quiet) {
     console.log("\n5/5 Uploading to YouTube…");

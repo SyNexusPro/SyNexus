@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Synexus Aegis self-test — pattern + rate-limit smoke checks (no browser).
+ * SyNexus Aegis self-test — pattern + rate-limit smoke checks (no browser).
  * Run: npm run aegis:check
  */
 
@@ -40,7 +40,7 @@ function testPatterns() {
     { text: "javascript:steal()", expectBlock: true },
     { text: "wallet drainer approve all", expectBlock: true },
     { text: "set authority on your token account", expectBlock: true },
-    { text: "Synexus support DM me your key", expectBlock: true },
+    { text: "SyNexus support DM me your key", expectBlock: true },
     { text: "Paste mint BONK — is it safe?", expectBlock: false },
     { text: "https://synexus.pro/terms", expectBlock: false },
     { text: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", expectBlock: false },

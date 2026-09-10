@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Create a Square Payment Link for a test Synexus Pro checkout.
+ * Create a Square Payment Link for a test SyNexusPro checkout.
  *   npm run square:test-checkout
  */
 
@@ -71,7 +71,7 @@ if (missing.length) {
   console.error("(Access tokens are long and usually start with EAAA...)");
   process.exitCode = 1;
 } else if (looksLikeWebhookId(planVariationId)) {
-  console.error("Plan ID looks like a webhook ID (wbhk_...). Use SKU SyNexus-Pro-001 or catalog variation ID.");
+  console.error("Plan ID looks like a webhook ID (wbhk_...). Use SKU SyNexusPro or catalog variation ID.");
   process.exitCode = 1;
 } else {
   const headers = {
@@ -151,9 +151,9 @@ if (missing.length) {
       headers: { ...headers, "Content-Type": "application/json" },
       body: JSON.stringify({
         idempotency_key: randomUUID(),
-        description: "Synexus Pro test checkout",
+        description: "SyNexusPro test checkout",
         quick_pay: {
-          name: "Synexus Pro",
+          name: "SyNexusPro",
           price_money: { amount: 999, currency: "USD" },
           location_id: locationId,
         },
