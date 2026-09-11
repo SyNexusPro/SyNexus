@@ -1,20 +1,20 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { ViteDevServer } from "../viteDevServer";
-import { buildTitanSystemPrompt, resolveDefaultCommanderPersona, type TitanPromptInput } from "../../lib/server/titan/prompt.js";
-import { resolveTitanAuthPlan } from "../../lib/server/titan/authPlan.js";
-import { guardTitanServerMessage } from "../../lib/server/titan/sanitize.js";
-import { titanCacheGet, titanCacheSet } from "../../lib/server/titan/responseCache.js";
-import { fetchLiveSolanaWatchlist, needsLiveMarketFetch } from "../../lib/server/titan/liveMarketBrief.js";
+import { buildTitanSystemPrompt, resolveDefaultCommanderPersona, type TitanPromptInput } from "../../../lib/server/titan/prompt.js";
+import { resolveTitanAuthPlan } from "../../../lib/server/titan/authPlan.js";
+import { guardTitanServerMessage } from "../../../lib/server/titan/sanitize.js";
+import { titanCacheGet, titanCacheSet } from "../../../lib/server/titan/responseCache.js";
+import { fetchLiveSolanaWatchlist, needsLiveMarketFetch } from "../../../lib/server/titan/liveMarketBrief.js";
 import {
   fetchVerifiedTokenSnapshot,
   needsLiveTokenFetch,
   resolveLiveTokenQuery,
-} from "../../lib/server/titan/liveTokenIntel.js";
+} from "../../../lib/server/titan/liveTokenIntel.js";
 import {
   formatLaunchWatchBrief,
   needsLaunchWatchFetch,
   scanLaunchWatch,
-} from "../../lib/server/titan/launchWatchScan.js";
+} from "../../../lib/server/titan/launchWatchScan.js";
 
 export type TitanChatRequestBody = TitanPromptInput & {
   message: string;

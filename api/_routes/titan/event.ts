@@ -1,8 +1,8 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { ViteDevServer } from "../viteDevServer";
-import { supabaseAdminFromEnv } from "../../lib/server/titan/authPlan.js";
-import { classifyEvent, shouldSendInstantPremium, type TitanSeverity } from "../../lib/server/titan/classifyEvent.js";
-import { sendPremiumAlert } from "../../lib/server/titan/sendPremiumAlert.js";
+import { supabaseAdminFromEnv } from "../../../lib/server/titan/authPlan.js";
+import { classifyEvent, shouldSendInstantPremium, type TitanSeverity } from "../../../lib/server/titan/classifyEvent.js";
+import { sendPremiumAlert } from "../../../lib/server/titan/sendPremiumAlert.js";
 
 type Env = Record<string, string | undefined>;
 

@@ -1,25 +1,25 @@
 import react from "@vitejs/plugin-react";
 import { defineConfig, loadEnv } from "vite";
-import { configureCheckoutApi } from "./api/checkout";
-import { configureOwnerUnlockApi } from "./api/ownerUnlock";
-import { configureAnalyticsApi } from "./api/analytics";
-import { configureTitanChatApi } from "./api/titan/chat";
-import { configureSubscriptionWebhookApi } from "./api/subscription/webhook";
-import { configureWhaleWebhookApi } from "./api/whale/webhook";
-import { configureWhalePollApi } from "./api/whale/poll";
-import { configureWhaleEventsApi } from "./api/whale/events";
-import { configurePushSubscribeApi } from "./api/push/subscribe";
-import { configureTitanEventApi } from "./api/titan/event";
-import { configureTitanDailyApi } from "./api/cron/titan-daily";
-import { configureTitanDiscoveryApi } from "./api/cron/titan-discovery";
-import { configureTitanLaunchWatchApi } from "./api/cron/titan-launch-watch";
-import { configureInviteApi } from "./api/invite";
-import { configureHeraSttApi } from "./api/hera/stt";
-import { configureHeraTtsApi } from "./api/hera/tts";
-import { configureHeraVoiceStreamApi } from "./api/hera/voice-stream";
-import { configureHeraRealtimeSessionApi } from "./api/hera/realtime-session";
-import { configureHeraLiveTokenApi } from "./api/hera/live-token";
-import { configureHeraLaunchWatchApi } from "./api/hera/launch-watch";
+import { configureCheckoutApi } from "./api/_routes/checkout";
+import { configureOwnerUnlockApi } from "./api/_routes/ownerUnlock";
+import { configureAnalyticsApi } from "./api/_routes/analytics";
+import { configureTitanChatApi } from "./api/_routes/titan/chat";
+import { configureSubscriptionWebhookApi } from "./api/_routes/subscription/webhook";
+import { configureWhaleWebhookApi } from "./api/_routes/whale/webhook";
+import { configureWhalePollApi } from "./api/_routes/whale/poll";
+import { configureWhaleEventsApi } from "./api/_routes/whale/events";
+import { configurePushSubscribeApi } from "./api/_routes/push/subscribe";
+import { configureTitanEventApi } from "./api/_routes/titan/event";
+import { configureTitanDailyApi } from "./api/_routes/cron/titan-daily";
+import { configureTitanDiscoveryApi } from "./api/_routes/cron/titan-discovery";
+import { configureTitanLaunchWatchApi } from "./api/_routes/cron/titan-launch-watch";
+import { configureInviteApi } from "./api/_routes/invite";
+import { configureHeraSttApi } from "./api/_routes/hera/stt";
+import { configureHeraTtsApi } from "./api/_routes/hera/tts";
+import { configureHeraVoiceStreamApi } from "./api/_routes/hera/voice-stream";
+import { configureHeraRealtimeSessionApi } from "./api/_routes/hera/realtime-session";
+import { configureHeraLiveTokenApi } from "./api/_routes/hera/live-token";
+import { configureHeraLaunchWatchApi } from "./api/_routes/hera/launch-watch";
 
 /** Client bundle reads only VITE_* from import.meta.env; Vercel often sets SUPABASE_* without the prefix. */
 function resolveSupabaseForClientBuild(mode: string) {

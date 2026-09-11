@@ -1,67 +1,7 @@
 {
   "functions": {
-    "api/invite.ts": {
-      "includeFiles": "lib/server/**"
-    },
-    "api/analytics.ts": {
-      "includeFiles": "lib/server/**"
-    },
-    "api/hera/tts.ts": {
-      "includeFiles": "lib/server/**"
-    },
-    "api/hera/stt.ts": {
-      "includeFiles": "lib/server/**"
-    },
-    "api/hera/voice-stream.ts": {
-      "includeFiles": "lib/server/**"
-    },
-    "api/hera/realtime-session.ts": {
-      "includeFiles": "{lib/server/**,src/lib/hera/**}"
-    },
-    "api/hera/session.ts": {
-      "includeFiles": "{lib/server/**,src/lib/hera/**}"
-    },
-    "api/hera/launch-watch.ts": {
-      "includeFiles": "lib/server/**"
-    },
-    "api/titan/chat.ts": {
-      "includeFiles": "lib/server/**"
-    },
-    "api/titan/warm.ts": {
-      "includeFiles": "lib/server/**"
-    },
-    "api/titan/event.ts": {
-      "includeFiles": "lib/server/**"
-    },
-    "api/cron/titan-daily.ts": {
-      "includeFiles": "lib/server/**"
-    },
-    "api/cron/titan-discovery.ts": {
-      "includeFiles": "lib/server/**"
-    },
-    "api/cron/titan-launch-watch.ts": {
-      "includeFiles": "lib/server/**"
-    },
-    "api/whale/webhook.ts": {
-      "includeFiles": "lib/server/**"
-    },
-    "api/whale/poll.ts": {
-      "includeFiles": "lib/server/**"
-    },
-    "api/whale/events.ts": {
-      "includeFiles": "lib/server/**"
-    },
-    "api/push/subscribe.ts": {
-      "includeFiles": "lib/server/**"
-    },
-    "api/subscription/webhook.ts": {
-      "includeFiles": "lib/**"
-    },
-    "api/webhook.ts": {
-      "includeFiles": "lib/**"
-    },
-    "api/square/webhook.ts": {
-      "includeFiles": "lib/**"
+    "api/gateway.ts": {
+      "includeFiles": "{lib/server/**,src/lib/hera/**,api/_routes/**}"
     }
   },
   "crons": [
@@ -71,6 +11,10 @@
     }
   ],
   "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api/gateway?__route=/api/:path*"
+    },
     {
       "source": "/((?!api/.*).*)",
       "destination": "/index.html"

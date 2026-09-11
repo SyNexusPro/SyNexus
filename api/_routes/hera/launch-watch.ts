@@ -8,7 +8,7 @@ import {
   formatLaunchWatchBrief,
   launchWatchMeta,
   scanLaunchWatch,
-} from "../../lib/server/titan/launchWatchScan.js";
+} from "../../../lib/server/titan/launchWatchScan.js";
 
 function sendJson(res: ServerResponse, status: number, body: unknown): void {
   res.statusCode = status;

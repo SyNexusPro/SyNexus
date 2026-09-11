@@ -5,7 +5,7 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { ViteDevServer } from "../viteDevServer";
 
-import { HERA_CONVERSATION_INSTRUCTIONS, HERA_VOICE_INSTRUCTIONS } from "../../src/lib/hera/heraPrompt";
+import { HERA_CONVERSATION_INSTRUCTIONS, HERA_VOICE_INSTRUCTIONS } from "../../../src/lib/hera/heraPrompt";
 
 let sessionEnv: Record<string, string | undefined> = process.env;
 

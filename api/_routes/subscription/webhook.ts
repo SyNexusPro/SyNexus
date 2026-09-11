@@ -1,5 +1,5 @@
 import type { ViteDevServer } from "../viteDevServer";
-import { processSquareWebhookEvent } from "../../lib/server/square/webhook.js";
+import { processSquareWebhookEvent } from "../../../lib/server/square/webhook.js";
 
 /** Browser GET test message — also used as plain-text health check. */
 export const SQUARE_WEBHOOK_ACTIVE_MESSAGE = "Square webhook endpoint is active";
