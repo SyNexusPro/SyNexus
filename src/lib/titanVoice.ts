@@ -10,60 +10,77 @@ import {
 let cachedVoice: SpeechSynthesisVoice | null = null;
 let voicesReady = false;
 
+const FEMALE_NAME =
+  /\b(female|woman|zira|aria|jenny|samantha|sara|sarah|michelle|eva|susan|linda|hazel|libby|sonia|natasha|moira|fiona|karen|tessa|veena|raveena|catherine|heera|nova|shimmer|coral|cortana)\b/;
+const MALE_NAME =
+  /\b(male|man|david|mark|fred|daniel|james|guy|ryan|christopher|eric|steffan|roger|george|richard|tom|alex|adam|brian|matthew)\b/;
+
+function voiceLabel(voice: SpeechSynthesisVoice): string {
+  return `${voice.name} ${voice.voiceURI}`.toLowerCase();
+}
+
 function isUkVoice(voice: SpeechSynthesisVoice): boolean {
   const lang = voice.lang.toLowerCase().replace("_", "-");
-  const label = `${voice.name} ${voice.voiceURI}`.toLowerCase();
-  return (
-    lang.startsWith("en-gb") ||
-    label.includes("uk english") ||
-    label.includes("british") ||
-    label.includes("en-gb") ||
-    /\b(sonia|libby|hazel)\b/.test(label)
-  );
+  const label = voiceLabel(voice);
+  return lang.startsWith("en-gb") || label.includes("uk english") || label.includes("british") || label.includes("en-gb");
+}
+
+function looksFemale(voice: SpeechSynthesisVoice): boolean {
+  return FEMALE_NAME.test(voiceLabel(voice));
+}
+
+function looksMale(voice: SpeechSynthesisVoice): boolean {
+  const label = voiceLabel(voice);
+  return MALE_NAME.test(label) && !FEMALE_NAME.test(label);
 }
 
 function scoreVoice(voice: SpeechSynthesisVoice): number {
   const lang = voice.lang.toLowerCase().replace("_", "-");
-  const label = `${voice.name} ${voice.voiceURI}`.toLowerCase();
+  const label = voiceLabel(voice);
   let score = lang.startsWith("en") ? 10 : 0;
-  if (label.includes("cortana")) score += 80;
-  if (label.includes("eva")) score += 36;
-  if (lang.startsWith("en-us") || label.includes("united states") || label.includes("us english") || label.includes("en-us")) score += 24;
-  if (isUkVoice(voice)) score -= 48;
-  if (label.includes("neural") || label.includes("natural")) score += 14;
-  if (label.includes("aria")) score += 28;
-  if (label.includes("jenny")) score += 8;
-  if (label.includes("samantha")) score += 10;
-  if (label.includes("google") && label.includes("us") && label.includes("english")) score += 16;
-  if (voice.localService) score += 1;
+  if (looksFemale(voice)) score += 48;
+  if (looksMale(voice)) score -= 90;
+  if (label.includes("aria")) score += 32;
+  if (label.includes("jenny")) score += 26;
+  if (label.includes("zira")) score += 22;
+  if (label.includes("samantha")) score += 18;
+  if (label.includes("eva")) score += 16;
+  if (lang.startsWith("en-us") || label.includes("united states") || label.includes("us english") || label.includes("en-us")) {
+    score += 20;
+  }
+  if (isUkVoice(voice)) score -= 36;
+  if (label.includes("neural") || label.includes("natural") || label.includes("online")) score += 22;
+  if (label.includes("google") && label.includes("us") && label.includes("english")) score += 18;
+  if (label.includes("cortana")) score += 6;
+  if (voice.localService) score += 2;
   for (const hint of TITAN_VOICE_PREFER) {
-    if (label.includes(hint) || lang.includes(hint)) score += 12;
+    if (label.includes(hint) || lang.includes(hint)) score += 10;
   }
   for (const avoid of TITAN_VOICE_AVOID) {
-    if (label.includes(avoid)) score -= 24;
+    if (label.includes(avoid)) score -= 28;
   }
   return score;
 }
 
-function pickFemaleVoice(): SpeechSynthesisVoice | null {
+export function pickFemaleVoice(): SpeechSynthesisVoice | null {
   if (typeof window === "undefined" || !window.speechSynthesis) return null;
   const voices = window.speechSynthesis.getVoices();
   if (!voices.length) return cachedVoice;
-  cachedVoice = null;
 
-  const usVoices = voices.filter((voice) => {
-    const lang = voice.lang.toLowerCase().replace("_", "-");
-    const label = `${voice.name} ${voice.voiceURI}`.toLowerCase();
-    return lang.startsWith("en-us") || label.includes("us english") || label.includes("cortana") || label.includes("aria") || label.includes("jenny");
-  });
-  const pool = usVoices.length ? usVoices.filter((v) => !isUkVoice(v)) : voices.filter((v) => !isUkVoice(v));
-  const ranked = [...(pool.length ? pool : voices)].sort((a, b) => scoreVoice(b) - scoreVoice(a));
-  const best = ranked[0] ?? null;
+  const english = voices.filter((voice) => voice.lang.toLowerCase().replace("_", "-").startsWith("en"));
+  const female = english.filter((voice) => looksFemale(voice) && !looksMale(voice) && !isUkVoice(voice));
+  const pool = female.length
+    ? female
+    : english.filter((voice) => !looksMale(voice) && !isUkVoice(voice));
+  const ranked = [...(pool.length ? pool : english.length ? english : voices)].sort(
+    (a, b) => scoreVoice(b) - scoreVoice(a),
+  );
+  const best = ranked.find((voice) => !looksMale(voice)) ?? ranked[0] ?? null;
   if (best && scoreVoice(best) > 0) {
     cachedVoice = best;
     return best;
   }
-  return cachedVoice ?? voices.find((v) => v.lang.startsWith("en")) ?? null;
+  return cachedVoice ?? voices.find((voice) => voice.lang.startsWith("en") && !looksMale(voice)) ?? null;
 }
 
 export function warmTitanVoices(): void {

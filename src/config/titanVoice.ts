@@ -2,20 +2,28 @@
 
 export const TITAN_VOICE_ENABLED_KEY = "synexus_titan_voice_enabled";
 
-/** Calm, present, slightly bright American AI — original Hera, not a named actor. */
-export const TITAN_VOICE_RATE = 1.0;
-export const TITAN_VOICE_PITCH = 1.08;
+/** Slightly slower and closer to natural pitch so she sounds smooth, not metallic. */
+export const TITAN_VOICE_RATE = 0.92;
+export const TITAN_VOICE_PITCH = 1.04;
 export const TITAN_VOICE_VOLUME = 1;
 
-/** Prefer US neural female voices (case-insensitive). Do not target a copyrighted character. */
+/** Prefer warm US neural female voices (case-insensitive). */
 export const TITAN_VOICE_PREFER = [
   "microsoft aria",
   "aria online",
   "aria",
-  "united states",
+  "microsoft jenny",
+  "jenny",
+  "microsoft zira",
+  "zira",
   "google us english",
   "samantha",
-  "jenny",
+  "sara",
+  "sarah",
+  "michelle",
+  "susan",
+  "female",
+  "united states",
   "en-us",
   "neural",
   "natural",
@@ -35,10 +43,10 @@ export const TITAN_VOICE_AVOID = [
   "steffan",
   "roger",
   "mark",
-  "zira",
-  "sonia",
-  "libby",
-  "hazel",
+  "george",
+  "richard",
+  "tom",
+  "alex",
   "uk english",
   "en-gb",
   "british",
@@ -48,6 +56,6 @@ export const TITAN_VOICE_AVOID = [
 
 /** Lines for the system prompt — text should match how she sounds. */
 export const TITAN_VOICE_PERSONA =
-  "Speak as Hera: a calm, intelligent, feminine AI. Confident, warm, slightly synthetic and futuristic. " +
+  "Speak as Hera: a calm, intelligent, feminine AI. Warm alto, smooth and clear. " +
   "Emotionally responsive but never theatrical. You are an original character — do not imitate any copyrighted character, game AI, or voice actor. " +
   "Clear conversational American English. Short, present sentences. You know more than you say.";

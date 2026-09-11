@@ -1,8 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchGuardianAlerts, fetchProfile, fetchWatchlistTokens, getCurrentUser } from "../lib/supabaseData";
 import { hasSupabaseEnv } from "../lib/supabaseClient";
 import { useTitanShell } from "../context/TitanShellContext";
 import { consumeHeraWakeLaunch, type HeraWakeLaunch } from "../lib/hera/wakeWord";
+import {
+  consumeHeraSignupDemoPending,
+  HERA_SIGNUP_DEMO_EVENT,
+} from "../lib/heraSignupDemo";
 import { useTitanBotName } from "../hooks/useTitanBotName";
 import { DEFAULT_TITAN_BOT_NAME } from "../config/titanBot";
 import { resolveTitanBotName } from "../lib/titanBotName";
@@ -32,7 +36,7 @@ function normalizePlan(raw: string | null | undefined): "FREE" | "PRO" {
 }
 
 export function TitanSheet() {
-  const { sheetOpen, sheetMode, closeSheet } = useTitanShell();
+  const { sheetOpen, sheetMode, openChat, closeSheet } = useTitanShell();
   const { name: titanBotName } = useTitanBotName();
   const commanderLabel = titanBotName || resolveTitanBotName() || DEFAULT_TITAN_BOT_NAME;
   const [bootReady, setBootReady] = useState(isSynexusBootComplete());
@@ -45,6 +49,7 @@ export function TitanSheet() {
   );
   const titanChatActive = sheetOpen && sheetMode === "chat";
   const [wakeLaunch, setWakeLaunch] = useState<HeraWakeLaunch | null>(null);
+  const [signupDemo, setSignupDemo] = useState(false);
 
   const { tokens, feedSource } = useOracleMarketFeed({
     enabled: titanChatActive,
@@ -59,13 +64,32 @@ export function TitanSheet() {
     if (sheetOpen) warmTitanBrain();
   }, [sheetOpen]);
 
+  const wasChatOpen = useRef(false);
   useEffect(() => {
-    if (sheetOpen && sheetMode === "chat") {
+    const chatOpen = sheetOpen && sheetMode === "chat";
+    if (chatOpen) {
+      wasChatOpen.current = true;
       setWakeLaunch(consumeHeraWakeLaunch());
-    } else {
-      setWakeLaunch(null);
+      return;
+    }
+    setWakeLaunch(null);
+    if (wasChatOpen.current) {
+      wasChatOpen.current = false;
+      setSignupDemo(false);
     }
   }, [sheetOpen, sheetMode]);
+
+  useEffect(() => {
+    const tryStart = () => {
+      if (!bootReady) return;
+      if (!consumeHeraSignupDemoPending()) return;
+      setSignupDemo(true);
+      openChat();
+    };
+    window.addEventListener(HERA_SIGNUP_DEMO_EVENT, tryStart);
+    tryStart();
+    return () => window.removeEventListener(HERA_SIGNUP_DEMO_EVENT, tryStart);
+  }, [bootReady, openChat]);
 
   useEffect(() => subscribeSynexusBootComplete(() => setBootReady(true)), []);
 
@@ -159,6 +183,7 @@ export function TitanSheet() {
           autoListen={autoListen}
           seedUtterance={fromWake && seed.length >= 6 ? seed : null}
           wakePulse={fromWake}
+          guidedDemo={signupDemo && !fromWake}
         />
       ) : null}
 
