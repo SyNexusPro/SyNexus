@@ -5,8 +5,8 @@ import {
   getInviteStatus,
   submitIdentity,
   userFromBearer,
-} from "../lib/server/invite/service.js";
-import { confirmRecentCardPayment, createCardVerifyCheckout } from "../lib/server/square/cardVerify.js";
+} from "../../lib/server/invite/service.js";
+import { confirmRecentCardPayment, createCardVerifyCheckout } from "../../lib/server/square/cardVerify.js";
 
 type InviteEnv = Record<string, string | undefined>;
 

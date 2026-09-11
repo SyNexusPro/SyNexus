@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { ViteDevServer } from "../viteDevServer";
-import { resolveTitanAuthPlan, supabaseAdminFromEnv } from "../../lib/server/titan/authPlan.js";
+import { resolveTitanAuthPlan, supabaseAdminFromEnv } from "../../../lib/server/titan/authPlan.js";
 
 type Env = Record<string, string | undefined>;
 

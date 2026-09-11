@@ -1,9 +1,9 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { ViteDevServer } from "../viteDevServer";
-import { supabaseAdminFromEnv } from "../../lib/server/titan/authPlan.js";
-import { whaleWebhookSecret } from "../../lib/server/whale/config.js";
-import { parseHeliusWhaleEvents } from "../../lib/server/whale/detect.js";
-import { processAndNotifyWhales } from "../../lib/server/whale/notify.js";
+import { supabaseAdminFromEnv } from "../../../lib/server/titan/authPlan.js";
+import { whaleWebhookSecret } from "../../../lib/server/whale/config.js";
+import { parseHeliusWhaleEvents } from "../../../lib/server/whale/detect.js";
+import { processAndNotifyWhales } from "../../../lib/server/whale/notify.js";
 
 type Env = Record<string, string | undefined>;
 

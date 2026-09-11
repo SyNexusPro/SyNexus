@@ -4,7 +4,7 @@
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { ViteDevServer } from "../viteDevServer";
-import { fetchVerifiedTokenSnapshot, SYN_MINT_DEFAULT } from "../../lib/server/titan/liveTokenIntel.js";
+import { fetchVerifiedTokenSnapshot, SYN_MINT_DEFAULT } from "../../../lib/server/titan/liveTokenIntel.js";
 
 function sendJson(res: ServerResponse, status: number, body: unknown): void {
   res.statusCode = status;
