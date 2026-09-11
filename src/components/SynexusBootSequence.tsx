@@ -49,7 +49,7 @@ function finishBoot(
 
 export function SynexusBootSequence({ children }: Props) {
   const bootProfileRef = useRef<BootProfile>(
-    typeof window !== "undefined" ? resolveBootProfile(readPrefersReducedMotion()) : "full",
+    typeof window !== "undefined" ? resolveBootProfile(readPrefersReducedMotion()) : "skip",
   );
   const profile = bootProfileRef.current;
   const skipEntirely = profile === "skip";
