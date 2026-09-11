@@ -66,20 +66,8 @@
   },
   "crons": [
     {
-      "path": "/api/whale/poll",
-      "schedule": "* * * * *"
-    },
-    {
       "path": "/api/cron/titan-daily",
       "schedule": "0 13 * * *"
-    },
-    {
-      "path": "/api/cron/titan-discovery",
-      "schedule": "*/15 * * * *"
-    },
-    {
-      "path": "/api/cron/titan-launch-watch",
-      "schedule": "*/2 * * * *"
     }
   ],
   "rewrites": [
