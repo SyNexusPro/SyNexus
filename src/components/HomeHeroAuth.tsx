@@ -80,7 +80,7 @@ export function HomeHeroAuth({ isSimple = false }: Props) {
       void attachPendingInvite();
       void syncInviteRewardForUser();
     }
-    navigate(result?.mode === "signup" ? "/invite?onboard=1" : "/pulse");
+    navigate(result?.mode === "signup" ? "/" : "/pulse");
   }
 
   if (linked) {

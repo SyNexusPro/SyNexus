@@ -105,6 +105,7 @@ import { useAppIsActive } from "../hooks/useAppIsActive";
 import { nativePollIntervalMs } from "../lib/nativePerformance";
 import { buildSentinelLiveIntel, sentinelLaneIdFromSentinel } from "../lib/sentinelIntel";
 import { trackSiteEvent } from "../lib/siteAnalytics";
+import { queueHeraSignupDemo } from "../lib/heraSignupDemo";
 
 type GuardianAlertItem = {
   token_symbol?: string | null;
@@ -465,6 +466,9 @@ export function Pulse() {
         });
         const method = pendingAuthMethod.current;
         pendingAuthMethod.current = null;
+        if (method === "signup" || showWelcome) {
+          queueHeraSignupDemo();
+        }
         if (method === "signup") {
           trackSiteEvent("sign_up", { userId: signedInUser.id, path: "/pulse" });
         } else if (method === "biometric") {
@@ -501,6 +505,7 @@ export function Pulse() {
     const fromLink = hasSignupWelcomeParam();
     const fromSignup = consumeAwaitingSignupWelcome();
     if (!fromLink && !fromSignup) return;
+    queueHeraSignupDemo();
     const trialStarted = syncProTrialForUser(userId);
     if (trialStarted) {
       setPlan("PRO");
@@ -699,6 +704,7 @@ export function Pulse() {
           notifySynexusPlanChanged();
         }
         void loadData(signupUser);
+        queueHeraSignupDemo();
         setAuthMessage({
           tone: "success",
           text: message,

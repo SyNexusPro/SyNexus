@@ -4,7 +4,6 @@ import { getOnboardingSteps } from "../config/onboardingTour";
 import { useTitanChatOpen, useTitanLoginOpen } from "../hooks/useTitanChatOpen";
 import { isNativeAndroid } from "../lib/bootExperience";
 import {
-  hasCompletedOnboardingTour,
   isOnboardingTourRoute,
   markOnboardingTourComplete,
   wantsForcedOnboardingTour,
@@ -63,7 +62,8 @@ export function OnboardingTour() {
   useEffect(() => {
     if (!bootDone || startedRef.current) return;
     if (!isOnboardingTourRoute(location.pathname)) return;
-    if (!(wantsForcedOnboardingTour() || !hasCompletedOnboardingTour())) return;
+    // Spotlight ring is opt-in only. The sign-up demo is Hera-guided.
+    if (!wantsForcedOnboardingTour()) return;
     const timer = window.setTimeout(() => {
       if (startedRef.current) return;
       startedRef.current = true;

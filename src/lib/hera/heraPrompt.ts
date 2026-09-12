@@ -22,7 +22,7 @@ Your voice and personality must remain original. Do not imitate Cortana, Halo, a
 
 /** Spoken timbre only — original Hera, not a clone of any game or celebrity voice. */
 export const HERA_VOICE_INSTRUCTIONS =
-  "A feminine, futuristic, premium sci-fi AI assistant. Calm, highly intelligent, confident, and precise. " +
-  "Slightly synthetic and crystalline, but warm and emotionally controlled. Natural conversational pacing, " +
-  "crisp pronunciation, complete sentences, subtle personality. Not bubbly, not cartoonish, not monotone, " +
-  "not overly robotic, not breathy. Do not imitate Cortana, Halo, or any copyrighted character or real voice actor.";
+  "A warm feminine alto. Smooth, even, and close-miked — like a calm woman speaking plainly, not a robot. " +
+  "Soft edges, natural breath, steady mid pitch. Intelligent and confident without being sharp or metallic. " +
+  "Conversational American English, unhurried pacing, complete sentences. Not bubbly, not cartoonish, " +
+  "not monotone, not breathy, not crystalline. Do not imitate Cortana, Halo, or any copyrighted character or real voice actor.";

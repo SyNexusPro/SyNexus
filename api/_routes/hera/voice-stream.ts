@@ -31,9 +31,9 @@ function writeNdjson(res: ServerResponse, row: unknown): void {
 }
 
 const HERA_VOICE_SETTINGS = {
-  stability: 0.52,
-  similarity_boost: 0.72,
-  style: 0.18,
+  stability: 0.74,
+  similarity_boost: 0.78,
+  style: 0.08,
   use_speaker_boost: true,
 };
 
@@ -67,7 +67,7 @@ function emitChunk(res: ServerResponse, chunk: ElChunk, pcm: boolean): void {
 async function elevenLabsTimestampStream(text: string, outputFormat: "pcm_24000" | "mp3_44100_128"): Promise<Response | null> {
   const key = process.env.ELEVENLABS_API_KEY?.trim();
   if (!key) return null;
-  const voiceId = process.env.ELEVENLABS_VOICE_ID?.trim() || "EXAVITQu4vr4xnSDxMaL";
+  const voiceId = process.env.ELEVENLABS_VOICE_ID?.trim() || "21m00Tcm4TlvDq8ikWAM";
   const modelId = process.env.ELEVENLABS_MODEL_ID?.trim() || "eleven_turbo_v2_5";
   const res = await fetch(
     `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream/with-timestamps?output_format=${outputFormat}`,

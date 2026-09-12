@@ -9,6 +9,7 @@ type Props = {
   autoListen?: boolean;
   seedUtterance?: string | null;
   wakePulse?: boolean;
+  guidedDemo?: boolean;
 };
 
 class HeraScreenBoundary extends Component<
@@ -46,7 +47,14 @@ class HeraScreenBoundary extends Component<
  * Dedicated full-screen Hera view — portaled to document.body so the
  * dashboard, logo, and bottom nav are not part of this tree.
  */
-export function HeraScreen({ context, onClose, autoListen = false, seedUtterance = null, wakePulse = false }: Props) {
+export function HeraScreen({
+  context,
+  onClose,
+  autoListen = false,
+  seedUtterance = null,
+  wakePulse = false,
+  guidedDemo = false,
+}: Props) {
   useEffect(() => {
     const root = document.documentElement;
     root.classList.add("hera-mode");
@@ -69,6 +77,7 @@ export function HeraScreen({ context, onClose, autoListen = false, seedUtterance
         autoListen={autoListen}
         seedUtterance={seedUtterance}
         wakePulse={wakePulse}
+        guidedDemo={guidedDemo}
       />
     </HeraScreenBoundary>,
     document.body,

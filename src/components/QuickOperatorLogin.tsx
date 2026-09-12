@@ -21,6 +21,7 @@ import {
 import { describeAuthError } from "../lib/authErrors";
 import { attachPendingInvite, syncInviteRewardForUser } from "../lib/inviteEarn";
 import { syncProTrialForUser } from "../lib/proDemo";
+import { queueHeraSignupDemo } from "../lib/heraSignupDemo";
 import { PasswordRevealToggle } from "./PasswordRevealToggle";
 import { GoogleAuthOption } from "./GoogleSignInButton";
 
@@ -130,6 +131,7 @@ export function QuickOperatorLogin({
         }
 
         finishLinkedSession(user!.id);
+        queueHeraSignupDemo();
         setMessage({ tone: "success", text: SIGNUP_WELCOME_ACTIVE });
         onSuccess?.({ mode: "signup", userId: user!.id, email: trimmedEmail });
         return;

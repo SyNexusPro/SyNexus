@@ -40,6 +40,7 @@ import { HeraHologramStage } from "./hera/HeraHologramStage";
 import { isWakeOnlyUtterance, stripWakePrefix } from "../lib/hera/wakeWord";
 import { useTranslation } from "react-i18next";
 import { useHeraVersion } from "../hooks/useHeraVersion";
+import { buildHeraSignupDemoLine, markHeraSignupDemoComplete } from "../lib/heraSignupDemo";
 
 function firstVoiceChunk(text: string): string | null {
   const trimmed = text.replace(/\s+/g, " ").trim();
@@ -65,6 +66,7 @@ type OracleSupremeChatProps = {
   autoListen?: boolean;
   seedUtterance?: string | null;
   wakePulse?: boolean;
+  guidedDemo?: boolean;
 };
 
 export function OracleSupremeChat({
@@ -76,6 +78,7 @@ export function OracleSupremeChat({
   autoListen = false,
   seedUtterance = null,
   wakePulse = false,
+  guidedDemo = false,
 }: OracleSupremeChatProps) {
   const { t } = useTranslation();
   const { tag: heraTag } = useHeraVersion(context.titanBotName);
@@ -92,6 +95,7 @@ export function OracleSupremeChat({
   const [forceEmotion, setForceEmotion] = useState<HeraEmotion | null>(null);
   const autoSpokeRef = useRef(false);
   const fallbackSeedRef = useRef(false);
+  const guidedDemoRef = useRef(false);
   const threadRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const submitRef = useRef<(text: string) => Promise<void> | void>(() => undefined);
@@ -221,6 +225,26 @@ export function OracleSupremeChat({
   useEffect(() => {
     warmTitanBrain();
   }, []);
+
+  useEffect(() => {
+    if (!guidedDemo || guidedDemoRef.current) return;
+    guidedDemoRef.current = true;
+    const line = buildHeraSignupDemoLine(context.operatorName);
+    appendOracle(line);
+    markHeraSignupDemoComplete();
+    if (voiceMode) {
+      unlockTitanSpeech();
+      void voiceOut.speak(line);
+      return;
+    }
+    if (hasTitanVoiceEnabled()) {
+      speakTitan(line, {
+        onStart: () => setSpeaking(true),
+        onEnd: () => setSpeaking(false),
+        onError: () => setSpeaking(false),
+      });
+    }
+  }, [appendOracle, context.operatorName, guidedDemo, voiceMode, voiceOut]);
 
   function speakReply(text: string) {
     if (!text.trim()) return;

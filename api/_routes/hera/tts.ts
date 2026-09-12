@@ -24,7 +24,7 @@ function readBody(req: IncomingMessage): Promise<{ text?: string }> {
 async function elevenLabsTts(text: string): Promise<{ buffer: ArrayBuffer; contentType: string } | null> {
   const key = process.env.ELEVENLABS_API_KEY?.trim();
   if (!key) return null;
-  const voiceId = process.env.ELEVENLABS_VOICE_ID?.trim() || "EXAVITQu4vr4xnSDxMaL";
+  const voiceId = process.env.ELEVENLABS_VOICE_ID?.trim() || "21m00Tcm4TlvDq8ikWAM";
   const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
     method: "POST",
     headers: {
@@ -36,9 +36,9 @@ async function elevenLabsTts(text: string): Promise<{ buffer: ArrayBuffer; conte
       text: text.slice(0, 2500),
       model_id: process.env.ELEVENLABS_MODEL_ID?.trim() || "eleven_turbo_v2_5",
       voice_settings: {
-        stability: 0.52,
-        similarity_boost: 0.72,
-        style: 0.18,
+        stability: 0.74,
+        similarity_boost: 0.78,
+        style: 0.08,
         use_speaker_boost: true,
       },
     }),
@@ -48,9 +48,9 @@ async function elevenLabsTts(text: string): Promise<{ buffer: ArrayBuffer; conte
 }
 
 const HERA_TTS_INSTRUCTIONS =
-  "Speak as Hera, an original calm, intelligent, feminine AI. Confident, warm, slightly synthetic and futuristic. " +
+  "Speak as Hera: a warm, smooth feminine alto. Calm and intelligent, close and natural, never metallic. " +
   "Emotionally responsive, never theatrical. Do not imitate any copyrighted character, game AI, or voice actor. " +
-  "Clear conversational American English. Natural pace.";
+  "Clear conversational American English. Unhurried pace.";
 
 async function openAiTts(text: string): Promise<{ buffer: ArrayBuffer; contentType: string } | null> {
   const key = process.env.OPENAI_API_KEY?.trim();
@@ -63,7 +63,7 @@ async function openAiTts(text: string): Promise<{ buffer: ArrayBuffer; contentTy
     },
     body: JSON.stringify({
       model: process.env.OPENAI_TTS_MODEL?.trim() || "gpt-4o-mini-tts",
-      voice: process.env.OPENAI_TTS_VOICE?.trim() || "nova",
+      voice: process.env.OPENAI_TTS_VOICE?.trim() || "coral",
       instructions: process.env.OPENAI_TTS_INSTRUCTIONS?.trim() || HERA_TTS_INSTRUCTIONS,
       input: text.slice(0, 2500),
       response_format: "mp3",

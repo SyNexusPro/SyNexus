@@ -35,13 +35,12 @@ export function readPrefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-/** skip = return visit on native · fast = first native launch · full = desktop web */
+/** skip = web + Android + return visits · fast = first native iOS launch */
 export function resolveBootProfile(reducedMotion = readPrefersReducedMotion()): BootProfile {
-  // Android WebView: never run the boot theatre — it freezes low-end devices.
-  if (isNativeAndroid()) return "skip";
-  if (isNativeMobile() && hasSeenBootIntro()) return "skip";
-  if (reducedMotion || isNativeMobile()) return "fast";
-  return "full";
+  // Web and Android: no fullscreen ring — it blocks taps until the theatre ends.
+  if (isNativeAndroid() || !isNativeMobile()) return "skip";
+  if (hasSeenBootIntro() || reducedMotion) return "skip";
+  return "fast";
 }
 
 /**
