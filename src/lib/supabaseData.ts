@@ -197,6 +197,8 @@ export async function updatePassword(newPassword: string) {
 
 export async function signOut() {
   if (!supabase) throw new Error("Supabase env vars are missing.");
+  const { clearStepUp } = await import("../security/mfa");
+  clearStepUp();
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
 }

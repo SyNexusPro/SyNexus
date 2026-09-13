@@ -91,19 +91,6 @@ export async function resolveTitanAuthPlan(
       plan = "PRO";
     }
 
-    // Shared tester login — honor metadata expiry (30-day window)
-    const email = (user.email || "").trim().toLowerCase();
-    const metaUntil = user.user_metadata?.tester_pro_until;
-    const untilMs =
-      typeof metaUntil === "string"
-        ? Date.parse(metaUntil)
-        : typeof metaUntil === "number"
-          ? metaUntil
-          : NaN;
-    if (email === "tester@synexus.pro") {
-      plan = Number.isFinite(untilMs) && Date.now() < untilMs ? "PRO" : "FREE";
-    }
-
     return {
       userId: user.id,
       email: user.email ?? null,

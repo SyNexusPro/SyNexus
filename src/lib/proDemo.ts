@@ -22,7 +22,6 @@ const PAID_GRANT_SOURCES = new Set([
   "owner",
   "admin",
   "play_review",
-  "tester_30d",
   "invite_30d",
 ]);
 

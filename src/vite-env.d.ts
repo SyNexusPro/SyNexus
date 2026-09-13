@@ -17,6 +17,8 @@ interface ImportMetaEnv {
   readonly VITE_GA_MEASUREMENT_ID?: string;
   /** AdSense home display unit slot ID (numeric string from AdSense dashboard). */
   readonly VITE_ADSENSE_HOME_SLOT?: string;
+  /** Optional WebAuthn passkeys. TOTP MFA stays required. Must be the string "true". */
+  readonly VITE_SYNEXUS_PASSKEYS?: string;
 }
 
 interface ImportMeta {

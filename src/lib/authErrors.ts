@@ -12,6 +12,9 @@ export function describeAuthError(err: unknown): string {
   if (lower.includes("too many requests") || lower.includes("rate")) {
     return "Too many attempts. Wait a minute and try again.";
   }
+  if (lower.includes("invalid") && (lower.includes("code") || lower.includes("factor") || lower.includes("mfa"))) {
+    return "Verification failed. Try again.";
+  }
   if (lower.includes("user already registered")) {
     return "An account with this email already exists. Try signing in instead.";
   }

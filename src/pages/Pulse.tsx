@@ -1,6 +1,6 @@
 import type { User } from "@supabase/supabase-js";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { synexusRiskBandLabel } from "../data/tokens";
 import {
   fetchGuardianAlerts,
@@ -34,7 +34,6 @@ import {
 } from "../data/syntheticWatchers";
 import { recordTrustedPlanGrant, enforceStoredPlan } from "../lib/securityBot";
 import { applyGooglePlayReviewAccess } from "../lib/googlePlayReviewAccess";
-import { applySharedTesterAccess } from "../lib/testerAccess";
 import { attachPendingInvite, syncInviteRewardForUser } from "../lib/inviteEarn";
 import {
   clearOwnerAccess,
@@ -75,6 +74,8 @@ import {
   saveIntroOperatorName,
 } from "../lib/oracleSupremeConversation";
 import { hasSupabaseEnv, supabase } from "../lib/supabaseClient";
+import { continueMfaAfterAuth } from "../security/mfa";
+import { recordSecurityEvent } from "../security/securityEvents";
 import { saveTitanBotName } from "../lib/titanBotName";
 import { useTitanBotName } from "../hooks/useTitanBotName";
 import {
@@ -159,6 +160,7 @@ function formatPlanName(plan: AppPlan) {
 }
 
 export function Pulse() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const scanQuery = searchParams.get("scan")?.trim() ?? "";
   const godModeEntry = searchParams.get("god") === "1" || searchParams.get("mode") === "god";
@@ -346,20 +348,19 @@ export function Pulse() {
       const inviteReward = await syncInviteRewardForUser();
 
       const playReviewPro = await applyGooglePlayReviewAccess(user.id, user.email);
-      const testerPro = await applySharedTesterAccess(user.id, user.email);
       const profile = await fetchProfile(user.id);
       if (profile?.titan_bot_name) {
         saveTitanBotName(profile.titan_bot_name);
       }
       setOperatorName(resolveOperatorDisplayName(profile, user.email));
       saveIntroOperatorName(resolveOperatorName(profile));
-      const hasPaidProfile = profile?.paid_plan === "PRO" || playReviewPro || testerPro || inviteReward;
+      const hasPaidProfile = profile?.paid_plan === "PRO" || playReviewPro || inviteReward;
       const trialActive = isProDemoActive();
       const rawPlan =
         hasPaidProfile || trialActive
           ? "PRO"
           : (profile?.paid_plan ?? localStorage.getItem(PLAN_STORAGE_KEY) ?? "FREE");
-      if (hasStoredOwnerGrant() || playReviewPro || testerPro || inviteReward) {
+      if (hasStoredOwnerGrant() || playReviewPro || inviteReward) {
         setPlan("PRO");
       } else {
         const normalizedPlan = enforceStoredPlan(rawPlan, hasPaidProfile);
@@ -481,6 +482,10 @@ export function Pulse() {
             void biometric.refresh();
           });
         }
+        void recordSecurityEvent({ eventType: "login_success", success: true });
+        void continueMfaAfterAuth().then((path) => {
+          if (path) navigate(path, { replace: true });
+        });
       }
 
       void loadData(signedInUser);
@@ -800,6 +805,9 @@ export function Pulse() {
         : "Synchronized with The SyNexus.";
       void loadData(signedIn);
       await completeAuthWithBiometricOffer(result.session, signedIn.email ?? email, message);
+      void recordSecurityEvent({ eventType: "login_success", success: true });
+      const mfaPath = await continueMfaAfterAuth();
+      if (mfaPath) navigate(mfaPath, { replace: true });
     } catch (err) {
       pendingAuthMethod.current = null;
       const message = describeAuthError(err);

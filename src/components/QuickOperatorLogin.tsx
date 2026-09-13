@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { passwordStrengthLabel, validateSignupPassword } from "../lib/authCredentials";
 import { loadRememberedEmail, saveRememberedEmail } from "../lib/authRemember";
 import { hasSupabaseEnv, supabase } from "../lib/supabaseClient";
@@ -12,7 +13,6 @@ import { isEmailVerified, savePendingVerificationEmail } from "../lib/emailVerif
 import { SYNEXUS_BRAND_NAME } from "../config/brand";
 import { useOperatorAuth } from "../hooks/useOperatorAuth";
 import { applyGooglePlayReviewAccess } from "../lib/googlePlayReviewAccess";
-import { applySharedTesterAccess } from "../lib/testerAccess";
 import {
   SIGNUP_WELCOME_ACTIVE,
   markAwaitingSignupWelcome,
@@ -24,6 +24,8 @@ import { syncProTrialForUser } from "../lib/proDemo";
 import { queueHeraSignupDemo } from "../lib/heraSignupDemo";
 import { PasswordRevealToggle } from "./PasswordRevealToggle";
 import { GoogleAuthOption } from "./GoogleSignInButton";
+import { continueMfaAfterAuth } from "../security/mfa";
+import { recordSecurityEvent } from "../security/securityEvents";
 
 const DEMO_SESSION_KEY = "synexus_demo_session";
 
@@ -53,6 +55,7 @@ export function QuickOperatorLogin({
   showTabs = true,
 }: Props) {
   const { linked } = useOperatorAuth();
+  const navigate = useNavigate();
   const [mode, setMode] = useState<"signin" | "signup">(initialMode);
   const [email, setEmail] = useState(() => loadRememberedEmail() ?? "");
   const [username, setUsername] = useState("");
@@ -133,7 +136,9 @@ export function QuickOperatorLogin({
         finishLinkedSession(user!.id);
         queueHeraSignupDemo();
         setMessage({ tone: "success", text: SIGNUP_WELCOME_ACTIVE });
+        const mfaPath = await continueMfaAfterAuth();
         onSuccess?.({ mode: "signup", userId: user!.id, email: trimmedEmail });
+        if (mfaPath) navigate(mfaPath, { replace: true });
         return;
       }
 
@@ -149,17 +154,20 @@ export function QuickOperatorLogin({
       saveRememberedEmail(trimmedEmail);
       if (signedInUser?.id) {
         await applyGooglePlayReviewAccess(signedInUser.id, trimmedEmail);
-        await applySharedTesterAccess(signedInUser.id, trimmedEmail);
         finishLinkedSession(signedInUser.id);
       }
       setPassword("");
       setMessage({ tone: "success", text: "Signed in." });
+      void recordSecurityEvent({ eventType: "login_success", success: true });
+      const mfaPath = await continueMfaAfterAuth();
       onSuccess?.({
         mode: "signin",
         userId: signedInUser?.id,
         email: trimmedEmail,
       });
+      if (mfaPath) navigate(mfaPath, { replace: true });
     } catch (err) {
+      void recordSecurityEvent({ eventType: "login_failure", success: false });
       setMessage({ tone: "error", text: describeAuthError(err) });
     } finally {
       setBusy(false);

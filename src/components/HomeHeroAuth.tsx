@@ -9,6 +9,7 @@ import { QuickOperatorLogin, type QuickOperatorAuthResult } from "./QuickOperato
 import { SynexusSubscribeButton } from "./SynexusSubscribeButton";
 import { InviteEarnButton } from "./InviteEarnButton";
 import { attachPendingInvite, syncInviteRewardForUser } from "../lib/inviteEarn";
+import { continueMfaAfterAuth } from "../security/mfa";
 
 type AuthPanel = null | "signup" | "signin";
 
@@ -73,12 +74,17 @@ export function HomeHeroAuth({ isSimple = false }: Props) {
     }
   }
 
-  function handleAuthSuccess(result?: QuickOperatorAuthResult) {
+  async function handleAuthSuccess(result?: QuickOperatorAuthResult) {
     closePanel();
     if (result?.userId) {
       syncProTrialForUser(result.userId);
       void attachPendingInvite();
       void syncInviteRewardForUser();
+    }
+    const mfaPath = await continueMfaAfterAuth();
+    if (mfaPath) {
+      navigate(mfaPath, { replace: true });
+      return;
     }
     navigate(result?.mode === "signup" ? "/" : "/pulse");
   }

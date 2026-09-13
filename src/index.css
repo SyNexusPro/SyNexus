@@ -14417,3 +14417,157 @@ body:has(.oracle-chat--presence) .titan-sheet-backdrop {
   color: #89ff2f;
 }
 
+.synexus-sec {
+  padding: 18px 12px 32px;
+}
+
+.synexus-sec__card {
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 22px 18px 20px;
+  border-radius: 16px;
+  border: 1px solid rgba(137, 255, 47, 0.32);
+  background: linear-gradient(165deg, rgba(6, 16, 12, 0.96), rgba(4, 8, 10, 0.96));
+}
+
+.synexus-sec__card--wide {
+  max-width: 560px;
+}
+
+.synexus-sec__eyebrow {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #5ee7ff;
+}
+
+.synexus-sec h1 {
+  margin: 8px 0 10px;
+  font-size: 1.35rem;
+}
+
+.synexus-sec__h2 {
+  margin: 22px 0 8px;
+  font-size: 0.92rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(137, 255, 47, 0.88);
+}
+
+.synexus-sec__lede,
+.synexus-sec p {
+  color: rgba(210, 232, 220, 0.88);
+  line-height: 1.45;
+}
+
+.synexus-sec__steps {
+  padding-left: 18px;
+  font-size: 0.82rem;
+  color: rgba(180, 210, 190, 0.7);
+}
+
+.synexus-sec__steps .is-active {
+  color: #ecffd2;
+  font-weight: 700;
+}
+
+.synexus-sec__qr {
+  display: block;
+  width: min(220px, 70vw);
+  height: auto;
+  margin: 12px auto;
+  border-radius: 12px;
+  background: #fff;
+  padding: 8px;
+}
+
+.synexus-sec__secret {
+  font-size: 0.78rem;
+  word-break: break-all;
+}
+
+.synexus-sec__secret code {
+  color: #89ff2f;
+}
+
+.synexus-sec__label {
+  display: block;
+  margin: 12px 0 6px;
+  font-size: 0.78rem;
+}
+
+.synexus-sec__code,
+.synexus-sec__input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(94, 231, 255, 0.28);
+  background: rgba(0, 0, 0, 0.45);
+  color: inherit;
+  font: inherit;
+  letter-spacing: 0.16em;
+}
+
+.synexus-sec__btn {
+  width: 100%;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(137, 255, 47, 0.5);
+  background: linear-gradient(135deg, rgba(137, 255, 47, 0.28), rgba(94, 231, 255, 0.12));
+  color: #ecffd2;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.synexus-sec__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.synexus-sec__btn--ghost {
+  background: transparent;
+  color: rgba(210, 240, 230, 0.92);
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.synexus-sec__row {
+  display: grid;
+  gap: 8px;
+}
+
+.synexus-sec__error {
+  color: #fca5a5;
+}
+
+.synexus-sec__success,
+.synexus-sec__note {
+  color: #89ff2f;
+}
+
+.synexus-sec__muted,
+.synexus-sec__foot {
+  font-size: 0.82rem;
+  color: rgba(180, 210, 190, 0.7);
+}
+
+.synexus-sec__list {
+  padding-left: 18px;
+  font-size: 0.85rem;
+}
+
+.synexus-sec__text-btn {
+  margin-left: 8px;
+  border: 0;
+  background: none;
+  color: #5ee7ff;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
