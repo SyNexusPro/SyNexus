@@ -315,6 +315,9 @@ export function PulseOperatorLink({
           </p>
         ) : null}
 
+        <Link className="operator-link__disconnect" to="/security">
+          Security settings
+        </Link>
         <button type="button" className="operator-link__disconnect" disabled={authBusy} onClick={onSignOut}>
           {ownerUnlocked && !linked ? "Exit god mode" : "Disconnect link"}
         </button>

@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { getCurrentUser } from "../lib/supabaseData";
 import { hasSupabaseEnv, supabase } from "../lib/supabaseClient";
 import { hasStoredOwnerGrant, OWNER_ACCESS_CHANGED } from "../lib/ownerAccess";
+import { isEmailVerified } from "../lib/emailVerification";
+import { isMfaPolicyExemptEmail, sessionSatisfiesProtectedAccess } from "../security/mfa";
 
 const DEMO_SESSION_KEY = "synexus_demo_session";
 
@@ -34,8 +36,17 @@ export function useOperatorAuth() {
       }
       try {
         const user = await getCurrentUser();
+        if (!user || !isEmailVerified(user)) {
+          if (!cancelled) {
+            setUserId(null);
+            setReady(true);
+          }
+          return;
+        }
+        const allowed =
+          isMfaPolicyExemptEmail(user.email) || (await sessionSatisfiesProtectedAccess());
         if (!cancelled) {
-          setUserId(user?.id ?? null);
+          setUserId(allowed ? user.id : null);
           setReady(true);
         }
       } catch {
@@ -57,8 +68,16 @@ export function useOperatorAuth() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUserId(session?.user?.id ?? null);
-      setReady(true);
+      const user = session?.user ?? null;
+      if (!user || !isEmailVerified(user)) {
+        setUserId(null);
+        setReady(true);
+        return;
+      }
+      void sessionSatisfiesProtectedAccess().then((allowed) => {
+        setUserId(allowed ? user.id : null);
+        setReady(true);
+      });
     });
 
     return () => {

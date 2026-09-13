@@ -7,6 +7,8 @@ import { SiteAnalyticsListener } from "./components/SiteAnalyticsListener";
 import { TRADING_BUILD_ENABLED } from "./config/trading";
 import { isNativeAndroid } from "./lib/bootExperience";
 import { lazyWithRetry } from "./lib/lazyWithRetry";
+import { AuthGuard } from "./security/AuthGuard";
+import { MfaGuard } from "./security/MfaGuard";
 
 /** Android: static home only — never load Matrix / ShouldIBuy / market feed chunk. */
 const HomeFeed = lazyWithRetry(
@@ -78,6 +80,11 @@ const Trade = TRADING_BUILD_ENABLED
 const AffiliateReferralRedirect = lazy(() =>
   import("./pages/AffiliateReferralRedirect").then((m) => ({ default: m.AffiliateReferralRedirect })),
 );
+const MfaSetup = lazy(() => import("./pages/security/MfaSetup").then((m) => ({ default: m.MfaSetup })));
+const MfaVerify = lazy(() => import("./pages/security/MfaVerify").then((m) => ({ default: m.MfaVerify })));
+const SecuritySettings = lazy(() =>
+  import("./pages/security/SecuritySettings").then((m) => ({ default: m.SecuritySettings })),
+);
 
 function RouteFallback() {
   return (
@@ -104,7 +111,38 @@ export default function App() {
             <Route path="contact" element={<Contact />} />
             <Route path="faq" element={<Faq />} />
             <Route path="disclaimer" element={<Disclaimer />} />
-            <Route path="pulse" element={<Pulse />} />
+            <Route
+              path="pulse"
+              element={
+                <MfaGuard>
+                  <Pulse />
+                </MfaGuard>
+              }
+            />
+            <Route
+              path="security"
+              element={
+                <AuthGuard requireAal2>
+                  <SecuritySettings />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="security/setup"
+              element={
+                <AuthGuard>
+                  <MfaSetup />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="security/verify"
+              element={
+                <AuthGuard>
+                  <MfaVerify />
+                </AuthGuard>
+              }
+            />
             <Route path="god" element={<GodMode />} />
             <Route path="invite" element={<InviteEarn />} />
             <Route path="invite/:code" element={<InviteEarn />} />
@@ -117,8 +155,22 @@ export default function App() {
             <Route path="data-deletion" element={<DataDeletion />} />
             <Route path="request-data-deletion" element={<Navigate to="/data-deletion" replace />} />
             <Route path="wallet-terms" element={<WalletComingSoon />} />
-            <Route path="wallet" element={<WalletComingSoon />} />
-            <Route path="wallet/*" element={<WalletComingSoon />} />
+            <Route
+              path="wallet"
+              element={
+                <AuthGuard requireAal2>
+                  <WalletComingSoon />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="wallet/*"
+              element={
+                <AuthGuard requireAal2>
+                  <WalletComingSoon />
+                </AuthGuard>
+              }
+            />
             <Route path="liquidity-treasury" element={<LiquidityTreasury />} />
             <Route path="marketing-command" element={<MarketingCommand />} />
             <Route path="analytics" element={<SiteAnalytics />} />
@@ -129,9 +181,25 @@ export default function App() {
             <Route path="business" element={<Navigate to="/hub" replace />} />
             <Route path="automations" element={<Automations />} />
             <Route path="learn" element={<Navigate to="/blog" replace />} />
-            <Route path="watchlist" element={<Watchlist />} />
+            <Route
+              path="watchlist"
+              element={
+                <AuthGuard requireAal2>
+                  <Watchlist />
+                </AuthGuard>
+              }
+            />
             <Route path="token/:tokenId" element={<TokenDetail />} />
-            {Trade ? <Route path="trade" element={<Trade />} /> : null}
+            {Trade ? (
+              <Route
+                path="trade"
+                element={
+                  <AuthGuard requireAal2>
+                    <Trade />
+                  </AuthGuard>
+                }
+              />
+            ) : null}
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
