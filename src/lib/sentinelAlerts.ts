@@ -1,12 +1,13 @@
 import type { Token } from "../data/tokens";
 import { synexusRiskBandLabel } from "../data/tokens";
+import { tokenLooksLikeSigningTrap } from "./helixWatch";
 
 export type SentinelAlertItem = {
   id: string;
   symbol: string;
   name: string;
   severity: "SAFE" | "WARNING" | "DANGER";
-  lane: "Aegis" | "Pulse" | "Titan" | "Cipher";
+  lane: "Aegis" | "Pulse" | "Leviathan" | "Cipher" | "Helix";
   title: string;
   message: string;
   tokenId?: string;
@@ -14,13 +15,15 @@ export type SentinelAlertItem = {
 };
 
 function laneForToken(token: Token): SentinelAlertItem["lane"] {
+  if (tokenLooksLikeSigningTrap(token)) return "Helix";
   if (token.guardianRisk === "DANGER" || (token.riskScore ?? 0) >= 55) return "Aegis";
   if (Math.abs(token.change24hPct) >= 12) return "Pulse";
-  if ((token.topWalletPct ?? 0) >= 22) return "Titan";
+  if ((token.topWalletPct ?? 0) >= 22) return "Leviathan";
   return "Cipher";
 }
 
 function alertTitle(token: Token): string {
+  if (tokenLooksLikeSigningTrap(token)) return "Helix — signing / phishing bait";
   if (token.guardianRisk === "DANGER") return "Danger — exit liquidity risk";
   if (token.guardianRisk === "WARNING") return "Warning — Sentinel flagged";
   if (Math.abs(token.change24hPct) >= 15) return "Momentum spike";

@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { ViteDevServer } from "../viteDevServer";
 import { supabaseAdminFromEnv } from "../../../lib/server/titan/authPlan.js";
+import { GROQ_DEFAULT_STRONG, remapGroqModel } from "../../../lib/server/titan/groqModels.js";
 
 type Env = Record<string, string | undefined>;
 
@@ -19,12 +20,13 @@ function resolveLlm(env: Env) {
     env.OPENAI_API_BASE?.trim() ||
     "https://api.openai.com/v1"
   ).replace(/\/$/, "");
-  const model =
+  const rawModel =
     env.TITAN_MODEL_PRO?.trim() ||
     env.TITAN_MODEL?.trim() ||
     env.OPENAI_MODEL_PRO?.trim() ||
     env.OPENAI_MODEL?.trim() ||
-    (/groq\.com/i.test(baseUrl) ? "llama-3.3-70b-versatile" : "gpt-4o");
+    (/groq\.com/i.test(baseUrl) ? GROQ_DEFAULT_STRONG : "gpt-4o");
+  const model = remapGroqModel(rawModel, baseUrl);
   return { apiKey, baseUrl, model };
 }
 
