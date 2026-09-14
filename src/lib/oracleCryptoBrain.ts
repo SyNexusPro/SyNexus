@@ -7,6 +7,7 @@ import { SENTINEL_LANE_IDS, sentinelLaneLabel, type SentinelLaneId } from "../co
 import { isInstantTitanPath } from "./titanRouting";
 import { rememberFavoriteSymbol } from "./titanMemory";
 import { evaluateTokenDiscovery, formatDiscoveryBrief } from "./titanDiscovery";
+import { collectHelixHits } from "./helixWatch";
 
 export type OracleSentinelDirective = {
   lane: SentinelLaneId;
@@ -164,7 +165,7 @@ function pickFocus(pool: Token[], lane: SentinelLaneId): Token | null {
         null
       );
     case "helix":
-      return null;
+      return collectHelixHits(pool)[0] ?? null;
     default:
       return pool[0] ?? null;
   }
@@ -182,7 +183,7 @@ export function buildOracleSentinelDirective(
       leviathan: "Hold whale lane — report any top-wallet shift above 3 points.",
       cipher: "Hold pattern fusion — escalate when two lanes agree on one symbol.",
       helix:
-        "Helix standing watch — key hygiene, scan-before-sign, never expose seeds (SyN Wallet on hold).",
+        "Helix standing watch — key hygiene, scan-before-sign, claim/seed bait in tickers, never expose seeds.",
     };
     return { lane, order: standby[lane], targetSymbol: null };
   }
@@ -216,8 +217,8 @@ export function buildOracleSentinelDirective(
     case "helix":
       return {
         lane,
-        targetSymbol: null,
-        order: `Helix clear on vault — if signing ${sym}, verify mint + destination before approve.`,
+        targetSymbol: sym,
+        order: `Helix trap scan on ${sym} — verify mint and destination; reject connect-to-claim or seed prompts.`,
       };
     default:
       return { lane, order: `Scan ${poolSize} pairs`, targetSymbol: sym };
@@ -272,7 +273,7 @@ export function buildSentinelReportToOracle(
       report = `Cipher → commander: ${sym} pattern fused — score ${token.riskScore ?? "?"} with ${synexusRiskBandLabel(token.guardianRisk)} alignment.`;
       break;
     case "helix":
-      report = `Helix → commander: vault watch active — scan ${sym} before any SyN Wallet signature.`;
+      report = `Helix → commander: ${sym} ticker/name looks like signing bait — do not connect a wallet or paste a seed.`;
       break;
     default:
       report = `${sentinelLaneLabel(lane)} → commander: ${sym} scanned.`;

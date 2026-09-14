@@ -10,6 +10,7 @@ import {
   buildSentinelReportToOracle,
   type OracleSentinelDirective,
 } from "./oracleCryptoBrain";
+import { collectHelixHits } from "./helixWatch";
 
 export type { SentinelLaneId } from "../config/sentinels";
 export { normalizeSentinelLaneId } from "../config/sentinels";
@@ -84,15 +85,15 @@ export function buildSentinelLiveIntel({
   const aegisFocus = danger[0] ?? warning[0] ?? null;
   const pulseFocus = movers[0] ?? null;
   const leviathanFocus = whales[0] ?? null;
+  const helixPool = collectHelixHits(pool);
   const cipherFocus = fused[0] ?? danger[0] ?? movers[0] ?? null;
+  const helixFocus = helixPool[0] ?? null;
 
   const aegisHits = danger.length + warning.length;
   const pulseHits = movers.length;
   const leviathanHits = whales.length;
   const cipherHits = fused.length;
-
-  // Helix watches key/signing hygiene; SyN Wallet UI is parked — idle hits for now.
-  const helixHits = 0;
+  const helixHits = helixPool.length;
 
   function computeStats(sentinel: SyntheticSentinel | undefined, hits: number, scansBoost: number) {
     const level = sentinel?.level ?? 1;
@@ -140,7 +141,12 @@ export function buildSentinelLiveIntel({
         ? `${cipherHits} multi-lane match${cipherHits === 1 ? "" : "es"} · ${cipherFocus.symbol} stacked across lanes`
         : `Patterns quiet — cross-checking ${pool.length} pair${pool.length === 1 ? "" : "s"}.`;
 
-  const helixStatus = SENTINEL_LANES.helix.idleStatus;
+  const helixStatus =
+    pool.length === 0
+      ? SENTINEL_LANES.helix.idleStatus
+      : helixHits > 0
+        ? `${helixHits} signing/phish trap${helixHits === 1 ? "" : "s"} in names · Helix blocks connect/seed bait${helixFocus ? ` · focus ${helixFocus.symbol}` : ""}`
+        : `Helix clear on ${pool.length} pair${pool.length === 1 ? "" : "s"} — no seed/claim bait in tickers. Vault watch standing.`;
 
   function laneIntel(
     lane: SentinelLaneId,
@@ -183,7 +189,7 @@ export function buildSentinelLiveIntel({
     leviathanSentinel,
   );
   out.cipher = laneIntel("cipher", cipherFocus, cipherStats, cipherStatus, cipherHits, cipherSentinel);
-  out.helix = laneIntel("helix", null, helixStats, helixStatus, helixHits, helixSentinel);
+  out.helix = laneIntel("helix", helixFocus, helixStats, helixStatus, helixHits, helixSentinel);
   return out;
 }
 

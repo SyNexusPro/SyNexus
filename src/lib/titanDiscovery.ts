@@ -95,7 +95,7 @@ export function evaluateTokenDiscovery(token: Token, opts?: { chain?: string }):
     knownSignals++;
   }
   if (token.guardianRisk) {
-    facts.push(`Guardian band ${token.guardianRisk}`);
+    facts.push(`Sentinel band ${token.guardianRisk}`);
     knownSignals++;
   }
   if (token.highVolumeLowLiquidity) {

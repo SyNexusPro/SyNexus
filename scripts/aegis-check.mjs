@@ -11,6 +11,9 @@ const PHISHING = [
   /\bdrain(er)?\b/i,
   /\bset\s*authority\b/i,
   /\bunlimited\s*approve\b/i,
+  /\bconnect\s*wallet\s*to\s*receive\b/i,
+  /\bvalidate\s*your\s*wallet\b/i,
+  /\bclaim\s*airdrop\s*now\b/i,
 ];
 const IMPERSONATION = [/\bsynexus\s*support\b/i, /\bofficial\s*synexus\b.*\bdm\b/i];
 const SUSPICIOUS = [/\.(exe|apk|scr)(\?|$)/i, /synexuss\.(?!pro\b)/i];
@@ -41,6 +44,8 @@ function testPatterns() {
     { text: "wallet drainer approve all", expectBlock: true },
     { text: "set authority on your token account", expectBlock: true },
     { text: "SyNexus support DM me your key", expectBlock: true },
+    { text: "connect wallet to receive airdrop", expectBlock: true },
+    { text: "validate your wallet then claim airdrop now", expectBlock: true },
     { text: "Paste mint BONK — is it safe?", expectBlock: false },
     { text: "https://synexus.pro/terms", expectBlock: false },
     { text: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", expectBlock: false },

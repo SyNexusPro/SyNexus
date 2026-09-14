@@ -15,6 +15,7 @@ import {
   needsLaunchWatchFetch,
   scanLaunchWatch,
 } from "../../../lib/server/titan/launchWatchScan.js";
+import { GROQ_DEFAULT_STRONG, remapGroqModel } from "../../../lib/server/titan/groqModels.js";
 
 export type TitanChatRequestBody = TitanPromptInput & {
   message: string;
@@ -97,8 +98,8 @@ function resolveLlmConfig(env: TitanEnv, plan: "FREE" | "PRO" = "FREE", fastMode
     "https://api.openai.com/v1"
   ).replace(/\/$/, "");
   const groq = /groq\.com/i.test(baseUrl);
-  const strongGroq = "llama-3.3-70b-versatile";
-  const model =
+  const strongGroq = GROQ_DEFAULT_STRONG;
+  const rawModel =
     plan === "PRO"
       ? env.TITAN_MODEL_PRO?.trim() ||
         env.OPENAI_MODEL_PRO?.trim() ||
@@ -110,6 +111,7 @@ function resolveLlmConfig(env: TitanEnv, plan: "FREE" | "PRO" = "FREE", fastMode
         env.TITAN_MODEL?.trim() ||
         env.OPENAI_MODEL?.trim() ||
         (groq ? strongGroq : "gpt-4o-mini");
+  const model = remapGroqModel(rawModel, baseUrl);
   const defaultMax = fastMode
     ? plan === "PRO"
       ? 900

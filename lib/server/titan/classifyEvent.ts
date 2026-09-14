@@ -22,6 +22,9 @@ export function classifyEvent(event: MarketEventSignal): TitanSeverity {
   if (event.exploitDetected || event.exchangeHack) {
     return "critical";
   }
+  if (event.type === "HELIX_PHISH" || event.type === "WALLET_PHISH") {
+    return "high";
+  }
 
   const discovery = event.discoveryScore ?? 0;
   const risk = event.riskScore ?? 0;

@@ -30,6 +30,10 @@ const PHISHING = [
   /\bapprove\s*all\b/i,
   /\bsign\s*to\s*claim\b/i,
   /\bwallet\s*connect\s*error\b/i,
+  /\bconnect\s*wallet\s*to\s*receive\b/i,
+  /\bvalidate\s*your\s*wallet\b/i,
+  /\bfree\s*nft\s*mint\b/i,
+  /\bclaim\s*airdrop\s*now\b/i,
 ];
 
 const IMPERSONATION = [

@@ -1,4 +1,5 @@
 import type { Token } from "../data/tokens";
+import { tokenLooksLikeSigningTrap } from "./helixWatch";
 import { buildTradeScorecard } from "./tradeScorecard";
 
 export type BuyVerdict = "AVOID" | "HIGH_RISK" | "WATCH" | "OK";
@@ -21,7 +22,12 @@ export function analyzeShouldIBuy(token: Token): ShouldIBuyResult {
   const card = buildTradeScorecard(token);
   let verdict: BuyVerdict = "WATCH";
 
-  if (token.guardianRisk === "DANGER" || card.rugPullWarning === "elevated" || card.riskScore >= 65) {
+  if (
+    token.guardianRisk === "DANGER" ||
+    card.rugPullWarning === "elevated" ||
+    card.riskScore >= 65 ||
+    tokenLooksLikeSigningTrap(token)
+  ) {
     verdict = "AVOID";
   } else if (token.guardianRisk === "WARNING" || card.riskScore >= 45 || card.whaleActivity >= 55) {
     verdict = "HIGH_RISK";
@@ -49,9 +55,15 @@ function buildPlainEnglish(
   const parts: string[] = [];
 
   if (verdict === "AVOID") {
-    parts.push(
-      `${token.symbol} is flashing serious Sentinel warnings. Risk score is ${card.riskScore}/100 with ${card.rugPullLabel.toLowerCase()}.`,
-    );
+    if (tokenLooksLikeSigningTrap(token)) {
+      parts.push(
+        `${token.symbol} looks like a Helix signing trap (phishing / claim bait in the name). Do not connect a wallet or paste a seed.`,
+      );
+    } else {
+      parts.push(
+        `${token.symbol} is flashing serious Sentinel warnings. Risk score is ${card.riskScore}/100 with ${card.rugPullLabel.toLowerCase()}.`,
+      );
+    }
   } else if (verdict === "HIGH_RISK") {
     parts.push(
       `${token.symbol} is tradable only with extreme caution. Sentinels see ${token.guardianRisk.toLowerCase()} conditions and whale concentration is elevated.`,

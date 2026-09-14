@@ -66,8 +66,8 @@ export function About() {
       <section className="about-page__section marketing-panel">
         <h2>The SyNexus Sentinels</h2>
         <p>
-          Four Sentinel lanes — <strong>Aegis</strong>, <strong>Pulse</strong>, <strong>Leviathan</strong>, and{" "}
-          <strong>Cipher</strong> — run parallel scans on every tracked token:
+          Five Sentinel lanes — <strong>Aegis</strong>, <strong>Pulse</strong>, <strong>Leviathan</strong>,{" "}
+          <strong>Cipher</strong>, and <strong>Helix</strong> — run parallel scans on every tracked token:
         </p>
         <ul className="about-page__bullets">
           <li>
@@ -82,6 +82,10 @@ export function About() {
           </li>
           <li>
             <strong>Cipher</strong> — pattern matching, naming traps, and swarm reports
+          </li>
+          <li>
+            <strong>Helix</strong> — wallet &amp; key security: phishing/claim bait in names, scan-before-sign,
+            never paste a seed
           </li>
         </ul>
         <p>
