@@ -31,6 +31,11 @@ class HeraLiveVoiceService {
     heraRealtimeController.disconnect();
   }
 
+  /** Applies a new voice by reconnecting; no-op when Hera is not live. */
+  restartSession(): Promise<boolean> {
+    return heraRealtimeController.restartSession();
+  }
+
   startListening(): void {
     heraRealtimeController.startListening();
   }

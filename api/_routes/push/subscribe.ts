@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { ViteDevServer } from "../viteDevServer";
+import { useApiRoute, type ViteDevServer } from "../viteDevServer";
 import { resolveTitanAuthPlan, supabaseAdminFromEnv } from "../../../lib/server/titan/authPlan.js";
 
 type Env = Record<string, string | undefined>;
@@ -105,7 +105,7 @@ export async function handlePushSubscribe(
 }
 
 export function configurePushSubscribeApi(server: ViteDevServer, env: Env) {
-  server.middlewares.use("/api/push/subscribe", async (req, res, next) => {
+  useApiRoute(server, "/api/push/subscribe", async (req, res, next) => {
     if (req.method !== "GET" && req.method !== "POST") {
       next();
       return;

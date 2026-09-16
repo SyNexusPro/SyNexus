@@ -3,7 +3,7 @@
  * ELEVENLABS_API_KEY stays server-side.
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { ViteDevServer } from "../viteDevServer";
+import { useApiRoute, type ViteDevServer } from "../viteDevServer";
 
 function readBody(req: IncomingMessage): Promise<{ text?: string }> {
   return new Promise((resolve, reject) => {
@@ -203,13 +203,13 @@ export function configureHeraVoiceStreamApi(
       if (value && !process.env[key]) process.env[key] = value;
     }
   }
-  server.middlewares.use("/api/hera/voice-stream", async (req, res, next) => {
-    const method = (req as IncomingMessage).method;
+  useApiRoute(server, "/api/hera/voice-stream", async (req, res, next) => {
+    const method = req.method;
     if (method !== "POST" && method !== "OPTIONS") {
       next();
       return;
     }
-    await handleHeraVoiceStream(req as IncomingMessage, res as ServerResponse);
+    await handleHeraVoiceStream(req, res);
   });
 }
 

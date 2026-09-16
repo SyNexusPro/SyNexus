@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { ViteDevServer } from "./viteDevServer";
+import { useApiRoute, type ViteDevServer } from "./viteDevServer";
 import {
   attachReferral,
   getInviteStatus,
@@ -119,7 +119,7 @@ async function handleInvite(req: IncomingMessage, res: ServerResponse, env: Invi
 }
 
 export function configureInviteApi(server: ViteDevServer, env: InviteEnv) {
-  server.middlewares.use("/api/invite", async (req, res, next) => {
+  useApiRoute(server, "/api/invite", async (req, res, next) => {
     const method = (req as IncomingMessage).method;
     if (method !== "GET" && method !== "POST") {
       next();

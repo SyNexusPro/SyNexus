@@ -3,7 +3,7 @@
  * Uses ELEVENLABS_API_KEY or OPENAI_API_KEY from env — never exposed to the client.
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { ViteDevServer } from "../viteDevServer";
+import { useApiRoute, type ViteDevServer } from "../viteDevServer";
 
 function readBody(req: IncomingMessage): Promise<{ text?: string }> {
   return new Promise((resolve, reject) => {
@@ -127,12 +127,12 @@ export function configureHeraTtsApi(
       if (value && !process.env[key]) process.env[key] = value;
     }
   }
-  server.middlewares.use("/api/hera/tts", async (req, res, next) => {
-    const method = (req as IncomingMessage).method;
+  useApiRoute(server, "/api/hera/tts", async (req, res, next) => {
+    const method = req.method;
     if (method !== "POST" && method !== "OPTIONS") {
       next();
       return;
     }
-    await handler(req as IncomingMessage, res as ServerResponse);
+    await handler(req, res);
   });
 }

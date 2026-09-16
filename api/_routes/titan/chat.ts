@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { ViteDevServer } from "../viteDevServer";
+import { useApiRoute, type ViteDevServer } from "../viteDevServer";
 import { buildTitanSystemPrompt, resolveDefaultCommanderPersona, type TitanPromptInput } from "../../../lib/server/titan/prompt.js";
 import { resolveTitanAuthPlan } from "../../../lib/server/titan/authPlan.js";
 import { guardTitanServerMessage } from "../../../lib/server/titan/sanitize.js";
@@ -615,7 +615,7 @@ export async function handleTitanChatStream(
 }
 
 export function configureTitanChatApi(server: ViteDevServer, env: TitanEnv) {
-  server.middlewares.use("/api/titan/warm", async (req, res, next) => {
+  useApiRoute(server, "/api/titan/warm", async (req, res, next) => {
     if (req.method !== "GET" && req.method !== "HEAD" && req.method !== "POST") {
       next();
       return;
@@ -623,7 +623,7 @@ export function configureTitanChatApi(server: ViteDevServer, env: TitanEnv) {
     await handleTitanWarm(req, res, env);
   });
 
-  server.middlewares.use("/api/titan/chat", async (req, res, next) => {
+  useApiRoute(server, "/api/titan/chat", async (req, res, next) => {
     if (req.method !== "POST") {
       next();
       return;

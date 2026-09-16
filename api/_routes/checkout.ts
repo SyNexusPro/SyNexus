@@ -1,4 +1,4 @@
-import type { ViteDevServer } from "./viteDevServer";
+import { useApiRoute, type ViteDevServer } from "./viteDevServer";
 import {
   createSubscriptionCheckoutResponse,
   type CheckoutPayload,
@@ -28,7 +28,7 @@ function readRequestBody(req: NodeJS.ReadableStream): Promise<string> {
 }
 
 export function configureCheckoutApi(server: ViteDevServer, env: Record<string, string | undefined>) {
-  server.middlewares.use("/api/checkout", async (req, res, next) => {
+  useApiRoute(server, "/api/checkout", async (req, res, next) => {
     if (req.method !== "POST") {
       next();
       return;

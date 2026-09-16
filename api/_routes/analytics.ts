@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import type { ViteDevServer } from "./viteDevServer";
+import { useApiRoute, type ViteDevServer } from "./viteDevServer";
 import { verifyOwnerGrant } from "../../lib/server/ownerGrant.js";
 
 type AnalyticsPayload = {
@@ -187,7 +187,7 @@ function readRequestBody(req: NodeJS.ReadableStream): Promise<string> {
 }
 
 export function configureAnalyticsApi(server: ViteDevServer) {
-  server.middlewares.use("/api/analytics", async (req, res, next) => {
+  useApiRoute(server, "/api/analytics", async (req, res, next) => {
     if (req.method !== "POST") {
       next();
       return;

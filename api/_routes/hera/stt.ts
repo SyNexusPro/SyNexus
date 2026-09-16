@@ -3,7 +3,7 @@
  * Keys stay server-side.
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { ViteDevServer } from "../viteDevServer";
+import { useApiRoute, type ViteDevServer } from "../viteDevServer";
 
 const STT_PROMPT =
   "Transcribe the speaker exactly. Include Hera, Titan, SyNexus, Solana, Bitcoin, Ethereum, and everyday English. Do not rewrite or summarize.";
@@ -131,13 +131,13 @@ export function configureHeraSttApi(
   env?: Record<string, string | undefined>,
 ): void {
   if (env) sttEnv = { ...process.env, ...env };
-  server.middlewares.use("/api/hera/stt", async (req, res, next) => {
-    const method = (req as IncomingMessage).method;
+  useApiRoute(server, "/api/hera/stt", async (req, res, next) => {
+    const method = req.method;
     if (method !== "POST" && method !== "OPTIONS") {
       next();
       return;
     }
-    await handleHeraStt(req as IncomingMessage, res as ServerResponse);
+    await handleHeraStt(req, res);
   });
 }
 

@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import type { ViteDevServer } from "./viteDevServer";
+import { useApiRoute, type ConnectHandler, type ViteDevServer } from "./viteDevServer";
 
 type OwnerEnv = {
   SYNEXUS_OWNER_EMAIL?: string;
@@ -134,15 +134,15 @@ async function respondJson(
 }
 
 export function configureOwnerUnlockApi(server: ViteDevServer, env: OwnerEnv) {
-  const middleware = async (req: { method?: string }, res: { statusCode: number; setHeader: (k: string, v: string) => void; end: (b: string) => void }, next: () => void) => {
+  const middleware: ConnectHandler = async (req, res, next) => {
     if (req.method !== "POST") {
       next();
       return;
     }
-    await respondJson(req as NodeJS.ReadableStream, res, env);
+    await respondJson(req, res, env);
   };
-  server.middlewares.use("/api/owner-unlock", middleware);
-  server.middlewares.use("/api/ownerUnlock", middleware);
+  useApiRoute(server, "/api/owner-unlock", middleware);
+  useApiRoute(server, "/api/ownerUnlock", middleware);
 }
 
 type ServerlessRequest = NodeJS.ReadableStream & {
@@ -163,8 +163,11 @@ function sendUnlockResult(
   result: { statusCode: number; body: JsonBody },
 ) {
   if (typeof res.status === "function") {
-    res.status(result.statusCode).json(result.body);
-    return;
+    const reply = res.status(result.statusCode);
+    if (typeof reply.json === "function") {
+      reply.json(result.body);
+      return;
+    }
   }
   res.statusCode = result.statusCode;
   res.setHeader?.("Content-Type", "application/json");

@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { ViteDevServer } from "../viteDevServer";
+import { useApiRoute, type ViteDevServer } from "../viteDevServer";
 import { supabaseAdminFromEnv } from "../../../lib/server/titan/authPlan.js";
 import { GROQ_DEFAULT_STRONG, remapGroqModel } from "../../../lib/server/titan/groqModels.js";
 
@@ -174,7 +174,7 @@ Keep it under 900 words. Direct, analyst voice.
 }
 
 export function configureTitanDailyApi(server: ViteDevServer, env: Env) {
-  server.middlewares.use("/api/cron/titan-daily", async (req, res, next) => {
+  useApiRoute(server, "/api/cron/titan-daily", async (req, res, next) => {
     if (req.method !== "GET" && req.method !== "POST") {
       next();
       return;

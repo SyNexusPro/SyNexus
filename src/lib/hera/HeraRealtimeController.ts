@@ -7,6 +7,7 @@ import { hostTimeZone } from "./formatLiveStamp";
 import { SYN_MINT, SYN_SYMBOL } from "../../config/synToken";
 import { authHeaders } from "../authSession";
 import { HERA_CONVERSATION_INSTRUCTIONS, HERA_VOICE_INSTRUCTIONS } from "./heraPrompt";
+import { getHeraVoicePreference } from "./heraVoicePreference";
 
 function heraLog(message: string, extra?: unknown): void {
   if (extra !== undefined) console.info(`[HERA] ${message}`, extra);
@@ -34,6 +35,7 @@ type TokenPayload = {
   value?: string;
   client_secret?: { value?: string };
   model?: string;
+  voice?: string;
   error?: string;
   session?: { id?: string };
   transport?: { type?: string; sdp?: string };
@@ -218,6 +220,15 @@ export class HeraRealtimeController {
     this.cleanup("idle");
   }
 
+  /** Voice is fixed when the session starts, so a new voice needs a new session. */
+  restartSession(): Promise<boolean> {
+    if (!this.enabled) return Promise.resolve(false);
+    this.reconnectAttempts = 0;
+    this.cleanup("connecting");
+    this.enabled = true;
+    return this.openCall();
+  }
+
   interrupt(): void {
     if (this.state !== "speaking" && !this.outputLive) return;
     heraLog("assistant interrupted");
@@ -338,7 +349,10 @@ export class HeraRealtimeController {
       if (this.generation !== gen) return false;
       this.protocol = session.mode;
       await pc.setRemoteDescription({ type: "answer", sdp: session.sdp });
-      heraLog("voice protocol", this.protocol);
+      heraLog(
+        "voice session",
+        `${this.protocol} · ${session.model ?? "default model"} · voice ${session.voice ?? "default"}`,
+      );
       window.setTimeout(() => {
         if (this.generation === gen && this.state === "connecting") {
           heraError("data channel timeout");
@@ -401,9 +415,9 @@ export class HeraRealtimeController {
    */
   private async createServerSession(
     offerSdp: string,
-  ): Promise<{ mode: "live" | "realtime"; sdp: string; model?: string }> {
+  ): Promise<{ mode: "live" | "realtime"; sdp: string; model?: string; voice?: string }> {
     const headers = await authHeaders({ "Content-Type": "application/json" });
-    const body = JSON.stringify({ sdp: offerSdp });
+    const body = JSON.stringify({ sdp: offerSdp, voice: getHeraVoicePreference() ?? undefined });
     let res = await fetch("/api/hera/session", { method: "POST", headers, body }).catch(() => null);
     if (!res?.ok) {
       res = await fetch("/api/hera/realtime-session", { method: "POST", headers, body });
@@ -416,6 +430,7 @@ export class HeraRealtimeController {
       mode: json.mode === "realtime" ? "realtime" : "live",
       sdp: answer,
       model: json.model,
+      voice: json.voice,
     };
   }
 

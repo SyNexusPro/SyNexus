@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { ViteDevServer } from "../viteDevServer";
+import { useApiRoute, type ViteDevServer } from "../viteDevServer";
 import { supabaseAdminFromEnv } from "../../../lib/server/titan/authPlan.js";
 import {
   persistDiscoveryEvaluations,
@@ -68,7 +68,7 @@ export async function handleTitanDiscoveryCron(
 }
 
 export function configureTitanDiscoveryApi(server: ViteDevServer, env: Env) {
-  server.middlewares.use("/api/cron/titan-discovery", async (req, res, next) => {
+  useApiRoute(server, "/api/cron/titan-discovery", async (req, res, next) => {
     if (req.method !== "GET" && req.method !== "POST") {
       next();
       return;

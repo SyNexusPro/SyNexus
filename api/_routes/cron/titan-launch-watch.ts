@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { ViteDevServer } from "../viteDevServer";
+import { useApiRoute, type ViteDevServer } from "../viteDevServer";
 import { supabaseAdminFromEnv } from "../../../lib/server/titan/authPlan.js";
 import { persistLaunchLeads, scanLaunchWatch } from "../../../lib/server/titan/launchWatchScan.js";
 
@@ -64,7 +64,7 @@ export async function handleTitanLaunchWatchCron(
 }
 
 export function configureTitanLaunchWatchApi(server: ViteDevServer, env: Env) {
-  server.middlewares.use("/api/cron/titan-launch-watch", async (req, res, next) => {
+  useApiRoute(server, "/api/cron/titan-launch-watch", async (req, res, next) => {
     if (req.method !== "GET" && req.method !== "POST") {
       next();
       return;

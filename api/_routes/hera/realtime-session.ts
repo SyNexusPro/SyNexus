@@ -3,7 +3,7 @@
  * Realtime fallback. OPENAI_API_KEY never leaves the server.
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { ViteDevServer } from "../viteDevServer";
+import { useApiRoute, type ConnectHandler, type ViteDevServer } from "../viteDevServer";
 
 import { HERA_CONVERSATION_INSTRUCTIONS, HERA_VOICE_INSTRUCTIONS } from "../../../src/lib/hera/heraPrompt";
 import { resolveTitanAuthPlan } from "../../../lib/server/titan/authPlan.js";
@@ -48,18 +48,26 @@ function liveModelCandidates(): string[] {
   return dedupe([preferred, "gpt-live-1"]);
 }
 
-function voiceName(): string {
+/** Server-side allowlist so a client cannot inject an arbitrary voice string. */
+const ALLOWED_VOICES = new Set([
+  "marin", "cedar", "quartz", "ripple", "vesper", "willow", "stone",
+  "gleam", "meridian", "bossa", "tempo", "beacon", "delta", "cinder",
+]);
+
+function voiceName(requested?: string): string {
+  const asked = requested?.trim().toLowerCase();
+  if (asked && ALLOWED_VOICES.has(asked)) return asked;
   const raw = (process.env.OPENAI_REALTIME_VOICE?.trim() || "marin").toLowerCase();
   if (raw === "coral" || raw === "shimmer") return "marin";
-  return raw;
+  return ALLOWED_VOICES.has(raw) ? raw : "marin";
 }
 
 function liveInstructions(): string {
   return `${HERA_CONVERSATION_INSTRUCTIONS}\n\nSpoken voice: ${HERA_VOICE_INSTRUCTIONS}`;
 }
 
-function realtimeSessionConfig(model = realtimeModelName()) {
-  const voice = voiceName();
+function realtimeSessionConfig(model = realtimeModelName(), requestedVoice?: string) {
+  const voice = voiceName(requestedVoice);
   return {
     type: "realtime" as const,
     model,
@@ -130,8 +138,9 @@ async function readJsonBody(req: Incoming): Promise<Record<string, unknown>> {
 async function createLiveSession(
   key: string,
   sdp: string,
-): Promise<{ sdp: string; sessionId: string; model: string } | null> {
-  const voice = voiceName();
+  requestedVoice?: string,
+): Promise<{ sdp: string; sessionId: string; model: string; voice: string } | null> {
+  const voice = voiceName(requestedVoice);
   for (const model of liveModelCandidates()) {
     const upstream = await fetch("https://api.openai.com/v1/live/sessions", {
       method: "POST",
@@ -156,18 +165,22 @@ async function createLiveSession(
     }
     const answer = extractTransportSdp(json);
     if (answer) {
-      return { sdp: answer, sessionId: extractSessionId(json), model };
+      return { sdp: answer, sessionId: extractSessionId(json), model, voice };
     }
     console.error("[hera/realtime-session] live sessions missing SDP", model, json);
   }
   return null;
 }
 
-async function createRealtimeCall(key: string, sdp: string): Promise<{ sdp: string; model: string } | null> {
+async function createRealtimeCall(
+  key: string,
+  sdp: string,
+  requestedVoice?: string,
+): Promise<{ sdp: string; model: string } | null> {
   for (const model of realtimeModelCandidates()) {
     const fd = new FormData();
     fd.set("sdp", sdp);
-    fd.set("session", JSON.stringify(realtimeSessionConfig(model)));
+    fd.set("session", JSON.stringify(realtimeSessionConfig(model, requestedVoice)));
     const upstream = await fetch("https://api.openai.com/v1/realtime/calls", {
       method: "POST",
       headers: {
@@ -291,25 +304,26 @@ export async function handleHeraRealtimeSession(req: IncomingMessage, res: Serve
       body = {};
     }
     const sdp = typeof body.sdp === "string" ? body.sdp.trim() : "";
+    const requestedVoice = typeof body.voice === "string" ? body.voice : undefined;
 
     if (sdp) {
-      const live = await createLiveSession(key, sdp);
+      const live = await createLiveSession(key, sdp, requestedVoice);
       if (live) {
         sendJson(res, 200, {
           mode: "live",
           model: live.model,
-          voice: voiceName(),
+          voice: live.voice,
           session: { id: live.sessionId },
           transport: { type: "webrtc", sdp: live.sdp },
         });
         return;
       }
-      const realtime = await createRealtimeCall(key, sdp);
+      const realtime = await createRealtimeCall(key, sdp, requestedVoice);
       if (realtime) {
         sendJson(res, 200, {
           mode: "realtime",
           model: realtime.model,
-          voice: voiceName(),
+          voice: voiceName(requestedVoice),
           transport: { type: "webrtc", sdp: realtime.sdp },
         });
         return;
@@ -357,7 +371,7 @@ export function configureHeraRealtimeSessionApi(
       if (value) process.env[key] = value;
     }
   }
-  const heraSession = async (req: IncomingMessage, res: ServerResponse, next: () => void) => {
+  const heraSession: ConnectHandler = async (req, res, next) => {
     const method = req.method;
     if (method !== "POST" && method !== "OPTIONS") {
       next();
@@ -365,8 +379,8 @@ export function configureHeraRealtimeSessionApi(
     }
     await handleHeraRealtimeSession(req, res);
   };
-  server.middlewares.use("/api/hera/realtime-session", heraSession);
-  server.middlewares.use("/api/hera/session", heraSession);
+  useApiRoute(server, "/api/hera/realtime-session", heraSession);
+  useApiRoute(server, "/api/hera/session", heraSession);
 }
 
 export default async function handler(req: IncomingMessage, res: ServerResponse) {

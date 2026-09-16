@@ -6141,6 +6141,24 @@ html:has(.app-shell--home) #root {
   line-height: 1.45;
 }
 
+.hera-listen-settings__field {
+  display: grid;
+  gap: 4px;
+  margin-top: 12px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.hera-listen-settings__field select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(137, 255, 47, 0.25);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--text);
+  font: inherit;
+}
+
 .synexus-core-panel__core-ai {
   font-size: 0.68rem;
   font-weight: 750;

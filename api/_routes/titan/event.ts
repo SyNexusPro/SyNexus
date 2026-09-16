@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { ViteDevServer } from "../viteDevServer";
+import { useApiRoute, type ViteDevServer } from "../viteDevServer";
 import { supabaseAdminFromEnv } from "../../../lib/server/titan/authPlan.js";
 import { classifyEvent, shouldSendInstantPremium, type TitanSeverity } from "../../../lib/server/titan/classifyEvent.js";
 import { sendPremiumAlert } from "../../../lib/server/titan/sendPremiumAlert.js";
@@ -138,7 +138,7 @@ export async function handleTitanEvent(
 }
 
 export function configureTitanEventApi(server: ViteDevServer, env: Env) {
-  server.middlewares.use("/api/titan/event", async (req, res, next) => {
+  useApiRoute(server, "/api/titan/event", async (req, res, next) => {
     if (req.method !== "POST") {
       next();
       return;

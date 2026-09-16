@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { ViteDevServer } from "../viteDevServer";
+import { useApiRoute, type ViteDevServer } from "../viteDevServer";
 import { supabaseAdminFromEnv } from "../../../lib/server/titan/authPlan.js";
 import { whaleTrackMints } from "../../../lib/server/whale/config.js";
 import { detectDexVolumeWhales } from "../../../lib/server/whale/detect.js";
@@ -56,7 +56,7 @@ export async function handleWhalePoll(
 }
 
 export function configureWhalePollApi(server: ViteDevServer, env: Env) {
-  server.middlewares.use("/api/whale/poll", async (req, res, next) => {
+  useApiRoute(server, "/api/whale/poll", async (req, res, next) => {
     if (req.method !== "GET" && req.method !== "POST") {
       next();
       return;

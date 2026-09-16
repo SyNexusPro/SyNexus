@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { ViteDevServer } from "../viteDevServer";
+import { useApiRoute, type ViteDevServer } from "../viteDevServer";
 import { supabaseAdminFromEnv } from "../../../lib/server/titan/authPlan.js";
 import { whaleWebhookSecret } from "../../../lib/server/whale/config.js";
 import { parseHeliusWhaleEvents } from "../../../lib/server/whale/detect.js";
@@ -65,7 +65,7 @@ export async function handleWhaleWebhook(
 }
 
 export function configureWhaleWebhookApi(server: ViteDevServer, env: Env) {
-  server.middlewares.use("/api/whale/webhook", async (req, res, next) => {
+  useApiRoute(server, "/api/whale/webhook", async (req, res, next) => {
     if (req.method !== "POST") {
       next();
       return;

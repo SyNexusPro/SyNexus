@@ -3,7 +3,7 @@
  * Verified DexScreener snapshot for Hera's LIVE stamp. No secrets.
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { ViteDevServer } from "../viteDevServer";
+import { useApiRoute, type ViteDevServer } from "../viteDevServer";
 import { fetchVerifiedTokenSnapshot, SYN_MINT_DEFAULT } from "../../../lib/server/titan/liveTokenIntel.js";
 
 function sendJson(res: ServerResponse, status: number, body: unknown): void {
@@ -52,7 +52,7 @@ export async function handleHeraLiveToken(req: IncomingMessage, res: ServerRespo
 }
 
 export function configureHeraLiveTokenApi(server: ViteDevServer): void {
-  server.middlewares.use("/api/hera/live-token", async (req, res, next) => {
+  useApiRoute(server, "/api/hera/live-token", async (req, res, next) => {
     const method = (req as IncomingMessage).method;
     if (method !== "GET" && method !== "HEAD" && method !== "OPTIONS") {
       next();

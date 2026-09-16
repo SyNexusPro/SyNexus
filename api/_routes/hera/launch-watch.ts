@@ -3,7 +3,7 @@
  * Live public launch + social-lead snapshot for Hera. No secrets.
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { ViteDevServer } from "../viteDevServer";
+import { useApiRoute, type ViteDevServer } from "../viteDevServer";
 import {
   formatLaunchWatchBrief,
   launchWatchMeta,
@@ -58,7 +58,7 @@ export async function handleHeraLaunchWatch(req: IncomingMessage, res: ServerRes
 }
 
 export function configureHeraLaunchWatchApi(server: ViteDevServer): void {
-  server.middlewares.use("/api/hera/launch-watch", async (req, res, next) => {
+  useApiRoute(server, "/api/hera/launch-watch", async (req, res, next) => {
     const method = (req as IncomingMessage).method;
     if (method !== "GET" && method !== "HEAD" && method !== "OPTIONS") {
       next();

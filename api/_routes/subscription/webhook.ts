@@ -1,4 +1,4 @@
-import type { ViteDevServer } from "../viteDevServer";
+import { useApiRoute, type ViteDevServer } from "../viteDevServer";
 import { processSquareWebhookEvent } from "../../../lib/server/square/webhook.js";
 
 /** Browser GET test message — also used as plain-text health check. */
@@ -35,7 +35,7 @@ function acknowledgePost(res: { statusCode?: number; setHeader(name: string, val
 }
 
 function registerWebhookRoute(server: ViteDevServer, path: string, env: WebhookEnv) {
-  server.middlewares.use(path, async (req, res, next) => {
+  useApiRoute(server, path, async (req, res, next) => {
     if (req.method === "GET" || req.method === "HEAD") {
       sendActiveMessage(res);
       return;
