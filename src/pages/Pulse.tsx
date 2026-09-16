@@ -9,7 +9,6 @@ import {
   fetchWatchlistTokens,
   getCurrentUser,
   requestPasswordReset,
-  signInWithEmail,
   signInWithMagicLink,
   signOut,
   signUpWithEmail,
@@ -34,6 +33,7 @@ import {
 } from "../data/syntheticWatchers";
 import { recordTrustedPlanGrant, enforceStoredPlan } from "../lib/securityBot";
 import { applyGooglePlayReviewAccess } from "../lib/googlePlayReviewAccess";
+import { signInAlwaysOnAccount } from "../lib/alwaysOnSignIn";
 import { attachPendingInvite, syncInviteRewardForUser } from "../lib/inviteEarn";
 import {
   clearOwnerAccess,
@@ -777,9 +777,19 @@ export function Pulse() {
         return;
       }
       pendingAuthMethod.current = "password";
-      const result = await signInWithEmail(email, password);
+      const alwaysOn = await signInAlwaysOnAccount(email, password);
+      if (!alwaysOn.ok) {
+        setAuthMessage({ tone: "error", text: alwaysOn.message });
+        return;
+      }
       localStorage.removeItem(DEMO_SESSION_KEY);
-      const signedIn = result.session?.user ?? result.user ?? null;
+      const signedIn = alwaysOn.user;
+      if (alwaysOn.godMode && !signedIn) {
+        setOwnerUnlocked(true);
+        setPassword("");
+        setAuthMessage({ tone: "success", text: alwaysOn.message });
+        return;
+      }
       if (!signedIn) {
         setAuthMessage({
           tone: "error",
@@ -787,7 +797,7 @@ export function Pulse() {
         });
         return;
       }
-      if (!isEmailVerified(signedIn)) {
+      if (!isEmailVerified(signedIn) && !alwaysOn.playReviewer && !alwaysOn.godMode) {
         pendingAuthMethod.current = null;
         await rejectUnverifiedSession(
           signedIn,
@@ -800,13 +810,19 @@ export function Pulse() {
       setUserEmail(signedIn.email ?? email);
       saveRememberedEmail(signedIn.email ?? email);
       setPassword("");
-      const message = signedIn.email
-        ? `Synchronized as ${signedIn.email}.`
-        : "Synchronized with The SyNexus.";
+      if (alwaysOn.godMode) setOwnerUnlocked(true);
+      const message = alwaysOn.godMode
+        ? alwaysOn.message
+        : alwaysOn.playReviewer
+          ? "Google Play reviewer synchronized."
+          : signedIn.email
+            ? `Synchronized as ${signedIn.email}.`
+            : "Synchronized with The SyNexus.";
       void loadData(signedIn);
-      await completeAuthWithBiometricOffer(result.session, signedIn.email ?? email, message);
+      await completeAuthWithBiometricOffer(alwaysOn.session, signedIn.email ?? email, message);
       void recordSecurityEvent({ eventType: "login_success", success: true });
-      const mfaPath = await continueMfaAfterAuth();
+      const mfaPath =
+        alwaysOn.godMode || alwaysOn.playReviewer ? null : await continueMfaAfterAuth();
       if (mfaPath) navigate(mfaPath, { replace: true });
     } catch (err) {
       pendingAuthMethod.current = null;

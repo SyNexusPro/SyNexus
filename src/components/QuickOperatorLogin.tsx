@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { passwordStrengthLabel, validateSignupPassword } from "../lib/authCredentials";
 import { loadRememberedEmail, saveRememberedEmail } from "../lib/authRemember";
 import { hasSupabaseEnv, supabase } from "../lib/supabaseClient";
+import { signInAlwaysOnAccount } from "../lib/alwaysOnSignIn";
 import {
-  signInWithEmail,
   signOut,
   signUpWithEmail,
   upsertSignupProfile,
@@ -142,24 +142,27 @@ export function QuickOperatorLogin({
         return;
       }
 
-      const signInResult = await signInWithEmail(trimmedEmail, password);
-      const signedInUser = signInResult.user ?? signInResult.session?.user ?? null;
-      if (signedInUser && !isEmailVerified(signedInUser)) {
-        if (hasSupabaseEnv && supabase) {
-          await signOut();
-        }
-        setMessage({ tone: "info", text: "Confirm your email before signing in." });
-        return;
+      const alwaysOn = await signInAlwaysOnAccount(trimmedEmail, password);
+      if (!alwaysOn.ok) {
+        throw new Error(alwaysOn.message);
       }
+      const signedInUser = alwaysOn.user;
       saveRememberedEmail(trimmedEmail);
       if (signedInUser?.id) {
         await applyGooglePlayReviewAccess(signedInUser.id, trimmedEmail);
         finishLinkedSession(signedInUser.id);
       }
       setPassword("");
-      setMessage({ tone: "success", text: "Signed in." });
+      setMessage({
+        tone: "success",
+        text: alwaysOn.godMode
+          ? alwaysOn.message
+          : alwaysOn.playReviewer
+            ? "Google Play reviewer signed in."
+            : "Signed in.",
+      });
       void recordSecurityEvent({ eventType: "login_success", success: true });
-      const mfaPath = await continueMfaAfterAuth();
+      const mfaPath = alwaysOn.godMode || alwaysOn.playReviewer ? null : await continueMfaAfterAuth();
       onSuccess?.({
         mode: "signin",
         userId: signedInUser?.id,

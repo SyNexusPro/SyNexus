@@ -9,6 +9,7 @@ import {
   MFA_SETUP_PATH,
   MFA_VERIFY_PATH,
 } from "./mfa";
+import { hasStoredOwnerGrant } from "../lib/ownerAccess";
 
 /** If a session exists, require MFA before the protected page renders. */
 export function MfaGuard({ children }: { children: ReactNode }) {
@@ -27,7 +28,7 @@ export function MfaGuard({ children }: { children: ReactNode }) {
         if (alive) setState("ok");
         return;
       }
-      if (!isEmailVerified(user) || isMfaPolicyExemptEmail(user.email)) {
+      if (hasStoredOwnerGrant() || !isEmailVerified(user) || isMfaPolicyExemptEmail(user.email)) {
         if (alive) setState("ok");
         return;
       }

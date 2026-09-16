@@ -6,6 +6,7 @@ import { fetchHeraLaunchWatch, fetchHeraLiveToken } from "./liveIntel";
 import { hostTimeZone } from "./formatLiveStamp";
 import { SYN_MINT, SYN_SYMBOL } from "../../config/synToken";
 import { authHeaders } from "../authSession";
+import { HERA_CONVERSATION_INSTRUCTIONS, HERA_VOICE_INSTRUCTIONS } from "./heraPrompt";
 
 function heraLog(message: string, extra?: unknown): void {
   if (extra !== undefined) console.info(`[HERA] ${message}`, extra);
@@ -387,7 +388,7 @@ export class HeraRealtimeController {
     if (ga.ok) return ga.text();
     const gaText = await ga.text();
     heraError("SDP /calls failed", `${ga.status} ${gaText.slice(0, 160)}`);
-    const modelQs = encodeURIComponent(model || "gpt-realtime");
+    const modelQs = encodeURIComponent(model || "gpt-realtime-2.1");
     const legacy = await fetch(`https://api.openai.com/v1/realtime?model=${modelQs}`, {
       method: "POST",
       body: offerSdp,
@@ -401,6 +402,16 @@ export class HeraRealtimeController {
   }
 
   private async primeConversation(): Promise<void> {
+    this.send({
+      type: "session.update",
+      session: {
+        type: "realtime",
+        instructions: HERA_CONVERSATION_INSTRUCTIONS,
+        audio: {
+          output: { instructions: HERA_VOICE_INSTRUCTIONS },
+        },
+      },
+    });
     let context = this.pendingContext;
     try {
       const live = await fetchHeraLiveToken({ mint: SYN_MINT, symbol: SYN_SYMBOL, tz: hostTimeZone() });

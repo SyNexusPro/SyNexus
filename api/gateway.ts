@@ -22,6 +22,7 @@ const loaders: Record<string, () => Promise<RouteModule>> = {
   "/api/hera/voice-stream": () => import("./_routes/hera/voice-stream.js"),
   "/api/invite": () => import("./_routes/invite.js"),
   "/api/ownerUnlock": () => import("./_routes/ownerUnlock.js"),
+  "/api/owner-unlock": () => import("./_routes/ownerUnlock.js"),
   "/api/push/subscribe": () => import("./_routes/push/subscribe.js"),
   "/api/square/webhook": () => import("./_routes/square/webhook.js"),
   "/api/subscription/webhook": () => import("./_routes/subscription/webhook.js"),

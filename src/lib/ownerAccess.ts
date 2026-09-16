@@ -49,37 +49,53 @@ export function hasStoredOwnerGrant(): boolean {
   return Boolean(stored?.grant && stored.expiresAt > Date.now());
 }
 
+const UNLOCK_PATHS = ["/api/owner-unlock", "/api/ownerUnlock"];
+
+async function postOwnerUnlock(body: Record<string, unknown>) {
+  let lastError = "Could not reach owner unlock service.";
+  for (const path of UNLOCK_PATHS) {
+    try {
+      const response = await fetch(path, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = (await response.json().catch(() => ({}))) as {
+        ok?: boolean;
+        grant?: string;
+        expiresAt?: number;
+        error?: string;
+      };
+      if (response.status === 404) {
+        lastError = data.error ?? lastError;
+        continue;
+      }
+      return { response, data };
+    } catch {
+      continue;
+    }
+  }
+  return { response: null, data: { error: lastError } as { ok?: boolean; grant?: string; expiresAt?: number; error?: string } };
+}
+
 /** Sign in with owner command ID + key (validated server-side). */
 export async function unlockOwnerAccess(
   email: string,
   password: string,
 ): Promise<{ ok: boolean; message: string }> {
-  try {
-    const response = await fetch("/api/owner-unlock", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: email.trim(), password }),
-    });
-    const data = (await response.json().catch(() => ({}))) as {
-      ok?: boolean;
-      grant?: string;
-      expiresAt?: number;
-      error?: string;
-    };
-
-    if (response.status === 503) {
-      return { ok: false, message: data.error ?? "God mode is not configured on this local server. Restart npm run dev." };
-    }
-    if (!response.ok || !data.ok || !data.grant || !data.expiresAt) {
-      return { ok: false, message: data.error ?? "Invalid god mode ID or key." };
-    }
-
-    writeStoredGrant({ grant: data.grant, expiresAt: data.expiresAt });
-    applyOwnerProAccess();
-    return { ok: true, message: "God mode active — full SyNexus access unlocked." };
-  } catch {
-    return { ok: false, message: "Could not reach owner unlock service." };
+  const { response, data } = await postOwnerUnlock({ email: email.trim(), password });
+  if (!response) {
+    return { ok: false, message: data.error ?? "Could not reach owner unlock service." };
   }
+  if (response.status === 503) {
+    return { ok: false, message: data.error ?? "God mode is not configured on this server." };
+  }
+  if (!response.ok || !data.ok || !data.grant || !data.expiresAt) {
+    return { ok: false, message: data.error ?? "Invalid god mode ID or key." };
+  }
+  writeStoredGrant({ grant: data.grant, expiresAt: data.expiresAt });
+  applyOwnerProAccess();
+  return { ok: true, message: "God mode active — full SyNexus access unlocked." };
 }
 
 /** Re-validate stored grant on app load (keeps Pro after refresh). */
@@ -92,20 +108,14 @@ export async function refreshOwnerAccess(): Promise<boolean> {
   }
 
   try {
-    const response = await fetch("/api/owner-unlock", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ grant: stored.grant }),
-    });
-    const data = (await response.json().catch(() => ({}))) as { ok?: boolean };
-    if (!response.ok || !data.ok) {
+    const { response, data } = await postOwnerUnlock({ grant: stored.grant });
+    if (!response?.ok || !data.ok) {
       clearOwnerAccess();
       return false;
     }
     applyOwnerProAccess();
     return true;
   } catch {
-    /* offline — trust local grant until expiry if still valid */
     if (stored.expiresAt > Date.now()) {
       applyOwnerProAccess();
       return true;

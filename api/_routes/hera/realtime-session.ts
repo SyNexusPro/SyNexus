@@ -24,27 +24,34 @@ function sendJson(res: ServerResponse, status: number, body: unknown): void {
 }
 
 function modelName(): string {
-  return process.env.OPENAI_REALTIME_MODEL?.trim() || "gpt-realtime";
+  return process.env.OPENAI_REALTIME_MODEL?.trim() || "gpt-realtime-2.1";
+}
+
+function realtimeModelCandidates(): string[] {
+  const env = process.env.OPENAI_REALTIME_MODEL?.trim();
+  return [...new Set(["gpt-realtime-2.1", env, "gpt-realtime"].filter(Boolean))];
 }
 
 function voiceName(): string {
-  return process.env.OPENAI_REALTIME_VOICE?.trim() || "coral";
+  const raw = (process.env.OPENAI_REALTIME_VOICE?.trim() || "marin").toLowerCase();
+  if (raw === "coral" || raw === "shimmer") return "marin";
+  return raw;
 }
 
-function sessionConfig() {
-  const model = modelName();
+function sessionConfig(model = modelName()) {
   const voice = voiceName();
   return {
     type: "realtime" as const,
     model,
     instructions: HERA_CONVERSATION_INSTRUCTIONS,
-    temperature: 0.8,
+    output_modalities: ["audio"] as const,
+    temperature: 0.85,
     audio: {
       input: {
         transcription: { model: "gpt-4o-mini-transcribe" },
         turn_detection: {
           type: "semantic_vad",
-          eagerness: "high",
+          eagerness: "medium",
           create_response: true,
           interrupt_response: true,
         },
@@ -65,22 +72,26 @@ function extractSecret(json: Record<string, unknown>): string {
 }
 
 async function mintGaSecret(key: string): Promise<{ secret: string; raw: Record<string, unknown> } | null> {
-  const upstream = await fetch("https://api.openai.com/v1/realtime/client_secrets", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-      "OpenAI-Safety-Identifier": "synexus-hera-web",
-    },
-    body: JSON.stringify({ session: sessionConfig() }),
-  });
-  const json = (await upstream.json()) as Record<string, unknown>;
-  if (!upstream.ok) {
-    console.error("[hera/realtime-session] client_secrets failed", upstream.status, json);
-    return null;
+  const models = realtimeModelCandidates();
+  for (const model of models) {
+    const upstream = await fetch("https://api.openai.com/v1/realtime/client_secrets", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+        "OpenAI-Safety-Identifier": "synexus-hera-web",
+      },
+      body: JSON.stringify({ session: sessionConfig(model) }),
+    });
+    const json = (await upstream.json()) as Record<string, unknown>;
+    if (!upstream.ok) {
+      console.error("[hera/realtime-session] client_secrets failed", model, upstream.status, json);
+      continue;
+    }
+    const secret = extractSecret(json);
+    if (secret) return { secret, raw: { ...json, model } };
   }
-  const secret = extractSecret(json);
-  return secret ? { secret, raw: json } : null;
+  return null;
 }
 
 async function mintLegacySecret(key: string): Promise<{ secret: string; raw: Record<string, unknown> } | null> {
@@ -99,11 +110,11 @@ async function mintLegacySecret(key: string): Promise<{ secret: string; raw: Rec
       modalities: ["audio", "text"],
       instructions: HERA_CONVERSATION_INSTRUCTIONS,
       voice,
-      temperature: 0.8,
+      temperature: 0.85,
       input_audio_transcription: { model: "gpt-4o-mini-transcribe" },
       turn_detection: {
         type: "semantic_vad",
-        eagerness: "high",
+        eagerness: "medium",
         create_response: true,
         interrupt_response: true,
       },
@@ -156,7 +167,8 @@ export async function handleHeraRealtimeSession(req: IncomingMessage, res: Serve
     sendJson(res, 200, {
       value: minted.secret,
       client_secret: { value: minted.secret },
-      model: modelName(),
+      model:
+        (typeof minted.raw.model === "string" && minted.raw.model.trim()) || modelName(),
       voice: voiceName(),
       expires_at:
         (minted.raw.expires_at as number | undefined) ??
