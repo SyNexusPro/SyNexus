@@ -69,7 +69,7 @@ public class MainActivity extends BridgeActivity {
     settings.setCacheMode(WebSettings.LOAD_DEFAULT);
     settings.setDomStorageEnabled(true);
     settings.setJavaScriptEnabled(true);
-    settings.setMediaPlaybackRequiresUserGesture(true);
+    settings.setMediaPlaybackRequiresUserGesture(false);
     settings.setDatabaseEnabled(true);
     settings.setLoadsImagesAutomatically(true);
     settings.setBlockNetworkImage(false);

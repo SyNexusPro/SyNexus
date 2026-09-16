@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ConversationTurn } from "../lib/oracleSupremeConversation";
 import type { HeraConversationState, HeraResponse } from "../lib/hera/types";
-import { heraRealtimeController } from "../lib/hera/HeraRealtimeController";
+import { heraLiveVoice } from "../services/heraVoice";
+import { useAppIsActive } from "./useAppIsActive";
 
 type Options = {
   active: boolean;
@@ -13,15 +14,20 @@ type Options = {
 };
 
 /**
- * React binding for the single Hera realtime controller.
+ * React binding for live Hera: mic → OpenAI Realtime WebRTC → speaker.
  * Face animation should read mouthOpen / state — it does not own the network.
  */
 export function useHeraRealtime(options: Options) {
   const { active, history, seedText, contextNote, onUserTurn, onAssistantTurn } = options;
+  const appActive = useAppIsActive();
+  const live = active && appActive;
   const [state, setState] = useState<HeraConversationState>("idle");
   const [mouthOpen, setMouthOpen] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [unavailable, setUnavailable] = useState(false);
+  const [userSpeaking, setUserSpeaking] = useState(false);
+  const [transcript, setTranscript] = useState("");
+  const [muted, setMutedState] = useState(false);
   const historyRef = useRef(history);
   const seedRef = useRef(seedText);
   const contextRef = useRef(contextNote);
@@ -34,7 +40,7 @@ export function useHeraRealtime(options: Options) {
   assistantTurnRef.current = onAssistantTurn;
 
   useEffect(() => {
-    return heraRealtimeController.subscribe({
+    return heraLiveVoice.subscribe({
       onState: setState,
       onMouthOpen: setMouthOpen,
       onUserTurn: (text) => userTurnRef.current?.(text),
@@ -45,42 +51,57 @@ export function useHeraRealtime(options: Options) {
         setError(null);
         setState("idle");
       },
+      onUserSpeaking: setUserSpeaking,
+      onTranscript: setTranscript,
     });
   }, []);
 
   useEffect(() => {
-    if (!active || unavailable) {
-      heraRealtimeController.stop();
+    if (!live || unavailable) {
+      heraLiveVoice.disconnect();
       if (!unavailable) {
         setState("idle");
         setMouthOpen(0);
+        setUserSpeaking(false);
       }
       return;
     }
     const seed = seedRef.current?.trim() ?? "";
-    void heraRealtimeController.start({
+    void heraLiveVoice.connect({
       history: historyRef.current,
       seedText: seed.length >= 6 ? seed : "",
       contextNote: contextRef.current,
     });
     return () => {
-      heraRealtimeController.stop();
+      heraLiveVoice.disconnect();
     };
-  }, [active, unavailable]);
+  }, [live, unavailable]);
 
   const sendText = useCallback((text: string) => {
-    heraRealtimeController.sendText(text);
+    heraLiveVoice.sendText(text);
   }, []);
 
   const interrupt = useCallback(() => {
-    heraRealtimeController.interrupt();
+    heraLiveVoice.interrupt();
   }, []);
 
   const armListening = useCallback(() => {
-    heraRealtimeController.armListening();
+    heraLiveVoice.startListening();
   }, []);
 
-  const connected = !unavailable && (state === "listening" || state === "thinking" || state === "speaking" || state === "interrupted");
+  const setMuted = useCallback((next: boolean) => {
+    heraLiveVoice.setMuted(next);
+    setMutedState(next);
+  }, []);
+
+  const stopListening = useCallback(() => {
+    heraLiveVoice.stopListening();
+    setMutedState(true);
+  }, []);
+
+  const connected =
+    !unavailable &&
+    (state === "listening" || state === "thinking" || state === "speaking" || state === "interrupted");
 
   return {
     state,
@@ -88,13 +109,21 @@ export function useHeraRealtime(options: Options) {
     connected,
     unavailable,
     speaking: connected && state === "speaking",
-    listening: connected && (state === "listening" || state === "interrupted"),
+    listening: connected && !muted && (state === "listening" || state === "interrupted"),
     thinking: !unavailable && (state === "thinking" || state === "connecting"),
+    userSpeaking,
+    heraSpeaking: connected && state === "speaking",
+    transcript,
+    muted,
     audioLevel: mouthOpen,
     mouthOpen,
+    amplitude: mouthOpen,
     error: unavailable ? null : error,
     sendText,
     interrupt,
     armListening,
+    setMuted,
+    startListening: armListening,
+    stopListening,
   };
 }

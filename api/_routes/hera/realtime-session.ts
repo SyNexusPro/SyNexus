@@ -6,6 +6,7 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import type { ViteDevServer } from "../viteDevServer";
 
 import { HERA_CONVERSATION_INSTRUCTIONS, HERA_VOICE_INSTRUCTIONS } from "../../../src/lib/hera/heraPrompt";
+import { resolveTitanAuthPlan } from "../../../lib/server/titan/authPlan.js";
 
 let sessionEnv: Record<string, string | undefined> = process.env;
 
@@ -43,7 +44,7 @@ function sessionConfig() {
         transcription: { model: "gpt-4o-mini-transcribe" },
         turn_detection: {
           type: "semantic_vad",
-          eagerness: "low",
+          eagerness: "high",
           create_response: true,
           interrupt_response: true,
         },
@@ -102,7 +103,7 @@ async function mintLegacySecret(key: string): Promise<{ secret: string; raw: Rec
       input_audio_transcription: { model: "gpt-4o-mini-transcribe" },
       turn_detection: {
         type: "semantic_vad",
-        eagerness: "low",
+        eagerness: "high",
         create_response: true,
         interrupt_response: true,
       },
@@ -135,6 +136,15 @@ export async function handleHeraRealtimeSession(req: IncomingMessage, res: Serve
   if (!key) {
     sendJson(res, 501, { error: "OPENAI_API_KEY not configured" });
     return;
+  }
+
+  const authHeader = typeof req.headers.authorization === "string" ? req.headers.authorization : "";
+  if (authHeader) {
+    const auth = await resolveTitanAuthPlan(req, sessionEnv);
+    if (!auth.authenticated) {
+      sendJson(res, 401, { error: "invalid_session" });
+      return;
+    }
   }
 
   try {
