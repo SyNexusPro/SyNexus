@@ -1,12 +1,14 @@
 /**
- * Mints an ephemeral OpenAI Realtime client secret for browser WebRTC.
- * OPENAI_API_KEY never leaves the server.
+ * Hera voice session: GPT-Live-1 WebRTC (SDP exchanged on the server) with
+ * Realtime fallback. OPENAI_API_KEY never leaves the server.
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { ViteDevServer } from "../viteDevServer";
 
 import { HERA_CONVERSATION_INSTRUCTIONS, HERA_VOICE_INSTRUCTIONS } from "../../../src/lib/hera/heraPrompt";
 import { resolveTitanAuthPlan } from "../../../lib/server/titan/authPlan.js";
+
+type Incoming = IncomingMessage & { body?: unknown };
 
 let sessionEnv: Record<string, string | undefined> = process.env;
 
@@ -23,13 +25,27 @@ function sendJson(res: ServerResponse, status: number, body: unknown): void {
   res.end(JSON.stringify(body));
 }
 
-function modelName(): string {
+function realtimeModelName(): string {
   return process.env.OPENAI_REALTIME_MODEL?.trim() || "gpt-realtime-2.1";
 }
 
+function dedupe(values: (string | undefined)[]): string[] {
+  const out: string[] = [];
+  for (const value of values) {
+    const trimmed = value?.trim();
+    if (trimmed && !out.includes(trimmed)) out.push(trimmed);
+  }
+  return out;
+}
+
 function realtimeModelCandidates(): string[] {
-  const env = process.env.OPENAI_REALTIME_MODEL?.trim();
-  return [...new Set(["gpt-realtime-2.1", env, "gpt-realtime"].filter(Boolean))];
+  return dedupe(["gpt-realtime-2.1", process.env.OPENAI_REALTIME_MODEL, "gpt-realtime"]);
+}
+
+function liveModelCandidates(): string[] {
+  const env = process.env.OPENAI_LIVE_MODEL?.trim() || process.env.OPENAI_REALTIME_MODEL?.trim();
+  const preferred = env && env.toLowerCase().includes("live") ? env : "gpt-live-1";
+  return dedupe([preferred, "gpt-live-1"]);
 }
 
 function voiceName(): string {
@@ -38,7 +54,11 @@ function voiceName(): string {
   return raw;
 }
 
-function sessionConfig(model = modelName()) {
+function liveInstructions(): string {
+  return `${HERA_CONVERSATION_INSTRUCTIONS}\n\nSpoken voice: ${HERA_VOICE_INSTRUCTIONS}`;
+}
+
+function realtimeSessionConfig(model = realtimeModelName()) {
   const voice = voiceName();
   return {
     type: "realtime" as const,
@@ -71,6 +91,111 @@ function extractSecret(json: Record<string, unknown>): string {
   return "";
 }
 
+function extractTransportSdp(json: Record<string, unknown>): string {
+  const transport = json.transport;
+  if (transport && typeof transport === "object" && typeof (transport as { sdp?: string }).sdp === "string") {
+    return (transport as { sdp: string }).sdp.trim();
+  }
+  if (typeof json.sdp === "string") return json.sdp.trim();
+  return "";
+}
+
+function extractSessionId(json: Record<string, unknown>): string {
+  const session = json.session;
+  if (session && typeof session === "object" && typeof (session as { id?: string }).id === "string") {
+    return (session as { id: string }).id.trim();
+  }
+  if (typeof json.id === "string") return json.id.trim();
+  return "";
+}
+
+async function readJsonBody(req: Incoming): Promise<Record<string, unknown>> {
+  if (req.body && typeof req.body === "object" && !Buffer.isBuffer(req.body)) {
+    return req.body as Record<string, unknown>;
+  }
+  if (typeof req.body === "string" && req.body.trim()) {
+    return JSON.parse(req.body) as Record<string, unknown>;
+  }
+  const chunks: Buffer[] = [];
+  await new Promise<void>((resolve, reject) => {
+    req.on("data", (chunk) => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)));
+    req.on("end", () => resolve());
+    req.on("error", reject);
+  });
+  const raw = Buffer.concat(chunks).toString("utf8").trim();
+  if (!raw) return {};
+  return JSON.parse(raw) as Record<string, unknown>;
+}
+
+async function createLiveSession(
+  key: string,
+  sdp: string,
+): Promise<{ sdp: string; sessionId: string; model: string } | null> {
+  const voice = voiceName();
+  for (const model of liveModelCandidates()) {
+    const upstream = await fetch("https://api.openai.com/v1/live/sessions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+        "OpenAI-Safety-Identifier": "synexus-hera-web",
+      },
+      body: JSON.stringify({
+        session: {
+          model,
+          instructions: liveInstructions(),
+          audio: { output: { voice } },
+        },
+        transport: { type: "webrtc", sdp },
+      }),
+    });
+    const json = (await upstream.json()) as Record<string, unknown>;
+    if (!upstream.ok) {
+      console.error("[hera/realtime-session] live sessions failed", model, upstream.status, json);
+      continue;
+    }
+    const answer = extractTransportSdp(json);
+    if (answer) {
+      return { sdp: answer, sessionId: extractSessionId(json), model };
+    }
+    console.error("[hera/realtime-session] live sessions missing SDP", model, json);
+  }
+  return null;
+}
+
+async function createRealtimeCall(key: string, sdp: string): Promise<{ sdp: string; model: string } | null> {
+  for (const model of realtimeModelCandidates()) {
+    const fd = new FormData();
+    fd.set("sdp", sdp);
+    fd.set("session", JSON.stringify(realtimeSessionConfig(model)));
+    const upstream = await fetch("https://api.openai.com/v1/realtime/calls", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "OpenAI-Safety-Identifier": "synexus-hera-web",
+      },
+      body: fd,
+    });
+    const body = await upstream.text();
+    if (!upstream.ok) {
+      console.error("[hera/realtime-session] realtime/calls failed", model, upstream.status, body.slice(0, 240));
+      continue;
+    }
+    const answer = body.trim();
+    if (answer.startsWith("v=") || answer.includes("m=audio")) {
+      return { sdp: answer, model };
+    }
+    try {
+      const json = JSON.parse(body) as Record<string, unknown>;
+      const nested = extractTransportSdp(json);
+      if (nested) return { sdp: nested, model };
+    } catch {
+      /* not JSON */
+    }
+  }
+  return null;
+}
+
 async function mintGaSecret(key: string): Promise<{ secret: string; raw: Record<string, unknown> } | null> {
   const models = realtimeModelCandidates();
   for (const model of models) {
@@ -81,7 +206,7 @@ async function mintGaSecret(key: string): Promise<{ secret: string; raw: Record<
         "Content-Type": "application/json",
         "OpenAI-Safety-Identifier": "synexus-hera-web",
       },
-      body: JSON.stringify({ session: sessionConfig(model) }),
+      body: JSON.stringify({ session: realtimeSessionConfig(model) }),
     });
     const json = (await upstream.json()) as Record<string, unknown>;
     if (!upstream.ok) {
@@ -133,7 +258,7 @@ export async function handleHeraRealtimeSession(req: IncomingMessage, res: Serve
   if (req.method === "OPTIONS") {
     res.writeHead(204, {
       "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
     });
     res.end();
     return;
@@ -159,16 +284,51 @@ export async function handleHeraRealtimeSession(req: IncomingMessage, res: Serve
   }
 
   try {
+    let body: Record<string, unknown> = {};
+    try {
+      body = await readJsonBody(req);
+    } catch {
+      body = {};
+    }
+    const sdp = typeof body.sdp === "string" ? body.sdp.trim() : "";
+
+    if (sdp) {
+      const live = await createLiveSession(key, sdp);
+      if (live) {
+        sendJson(res, 200, {
+          mode: "live",
+          model: live.model,
+          voice: voiceName(),
+          session: { id: live.sessionId },
+          transport: { type: "webrtc", sdp: live.sdp },
+        });
+        return;
+      }
+      const realtime = await createRealtimeCall(key, sdp);
+      if (realtime) {
+        sendJson(res, 200, {
+          mode: "realtime",
+          model: realtime.model,
+          voice: voiceName(),
+          transport: { type: "webrtc", sdp: realtime.sdp },
+        });
+        return;
+      }
+      sendJson(res, 502, { error: "Voice session unavailable" });
+      return;
+    }
+
     const minted = (await mintGaSecret(key)) ?? (await mintLegacySecret(key));
     if (!minted) {
       sendJson(res, 502, { error: "Realtime session unavailable" });
       return;
     }
     sendJson(res, 200, {
+      mode: "realtime",
       value: minted.secret,
       client_secret: { value: minted.secret },
       model:
-        (typeof minted.raw.model === "string" && minted.raw.model.trim()) || modelName(),
+        (typeof minted.raw.model === "string" && minted.raw.model.trim()) || realtimeModelName(),
       voice: voiceName(),
       expires_at:
         (minted.raw.expires_at as number | undefined) ??
@@ -186,7 +346,13 @@ export function configureHeraRealtimeSessionApi(
 ): void {
   if (env) sessionEnv = { ...process.env, ...env };
   if (env) {
-    for (const key of ["OPENAI_API_KEY", "TITAN_API_KEY", "OPENAI_REALTIME_MODEL", "OPENAI_REALTIME_VOICE"]) {
+    for (const key of [
+      "OPENAI_API_KEY",
+      "TITAN_API_KEY",
+      "OPENAI_LIVE_MODEL",
+      "OPENAI_REALTIME_MODEL",
+      "OPENAI_REALTIME_VOICE",
+    ]) {
       const value = env[key]?.trim();
       if (value) process.env[key] = value;
     }

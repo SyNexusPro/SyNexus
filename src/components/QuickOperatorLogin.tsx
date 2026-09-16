@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { passwordStrengthLabel, validateSignupPassword } from "../lib/authCredentials";
 import { loadRememberedEmail, saveRememberedEmail } from "../lib/authRemember";
 import { hasSupabaseEnv, supabase } from "../lib/supabaseClient";
@@ -22,6 +23,7 @@ import { describeAuthError } from "../lib/authErrors";
 import { attachPendingInvite, syncInviteRewardForUser } from "../lib/inviteEarn";
 import { syncProTrialForUser } from "../lib/proDemo";
 import { queueHeraSignupDemo } from "../lib/heraSignupDemo";
+import { LanguagePicker } from "./LanguagePicker";
 import { PasswordRevealToggle } from "./PasswordRevealToggle";
 import { GoogleAuthOption } from "./GoogleSignInButton";
 import { continueMfaAfterAuth } from "../security/mfa";
@@ -54,6 +56,7 @@ export function QuickOperatorLogin({
   initialMode = "signin",
   showTabs = true,
 }: Props) {
+  const { t } = useTranslation();
   const { linked } = useOperatorAuth();
   const navigate = useNavigate();
   const [mode, setMode] = useState<"signin" | "signup">(initialMode);
@@ -290,6 +293,12 @@ export function QuickOperatorLogin({
           </div>
           {passwordHint ? <span className="quick-login__hint">{passwordHint}</span> : null}
         </label>
+        {mode === "signup" ? (
+          <label className="quick-login__field">
+            <span>{t("footer.language")}</span>
+            <LanguagePicker embedded />
+          </label>
+        ) : null}
       </div>
 
       <button type="button" className="quick-login__submit" disabled={busy} onClick={() => void handleSubmit()}>

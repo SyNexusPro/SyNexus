@@ -5,6 +5,7 @@ import { SYNEXUS_PRO_TRIAL_DAYS } from "../config/proTrial";
 import { useTitanBotName } from "../hooks/useTitanBotName";
 import { PasswordRevealToggle } from "./PasswordRevealToggle";
 import { GoogleAuthOption } from "./GoogleSignInButton";
+import { LanguagePicker } from "./LanguagePicker";
 
 type AuthTone = "info" | "success" | "error";
 type SignInMethod = "magic" | "password";
@@ -492,6 +493,12 @@ export function PulseOperatorLink({
           <p className="operator-link__magic-note">
             We&apos;ll email a one-time link that expires quickly. No password is sent or stored on this device.
           </p>
+        ) : null}
+        {mode === "link" ? (
+          <label className="operator-link__field">
+            <span>Language</span>
+            <LanguagePicker embedded />
+          </label>
         ) : null}
       </div>
 

@@ -80,8 +80,7 @@ a {
    If Hera fails to mount, the home screen stays visible. */
 html:has(.hera-screen) .app-shell__dashboard,
 html:has(.hera-screen) .bottom-nav,
-html:has(.hera-screen) .oracle-presence-fab,
-html:has(.hera-screen) .lang-picker-dock {
+html:has(.hera-screen) .oracle-presence-fab {
   display: none !important;
 }
 
@@ -3593,6 +3592,10 @@ html:has(.app-shell--home) #root {
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
     0 0 40px rgba(94, 231, 255, 0.08);
   overflow: hidden;
+}
+
+.operator-link:has(.lang-picker) {
+  overflow: visible;
 }
 
 .operator-link--active {
@@ -12535,17 +12538,19 @@ html.native-android .syn-wallet__portfolio {
   }
 }
 
-/* Language picker */
-.lang-picker-dock {
-  position: fixed;
-  z-index: 55;
-  left: 12px;
-  bottom: calc(64px + env(safe-area-inset-bottom, 0px));
-}
-
+/* Language picker — signup forms only */
 .lang-picker {
   position: relative;
   display: inline-block;
+}
+
+.lang-picker--form {
+  display: block;
+  width: 100%;
+}
+
+.lang-picker--form .lang-picker__label {
+  display: none;
 }
 
 .lang-picker__trigger {
@@ -12560,6 +12565,18 @@ html.native-android .syn-wallet__portfolio {
   color: #e2e8f0;
   font-size: 0.72rem;
   cursor: pointer;
+}
+
+.lang-picker--form .lang-picker__trigger {
+  width: 100%;
+  max-width: none;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border-color: rgba(137, 255, 47, 0.25);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--text);
+  font-size: 0.9rem;
 }
 
 .lang-picker__label {
@@ -12578,6 +12595,7 @@ html.native-android .syn-wallet__portfolio {
   position: absolute;
   bottom: calc(100% + 8px);
   left: 0;
+  z-index: 40;
   width: min(300px, 86vw);
   max-height: min(360px, 55vh);
   display: flex;
@@ -12588,6 +12606,13 @@ html.native-android .syn-wallet__portfolio {
   border: 1px solid rgba(148, 163, 184, 0.35);
   background: rgba(6, 10, 18, 0.98);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+}
+
+.lang-picker--form .lang-picker__panel {
+  bottom: auto;
+  top: calc(100% + 6px);
+  width: 100%;
+  max-height: min(280px, 42vh);
 }
 
 .lang-picker__search {
@@ -12640,12 +12665,7 @@ html.native-android .syn-wallet__portfolio {
   opacity: 0.6;
 }
 
-html[dir="rtl"] .lang-picker-dock {
-  left: auto;
-  right: 12px;
-}
-
-html[dir="rtl"] .lang-picker__panel {
+html[dir="rtl"] .lang-picker--form .lang-picker__panel {
   left: auto;
   right: 0;
 }
