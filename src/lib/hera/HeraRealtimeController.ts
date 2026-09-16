@@ -5,6 +5,7 @@ import { rmsFromTimeDomain } from "./audioAnalysis";
 import { fetchHeraLaunchWatch, fetchHeraLiveToken } from "./liveIntel";
 import { hostTimeZone } from "./formatLiveStamp";
 import { SYN_MINT, SYN_SYMBOL } from "../../config/synToken";
+import { authHeaders } from "../authSession";
 
 function heraLog(message: string, extra?: unknown): void {
   if (extra !== undefined) console.info(`[HERA] ${message}`, extra);
@@ -23,6 +24,8 @@ export type HeraRealtimeEvents = {
   onAssistantTurn?: (response: HeraResponse) => void;
   onError?: (message: string) => void;
   onUnavailable?: () => void;
+  onUserSpeaking?: (speaking: boolean) => void;
+  onTranscript?: (text: string) => void;
 };
 
 type TokenPayload = {
@@ -105,6 +108,11 @@ export class HeraRealtimeController {
   private pendingContext = "";
   private outputLive = false;
   private audioUnlocked = false;
+  private muted = false;
+  private userSpeaking = false;
+  private transcript = "";
+  private speakerGain: GainNode | null = null;
+  private remoteRoutedToCtx = false;
 
   get conversationState(): HeraConversationState {
     return this.state;
@@ -112,6 +120,30 @@ export class HeraRealtimeController {
 
   getMouthOpen(): number {
     return this.mouthOpen;
+  }
+
+  get connected(): boolean {
+    return this.dc?.readyState === "open" && this.pc?.connectionState !== "closed";
+  }
+
+  get listening(): boolean {
+    return this.enabled && !this.muted && (this.state === "listening" || this.state === "interrupted" || this.state === "thinking");
+  }
+
+  isUserSpeaking(): boolean {
+    return this.userSpeaking;
+  }
+
+  isHeraSpeaking(): boolean {
+    return this.outputLive || this.state === "speaking";
+  }
+
+  getTranscript(): string {
+    return this.transcript;
+  }
+
+  isMuted(): boolean {
+    return this.muted;
   }
 
   subscribe(listener: HeraRealtimeEvents): () => void {
@@ -129,13 +161,40 @@ export class HeraRealtimeController {
     this.pendingContext = opts?.contextNote?.trim() || this.pendingContext;
     if (this.dc?.readyState === "open" && this.pc) {
       heraLog("realtime connected");
+      this.applyMute();
       if (this.state === "idle" || this.state === "connecting" || this.state === "error") {
         this.setState("listening");
       }
       return true;
     }
     if (this.connecting) return false;
+    if (this.pc) this.teardownPeer();
     return this.openCall();
+  }
+
+  connect(opts?: StartOpts): Promise<boolean> {
+    return this.start(opts);
+  }
+
+  disconnect(): void {
+    this.stop();
+  }
+
+  startListening(): void {
+    this.setMuted(false);
+    this.armListening();
+  }
+
+  stopListening(): void {
+    this.setMuted(true);
+  }
+
+  setMuted(muted: boolean): void {
+    this.muted = muted;
+    this.applyMute();
+    if (!muted && this.enabled && this.dc?.readyState === "open" && this.state === "idle") {
+      this.setState("listening");
+    }
   }
 
   /** Wake-word / UI activation: enter LISTENING without minting a new session. */
@@ -191,8 +250,11 @@ export class HeraRealtimeController {
     heraLog("realtime connecting");
     await this.unlockAudio();
     try {
-      const tokenRes = await fetch("/api/hera/session", { method: "POST" }).catch(() => null);
-      const fallback = tokenRes?.ok ? tokenRes : await fetch("/api/hera/realtime-session", { method: "POST" });
+      const headers = await authHeaders({ "Content-Type": "application/json" });
+      const tokenRes = await fetch("/api/hera/session", { method: "POST", headers }).catch(() => null);
+      const fallback = tokenRes?.ok
+        ? tokenRes
+        : await fetch("/api/hera/realtime-session", { method: "POST", headers });
       const tokenJson = (await fallback.json()) as TokenPayload;
       if (!fallback.ok) throw new Error(tokenJson.error || `session HTTP ${fallback.status}`);
       const ephemeral = extractToken(tokenJson);
@@ -214,6 +276,7 @@ export class HeraRealtimeController {
         return false;
       }
       this.mic = mic;
+      this.applyMute();
       const micTrack = mic.getAudioTracks()[0];
       heraLog("microphone active", micTrack?.label || micTrack?.id);
       micTrack?.addEventListener("ended", () => heraError("microphone track ended"));
@@ -247,8 +310,12 @@ export class HeraRealtimeController {
         const stream = event.streams[0] ?? new MediaStream([event.track]);
         audioEl.srcObject = stream;
         heraLog("audio playback started");
-        void audioEl.play().catch((err) => heraError("audio.play", err));
-        this.attachOutgoingAnalyser(stream);
+        void audioEl.play().then(() => {
+          this.attachOutgoingAnalyser(stream, false);
+        }).catch((err) => {
+          heraError("audio.play", err);
+          this.attachOutgoingAnalyser(stream, true);
+        });
       });
 
       const dc = pc.createDataChannel("oai-events");
@@ -407,6 +474,8 @@ export class HeraRealtimeController {
 
     if (type === "input_audio_buffer.speech_started") {
       heraLog("user speech started");
+      this.userSpeaking = true;
+      this.emit("onUserSpeaking", true);
       if (this.state === "speaking" || this.outputLive) this.interrupt();
       else this.setState("listening");
       return;
@@ -414,6 +483,8 @@ export class HeraRealtimeController {
 
     if (type === "input_audio_buffer.speech_stopped") {
       heraLog("user speech ended");
+      this.userSpeaking = false;
+      this.emit("onUserSpeaking", false);
       this.setState("thinking");
       return;
     }
@@ -466,11 +537,15 @@ export class HeraRealtimeController {
 
     if (type === "conversation.item.input_audio_transcription.delta") {
       this.userPartial += data.delta || "";
+      this.transcript = this.userPartial;
+      this.emit("onTranscript", this.transcript);
       return;
     }
     if (type === "conversation.item.input_audio_transcription.completed") {
       const finalText = eventText(data) || this.userPartial.trim();
       this.userPartial = "";
+      this.transcript = finalText;
+      this.emit("onTranscript", this.transcript);
       if (finalText) this.emit("onUserTurn", finalText);
       return;
     }
@@ -514,7 +589,7 @@ export class HeraRealtimeController {
     this.emit("onAssistantTurn", current);
   }
 
-  private attachOutgoingAnalyser(stream: MediaStream): void {
+  private attachOutgoingAnalyser(stream: MediaStream, playThroughContext: boolean): void {
     this.stopLevelPump();
     const Ctor = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     const ctx = new Ctor();
@@ -523,6 +598,18 @@ export class HeraRealtimeController {
     const analyser = ctx.createAnalyser();
     analyser.fftSize = 256;
     source.connect(analyser);
+    if (playThroughContext) {
+      const gain = ctx.createGain();
+      gain.gain.value = 1;
+      source.connect(gain);
+      gain.connect(ctx.destination);
+      this.speakerGain = gain;
+      this.remoteRoutedToCtx = true;
+      if (this.audioEl) this.audioEl.muted = true;
+    } else {
+      this.speakerGain = null;
+      this.remoteRoutedToCtx = false;
+    }
     this.analyser = analyser;
     this.analyserData = new Uint8Array(analyser.fftSize);
     if (ctx.state === "suspended") void ctx.resume();
@@ -553,7 +640,61 @@ export class HeraRealtimeController {
   }
 
   private muteRemote(mute: boolean): void {
-    if (this.audioEl) this.audioEl.muted = mute;
+    if (this.audioEl && !this.remoteRoutedToCtx) this.audioEl.muted = mute;
+    if (this.speakerGain && this.audioCtx) {
+      const now = this.audioCtx.currentTime;
+      this.speakerGain.gain.cancelScheduledValues(now);
+      this.speakerGain.gain.setValueAtTime(this.speakerGain.gain.value, now);
+      this.speakerGain.gain.linearRampToValueAtTime(mute ? 0.0001 : 1, now + 0.04);
+    }
+  }
+
+  private applyMute(): void {
+    const live = !this.muted;
+    if (this.mic) {
+      for (const track of this.mic.getAudioTracks()) track.enabled = live;
+    }
+    this.pc?.getSenders().forEach((sender) => {
+      if (sender.track?.kind === "audio") sender.track.enabled = live;
+    });
+  }
+
+  private teardownPeer(): void {
+    this.connecting = false;
+    this.outputLive = false;
+    this.userSpeaking = false;
+    this.stopLevelPump();
+    try {
+      this.dc?.close();
+    } catch {
+      /* ignore */
+    }
+    this.dc = null;
+    try {
+      this.pc?.getSenders().forEach((sender) => sender.track?.stop());
+      this.pc?.close();
+    } catch {
+      /* ignore */
+    }
+    this.pc = null;
+    if (this.mic) {
+      for (const track of this.mic.getTracks()) track.stop();
+    }
+    this.mic = null;
+    if (this.audioEl) {
+      this.audioEl.pause();
+      this.audioEl.srcObject = null;
+      this.audioEl.remove();
+      this.audioEl = null;
+    }
+    this.speakerGain = null;
+    this.remoteRoutedToCtx = false;
+    if (this.audioCtx) {
+      void this.audioCtx.close();
+      this.audioCtx = null;
+    }
+    this.analyser = null;
+    this.analyserData = null;
   }
 
   private setState(next: HeraConversationState): void {
@@ -589,43 +730,12 @@ export class HeraRealtimeController {
 
   private cleanup(next: HeraConversationState): void {
     const gen = ++this.generation;
-    this.connecting = false;
-    this.outputLive = false;
-    this.activeResponse = null;
-    this.stopLevelPump();
     if (this.reconnectTimer) {
       window.clearTimeout(this.reconnectTimer);
       this.reconnectTimer = 0;
     }
-    try {
-      this.dc?.close();
-    } catch {
-      /* ignore */
-    }
-    this.dc = null;
-    try {
-      this.pc?.getSenders().forEach((sender) => sender.track?.stop());
-      this.pc?.close();
-    } catch {
-      /* ignore */
-    }
-    this.pc = null;
-    if (this.mic) {
-      for (const track of this.mic.getTracks()) track.stop();
-    }
-    this.mic = null;
-    if (this.audioEl) {
-      this.audioEl.pause();
-      this.audioEl.srcObject = null;
-      this.audioEl.remove();
-      this.audioEl = null;
-    }
-    if (this.audioCtx) {
-      void this.audioCtx.close();
-      this.audioCtx = null;
-    }
-    this.analyser = null;
-    this.analyserData = null;
+    this.activeResponse = null;
+    this.teardownPeer();
     if (next === "idle") this.committedResponseIds.clear();
     this.setState(next);
     void gen;

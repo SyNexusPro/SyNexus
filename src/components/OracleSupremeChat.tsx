@@ -409,6 +409,17 @@ export function OracleSupremeChat({
   }
 
   async function handleMicToggle() {
+    if (screenMode && liveVoice) {
+      unlockTitanSpeech();
+      if (realtime.muted || !realtime.listening) {
+        realtime.startListening();
+        realtime.setMuted(false);
+      } else {
+        realtime.setMuted(true);
+        realtime.stopListening();
+      }
+      return;
+    }
     if (screenMode) return;
     if (voiceIn.transcribing) return;
     stopTitanSpeech();
@@ -460,9 +471,9 @@ export function OracleSupremeChat({
         </div>
 
         <div className="hera-screen__dock">
-          {liveCaption ? (
+              {liveCaption ? (
             <p className={`hera-screen__caption${(textTalk || realtime.listening) && !isActivelySpeaking ? " hera-screen__caption--listen" : ""}`}>
-              {liveCaption}
+              {realtime.userSpeaking && realtime.transcript ? realtime.transcript : liveCaption}
             </p>
           ) : null}
           <form
