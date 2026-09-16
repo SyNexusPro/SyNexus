@@ -39,11 +39,10 @@ function ownerConfigured(env: OwnerEnv): boolean {
   return Boolean(env.SYNEXUS_OWNER_EMAIL?.trim() && env.SYNEXUS_OWNER_PASSWORD?.trim());
 }
 
-function safeEqual(a: string, b: string): boolean {
-  const aa = Buffer.from(a);
-  const bb = Buffer.from(b);
-  if (aa.length !== bb.length) return false;
-  return crypto.timingSafeEqual(aa, bb);
+function secretEqual(a: string, b: string): boolean {
+  const left = crypto.createHash("sha256").update(a).digest();
+  const right = crypto.createHash("sha256").update(b).digest();
+  return crypto.timingSafeEqual(left, right);
 }
 
 function issueGrant(email: string, env: OwnerEnv): { grant: string; expiresAt: number } | null {
@@ -67,7 +66,7 @@ function verifyGrantToken(grant: string, env: OwnerEnv): boolean {
     if (!parsed.e || !parsed.exp || !parsed.sig) return false;
     if (Date.now() > parsed.exp) return false;
     const expected = crypto.createHmac("sha256", key).update(`${parsed.e}:${parsed.exp}`).digest("hex");
-    return safeEqual(parsed.sig, expected);
+    return secretEqual(parsed.sig, expected);
   } catch {
     return false;
   }
@@ -101,7 +100,7 @@ async function handleOwnerUnlock(
     return { statusCode: 400, body: { error: "Enter your command ID and key." } };
   }
 
-  if (!safeEqual(email, expectedEmail) || !safeEqual(password, expectedPassword)) {
+  if (!secretEqual(email, expectedEmail) || !secretEqual(password, expectedPassword)) {
     return { statusCode: 401, body: { error: "Invalid command ID or key." } };
   }
 
@@ -135,13 +134,15 @@ async function respondJson(
 }
 
 export function configureOwnerUnlockApi(server: ViteDevServer, env: OwnerEnv) {
-  server.middlewares.use("/api/owner-unlock", async (req, res, next) => {
+  const middleware = async (req: { method?: string }, res: { statusCode: number; setHeader: (k: string, v: string) => void; end: (b: string) => void }, next: () => void) => {
     if (req.method !== "POST") {
       next();
       return;
     }
-    await respondJson(req, res, env);
-  });
+    await respondJson(req as NodeJS.ReadableStream, res, env);
+  };
+  server.middlewares.use("/api/owner-unlock", middleware);
+  server.middlewares.use("/api/ownerUnlock", middleware);
 }
 
 type ServerlessRequest = NodeJS.ReadableStream & {
@@ -150,21 +151,47 @@ type ServerlessRequest = NodeJS.ReadableStream & {
 };
 
 type ServerlessResponse = {
-  status(statusCode: number): ServerlessResponse;
-  json(body: unknown): void;
+  status?(statusCode: number): ServerlessResponse;
+  json?(body: unknown): void;
+  statusCode?: number;
+  setHeader?(name: string, value: string): void;
+  end?(body?: string): void;
 };
+
+function sendUnlockResult(
+  res: ServerlessResponse & Partial<{ statusCode: number; setHeader: (k: string, v: string) => void; end: (b: string) => void }>,
+  result: { statusCode: number; body: JsonBody },
+) {
+  if (typeof res.status === "function") {
+    res.status(result.statusCode).json(result.body);
+    return;
+  }
+  res.statusCode = result.statusCode;
+  res.setHeader?.("Content-Type", "application/json");
+  res.end?.(JSON.stringify(result.body));
+}
 
 export default async function handler(req: ServerlessRequest, res: ServerlessResponse) {
   if (req.method !== "POST") {
-    res.status(405).json({ error: "Method not allowed" });
+    sendUnlockResult(res, { statusCode: 405, body: { error: "Method not allowed" } });
     return;
   }
 
-  const payload =
-    typeof req.body === "string"
-      ? (JSON.parse(req.body) as UnlockPayload)
-      : (req.body as UnlockPayload | undefined) ?? {};
+  let payload: UnlockPayload = {};
+  try {
+    if (typeof req.body === "string" && req.body.trim()) {
+      payload = JSON.parse(req.body) as UnlockPayload;
+    } else if (req.body && typeof req.body === "object" && Object.keys(req.body as object).length) {
+      payload = req.body as UnlockPayload;
+    } else {
+      const raw = await readRequestBody(req);
+      payload = raw.trim() ? (JSON.parse(raw) as UnlockPayload) : {};
+    }
+  } catch {
+    sendUnlockResult(res, { statusCode: 400, body: { error: "Invalid request" } });
+    return;
+  }
 
   const result = await handleOwnerUnlock(payload, process.env);
-  res.status(result.statusCode).json(result.body);
+  sendUnlockResult(res, result);
 }

@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { isEmailVerified } from "../lib/emailVerification";
 import { hasSupabaseEnv } from "../lib/supabaseClient";
+import { hasStoredOwnerGrant } from "../lib/ownerAccess";
 import {
   getAssurance,
   getVerifiedSessionUser,
@@ -23,7 +24,15 @@ export function AuthGuard({ children, requireAal2 = false }: Props) {
     let alive = true;
     async function run() {
       if (!hasSupabaseEnv) {
+        if (hasStoredOwnerGrant()) {
+          if (alive) setState("ok");
+          return;
+        }
         if (alive) setState("signin");
+        return;
+      }
+      if (hasStoredOwnerGrant()) {
+        if (alive) setState("ok");
         return;
       }
       const user = await getVerifiedSessionUser();

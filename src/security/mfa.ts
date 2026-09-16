@@ -1,6 +1,7 @@
 import type { User } from "@supabase/supabase-js";
 import { GOOGLE_PLAY_REVIEW_EMAIL } from "../config/googlePlayReview";
 import { isEmailVerified } from "../lib/emailVerification";
+import { hasStoredOwnerGrant } from "../lib/ownerAccess";
 import { supabase } from "../lib/supabaseClient";
 import { recordSecurityEvent } from "./securityEvents";
 
@@ -69,6 +70,7 @@ export async function resolveMfaContinue(user?: User | null): Promise<MfaContinu
 
 /** After password / OAuth / biometric session is established. */
 export async function continueMfaAfterAuth(): Promise<string | null> {
+  if (hasStoredOwnerGrant()) return null;
   const next = await resolveMfaContinue();
   if (next.action === "setup" || next.action === "verify") return next.path;
   return null;
