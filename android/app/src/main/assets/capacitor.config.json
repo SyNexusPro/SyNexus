@@ -6,6 +6,13 @@
 		"backgroundColor": "#071007",
 		"allowMixedContent": false
 	},
+	"includePlugins": [
+		"@aparajita/capacitor-biometric-auth",
+		"@capacitor/app",
+		"@capacitor/browser",
+		"@capacitor/preferences",
+		"capacitor-secure-storage-plugin"
+	],
 	"server": {
 		"androidScheme": "https",
 		"url": "https://www.synexus.pro",
