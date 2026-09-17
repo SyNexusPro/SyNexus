@@ -133,7 +133,7 @@ export const FAQ_ITEMS = [
   },
   {
     q: "What is SyNexusPro?",
-    a: "SyNexusPro ($9.99/month, cancel anytime) unlocks Oracle briefings, the full Sentinel grid, faster refresh, reduced trading fees (0.05% vs 0.10% free tier), and priority surfaces on Pulse. After you sign up, you get a 7-day free Pro trial when you add a card at checkout.",
+    a: "SyNexusPro ($9.99/month, cancel anytime) unlocks Oracle briefings, the full Sentinel grid, faster refresh, reduced trading fees (0.05% vs 0.10% free tier), and priority surfaces on Pulse. After you sign up, you get 30 days of Pro completely free — no card required.",
   },
   {
     q: "How do I cancel SyNexusPro?",
@@ -141,7 +141,7 @@ export const FAQ_ITEMS = [
   },
   {
     q: "What is SyNexus's refund policy?",
-    a: "SyNexusPro is $9.99/month after the 7-day trial. Subscription fees are generally non-refundable once a billing period starts. We may refund duplicate or erroneous charges and other cases described in the Refund Policy at /refund-policy.",
+    a: "SyNexusPro is $9.99/month after the 30-day free trial. Subscription fees are generally non-refundable once a billing period starts. We may refund duplicate or erroneous charges and other cases described in the Refund Policy at /refund-policy.",
   },
   {
     q: "Is Sentinel, Titan, or “Avoid / Watch / OK” financial advice?",

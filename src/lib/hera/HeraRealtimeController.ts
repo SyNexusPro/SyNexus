@@ -121,6 +121,7 @@ export class HeraRealtimeController {
   private livePrimed = false;
   private liveUserTimer = 0;
   private liveOutputTimer = 0;
+  private pendingTyped: string[] = [];
 
   get conversationState(): HeraConversationState {
     return this.state;
@@ -246,16 +247,34 @@ export class HeraRealtimeController {
     }, 120);
   }
 
-  sendText(text: string): void {
+  sendText(text: string): boolean {
     const trimmed = text.trim();
-    if (!trimmed) return;
-    heraLog("user speech ended", trimmed);
+    if (!trimmed) return false;
+    heraLog("user typed", trimmed);
     this.emit("onUserTurn", trimmed);
-    if (this.protocol === "live") {
-      this.liveAppend("session.commentary.append", `The operator typed: ${trimmed}. Answer them now in one spoken reply.`);
-      return;
+    this.transcript = trimmed;
+    this.emit("onTranscript", trimmed);
+    this.setState("thinking");
+    if (!this.canSend()) {
+      this.pendingTyped.push(trimmed);
+      return this.enabled;
     }
-    this.send({
+    return this.dispatchUserText(trimmed);
+  }
+
+  private dispatchUserText(trimmed: string): boolean {
+    if (this.protocol === "live") {
+      this.liveAppend(
+        "session.thinking.append",
+        `The operator typed this message (their current turn, verbatim): ${trimmed}`,
+      );
+      this.liveAppend(
+        "session.commentary.append",
+        "Answer that typed message now in one spoken reply. Do not read this cue or the word typed aloud.",
+      );
+      return true;
+    }
+    const created = this.send({
       type: "conversation.item.create",
       item: {
         type: "message",
@@ -263,7 +282,14 @@ export class HeraRealtimeController {
         content: [{ type: "input_text", text: trimmed }],
       },
     });
-    this.send({ type: "response.create" });
+    const asked = this.send({ type: "response.create" });
+    return created && asked;
+  }
+
+  private flushPendingTyped(): void {
+    if (!this.canSend() || !this.pendingTyped.length) return;
+    const queued = this.pendingTyped.splice(0);
+    for (const text of queued) this.dispatchUserText(text);
   }
 
   private async openCall(): Promise<boolean> {
@@ -535,6 +561,7 @@ export class HeraRealtimeController {
     if (seed.length >= 6) {
       this.sendText(seed);
     }
+    this.flushPendingTyped();
   }
 
   private onServerEvent(raw: unknown): void {
@@ -773,8 +800,9 @@ export class HeraRealtimeController {
     const tick = () => {
       if (!this.analyser || !this.analyserData) return;
       const rms = this.outputLive ? rmsFromTimeDomain(this.analyser, this.analyserData) : 0;
-      const current = Math.max(0, Math.min(1, rms * 7.5));
-      this.setMouth(this.mouthOpen * 0.65 + current * 0.35);
+      const current = Math.max(0, Math.min(1, rms * 6.2));
+      const gated = current < 0.045 ? 0 : current;
+      this.setMouth(this.mouthOpen * 0.84 + gated * 0.16);
       this.levelRaf = requestAnimationFrame(tick);
     };
     this.levelRaf = requestAnimationFrame(tick);
@@ -900,9 +928,14 @@ export class HeraRealtimeController {
     void gen;
   }
 
-  private send(payload: unknown): void {
-    if (!this.dc || this.dc.readyState !== "open") return;
+  private canSend(): boolean {
+    return Boolean(this.dc && this.dc.readyState === "open");
+  }
+
+  private send(payload: unknown): boolean {
+    if (!this.canSend() || !this.dc) return false;
     this.dc.send(JSON.stringify(payload));
+    return true;
   }
 
   private emit<K extends keyof HeraRealtimeEvents>(key: K, ...args: Parameters<NonNullable<HeraRealtimeEvents[K]>>): void {

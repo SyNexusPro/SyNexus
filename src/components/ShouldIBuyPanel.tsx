@@ -185,7 +185,7 @@ export function ShouldIBuyPanel({ poolTokens = [], initialScan = "" }: Props) {
         <div className="should-i-buy__demo-gate" role="region" aria-label="Sign up to continue scanning">
           <p className="should-i-buy__demo-gate-title">You&apos;ve used your {DEEP_SCAN_FREE_LIMIT} free deep scans</p>
           <p className="should-i-buy__demo-gate-copy">
-            Sign up free to unlock unlimited Sentinel reads, watchlists, and a {SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial with card on file.
+            Sign up free to unlock unlimited Sentinel reads, watchlists, and {SYNEXUS_PRO_TRIAL_DAYS} days of Pro — no card.
           </p>
           <div className="should-i-buy__demo-gate-actions">
             <button type="button" className="should-i-buy__button" onClick={openSignup}>

@@ -276,11 +276,11 @@ export function OracleSupremeChat({
     stopTitanSpeech();
     voiceOut.stop();
     if (liveVoice) {
-      realtime.sendText(trimmed);
+      const sent = realtime.sendText(trimmed);
       setDraft("");
       setAwaitingDayReply(false);
       setLastUserTopic(trimmed);
-      return;
+      if (sent) return;
     }
     setSpeaking(false);
 
@@ -444,8 +444,8 @@ export function OracleSupremeChat({
   const lastSpoken = [...visibleTurns].reverse().find((turn) => turn.role === "oracle" && turn.text.trim());
   const liveCaption = liveVoice
     ? realtime.state === "thinking"
-      ? lastSpoken?.text || "Thinking…"
-      : lastSpoken?.text || (realtime.state === "speaking" ? null : "Listening…")
+      ? realtime.transcript || lastSpoken?.text || "Thinking…"
+      : lastSpoken?.text || (realtime.state === "speaking" ? null : realtime.transcript || "Listening…")
     : thinking
       ? "Thinking…"
       : voiceIn.partial

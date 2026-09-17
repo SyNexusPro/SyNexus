@@ -78,7 +78,7 @@ export function useHeraRealtime(options: Options) {
   }, [live, unavailable]);
 
   const sendText = useCallback((text: string) => {
-    heraLiveVoice.sendText(text);
+    return heraLiveVoice.sendText(text);
   }, []);
 
   const interrupt = useCallback(() => {

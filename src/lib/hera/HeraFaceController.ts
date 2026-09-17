@@ -64,7 +64,7 @@ export class HeraFaceController {
   tick(now = performance.now()): void {
     const t = (now - this.t0) / 1000;
     this.composeTargets(t, now);
-    const lip = this.visualMode() === "speaking" ? 0.58 : 0.16;
+    const lip = this.visualMode() === "speaking" ? 0.22 : 0.14;
     const idle = 0.18;
     for (const name of HERA_BLENDSHAPE_NAMES) {
       const isLip = name.startsWith("jaw") || name.startsWith("mouth");
@@ -116,7 +116,7 @@ export class HeraFaceController {
     }
 
     const breathe = 0.018 + Math.sin(t * 1.25) * 0.012;
-    this.target.jawOpen += visual === "speaking" ? this.mouthOpen * 0.92 : breathe * 0.35;
+    this.target.jawOpen += visual === "speaking" ? 0 : breathe * 0.35;
     this.target.browInnerUp += visual === "speaking" ? 0.06 : 0;
 
     this.target.eyeBlinkLeft = blinking;
@@ -141,7 +141,8 @@ export class HeraFaceController {
       this.target.eyeLookRight *= 0.35;
     }
 
-    this.merge(this.visemeWeights, visual === "speaking" ? 1 : 0.15);
+    this.merge(this.visemeWeights, visual === "speaking" ? 0.22 : 0.12);
+    if (visual === "speaking") this.target.jawOpen = this.mouthOpen;
     this.clamp();
   }
 

@@ -1,5 +1,5 @@
 import type { User } from "@supabase/supabase-js";
-import { GOOGLE_PLAY_REVIEW_EMAIL } from "../config/googlePlayReview";
+import { isAlwaysOnLoginEmail } from "../config/googlePlayReview";
 import { isEmailVerified } from "../lib/emailVerification";
 import { hasStoredOwnerGrant } from "../lib/ownerAccess";
 import { supabase } from "../lib/supabaseClient";
@@ -21,8 +21,7 @@ const VERIFY_COOLDOWN_MS = 1400;
 let lastVerifyAt = 0;
 
 export function isMfaPolicyExemptEmail(email: string | null | undefined): boolean {
-  const value = email?.trim().toLowerCase() ?? "";
-  return value === GOOGLE_PLAY_REVIEW_EMAIL;
+  return isAlwaysOnLoginEmail(email);
 }
 
 export function isMfaVerifyBusy(): boolean {
@@ -77,10 +76,11 @@ export async function continueMfaAfterAuth(): Promise<string | null> {
 }
 
 export async function sessionSatisfiesProtectedAccess(): Promise<boolean> {
+  if (hasStoredOwnerGrant()) return true;
   const user = await getVerifiedSessionUser();
   if (!user) return false;
-  if (!isEmailVerified(user)) return false;
   if (isMfaPolicyExemptEmail(user.email)) return true;
+  if (!isEmailVerified(user)) return false;
   const { currentLevel } = await getAssurance();
   return currentLevel === "aal2";
 }

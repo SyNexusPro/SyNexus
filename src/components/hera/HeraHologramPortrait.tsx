@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import type { HeraAvatarRendererProps, HeraViseme } from "../../lib/hera/types";
+import type { HeraAvatarRendererProps } from "../../lib/hera/types";
 import { detectHeraLowPerf, prefersReducedMotion } from "../../lib/hera/hologramPerf";
 import { heraFaceController } from "../../lib/hera/HeraFaceController";
 import { heraVoice } from "../../lib/hera/HeraVoice";
@@ -7,13 +7,11 @@ import { heraVoice } from "../../lib/hera/HeraVoice";
 /** Clean holographic portrait matching the SyNexus Hera design reference. */
 export const HERA_FACE_SRC = "/hera/hera-face-alt.png?v=cyan1";
 
-function visemeFromSpeech(open: number, now: number): HeraViseme {
-  if (open < 0.06) return "PP";
-  const wave = Math.sin(now / 68);
-  if (open < 0.18) return wave > 0 ? "I" : "E";
-  if (open < 0.34) return wave > 0.25 ? "E" : "O";
-  if (open < 0.55) return wave > 0 ? "aa" : "O";
-  return wave > 0 ? "aa" : "U";
+function envelope(prev: number, raw: number): number {
+  const gated = raw < 0.04 ? 0 : Math.min(1, raw);
+  const k = gated > prev ? 0.28 : 0.1;
+  const next = prev + (gated - prev) * k;
+  return next < 0.008 ? 0 : next;
 }
 
 function blinkEase(amount: number): number {
@@ -47,8 +45,9 @@ export function HeraHologramPortrait({
   const scanRef = useRef<HTMLDivElement>(null);
   const lashLRef = useRef<HTMLDivElement>(null);
   const lashRRef = useRef<HTMLDivElement>(null);
-  const lipLRef = useRef<HTMLImageElement>(null);
+  const lipLRef = useRef<HTMLDivElement>(null);
   const openingRef = useRef<HTMLSpanElement>(null);
+  const lipEnvRef = useRef(0);
   const reducedMotion = reducedMotionProp ?? prefersReducedMotion();
   const lowPerf = lowPerfProp ?? detectHeraLowPerf();
 
@@ -73,17 +72,18 @@ export function HeraHologramPortrait({
       const speaking = s === "speaking";
       const listening = s === "listening" || s === "interrupted";
       const thinking = s === "thinking" || s === "connecting";
-      const open = speaking ? Math.max(heraFaceController.mouthOpen, audioLevelRef.current) : 0;
+      const rawOpen = speaking
+        ? Math.max(heraFaceController.mouthOpen, audioLevelRef.current)
+        : 0;
+      const open = (lipEnvRef.current = envelope(lipEnvRef.current, rawOpen));
 
       heraFaceController.setMode(s);
       heraFaceController.setMouthOpen(open);
 
-      const voiceViseme = heraVoice.isSpeaking() ? heraVoice.pumpFace() : null;
-      const nextViseme = speaking
-        ? visemeRef.current || voiceViseme || visemeFromSpeech(open, now)
-        : "sil";
-      if (!heraVoice.isSpeaking()) {
-        heraFaceController.setViseme(nextViseme, speaking ? Math.max(0.45, open) : 0.2);
+      if (heraVoice.isSpeaking()) {
+        heraVoice.pumpFace();
+      } else {
+        heraFaceController.setViseme(speaking ? visemeRef.current : "sil", speaking ? 0.35 : 0.12);
       }
 
       heraFaceController.tick(now);
@@ -92,8 +92,8 @@ export function HeraHologramPortrait({
 
       if (!reducedMotion && stack) {
         const breathe = Math.sin(t * 1.15) * (lowPerf ? 1.2 : 2.2);
-        const talkNod = speaking ? Math.sin(t * 2.2) * 0.35 + open * 0.6 : 0;
-        const talkTurn = speaking ? Math.sin(t * 0.85) * 0.55 : 0;
+        const talkNod = speaking ? Math.sin(t * 1.35) * 0.18 + open * 0.22 : 0;
+        const talkTurn = speaking ? Math.sin(t * 0.55) * 0.28 : 0;
         const listenSway = listening ? Math.sin(t * 0.85) * 0.9 : Math.sin(t * 0.55) * 0.55;
         const thinkSway = thinking || e === "thinking" ? Math.sin(t * 1.4) * 1.6 : 0;
         const lean = listening ? 1.1 : speaking ? 0.45 : 0;
@@ -103,9 +103,7 @@ export function HeraHologramPortrait({
       if (!reducedMotion) {
         const blinkL = blinkEase(w.eyeBlinkLeft);
         const blinkR = blinkEase(w.eyeBlinkRight);
-        const jaw = Math.max(0, w.jawOpen - w.mouthClose * 0.35);
-        const smile = (w.mouthSmileLeft + w.mouthSmileRight) * 0.5;
-        const pucker = Math.max(w.mouthPucker, w.mouthFunnel);
+        const jaw = open;
 
         applyFeat(
           lashLRef.current,
@@ -119,15 +117,14 @@ export function HeraHologramPortrait({
         );
         applyFeat(
           lipLRef.current,
-          `translateY(${(jaw * 2.8).toFixed(2)}px) scale(${(1 + smile * 0.04 - pucker * 0.06).toFixed(3)}, 1)`,
+          `translateY(${(jaw * 3.1).toFixed(2)}px)`,
           "44.7% 51.4%",
         );
 
         const opening = openingRef.current;
         if (opening) {
-          const amt = Math.max(0, jaw);
-          opening.style.opacity = String(Math.min(0.92, amt * 1.8));
-          opening.style.transform = `translate(-50%, -50%) scale(${(0.7 + smile * 0.18 - pucker * 0.2).toFixed(3)}, ${(0.12 + amt * 0.95).toFixed(3)})`;
+          opening.style.opacity = String(Math.min(0.88, jaw * 1.55));
+          opening.style.transform = `translate(-50%, -50%) scale(1, ${(0.12 + jaw * 0.9).toFixed(3)})`;
         }
       }
 
@@ -193,8 +190,8 @@ export function HeraHologramPortrait({
             <div ref={lashRRef} className="hera-hologram__feat hera-hologram__feat--lash-r">
               <img src={HERA_FACE_SRC} alt="" draggable={false} />
             </div>
-            <div className="hera-hologram__feat hera-hologram__feat--lip-l">
-              <img ref={lipLRef} src={HERA_FACE_SRC} alt="" draggable={false} />
+            <div ref={lipLRef} className="hera-hologram__feat hera-hologram__feat--lip-l">
+              <img src={HERA_FACE_SRC} alt="" draggable={false} />
             </div>
             <span ref={openingRef} className="hera-hologram__opening" />
           </>

@@ -1,8 +1,10 @@
 import type { User } from "@supabase/supabase-js";
+import { isAlwaysOnLoginEmail } from "../config/googlePlayReview";
 
 /** True when Supabase has confirmed the operator's email address. */
-export function isEmailVerified(user: Pick<User, "email_confirmed_at" | "confirmed_at"> | null): boolean {
+export function isEmailVerified(user: Pick<User, "email" | "email_confirmed_at" | "confirmed_at"> | null): boolean {
   if (!user) return false;
+  if (isAlwaysOnLoginEmail(user.email)) return true;
   return Boolean(user.email_confirmed_at ?? user.confirmed_at);
 }
 

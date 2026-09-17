@@ -1421,7 +1421,7 @@ export function Pulse() {
           <p className="pulse-synexus-pro-promo__price">{SYNEXUS_PRO_PRICE_LABEL}</p>
           <p className="pulse-synexus-pro-promo__headline">Unlimited trading intelligence. One simple price.</p>
           <p className="pulse-synexus-pro-promo__body">
-            Sign up for a {SYNEXUS_PRO_TRIAL_DAYS}-day full Pro trial — add a card at checkout. Then unlock the full
+            Sign up for a {SYNEXUS_PRO_TRIAL_DAYS}-day full Pro trial — no card required. Then subscribe to keep the full
             SyNexus system with real-time Sentinel analysis, risk scanning, momentum tracking, whale activity
             signals, pattern detection, and unlimited trading intelligence tools.
           </p>

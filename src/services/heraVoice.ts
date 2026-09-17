@@ -52,8 +52,8 @@ class HeraLiveVoiceService {
     heraRealtimeController.setMuted(muted);
   }
 
-  sendText(text: string): void {
-    heraRealtimeController.sendText(text);
+  sendText(text: string): boolean {
+    return heraRealtimeController.sendText(text);
   }
 
   subscribe(listener: HeraRealtimeEvents): () => void {

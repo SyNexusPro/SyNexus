@@ -47,7 +47,7 @@ export function ProDemoBanner() {
             ? " Checkout couldn't open — tap Subscribe to retry."
             : androidRequiresWebSubscription()
               ? ` ${ANDROID_WEB_SUBSCRIBE_HINT}`
-              : " Add a card before trial ends to keep Pro access."}
+              : " Subscribe before trial ends to keep Pro."}
         </span>
       </div>
       <div className="pro-demo-banner__actions">

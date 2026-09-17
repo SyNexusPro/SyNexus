@@ -22,6 +22,7 @@ const TRUSTED_PLAN_SOURCES = [
   "supabase_profile",
   "demo_session",
   "trial_7d",
+  "trial_30d",
   "admin",
   "owner",
   "play_review",
@@ -42,13 +43,11 @@ function isTrustedProGrant(grant: PlanGrant | null): boolean {
   if (!grant || grant.plan !== "PRO") return false;
   if (!TRUSTED_PLAN_SOURCES.includes(grant.source)) return false;
   const maxAge =
-    grant.source === "owner"
-      ? 90 * 86_400_000
-      : grant.source === "trial_7d"
-        ? 8 * 86_400_000
-        : grant.source === "demo_session"
-          ? 8 * 86_400_000
-          : 86_400_000;
+    grant.source === "owner" || grant.source === "play_review"
+      ? 400 * 86_400_000
+      : grant.source === "trial_30d" || grant.source === "trial_7d" || grant.source === "demo_session"
+        ? 32 * 86_400_000
+        : 86_400_000;
   return Date.now() - grant.at < maxAge;
 }
 

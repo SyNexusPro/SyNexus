@@ -21,16 +21,16 @@ const CHECK_ITEMS: readonly CheckDef[] = [
   { id: "discord", label: "Post Discord update" },
   { id: "reply5", label: "Reply thoughtfully to 5 crypto posts (value, not spam)" },
   { id: "share", label: "Share live SyNexus app link responsibly" },
-  { id: "trial-promo", label: "Promote 7-day free Pro trial · $9.99/mo after (X, TikTok, Telegram)" },
+  { id: "trial-promo", label: "Promote 30-day free Pro on sign-up · $9.99/mo after (X, TikTok, Telegram)" },
   { id: "square", label: "Check Square subscriptions (dashboard audit)" },
 ] as const;
 
 const CONTENT_CALENDAR = [
-  { day: "Day 1", title: "Launch announcement", detail: "Tease SyNexus + 7-day free Pro trial when you sign up." },
+  { day: "Day 1", title: "Launch announcement", detail: "Tease SyNexus + 30 days of Pro free when you sign up." },
   { day: "Day 2", title: "Don’t get rugged", detail: "Sentinel Aegis framing on risk scans + pattern anomalies." },
   { day: "Day 3", title: "Sentinel Aegis risk scan", detail: "Walk through how risk overlays stay structured." },
   { day: "Day 4", title: "Whale tracking", detail: "Sentinel Leviathan cues + reading flow without guaranteeing moves." },
-  { day: "Day 5", title: "7-day free trial offer", detail: "Sign up · full Pro for 7 days · card on file · $9.99/mo after." },
+  { day: "Day 5", title: "30-day free trial offer", detail: "Sign up · full Pro for 30 days · no card · $9.99/mo after if you subscribe." },
   { day: "Day 6", title: "SyNexusPro benefits", detail: "Titan briefings, Sentinel grid, faster refresh — what trial unlocks." },
   { day: "Day 7", title: "User feedback post", detail: "Amplify sober wins + trial-to-paid journey tone." },
 ] as const;

@@ -110,6 +110,14 @@ export async function refreshOwnerAccess(): Promise<boolean> {
   try {
     const { response, data } = await postOwnerUnlock({ grant: stored.grant });
     if (!response?.ok || !data.ok) {
+      if (stored.expiresAt > Date.now() && (!response || response.status >= 500)) {
+        applyOwnerProAccess();
+        return true;
+      }
+      if (stored.expiresAt > Date.now() && response.status === 404) {
+        applyOwnerProAccess();
+        return true;
+      }
       clearOwnerAccess();
       return false;
     }

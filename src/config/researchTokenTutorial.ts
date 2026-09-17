@@ -57,7 +57,7 @@ export const RESEARCH_TOKEN_TUTORIAL_STEPS: readonly ResearchTutorialStep[] = [
     id: "does-not",
     visual: "does-not",
     caption: "What it does not do: no trades, no keys, not financial advice.",
-    narration: `What it does not do: SyNexus never holds your keys or buys for you. This is not financial advice — you sign every trade in your own wallet. Data can lag, and no scanner catches every scam. You still verify the mint yourself. Guests get ${DEEP_SCAN_FREE_LIMIT} free deep scans; sign up free for unlimited reads and a ${SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial with card on file.`,
+    narration: `What it does not do: SyNexus never holds your keys or buys for you. This is not financial advice — you sign every trade in your own wallet. Data can lag, and no scanner catches every scam. You still verify the mint yourself. Guests get ${DEEP_SCAN_FREE_LIMIT} free deep scans; sign up free for unlimited reads and ${SYNEXUS_PRO_TRIAL_DAYS} days of Pro with no card.`,
   },
 ];
 

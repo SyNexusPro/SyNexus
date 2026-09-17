@@ -1,6 +1,7 @@
 import { isGooglePlayReviewEmail } from "../config/googlePlayReview";
 import { notifySynexusPlanChanged } from "../hooks/useSynexusPlan";
 import { recordTrustedPlanGrant } from "./securityBot";
+import { supabase } from "./supabaseClient";
 import { PLAN_STORAGE_KEY } from "./tradingFees";
 import { updatePaidPlan } from "./supabaseData";
 
@@ -29,4 +30,17 @@ export async function applyGooglePlayReviewAccess(
   }
 
   return true;
+}
+
+/** Re-apply Play reviewer Pro if a reviewer session is already on this device. */
+export async function restoreAlwaysOnPlayReviewSession(): Promise<boolean> {
+  if (!supabase) return false;
+  try {
+    const { data } = await supabase.auth.getSession();
+    const user = data.session?.user;
+    if (!user) return false;
+    return applyGooglePlayReviewAccess(user.id, user.email);
+  } catch {
+    return false;
+  }
 }

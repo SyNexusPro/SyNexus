@@ -354,7 +354,7 @@ export function PulseOperatorLink({
           {variant === "oracle" ? (
             <>
               Sign up to enter {titanBotName} and start a{" "}
-              <strong>{SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial</strong> — card and identity required. Already
+              <strong>{SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial</strong> — completely free, no card. Already
               linked? Switch to Return.
             </>
           ) : (

@@ -13455,9 +13455,11 @@ body:has(.oracle-chat--presence) .titan-sheet-backdrop {
   align-items: center;
   gap: 10px;
   width: 100%;
-  z-index: 5;
+  position: relative;
+  z-index: 20;
+  pointer-events: auto;
   padding: 8px 20px calc(20px + env(safe-area-inset-bottom, 0px));
-  background: linear-gradient(to top, #000 40%, rgba(0, 0, 0, 0.12) 78%, transparent);
+  background: linear-gradient(to top, #000 40%, rgba(0, 16, 10, 0.12) 78%, transparent);
 }
 
 .hera-screen__caption {
@@ -13807,7 +13809,7 @@ body:has(.oracle-chat--presence) .titan-sheet-backdrop {
 }
 
 .hera-hologram__feat--lip-l {
-  clip-path: ellipse(8.4% 3.2% at 44.7% 51.6%);
+  clip-path: ellipse(7.6% 2.6% at 44.7% 51.55%);
   z-index: 7;
 }
 

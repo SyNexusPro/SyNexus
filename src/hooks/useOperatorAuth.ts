@@ -3,6 +3,8 @@ import { getCurrentUser } from "../lib/supabaseData";
 import { hasSupabaseEnv, supabase } from "../lib/supabaseClient";
 import { hasStoredOwnerGrant, OWNER_ACCESS_CHANGED } from "../lib/ownerAccess";
 import { isEmailVerified } from "../lib/emailVerification";
+import { isAlwaysOnLoginEmail } from "../config/googlePlayReview";
+import { applyGooglePlayReviewAccess } from "../lib/googlePlayReviewAccess";
 import { isMfaPolicyExemptEmail, sessionSatisfiesProtectedAccess } from "../security/mfa";
 
 const DEMO_SESSION_KEY = "synexus_demo_session";
@@ -44,7 +46,9 @@ export function useOperatorAuth() {
           return;
         }
         const allowed =
-          isMfaPolicyExemptEmail(user.email) || (await sessionSatisfiesProtectedAccess());
+          hasStoredOwnerGrant() ||
+          isMfaPolicyExemptEmail(user.email) ||
+          (await sessionSatisfiesProtectedAccess());
         if (!cancelled) {
           setUserId(allowed ? user.id : null);
           setReady(true);
@@ -69,13 +73,16 @@ export function useOperatorAuth() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       const user = session?.user ?? null;
-      if (!user || !isEmailVerified(user)) {
+      if (!user || (!isEmailVerified(user) && !isAlwaysOnLoginEmail(user.email))) {
         setUserId(null);
         setReady(true);
         return;
       }
+      if (isAlwaysOnLoginEmail(user.email)) {
+        void applyGooglePlayReviewAccess(user.id, user.email);
+      }
       void sessionSatisfiesProtectedAccess().then((allowed) => {
-        setUserId(allowed ? user.id : null);
+        setUserId(allowed || hasStoredOwnerGrant() || isMfaPolicyExemptEmail(user.email) ? user.id : null);
         setReady(true);
       });
     });

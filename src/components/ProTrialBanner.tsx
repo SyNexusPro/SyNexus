@@ -76,7 +76,7 @@ export function ProTrialBanner() {
     : androidRequiresWebSubscription()
       ? ANDROID_WEB_SUBSCRIBE_HINT
       : !linked
-        ? `${SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial · card at checkout · then ${SYNEXUS_PRO_PRICE_LABEL}`
+        ? `${SYNEXUS_PRO_TRIAL_DAYS} days of Pro free when you sign up · no card · then ${SYNEXUS_PRO_PRICE_LABEL}`
         : `${SYNEXUS_PRO_TRIAL_LABEL} active or available · ${SYNEXUS_PRO_PRICE_LABEL} after trial · cancel anytime`;
 
   return (

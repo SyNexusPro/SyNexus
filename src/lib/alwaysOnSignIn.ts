@@ -1,4 +1,4 @@
-import { isGooglePlayReviewEmail } from "../config/googlePlayReview";
+import { isAlwaysOnLoginEmail, isGooglePlayReviewEmail } from "../config/googlePlayReview";
 import { applyGooglePlayReviewAccess } from "./googlePlayReviewAccess";
 import { unlockOwnerAccess } from "./ownerAccess";
 import { isEmailVerified } from "./emailVerification";
@@ -33,7 +33,7 @@ export async function signInAlwaysOnAccount(
     try {
       const result = await signInWithEmail(trimmed, password);
       const user = result.user ?? result.session?.user ?? null;
-      if (user && !isEmailVerified(user) && !isGooglePlayReviewEmail(trimmed)) {
+      if (user && !isEmailVerified(user) && !isAlwaysOnLoginEmail(trimmed)) {
         if (supabase) await signOut();
         supabaseError = "Confirm your email before signing in.";
       } else {
