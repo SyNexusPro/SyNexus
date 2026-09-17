@@ -19,13 +19,16 @@ restoreActiveProTrialGrant();
 void refreshOwnerAccess();
 markNativePerformanceMode();
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <ErrorBoundary>
-      <SynexusBootSequence>
-        <App />
-        <Analytics />
-      </SynexusBootSequence>
-    </ErrorBoundary>
-  </StrictMode>,
-);
+const root = document.getElementById("root");
+if (root) {
+  createRoot(root).render(
+    <StrictMode>
+      <ErrorBoundary>
+        <SynexusBootSequence>
+          <App />
+          <Analytics />
+        </SynexusBootSequence>
+      </ErrorBoundary>
+    </StrictMode>,
+  );
+}

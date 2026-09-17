@@ -113,8 +113,17 @@ public class HeraWakeWordPlugin extends Plugin {
       return;
     }
     if (recognizer == null) {
-      recognizer = SpeechRecognizer.createSpeechRecognizer(getContext());
-      recognizer.setRecognitionListener(listener);
+      try {
+        recognizer = SpeechRecognizer.createSpeechRecognizer(getContext());
+        recognizer.setRecognitionListener(listener);
+      } catch (Throwable t) {
+        Log.w(TAG, "createSpeechRecognizer failed", t);
+        JSObject err = new JSObject();
+        err.put("message", "On-device speech recognizer is not available");
+        notifyListeners("error", err);
+        running = false;
+        return;
+      }
     }
     startListeningLocked();
   }
