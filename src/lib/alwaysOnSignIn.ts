@@ -42,7 +42,13 @@ export async function signInAlwaysOnAccount(
         if (user) await applyGooglePlayReviewAccess(user.id, trimmed);
       }
     } catch (err) {
-      supabaseError = err instanceof Error ? err.message : "Sign-in failed.";
+      const message = err instanceof Error ? err.message : "Sign-in failed.";
+      const banned = /banned|disabled|user_banned/i.test(message);
+      if (isAlwaysOnLoginEmail(trimmed) && banned) {
+        supabaseError = null;
+      } else {
+        supabaseError = message;
+      }
     }
   }
 

@@ -4,7 +4,6 @@ import { AppShell } from "./components/AppShell";
 import { GoogleAnalytics } from "./components/GoogleAnalytics";
 import { NativePerformanceInit } from "./components/NativePerformanceInit";
 import { SiteAnalyticsListener } from "./components/SiteAnalyticsListener";
-import { TRADING_BUILD_ENABLED } from "./config/trading";
 import { isNativeAndroid } from "./lib/bootExperience";
 import { lazyWithRetry } from "./lib/lazyWithRetry";
 import { AuthGuard } from "./security/AuthGuard";
@@ -74,9 +73,7 @@ const WalletComingSoon = lazy(() =>
   import("./pages/WalletComingSoon").then((m) => ({ default: m.WalletComingSoon })),
 );
 const InviteEarn = lazy(() => import("./pages/InviteEarn").then((m) => ({ default: m.InviteEarn })));
-const Trade = TRADING_BUILD_ENABLED
-  ? lazyWithRetry(() => import("./pages/Trade").then((m) => ({ default: m.Trade })), "Trade")
-  : null;
+const Trade = lazyWithRetry(() => import("./pages/Trade").then((m) => ({ default: m.Trade })), "Trade");
 const AffiliateReferralRedirect = lazy(() =>
   import("./pages/AffiliateReferralRedirect").then((m) => ({ default: m.AffiliateReferralRedirect })),
 );
@@ -190,16 +187,14 @@ export default function App() {
               }
             />
             <Route path="token/:tokenId" element={<TokenDetail />} />
-            {Trade ? (
-              <Route
-                path="trade"
-                element={
-                  <AuthGuard requireAal2>
-                    <Trade />
-                  </AuthGuard>
-                }
-              />
-            ) : null}
+            <Route
+              path="trade"
+              element={
+                <AuthGuard>
+                  <Trade />
+                </AuthGuard>
+              }
+            />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

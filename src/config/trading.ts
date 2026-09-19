@@ -1,23 +1,11 @@
-import { isNativeAndroid } from "../lib/bootExperience";
-
 /**
- * In-app Trade / Swap. Default OFF.
- *
- * VITE_TRADING_ENABLED=true  — include /trade in this web build (local/web test).
- * VITE_TRADING_ANDROID=true  — also show Trade on native Android. Leave unset for
- * Play Store intelligence-only builds.
- *
- * Google Play: approving the current intelligence app does **not** approve a later
- * update that adds exchanging. Keep this flag false in the reviewed Play APK.
+ * In-app Trade / Swap. On for this SyNexus build so Trade is a main section.
+ * Set VITE_TRADING_ENABLED=false to hide /trade and the nav item.
  */
-export const TRADING_BUILD_ENABLED = import.meta.env.VITE_TRADING_ENABLED === "true";
+export const TRADING_BUILD_ENABLED = import.meta.env.VITE_TRADING_ENABLED !== "false";
 
 export function isTradingEnabled(): boolean {
-  if (!TRADING_BUILD_ENABLED) return false;
-  if (isNativeAndroid() && import.meta.env.VITE_TRADING_ANDROID !== "true") {
-    return false;
-  }
-  return true;
+  return TRADING_BUILD_ENABLED;
 }
 
 export function tradePath(opts?: { mint?: string | null; side?: "buy" | "sell" }): string {

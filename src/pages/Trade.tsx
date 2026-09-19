@@ -26,7 +26,7 @@ import {
 import { loadSwapHistory, recordSwapHistory, type SwapHistoryRecord } from "../lib/swapHistory";
 import { assessSwapToken, priceImpactGate, type SwapSafetyReport } from "../lib/swapSafety";
 import { calculateTradeFeeUsd, formatFeeUsd, formatTradingFeeRate, getTradingFeeBps } from "../lib/tradingFees";
-import { lookupTokenByQuery } from "../services/marketDataService";
+import { fetchMvpTokenFeed, lookupTokenByQuery, searchTradeTokens } from "../services/marketDataService";
 import type { Token } from "../data/tokens";
 
 type TokenPick = {
@@ -70,11 +70,16 @@ function TradeScreen() {
   const feeBps = getTradingFeeBps(plan);
   const feeAccount = jupiterFeeAccount();
 
+  const [tradeSide, setTradeSide] = useState<"buy" | "sell">("buy");
   const [sell, setSell] = useState<TokenPick>(SOL_PICK);
   const [buy, setBuy] = useState<TokenPick>(USDC_PICK);
   const [amount, setAmount] = useState("0.1");
   const [slippageBps, setSlippageBps] = useState(50);
+  const [slippageCustom, setSlippageCustom] = useState("");
   const [mintQuery, setMintQuery] = useState("");
+  const [searchHits, setSearchHits] = useState<Token[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [tokenPool, setTokenPool] = useState<Token[]>([]);
   const [quote, setQuote] = useState<SwapQuoteView | null>(null);
   const [quoteError, setQuoteError] = useState<string | null>(null);
   const [quoting, setQuoting] = useState(false);
@@ -87,6 +92,7 @@ function TradeScreen() {
   const [swapBuild, setSwapBuild] = useState<JupiterSwapBuild | null>(null);
   const [signing, setSigning] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
+  const [statusKind, setStatusKind] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [history, setHistory] = useState<SwapHistoryRecord[]>([]);
 
   useEffect(() => {
@@ -97,18 +103,28 @@ function TradeScreen() {
   }, []);
 
   useEffect(() => {
-    const mint = params.get("mint")?.trim();
-    const side = params.get("side") === "sell" ? "sell" : "buy";
-    if (!mint) return;
-    const pick: TokenPick = { mint, symbol: shortenAddress(mint, 3), name: mint };
+    void fetchMvpTokenFeed().then((feed) => setTokenPool(feed.all)).catch(() => undefined);
+  }, []);
+
+  const applyFocusToken = useCallback((pick: TokenPick, side: "buy" | "sell") => {
+    setTradeSide(side);
     if (side === "sell") {
-      setSell(pick);
+      setSell(pick.mint === JUPITER_SOL_MINT ? USDC_PICK : pick);
       setBuy(SOL_PICK);
     } else {
       setSell(SOL_PICK);
-      setBuy(pick);
+      setBuy(pick.mint === JUPITER_SOL_MINT ? USDC_PICK : pick);
     }
-  }, [params]);
+  }, []);
+
+  useEffect(() => {
+    const mint = params.get("mint")?.trim();
+    const side = params.get("side") === "sell" ? "sell" : "buy";
+    setTradeSide(side);
+    if (!mint) return;
+    const pick: TokenPick = { mint, symbol: shortenAddress(mint, 3), name: mint };
+    applyFocusToken(pick, side);
+  }, [params, applyFocusToken]);
 
   const analysisMint = buy.mint === JUPITER_SOL_MINT ? sell.mint : buy.mint;
 
@@ -235,37 +251,89 @@ function TradeScreen() {
     return null;
   }, [wallet.address, analyzing, safety, quoting, quote, quoteError, impact, riskAck, impactAck]);
 
+  useEffect(() => {
+    const q = mintQuery.trim();
+    if (q.length < 2) {
+      setSearchHits([]);
+      setSearching(false);
+      return;
+    }
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      setSearching(true);
+      void searchTradeTokens(q, tokenPool)
+        .then((hits) => {
+          if (!cancelled) setSearchHits(hits);
+        })
+        .catch(() => {
+          if (!cancelled) setSearchHits([]);
+        })
+        .finally(() => {
+          if (!cancelled) setSearching(false);
+        });
+    }, 280);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [mintQuery, tokenPool]);
+
   const flip = useCallback(() => {
     setSell(buy);
     setBuy(sell);
+    setTradeSide((prev) => (prev === "buy" ? "sell" : "buy"));
     setAmount("");
   }, [buy, sell]);
+
+  function pickFromToken(token: Token): TokenPick | null {
+    if (!token.mintAddress) return null;
+    return { mint: token.mintAddress, symbol: token.symbol, name: token.name };
+  }
+
+  function applySearchToken(token: Token) {
+    const pick = pickFromToken(token);
+    if (!pick) {
+      setStatusKind("error");
+      setStatus("Token not found. Paste a Solana mint address.");
+      return;
+    }
+    applyFocusToken(pick, tradeSide);
+    setMintQuery("");
+    setSearchHits([]);
+    setStatusKind("idle");
+    setStatus(null);
+  }
 
   async function applyMintQuery() {
     const q = mintQuery.trim();
     if (!q) return;
-    const token = await lookupTokenByQuery(q);
+    setStatusKind("loading");
+    setStatus("Looking up token…");
+    const token = await lookupTokenByQuery(q, tokenPool);
     if (!token?.mintAddress) {
-      setStatus("Token not found. Paste a Solana mint address.");
+      setStatusKind("error");
+      setStatus("Token not found. Paste a Solana mint address or ticker.");
       return;
     }
-    setBuy({ mint: token.mintAddress, symbol: token.symbol, name: token.name });
-    setMintQuery("");
-    setStatus(null);
+    applySearchToken(token);
   }
 
   async function openConfirm() {
     if (swapLocked || !wallet.address || !quote) return;
     setConfirmOpen(true);
     setSwapBuild(null);
-    setStatus(null);
+    setStatusKind("loading");
+    setStatus("Building transaction…");
     try {
       const build = await buildJupiterSwapTransaction({
         quote: quote.quote,
         userPublicKey: wallet.address,
       });
       setSwapBuild(build);
+      setStatusKind("idle");
+      setStatus(null);
     } catch (err) {
+      setStatusKind("error");
       setStatus(err instanceof Error ? err.message : "Could not build the swap transaction.");
     }
   }
@@ -273,7 +341,8 @@ function TradeScreen() {
   async function signSwap() {
     if (!wallet.provider || !wallet.address || !quote || !swapBuild) return;
     setSigning(true);
-    setStatus(null);
+    setStatusKind("loading");
+    setStatus("Waiting for wallet approval…");
     try {
       const signature = await walletSignAndSend(wallet.provider, swapBuild.swapTransaction);
       await recordSwapHistory({
@@ -288,13 +357,15 @@ function TradeScreen() {
         status: "confirmed",
         priceImpactPct: quote.priceImpactPct,
       });
-      setStatus(`Confirmed ${shortenAddress(signature, 6)}`);
+      setStatusKind("success");
+      setStatus(`Swap confirmed · ${shortenAddress(signature, 6)}`);
       setConfirmOpen(false);
       const rows = await loadSwapHistory(wallet.address);
       setHistory(rows);
       await wallet.refresh();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Wallet rejected the transaction.";
+      setStatusKind("error");
       setStatus(message);
       await recordSwapHistory({
         walletAddress: wallet.address,
@@ -317,6 +388,8 @@ function TradeScreen() {
     SOL_PICK,
     USDC_PICK,
     SYN_PICK,
+    sell,
+    buy,
     ...(wallet.snapshot?.tokens.slice(0, 6).map((t) => ({
       mint: t.mint,
       symbol: t.symbol,
@@ -335,6 +408,23 @@ function TradeScreen() {
           seeds, or balances.
         </p>
       </section>
+
+      {safetyToken ? (
+        <section className="trade-page__card trade-page__card--market" aria-live="polite">
+          <h2>Live market</h2>
+          <p className="trade-page__market-head">
+            <strong>{safetyToken.symbol}</strong>
+            <span>{safetyToken.name}</span>
+          </p>
+          <p className="trade-page__balance">{formatUsd(safetyToken.priceUsd)}</p>
+          <ul className="trade-page__facts">
+            <li>24h {safetyToken.change24hPct >= 0 ? "+" : ""}{safetyToken.change24hPct.toFixed(2)}%</li>
+            <li>Liquidity {formatUsd(safetyToken.liquidityUsd ?? 0)}</li>
+            <li>Volume 24h {formatUsd(safetyToken.volume24hUsd ?? 0)}</li>
+            <li>Mkt cap {formatUsd(safetyToken.marketCapUsd ?? 0)}</li>
+          </ul>
+        </section>
+      ) : null}
 
       <section className="trade-page__card">
         <h2>Wallet</h2>
@@ -402,6 +492,22 @@ function TradeScreen() {
       <section className="trade-page__card">
         <h2>Swap</h2>
         <p className="trade-page__hint">Routes come from Jupiter. SyNexus does not run its own pool.</p>
+        <div className="trade-page__sides" role="group" aria-label="Buy or sell">
+          <button
+            type="button"
+            className={`trade-page__side${tradeSide === "buy" ? " is-active" : ""}`}
+            onClick={() => applyFocusToken(buy.mint === JUPITER_SOL_MINT ? sell : buy, "buy")}
+          >
+            Buy
+          </button>
+          <button
+            type="button"
+            className={`trade-page__side${tradeSide === "sell" ? " is-active" : ""}`}
+            onClick={() => applyFocusToken(buy.mint === JUPITER_SOL_MINT ? sell : buy, "sell")}
+          >
+            Sell
+          </button>
+        </div>
         <label className="trade-page__field">
           You sell
           <div className="trade-page__row">
@@ -458,26 +564,67 @@ function TradeScreen() {
           </div>
         </label>
         <label className="trade-page__field">
-          Token mint or ticker
+          Token search
           <div className="trade-page__row">
             <input
               value={mintQuery}
               onChange={(e) => setMintQuery(e.target.value)}
-              placeholder="Paste mint or search ticker"
+              placeholder="Ticker, name, or Solana mint"
+              autoComplete="off"
             />
             <button type="button" className="trade-page__cta trade-page__cta--compact" onClick={() => void applyMintQuery()}>
               Load
             </button>
           </div>
         </label>
-        <label className="trade-page__field">
+        {searching ? <p className="trade-page__hint">Searching tokens…</p> : null}
+        {searchHits.length ? (
+          <ul className="trade-page__search" role="listbox" aria-label="Token matches">
+            {searchHits.map((hit) => (
+              <li key={hit.mintAddress ?? hit.id}>
+                <button type="button" onClick={() => applySearchToken(hit)}>
+                  <span>
+                    <strong>{hit.symbol}</strong> {hit.name}
+                  </span>
+                  <span>{formatUsd(hit.priceUsd)}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        <div className="trade-page__field">
           Slippage
-          <select value={slippageBps} onChange={(e) => setSlippageBps(Number(e.target.value))}>
-            <option value={50}>0.5%</option>
-            <option value={100}>1%</option>
-            <option value={300}>3%</option>
-          </select>
-        </label>
+          <div className="trade-page__slip">
+            {[50, 100, 300].map((bps) => (
+              <button
+                key={bps}
+                type="button"
+                className={`trade-page__slip-btn${slippageBps === bps && !slippageCustom ? " is-active" : ""}`}
+                onClick={() => {
+                  setSlippageBps(bps);
+                  setSlippageCustom("");
+                }}
+              >
+                {bps / 100}%
+              </button>
+            ))}
+            <input
+              inputMode="decimal"
+              aria-label="Custom slippage percent"
+              placeholder="Custom %"
+              value={slippageCustom}
+              onChange={(e) => {
+                const raw = e.target.value;
+                setSlippageCustom(raw);
+                const pct = Number(raw);
+                if (Number.isFinite(pct) && pct > 0 && pct <= 50) {
+                  setSlippageBps(Math.round(pct * 100));
+                }
+              }}
+            />
+          </div>
+        </div>
+        {quoting ? <p className="trade-page__hint">Refreshing Jupiter quote…</p> : null}
         {quoteError ? <p className="trade-page__error">{quoteError}</p> : null}
         {quote ? (
           <ul className="trade-page__facts">
@@ -564,7 +711,13 @@ function TradeScreen() {
         </section>
       ) : null}
 
-      {status ? <p className="trade-page__message">{status}</p> : null}
+      {status && statusKind !== "idle" ? (
+        <p className={`trade-page__banner trade-page__banner--${statusKind}`} role="status">
+          {status}
+        </p>
+      ) : status ? (
+        <p className="trade-page__message">{status}</p>
+      ) : null}
 
       <section className="trade-page__card">
         <h2>Recent swaps</h2>
@@ -593,8 +746,8 @@ function TradeScreen() {
 
       <NonCustodialDisclaimer />
       <p className="trade-page__footnote">
-        Not financial advice. In-app swap is gated off Play Store builds until a separate Google financial-feature
-        review. External Jupiter links on token pages stay unchanged.
+        Not financial advice. Swaps use public Jupiter quotes and your own wallet. Titan safety is a warning,
+        not a guarantee.
       </p>
       <p className="trade-page__footnote">
         <Link to="/hub">Back to Hub</Link>

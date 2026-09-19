@@ -19,6 +19,7 @@ type TokenPatch = {
 };
 
 type DexPair = {
+  chainId?: string;
   baseToken?: { symbol?: string; name?: string; address?: string };
   info?: { imageUrl?: string };
   priceUsd?: string;
@@ -492,6 +493,64 @@ export async function lookupTokenByQuery(query: string, pool?: Token[]): Promise
   }
 
   return null;
+}
+
+/** Lightweight token search for Trade — Dex + existing feed, no new APIs. */
+export async function searchTradeTokens(query: string, pool?: Token[]): Promise<Token[]> {
+  const q = query.trim();
+  if (q.length < 2) return [];
+  const scanGuard = guardTokenScan(q);
+  if (!scanGuard.allowed) return [];
+
+  const hits: Token[] = [];
+  const seen = new Set<string>();
+  const add = (token: Token | null | undefined) => {
+    const mint = token?.mintAddress?.trim();
+    if (!token || !mint || seen.has(mint)) return;
+    seen.add(mint);
+    hits.push(token);
+  };
+
+  const upper = q.toUpperCase();
+  const lower = q.toLowerCase();
+  if (pool?.length) {
+    for (const token of pool) {
+      if (
+        token.symbol.toUpperCase().includes(upper) ||
+        token.name.toLowerCase().includes(lower) ||
+        token.mintAddress?.toLowerCase().includes(lower)
+      ) {
+        add(token);
+      }
+      if (hits.length >= 8) break;
+    }
+  }
+
+  add(await lookupTokenByQuery(q, pool));
+
+  const apiGuard = guardApiFetch("dex-lookup");
+  if (apiGuard.allowed) {
+    try {
+      const response = await fetch(
+        `https://api.dexscreener.com/latest/dex/search/?q=${encodeURIComponent(q)}`,
+      );
+      if (response.ok) {
+        const data = (await response.json()) as { pairs?: DexPair[] };
+        const solana = (data.pairs ?? [])
+          .filter((pair) => (pair.chainId ?? "").toLowerCase() === "solana")
+          .sort((a, b) => (b.liquidity?.usd ?? 0) - (a.liquidity?.usd ?? 0))
+          .slice(0, 8);
+        for (const pair of solana) {
+          const mint = pair.baseToken?.address;
+          if (mint) add(tokenFromDexPair(pair, mint));
+        }
+      }
+    } catch {
+      // Keep pool / exact-lookup hits if Dex search is unavailable.
+    }
+  }
+
+  return hits.slice(0, 8);
 }
 
 export async function fetchTokenDetailById(tokenId: string) {

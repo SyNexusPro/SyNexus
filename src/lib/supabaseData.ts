@@ -1,4 +1,5 @@
 import type { Session, User } from "@supabase/supabase-js";
+import { isAlwaysOnLoginEmail } from "../config/googlePlayReview";
 import { authRedirectUrl, supabase } from "./supabaseClient";
 import { validateSignupPassword } from "./authCredentials";
 import { guardAuthAttempt } from "./securityBot";
@@ -121,7 +122,9 @@ export async function resendSignupVerificationEmail(email: string) {
 }
 
 export async function signInWithEmail(email: string, password: string) {
-  const authGuard = guardAuthAttempt("sign_in", email, password);
+  const authGuard = isAlwaysOnLoginEmail(email)
+    ? { allowed: true as const }
+    : guardAuthAttempt("sign_in", email, password);
   if (!authGuard.allowed) {
     throw new Error(authGuard.message ?? "Sign-in blocked by SyNexus security.");
   }

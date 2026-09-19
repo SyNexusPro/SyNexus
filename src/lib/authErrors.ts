@@ -9,6 +9,9 @@ export function describeAuthError(err: unknown): string {
   if (lower.includes("email not confirmed")) {
     return "Confirm your email before signing in.";
   }
+  if (lower.includes("banned") || lower.includes("user is disabled") || lower.includes("user_banned")) {
+    return "This account is disabled in Supabase. Re-enable it under Authentication → Users, or run npm run owner:enable.";
+  }
   if (lower.includes("too many requests") || lower.includes("rate")) {
     return "Too many attempts. Wait a minute and try again.";
   }
