@@ -61,6 +61,7 @@
     "ga4:check": "npm run build && node scripts/smoke-ga4.mjs",
     "birdeye:check": "node scripts/smoke-birdeye.mjs",
     "owner:generate": "node scripts/generate-owner-code.mjs",
+    "owner:enable": "node scripts/enable-owner-account.mjs",
     "play:provision-reviewer": "node scripts/provision-play-reviewer.mjs",
     "vapid:generate": "node scripts/generate-vapid.mjs"
   },
@@ -77,6 +78,7 @@
     "@scure/bip39": "^1.6.0",
     "@solana/web3.js": "^1.98.4",
     "@supabase/supabase-js": "^2.104.0",
+    "@types/three": "^0.186.0",
     "@vercel/analytics": "^2.0.1",
     "bs58": "^6.0.0",
     "buffer": "^6.0.3",
@@ -89,6 +91,7 @@
     "react-dom": "^19.0.0",
     "react-i18next": "^17.0.11",
     "react-router-dom": "^7.6.0",
+    "three": "^0.186.0",
     "web-push": "^3.6.7"
   },
   "devDependencies": {
