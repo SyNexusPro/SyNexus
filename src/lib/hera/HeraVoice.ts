@@ -2,6 +2,7 @@ import { heraFaceController } from "./HeraFaceController";
 import { HeraLipSync } from "./HeraLipSync";
 import { charToViseme } from "./blendshapes";
 import { setTitanVoiceEnabled, speakTitan, stopTitanSpeech, textForTitanSpeech } from "../titanVoice";
+import { authHeaders } from "../authSession";
 import type { HeraViseme } from "./types";
 
 export type HeraVoiceEvents = {
@@ -218,7 +219,7 @@ export class HeraVoice {
   private async streamUtterance(text: string, gen: number): Promise<void> {
     const res = await fetch("/api/hera/voice-stream", {
       method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/x-ndjson" },
+      headers: await authHeaders({ "Content-Type": "application/json", Accept: "application/x-ndjson" }),
       body: JSON.stringify({ text }),
     });
     if (res.status === 501 || !res.ok || !res.body) {
@@ -312,7 +313,7 @@ export class HeraVoice {
   private async playFallbackMp3(text: string, gen: number): Promise<void> {
     const res = await fetch("/api/hera/tts", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: await authHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({ text }),
     });
     if (!res.ok) throw new Error("TTS unavailable");

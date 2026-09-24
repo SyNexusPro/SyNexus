@@ -15,6 +15,7 @@ import { useAppIsActive } from "../hooks/useAppIsActive";
 import { useOracleMarketFeed } from "../lib/useOracleMarketFeed";
 import { isNativeAndroid } from "../lib/bootExperience";
 import { sampleTokens } from "../data/tokens";
+import { HomeTape } from "../components/home/HomeTape";
 
 type FeatureCard = {
   id: string;
@@ -234,6 +235,8 @@ export function HomeFeed() {
             Markets. Business. Security. Automation. All Connected.
           </p>
         </div>
+
+        <HomeTape />
 
         <div className="home-feature-grid" role="list">
           {featureCards.map((card) => {

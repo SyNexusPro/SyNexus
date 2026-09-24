@@ -4,6 +4,7 @@
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { useApiRoute, type ViteDevServer } from "../viteDevServer";
+import { requireHeraUser } from "../../../lib/server/heraGuard.js";
 
 function readBody(req: IncomingMessage): Promise<{ text?: string }> {
   return new Promise((resolve, reject) => {
@@ -140,7 +141,7 @@ export async function handleHeraVoiceStream(req: IncomingMessage, res: ServerRes
   if (req.method === "OPTIONS") {
     res.writeHead(204, {
       "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
     });
     res.end();
     return;
@@ -149,6 +150,9 @@ export async function handleHeraVoiceStream(req: IncomingMessage, res: ServerRes
     sendJson(res, 405, { error: "Method not allowed" });
     return;
   }
+
+  const authed = await requireHeraUser(req, res, process.env);
+  if (!authed) return;
 
   try {
     const body = await readBody(req);

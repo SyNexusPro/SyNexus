@@ -187,14 +187,7 @@ export default function App() {
               }
             />
             <Route path="token/:tokenId" element={<TokenDetail />} />
-            <Route
-              path="trade"
-              element={
-                <AuthGuard>
-                  <Trade />
-                </AuthGuard>
-              }
-            />
+            <Route path="trade" element={<Trade />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

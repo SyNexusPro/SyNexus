@@ -9,6 +9,7 @@ import { refreshOwnerAccess } from "./lib/ownerAccess";
 import { restoreAlwaysOnPlayReviewSession } from "./lib/googlePlayReviewAccess";
 import { clearExpiredProDemo, restoreActiveProTrialGrant } from "./lib/proDemo";
 import { markNativePerformanceMode } from "./lib/nativePerformance";
+import { realtime } from "./lib/realtime/RealtimeManager";
 import { migrateLegacyStorageKeys } from "./lib/legacyStorageMigrate";
 import "./i18n";
 import "./index.css";
@@ -20,6 +21,7 @@ restoreActiveProTrialGrant();
 void refreshOwnerAccess();
 void restoreAlwaysOnPlayReviewSession();
 markNativePerformanceMode();
+realtime.start();
 
 const root = document.getElementById("root");
 if (root) {

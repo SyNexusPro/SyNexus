@@ -449,7 +449,11 @@ export class HeraRealtimeController {
       res = await fetch("/api/hera/realtime-session", { method: "POST", headers, body });
     }
     const json = (await res.json()) as TokenPayload;
-    if (!res.ok) throw new Error(json.error || `session HTTP ${res.status}`);
+    if (!res.ok) {
+      if (json.error === "sign_in_required") throw new Error("Sign in to talk to Hera.");
+      if (json.error === "rate_limited") throw new Error("Hera voice is busy. Try again in a bit.");
+      throw new Error(json.error || `session HTTP ${res.status}`);
+    }
     const answer = json.transport?.sdp?.trim() || "";
     if (!answer) throw new Error("no SDP answer from voice session");
     return {

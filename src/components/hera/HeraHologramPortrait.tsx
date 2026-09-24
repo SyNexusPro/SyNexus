@@ -5,7 +5,7 @@ import { heraFaceController } from "../../lib/hera/HeraFaceController";
 import { heraVoice } from "../../lib/hera/HeraVoice";
 
 /** Clean holographic portrait matching the SyNexus Hera design reference. */
-export const HERA_FACE_SRC = "/hera/hera-face-alt.png?v=cyan1";
+export const HERA_FACE_SRC = "/hera/hera-face.png?v=green-s1";
 
 function envelope(prev: number, raw: number): number {
   const gated = raw < 0.04 ? 0 : Math.min(1, raw);
@@ -108,17 +108,17 @@ export function HeraHologramPortrait({
         applyFeat(
           lashLRef.current,
           `translateY(${(blinkL * 2.4).toFixed(2)}px)`,
-          "34% 25.5%",
+          "38% 29.2%",
         );
         applyFeat(
           lashRRef.current,
           `translateY(${(blinkR * 2.4).toFixed(2)}px)`,
-          "55.3% 25.5%",
+          "62% 29.2%",
         );
         applyFeat(
           lipLRef.current,
           `translateY(${(jaw * 3.1).toFixed(2)}px)`,
-          "44.7% 51.4%",
+          "50% 40.8%",
         );
 
         const opening = openingRef.current;

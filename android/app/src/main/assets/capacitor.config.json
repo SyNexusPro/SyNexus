@@ -14,8 +14,6 @@
 		"capacitor-secure-storage-plugin"
 	],
 	"server": {
-		"androidScheme": "https",
-		"url": "https://www.synexus.pro",
-		"cleartext": false
+		"androidScheme": "https"
 	}
 }

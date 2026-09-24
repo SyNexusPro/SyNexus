@@ -6,7 +6,7 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import { useApiRoute, type ConnectHandler, type ViteDevServer } from "../viteDevServer";
 
 import { HERA_CONVERSATION_INSTRUCTIONS, HERA_VOICE_INSTRUCTIONS } from "../../../src/lib/hera/heraPrompt";
-import { resolveTitanAuthPlan } from "../../../lib/server/titan/authPlan.js";
+import { requireHeraUser } from "../../../lib/server/heraGuard.js";
 
 type Incoming = IncomingMessage & { body?: unknown };
 
@@ -287,14 +287,8 @@ export async function handleHeraRealtimeSession(req: IncomingMessage, res: Serve
     return;
   }
 
-  const authHeader = typeof req.headers.authorization === "string" ? req.headers.authorization : "";
-  if (authHeader) {
-    const auth = await resolveTitanAuthPlan(req, sessionEnv);
-    if (!auth.authenticated) {
-      sendJson(res, 401, { error: "invalid_session" });
-      return;
-    }
-  }
+  const auth = await requireHeraUser(req, res, sessionEnv);
+  if (!auth) return;
 
   try {
     let body: Record<string, unknown> = {};

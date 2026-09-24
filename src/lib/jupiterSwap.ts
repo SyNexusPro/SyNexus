@@ -1,4 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
+import { SYN_MINT } from "../config/synToken";
 import { JUPITER_SOL_MINT } from "./solanaTradeLinks";
 import { getSolanaConnection } from "./solanaWallet";
 
@@ -49,16 +50,21 @@ export function jupiterFeeAccount(): string {
 
 export async function getMintDecimals(mint: string): Promise<number> {
   if (mint === JUPITER_SOL_MINT) return 9;
+  if (mint === USDC_MINT || mint === SYN_MINT) return 6;
   const cached = decimalsCache.get(mint);
   if (cached != null) return cached;
 
-  const connection = getSolanaConnection();
-  const info = await connection.getParsedAccountInfo(new PublicKey(mint));
-  const parsed = info.value?.data;
   let decimals = 6;
-  if (parsed && typeof parsed === "object" && "parsed" in parsed) {
-    const d = (parsed.parsed as { info?: { decimals?: number } })?.info?.decimals;
-    if (typeof d === "number") decimals = d;
+  try {
+    const connection = getSolanaConnection();
+    const info = await connection.getParsedAccountInfo(new PublicKey(mint));
+    const parsed = info.value?.data;
+    if (parsed && typeof parsed === "object" && "parsed" in parsed) {
+      const d = (parsed.parsed as { info?: { decimals?: number } })?.info?.decimals;
+      if (typeof d === "number") decimals = d;
+    }
+  } catch {
+    decimals = 6;
   }
   decimalsCache.set(mint, decimals);
   return decimals;

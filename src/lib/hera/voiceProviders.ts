@@ -14,6 +14,7 @@ import {
   stopTitanSpeech,
   textForTitanSpeech,
 } from "../titanVoice";
+import { authHeaders } from "../authSession";
 
 export type SpeakOptions = {
   onStart?: () => void;
@@ -133,7 +134,7 @@ export class RemoteApiTextToSpeechProvider implements TextToSpeechProvider {
       const timer = window.setTimeout(() => controller.abort(), 4000);
       const res = await fetch("/api/hera/tts", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await authHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ text: spoken }),
         signal: controller.signal,
       });
@@ -492,7 +493,7 @@ async function transcribeBlob(blob: Blob, mimeType: string): Promise<string> {
   const audioBase64 = await blobToBase64(blob);
   const res = await fetch("/api/hera/stt", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: await authHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify({ audioBase64, mimeType }),
   });
   const json = (await res.json().catch(() => ({}))) as { text?: string; error?: string };

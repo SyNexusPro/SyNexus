@@ -1,7 +1,7 @@
 {
   "name": "synexus-app",
   "private": true,
-  "version": "1.0.3",
+  "version": "1.0.4",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -14,8 +14,9 @@
     "android:perf": "node scripts/android-perf.mjs",
     "perf:audit": "node scripts/perf-audit.mjs",
     "android:icons": "node scripts/generate-android-icons.mjs",
-    "android:bundle": "npm run build && npx cap sync android && node scripts/android-release.mjs bundle",
-    "android:apk": "npm run build && npx cap sync android && node scripts/android-release.mjs apk",
+    "version:android": "node scripts/bump-app-version.mjs",
+    "android:bundle": "npm run version:android && npm run build && npx cap sync android && node scripts/android-release.mjs bundle",
+    "android:apk": "npm run version:android && npm run build && npx cap sync android && node scripts/android-release.mjs apk",
     "android:release": "npm run android:icons && npm run android:bundle",
     "android:keystore": "node scripts/setup-android-keystore.mjs",
     "youtube:auth": "npm run youtube:oauth --prefix marketing-ai",
