@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { isTradingEnabled, tradePath } from "../../config/trading";
-import { useSolanaWallet } from "../../hooks/useSolanaWallet";
 import { assessSwapToken } from "../../lib/swapSafety";
 import { realtime } from "../../lib/realtime/RealtimeManager";
 import { useRealtimeDashboard } from "../../lib/realtime/useRealtimeDashboard";
@@ -52,7 +51,6 @@ function asToken(row: TapeToken) {
 
 export function HomeTape() {
   const dash = useRealtimeDashboard();
-  const wallet = useSolanaWallet();
   const trading = isTradingEnabled();
   const [tab, setTab] = useState<"watch" | "trending" | "new">("trending");
   const [query, setQuery] = useState("");
@@ -63,10 +61,6 @@ export function HomeTape() {
   const streamRef = useRef(0);
 
   useEffect(() => () => window.clearInterval(streamRef.current), []);
-
-  useEffect(() => {
-    realtime.noteWallet(wallet.address, wallet.snapshot?.sol ?? dash.walletSol);
-  }, [wallet.address, wallet.snapshot?.sol, dash.walletSol]);
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
