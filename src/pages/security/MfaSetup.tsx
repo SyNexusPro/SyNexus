@@ -3,6 +3,7 @@ import {
   useRef,
   useState,
   type ClipboardEvent,
+  type FormEvent,
   type KeyboardEvent,
 } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -59,14 +60,17 @@ export function MfaSetup() {
   const [digits, setDigits] = useState(["", "", "", "", "", ""]);
   const [cooldown, setCooldown] = useState(0);
   const [busy, setBusy] = useState(true);
+  const [status, setStatus] = useState<string | null>("Checking your security methods…");
   const [error, setError] = useState<string | null>(null);
 
   async function sendChallenge(id: string) {
+    setStatus("Sending your SMS code securely through Supabase…");
     const challenge = await challengePhoneMfa(id);
     setChallengeId(challenge);
     setCooldown(PHONE_RESEND_SECONDS);
     setDigits(["", "", "", "", "", ""]);
     setStep("code");
+    setStatus(null);
   }
 
   useEffect(() => {
@@ -83,7 +87,10 @@ export function MfaSetup() {
         if (alive) setError(err instanceof Error ? err.message : "Could not send the SMS code.");
       })
       .finally(() => {
-        if (alive) setBusy(false);
+        if (alive) {
+          setBusy(false);
+          setStatus(null);
+        }
       });
     return () => {
       alive = false;
@@ -100,12 +107,18 @@ export function MfaSetup() {
     if (step === "code") inputs.current[0]?.focus();
   }, [step]);
 
-  async function enrollAndSend() {
+  async function enrollAndSend(event?: FormEvent<HTMLFormElement>) {
+    event?.preventDefault();
     if (busy) return;
     setBusy(true);
     setError(null);
+    setStatus("Securing your phone number with Supabase…");
     try {
-      const localDigits = nationalNumber.replace(/\D/g, "").replace(/^0+/, "");
+      let localDigits = nationalNumber.replace(/\D/g, "").replace(/^0+/, "");
+      const countryDigits = country.slice(1);
+      if (localDigits.startsWith(countryDigits) && localDigits.length - countryDigits.length >= 7) {
+        localDigits = localDigits.slice(countryDigits.length);
+      }
       const phone = `${country}${localDigits}`;
       const enrolled = await enrollPhoneMfa(phone);
       setFactorId(enrolled.factorId);
@@ -114,6 +127,7 @@ export function MfaSetup() {
       await sendChallenge(enrolled.factorId);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not send the verification code.");
+      setStatus(null);
     } finally {
       setBusy(false);
     }
@@ -150,6 +164,7 @@ export function MfaSetup() {
     if (busy || !factorId || !challengeId || digits.join("").length !== 6) return;
     setBusy(true);
     setError(null);
+    setStatus("Verifying your secure code…");
     try {
       await verifyPhoneMfa(factorId, challengeId, digits.join(""));
       markRecentStepUp();
@@ -169,6 +184,7 @@ export function MfaSetup() {
       window.setTimeout(() => navigate(returnPath, { replace: true }), 650);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Verification failed.");
+      setStatus(null);
       setDigits(["", "", "", "", "", ""]);
       inputs.current[0]?.focus();
     } finally {
@@ -180,10 +196,12 @@ export function MfaSetup() {
     if (busy || cooldown > 0 || !factorId) return;
     setBusy(true);
     setError(null);
+    setStatus("Sending a new SMS code…");
     try {
       await sendChallenge(factorId);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not resend the code.");
+      setStatus(null);
     } finally {
       setBusy(false);
     }
@@ -227,32 +245,35 @@ export function MfaSetup() {
               Add your phone number to protect your account. We&apos;ll text you a 6-digit verification code.
             </p>
             {error ? <p className="synexus-sec__error" role="alert">{error}</p> : null}
-            <label className="synexus-sec__label" htmlFor="mfa-country">Country</label>
-            <select
-              id="mfa-country"
-              className="synexus-sec__input synexus-sec__country"
-              value={country}
-              onChange={(event) => setCountry(event.target.value)}
-            >
-              {COUNTRIES.map((item) => <option key={item.label} value={item.code}>{item.label}</option>)}
-            </select>
-            <label className="synexus-sec__label" htmlFor="mfa-phone">Mobile phone number</label>
-            <div className="synexus-sec__phone-field">
-              <span aria-hidden>{country}</span>
-              <input
-                id="mfa-phone"
-                type="tel"
-                inputMode="tel"
-                autoComplete="tel-national"
-                value={nationalNumber}
-                onChange={(event) => setNationalNumber(event.target.value.replace(/[^\d\s().-]/g, "").slice(0, 22))}
-                placeholder="555 123 4567"
-                aria-label="Mobile phone number"
-              />
-            </div>
-            <button type="button" className="synexus-sec__btn" disabled={busy || nationalNumber.replace(/\D/g, "").length < 7} onClick={() => void enrollAndSend()}>
-              {busy ? "Sending…" : "Send Verification Code"}
-            </button>
+            {status ? <p className="synexus-sec__note" role="status">{status}</p> : null}
+            <form onSubmit={(event) => void enrollAndSend(event)}>
+              <label className="synexus-sec__label" htmlFor="mfa-country">Country</label>
+              <select
+                id="mfa-country"
+                className="synexus-sec__input synexus-sec__country"
+                value={country}
+                onChange={(event) => setCountry(event.target.value)}
+              >
+                {COUNTRIES.map((item) => <option key={item.label} value={item.code}>{item.label}</option>)}
+              </select>
+              <label className="synexus-sec__label" htmlFor="mfa-phone">Mobile phone number</label>
+              <div className="synexus-sec__phone-field">
+                <span aria-hidden>{country}</span>
+                <input
+                  id="mfa-phone"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel-national"
+                  value={nationalNumber}
+                  onChange={(event) => setNationalNumber(event.target.value.replace(/[^\d\s().-]/g, "").slice(0, 22))}
+                  placeholder="555 123 4567"
+                  aria-label="Mobile phone number"
+                />
+              </div>
+              <button type="submit" className="synexus-sec__btn" disabled={busy || nationalNumber.replace(/\D/g, "").length < 7}>
+                {busy ? "Please wait…" : "Send Verification Code"}
+              </button>
+            </form>
           </>
         ) : null}
 
@@ -261,6 +282,7 @@ export function MfaSetup() {
             <h1 id="mfa-setup-title">Enter Verification Code</h1>
             <p className="synexus-sec__lede">We sent a 6-digit code to {maskedPhone}.</p>
             {error ? <p className="synexus-sec__error" role="alert">{error}</p> : null}
+            {status ? <p className="synexus-sec__note" role="status">{status}</p> : null}
             <div className="synexus-sec__otp" aria-label="Six-digit SMS verification code">
               {digits.map((digit, index) => (
                 <input

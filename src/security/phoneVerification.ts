@@ -3,6 +3,24 @@ import { recordSecurityEvent } from "./securityEvents";
 
 export const PHONE_RESEND_SECONDS = 60;
 const challengeRequests = new Map<string, Promise<string>>();
+const AUTH_REQUEST_TIMEOUT_MS = 15_000;
+
+async function withAuthTimeout<T>(request: PromiseLike<T>): Promise<T> {
+  let timer = 0;
+  try {
+    return await Promise.race([
+      Promise.resolve(request),
+      new Promise<never>((_, reject) => {
+        timer = window.setTimeout(
+          () => reject(new Error("Supabase did not respond. Check your connection and try again.")),
+          AUTH_REQUEST_TIMEOUT_MS,
+        );
+      }),
+    ]);
+  } finally {
+    window.clearTimeout(timer);
+  }
+}
 
 export type PhoneMfaFactor = {
   id: string;
@@ -34,7 +52,7 @@ function phoneError(message: string, fallback: string): Error {
 
 export async function listPhoneMfaFactors(verifiedOnly = true): Promise<PhoneMfaFactor[]> {
   if (!supabase) return [];
-  const { data, error } = await supabase.auth.mfa.listFactors();
+  const { data, error } = await withAuthTimeout(supabase.auth.mfa.listFactors());
   if (error || !data) return [];
   return (data.phone ?? [])
     .filter((factor) => !verifiedOnly || factor.status === "verified")
@@ -51,14 +69,13 @@ export async function enrollPhoneMfa(value: string): Promise<{ factorId: string;
   const phone = normalizePhoneNumber(value);
   if (!phone) throw new Error("Enter a valid mobile number including country code, such as +1 555 123 4567.");
 
-  const existing = await listPhoneMfaFactors();
-  if (existing.length) return { factorId: existing[0].id, phone: existing[0].phone ?? phone };
-
-  const { data, error } = await supabase.auth.mfa.enroll({
-    factorType: "phone",
-    phone,
-    friendlyName: "SyNexus Phone",
-  });
+  const { data, error } = await withAuthTimeout(
+    supabase.auth.mfa.enroll({
+      factorType: "phone",
+      phone,
+      friendlyName: "SyNexus Phone",
+    }),
+  );
   if (error || !data?.id) {
     void recordSecurityEvent({ eventType: "phone_verification_failure", success: false });
     throw phoneError(error?.message ?? "", "Could not add that phone number.");
@@ -71,7 +88,7 @@ export async function challengePhoneMfa(factorId: string): Promise<string> {
   const pending = challengeRequests.get(factorId);
   if (pending) return pending;
   const request = (async () => {
-    const { data, error } = await supabase.auth.mfa.challenge({ factorId });
+    const { data, error } = await withAuthTimeout(supabase.auth.mfa.challenge({ factorId }));
     if (error || !data?.id) {
       void recordSecurityEvent({ eventType: "phone_verification_failure", success: false });
       throw phoneError(error?.message ?? "", "Could not send the verification code.");
@@ -89,11 +106,13 @@ export async function verifyPhoneMfa(factorId: string, challengeId: string, code
   const digits = code.replace(/\D/g, "").slice(0, 6);
   if (digits.length !== 6) throw new Error("Enter the complete 6-digit verification code.");
 
-  const { error } = await supabase.auth.mfa.verify({
-    factorId,
-    challengeId,
-    code: digits,
-  });
+  const { error } = await withAuthTimeout(
+    supabase.auth.mfa.verify({
+      factorId,
+      challengeId,
+      code: digits,
+    }),
+  );
   if (error) {
     void recordSecurityEvent({ eventType: "phone_verification_failure", success: false });
     throw phoneError(error.message, "Verification failed. Send a new code and try again.");
