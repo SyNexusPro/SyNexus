@@ -23,13 +23,19 @@ export function SecondFactorRedirect() {
   useEffect(() => {
     if (location.pathname === "/god" || location.pathname.startsWith("/god/")) return;
     if (hasStoredOwnerGrant()) {
-      if (location.pathname === MFA_SETUP_PATH || location.pathname === MFA_VERIFY_PATH) {
+      if (
+        location.pathname === MFA_SETUP_PATH ||
+        location.pathname === MFA_VERIFY_PATH
+      ) {
         navigate("/pulse", { replace: true });
       }
       return;
     }
     if (!supabase) return;
-    if (location.pathname === MFA_SETUP_PATH || location.pathname === MFA_VERIFY_PATH) return;
+    if (
+      location.pathname === MFA_SETUP_PATH ||
+      location.pathname === MFA_VERIFY_PATH
+    ) return;
 
     let alive = true;
 
@@ -42,7 +48,7 @@ export function SecondFactorRedirect() {
       const next = await resolveMfaContinue(user);
       if (!alive) return;
       if (next.action === "setup" || next.action === "verify") {
-        navigate(next.path, { replace: true });
+        navigate(next.path, { replace: true, state: { from: location.pathname } });
       }
     }
 

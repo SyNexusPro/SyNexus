@@ -5,11 +5,11 @@ import { isEmailVerified } from "../lib/emailVerification";
 import { hasSupabaseEnv, supabase } from "../lib/supabaseClient";
 import { hasStoredOwnerGrant } from "../lib/ownerAccess";
 import {
-  getAssurance,
   getVerifiedSessionUser,
   isMfaPolicyExemptEmail,
   MFA_SETUP_PATH,
   MFA_VERIFY_PATH,
+  resolveMfaContinue,
 } from "./mfa";
 
 type Props = {
@@ -42,13 +42,11 @@ export function AuthGuard({ children, requireAal2 = false }: Props) {
         setState("ok");
         return;
       }
-      const { currentLevel, nextLevel } = await getAssurance();
+      const next = await resolveMfaContinue(user);
       if (!alive) return;
-      if (currentLevel === "aal2") {
-        setState("ok");
-        return;
-      }
-      setState(nextLevel === "aal2" ? "verify" : "setup");
+      if (next.action === "setup") setState("setup");
+      else if (next.action === "verify") setState("verify");
+      else setState("ok");
     }
 
     if (!supabase) {
@@ -86,7 +84,9 @@ export function AuthGuard({ children, requireAal2 = false }: Props) {
   if (state === "signin") {
     return <Navigate to="/pulse" replace state={{ from: location.pathname }} />;
   }
-  if (state === "setup") return <Navigate to={MFA_SETUP_PATH} replace />;
+  if (state === "setup") {
+    return <Navigate to={MFA_SETUP_PATH} replace state={{ from: location.pathname }} />;
+  }
   if (state === "verify") return <Navigate to={MFA_VERIFY_PATH} replace />;
   return <>{children}</>;
 }

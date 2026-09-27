@@ -14771,6 +14771,124 @@ body:has(.oracle-chat--presence) .titan-sheet-backdrop {
   text-decoration: underline;
 }
 
+.synexus-sec__phone-card {
+  margin-top: max(4vh, 16px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.46), 0 0 32px rgba(137, 255, 47, 0.07);
+}
+
+.synexus-sec__phone {
+  min-height: 50px;
+  font-size: 1rem;
+  letter-spacing: 0.03em;
+}
+
+.synexus-sec__country {
+  min-height: 50px;
+  letter-spacing: 0;
+}
+
+.synexus-sec__phone-field {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  min-height: 52px;
+  border: 1px solid rgba(94, 231, 255, 0.28);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.synexus-sec__phone-field > span {
+  padding: 0 12px;
+  border-right: 1px solid rgba(94, 231, 255, 0.18);
+  color: #89ff2f;
+  font-weight: 700;
+}
+
+.synexus-sec__phone-field input {
+  width: 100%;
+  min-width: 0;
+  min-height: 50px;
+  padding: 0 12px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.synexus-sec__otp {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: clamp(5px, 2vw, 10px);
+  margin: 22px 0 8px;
+}
+
+.synexus-sec__otp-box {
+  width: 100%;
+  min-width: 0;
+  height: 56px;
+  padding: 0;
+  border: 1px solid rgba(137, 255, 47, 0.48);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.62);
+  color: #ecffd2;
+  font: 700 1.45rem/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  text-align: center;
+  caret-color: #89ff2f;
+}
+
+.synexus-sec__otp-box:focus {
+  border-color: #89ff2f;
+  outline: 2px solid rgba(137, 255, 47, 0.18);
+  box-shadow: 0 0 14px rgba(137, 255, 47, 0.16);
+}
+
+.synexus-sec__phone-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.synexus-sec__phone-actions .synexus-sec__text-btn {
+  margin: 0;
+  padding: 8px 0;
+}
+
+.synexus-sec__text-btn:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+
+.synexus-sec__verified {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 34px 8px 24px;
+  color: #89ff2f;
+  text-align: center;
+}
+
+.synexus-sec__verified > span {
+  display: grid;
+  width: 64px;
+  height: 64px;
+  place-items: center;
+  border: 1px solid rgba(137, 255, 47, 0.64);
+  border-radius: 50%;
+  box-shadow: 0 0 24px rgba(137, 255, 47, 0.2);
+  font-size: 2rem;
+}
+
+.synexus-sec__verified strong {
+  font-size: 1.2rem;
+}
+
+.synexus-sec__verified p {
+  margin: 0;
+}
+
 .home-tape {
   width: min(720px, 100%);
   margin: 8px auto 18px;

@@ -22,7 +22,7 @@ type MfaClient = {
   }>;
 };
 
-/** Experimental — TOTP remains the required factor. */
+/** Experimental optional device factor; Supabase phone MFA remains the required factor. */
 export async function enrollDevicePasskey(): Promise<void> {
   if (!passkeysAvailable() || !supabase) {
     throw new Error("Passkeys are not available on this device yet.");

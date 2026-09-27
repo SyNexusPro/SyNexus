@@ -4,15 +4,15 @@ import { Navigate, useLocation } from "react-router-dom";
 import { isEmailVerified } from "../lib/emailVerification";
 import { hasSupabaseEnv, supabase } from "../lib/supabaseClient";
 import {
-  getAssurance,
   getVerifiedSessionUser,
   isMfaPolicyExemptEmail,
   MFA_SETUP_PATH,
   MFA_VERIFY_PATH,
+  resolveMfaContinue,
 } from "./mfa";
 import { hasStoredOwnerGrant } from "../lib/ownerAccess";
 
-/** If a session exists, require MFA before the protected page renders. */
+/** Require a verified phone MFA factor and an AAL2 session. */
 export function MfaGuard({ children }: { children: ReactNode }) {
   const location = useLocation();
   const [state, setState] = useState<"loading" | "ok" | "setup" | "verify">("loading");
@@ -30,13 +30,11 @@ export function MfaGuard({ children }: { children: ReactNode }) {
         setState("ok");
         return;
       }
-      const { currentLevel, nextLevel } = await getAssurance();
+      const next = await resolveMfaContinue(user);
       if (!alive) return;
-      if (currentLevel === "aal2") {
-        setState("ok");
-        return;
-      }
-      setState(nextLevel === "aal2" ? "verify" : "setup");
+      if (next.action === "setup") setState("setup");
+      else if (next.action === "verify") setState("verify");
+      else setState("ok");
     }
 
     if (!supabase) {
@@ -71,7 +69,9 @@ export function MfaGuard({ children }: { children: ReactNode }) {
       </div>
     );
   }
-  if (state === "setup") return <Navigate to={MFA_SETUP_PATH} replace />;
+  if (state === "setup") {
+    return <Navigate to={MFA_SETUP_PATH} replace state={{ from: location.pathname }} />;
+  }
   if (state === "verify") return <Navigate to={MFA_VERIFY_PATH} replace />;
   return <>{children}</>;
 }

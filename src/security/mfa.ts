@@ -3,6 +3,7 @@ import { isAlwaysOnLoginEmail } from "../config/googlePlayReview";
 import { isEmailVerified } from "../lib/emailVerification";
 import { hasStoredOwnerGrant } from "../lib/ownerAccess";
 import { supabase } from "../lib/supabaseClient";
+import { listPhoneMfaFactors } from "./phoneVerification";
 import { recordSecurityEvent } from "./securityEvents";
 
 export const MFA_SETUP_PATH = "/security/setup";
@@ -13,8 +14,8 @@ export type AssuranceLevel = "aal1" | "aal2";
 
 export type MfaContinue =
   | { action: "ok" }
-  | { action: "setup"; path: typeof MFA_SETUP_PATH }
-  | { action: "verify"; path: typeof MFA_VERIFY_PATH }
+  | { action: "setup"; path: string }
+  | { action: "verify"; path: string }
   | { action: "unsigned" };
 
 const VERIFY_COOLDOWN_MS = 1400;
@@ -60,10 +61,19 @@ export async function resolveMfaContinue(user?: User | null): Promise<MfaContinu
   const sessionUser = user === undefined ? await getVerifiedSessionUser() : user;
   if (!sessionUser) return { action: "unsigned" };
   if (isMfaPolicyExemptEmail(sessionUser.email)) return { action: "ok" };
-
-  const { currentLevel, nextLevel } = await getAssurance();
+  const [phoneFactors, totpFactors, assurance] = await Promise.all([
+    listPhoneMfaFactors(),
+    listVerifiedTotpFactors(),
+    getAssurance(),
+  ]);
+  const { currentLevel } = assurance;
+  if (!phoneFactors.length) {
+    if (currentLevel !== "aal2" && totpFactors.length) {
+      return { action: "verify", path: `${MFA_VERIFY_PATH}?next=phone` };
+    }
+    return { action: "setup", path: MFA_SETUP_PATH };
+  }
   if (currentLevel === "aal2") return { action: "ok" };
-  if (nextLevel === "aal2") return { action: "verify", path: MFA_VERIFY_PATH };
   return { action: "setup", path: MFA_SETUP_PATH };
 }
 
@@ -81,6 +91,8 @@ export async function sessionSatisfiesProtectedAccess(): Promise<boolean> {
   if (!user) return false;
   if (isMfaPolicyExemptEmail(user.email)) return true;
   if (!isEmailVerified(user)) return false;
+  const phoneFactors = await listPhoneMfaFactors();
+  if (!phoneFactors.length) return false;
   const { currentLevel } = await getAssurance();
   return currentLevel === "aal2";
 }
@@ -188,8 +200,10 @@ export async function listVerifiedTotpFactors(): Promise<ListedFactor[]> {
 export async function unenrollFactor(factorId: string): Promise<void> {
   if (!supabase) throw new Error("Supabase is not configured.");
   const factors = await listVerifiedTotpFactors();
-  if (factors.length <= 1) {
-    throw new Error("You cannot remove your last authenticator.");
+  if (!factors.some((factor) => factor.id === factorId)) throw new Error("Authenticator not found.");
+  const phoneFactors = await listPhoneMfaFactors();
+  if (!phoneFactors.length) {
+    throw new Error("Verify a phone factor before removing an authenticator.");
   }
   const { currentLevel } = await getAssurance();
   if (currentLevel !== "aal2" || !hasRecentStepUp()) {
