@@ -1,1 +1,1 @@
-export { default, handleHeraRealtimeSession } from "./realtime-session";
+export { default, handleHeraRealtimeSession } from "./realtime-session.js";

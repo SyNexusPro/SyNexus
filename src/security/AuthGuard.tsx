@@ -1,7 +1,8 @@
 import { useEffect, useState, type ReactNode } from "react";
+import type { User } from "@supabase/supabase-js";
 import { Navigate, useLocation } from "react-router-dom";
 import { isEmailVerified } from "../lib/emailVerification";
-import { hasSupabaseEnv } from "../lib/supabaseClient";
+import { hasSupabaseEnv, supabase } from "../lib/supabaseClient";
 import { hasStoredOwnerGrant } from "../lib/ownerAccess";
 import {
   getAssurance,
@@ -22,38 +23,56 @@ export function AuthGuard({ children, requireAal2 = false }: Props) {
 
   useEffect(() => {
     let alive = true;
-    async function run() {
+
+    async function decide(user: User | null) {
+      if (!alive) return;
       if (!hasSupabaseEnv) {
-        if (hasStoredOwnerGrant()) {
-          if (alive) setState("ok");
-          return;
-        }
-        if (alive) setState("signin");
+        setState(hasStoredOwnerGrant() ? "ok" : "signin");
         return;
       }
       if (hasStoredOwnerGrant()) {
-        if (alive) setState("ok");
+        setState("ok");
         return;
       }
-      const user = await getVerifiedSessionUser();
       if (!user || !isEmailVerified(user)) {
-        if (alive) setState("signin");
+        setState("signin");
         return;
       }
       if (!requireAal2 || isMfaPolicyExemptEmail(user.email)) {
-        if (alive) setState("ok");
+        setState("ok");
         return;
       }
       const { currentLevel, nextLevel } = await getAssurance();
+      if (!alive) return;
       if (currentLevel === "aal2") {
-        if (alive) setState("ok");
+        setState("ok");
         return;
       }
-      if (alive) setState(nextLevel === "aal2" ? "verify" : "setup");
+      setState(nextLevel === "aal2" ? "verify" : "setup");
     }
-    void run();
+
+    if (!supabase) {
+      void decide(null);
+      return;
+    }
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      const user = session?.user ?? null;
+      window.setTimeout(() => {
+        void decide(user);
+      }, 0);
+    });
+
+    const fallback = window.setTimeout(() => {
+      void getVerifiedSessionUser().then((user) => decide(user));
+    }, 1200);
+
     return () => {
       alive = false;
+      window.clearTimeout(fallback);
+      subscription.unsubscribe();
     };
   }, [location.key, requireAal2]);
 

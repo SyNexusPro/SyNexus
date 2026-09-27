@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { HomeTape } from "../components/home/HomeTape";
 import { enableHeraWakeWordFromUi } from "../lib/hera/wakeWord";
+import { EnterSynexusButton } from "../community/EnterSynexusButton";
 
 /**
  * Android-only home: no canvas, overlays, market polls, or heavy tool panels.
@@ -34,6 +35,7 @@ export function AndroidHomeStatic() {
         <p className="android-home__lede">Markets. Business. Security. Automation.</p>
       </header>
       <HomeTape />
+      <EnterSynexusButton />
 
       <nav className="android-home__grid" aria-label="Features">
         {LINKS.map((item) =>

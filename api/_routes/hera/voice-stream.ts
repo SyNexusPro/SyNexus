@@ -3,7 +3,7 @@
  * ELEVENLABS_API_KEY stays server-side.
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { useApiRoute, type ViteDevServer } from "../viteDevServer";
+import { useApiRoute, type ViteDevServer } from "../viteDevServer.js";
 import { requireHeraUser } from "../../../lib/server/heraGuard.js";
 
 function readBody(req: IncomingMessage): Promise<{ text?: string }> {

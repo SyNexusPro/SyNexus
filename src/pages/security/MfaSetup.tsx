@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { enrollTotpFactor, listVerifiedTotpFactors, MFA_VERIFY_PATH, verifyTotpCode } from "../../security/mfa";
+import { MFA_VERIFY_PATH, startTotpSetup, verifyTotpCode } from "../../security/mfa";
 import { recordSecurityEvent } from "../../security/securityEvents";
 
 export function MfaSetup() {
@@ -16,20 +16,17 @@ export function MfaSetup() {
   useEffect(() => {
     let alive = true;
     setBusy(true);
-    void listVerifiedTotpFactors()
-      .then((existing) => {
+    void startTotpSetup("SyNexus Authenticator")
+      .then((enrolled) => {
         if (!alive) return;
-        if (existing.length) {
-          navigate("/security/verify", { replace: true });
+        if (enrolled === "verified") {
+          navigate(MFA_VERIFY_PATH, { replace: true });
           return;
         }
-        return enrollTotpFactor("SyNexus Authenticator").then((enrolled) => {
-          if (!alive) return;
-          setFactorId(enrolled.factorId);
-          setQrCode(enrolled.qrCode);
-          setSecret(enrolled.secret);
-          setStep(1);
-        });
+        setFactorId(enrolled.factorId);
+        setQrCode(enrolled.qrCode);
+        setSecret(enrolled.secret);
+        setStep(1);
       })
       .catch((err) => {
         if (!alive) return;

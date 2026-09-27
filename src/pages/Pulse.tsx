@@ -227,8 +227,11 @@ export function Pulse() {
   }
 
   async function rejectUnverifiedSession(user: User, message: string) {
-    if (supabase) {
-      await supabase.auth.signOut();
+    const client = supabase;
+    if (client) {
+      window.setTimeout(() => {
+        void client.auth.signOut();
+      }, 0);
     }
     setUserId(null);
     setUserEmail(null);
@@ -423,9 +426,11 @@ export function Pulse() {
 
       if (!isEmailVerified(signedInUser)) {
         if (event !== "SIGNED_OUT") {
-          void signOut().catch(() => {
-            /* session may already be cleared */
-          });
+          window.setTimeout(() => {
+            void signOut().catch(() => {
+              /* session may already be cleared */
+            });
+          }, 0);
         }
         markEmailVerificationPending(signedInUser.email ?? email);
         setUserId(null);
@@ -672,8 +677,11 @@ export function Pulse() {
       setPassword("");
       const needsVerification = !signupUser || !isEmailVerified(signupUser);
       if (needsVerification) {
-        if (result.session && signupUser && supabase) {
-          await supabase.auth.signOut();
+        const client = supabase;
+        if (result.session && signupUser && client) {
+          window.setTimeout(() => {
+            void client.auth.signOut();
+          }, 0);
         }
         setUserId(null);
         setUserEmail(null);
@@ -714,30 +722,11 @@ export function Pulse() {
           tone: "success",
           text: message,
         });
-        if (androidRequiresWebSubscription()) {
-          await completeAuthWithBiometricOffer(result.session, signupEmail, message);
-          setAuthMessage({
-            tone: "success",
-            text: message,
-          });
-          pendingAuthMethod.current = null;
-          trackSiteEvent("sign_up", { path: "/pulse" });
-          void refreshMarketSignals();
-          return;
-        }
-        const checkout = await startProCheckout({ userId: signupUser.id, email: signupEmail });
-        if (checkout.ok) {
-          redirectToProCheckout(checkout.url);
-          return;
-        }
-        await completeAuthWithBiometricOffer(result.session, signupEmail, message);
-        setAuthMessage({
-          tone: "success",
-          text: message,
-        });
         pendingAuthMethod.current = null;
         trackSiteEvent("sign_up", { path: "/pulse" });
         void refreshMarketSignals();
+        const mfaPath = await continueMfaAfterAuth(signupUser);
+        if (mfaPath) navigate(mfaPath, { replace: true });
         return;
       } else {
         setAuthMessage({ tone: "success", text: message });
@@ -822,7 +811,7 @@ export function Pulse() {
       await completeAuthWithBiometricOffer(alwaysOn.session, signedIn.email ?? email, message);
       void recordSecurityEvent({ eventType: "login_success", success: true });
       const mfaPath =
-        alwaysOn.godMode || alwaysOn.playReviewer ? null : await continueMfaAfterAuth();
+        alwaysOn.godMode || alwaysOn.playReviewer ? null : await continueMfaAfterAuth(signedIn);
       if (mfaPath) navigate(mfaPath, { replace: true });
     } catch (err) {
       pendingAuthMethod.current = null;

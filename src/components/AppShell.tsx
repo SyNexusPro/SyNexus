@@ -15,6 +15,7 @@ import { TitanLiveAlerts } from "./TitanLiveAlerts";
 import { OnboardingTour } from "./OnboardingTour";
 import { SYNEXUS_VAULT_PATH, SYNEXUS_VAULT_PRODUCT_NAME } from "../config/walletComingSoon";
 import { isTradingEnabled } from "../config/trading";
+import { SecondFactorRedirect } from "../security/SecondFactorRedirect";
 
 export function AppShell() {
   return (
@@ -35,6 +36,7 @@ function AppShellFrame() {
     <div
       className={`app-shell${isSimple ? " app-shell--easy" : " app-shell--advanced"}${isHome ? " app-shell--home" : ""}${heraOpen ? " app-shell--hera" : ""}`}
     >
+      <SecondFactorRedirect />
       <div className="app-shell__dashboard">
         {!isHome ? <ProDemoBanner /> : null}
         <WhaleAlertToaster />

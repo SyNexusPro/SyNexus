@@ -452,7 +452,17 @@ export function PulseOperatorLink({
         </p>
       ) : null}
 
-      <div className="operator-link__fields">
+      <form
+        className="operator-link__fields"
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (authBusy) return;
+          if (mode === "command") onOwnerUnlock();
+          else if (mode === "link") onSignUp();
+          else if (signInMethod === "magic") onMagicLink();
+          else onSignIn();
+        }}
+      >
         <label className="operator-link__field">
           <span>{mode === "command" ? "God mode ID" : "Operator email"}</span>
           <input
@@ -500,8 +510,6 @@ export function PulseOperatorLink({
             <LanguagePicker embedded />
           </label>
         ) : null}
-      </div>
-
       {mode === "return" && signInMethod === "password" && hasSupabaseEnv ? (
         <button
           type="button"
@@ -514,21 +522,13 @@ export function PulseOperatorLink({
       ) : null}
 
       <button
-        type="button"
+        type="submit"
         className="operator-link__submit"
         disabled={authBusy}
-        onClick={
-          mode === "command"
-            ? onOwnerUnlock
-            : mode === "link"
-              ? onSignUp
-              : signInMethod === "magic"
-                ? onMagicLink
-                : onSignIn
-        }
       >
         {authBusy ? "Linking…" : submitLabel}
       </button>
+      </form>
       {mode !== "command" ? (
         <GoogleAuthOption disabled={authBusy} onError={onOauthError} />
       ) : null}

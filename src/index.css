@@ -11490,6 +11490,18 @@ html:has(.app-shell--home) #root {
   gap: 10px;
 }
 
+/* Login must sit above the bottom nav. The nav is taller than --nav-height when Trade is showing, and it was swallowing Sign in / Google taps. */
+.titan-sheet-backdrop:has(+ .titan-sheet--login) {
+  z-index: 9700;
+  bottom: 0;
+}
+
+.titan-sheet--login {
+  z-index: 9710;
+  bottom: calc(12px + var(--safe-bottom));
+  max-height: calc(100dvh - 20px - var(--safe-bottom));
+}
+
 .titan-sheet__body .oracle-chat--overlay {
   flex: 1;
   min-height: 240px;
@@ -14603,7 +14615,7 @@ body:has(.oracle-chat--presence) .titan-sheet-backdrop {
 }
 
 .synexus-sec {
-  padding: 18px 12px 32px;
+  padding: 18px 12px calc(180px + var(--safe-bottom));
 }
 
 .synexus-sec__card {
@@ -14698,6 +14710,7 @@ body:has(.oracle-chat--presence) .titan-sheet-backdrop {
 .synexus-sec__btn {
   width: 100%;
   margin-top: 14px;
+  scroll-margin-bottom: 24px;
   padding: 12px 14px;
   border-radius: 12px;
   border: 1px solid rgba(137, 255, 47, 0.5);

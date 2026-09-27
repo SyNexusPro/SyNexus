@@ -3,7 +3,7 @@
  * Uses ELEVENLABS_API_KEY or OPENAI_API_KEY from env — never exposed to the client.
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { useApiRoute, type ViteDevServer } from "../viteDevServer";
+import { useApiRoute, type ViteDevServer } from "../viteDevServer.js";
 import { requireHeraUser } from "../../../lib/server/heraGuard.js";
 
 function readBody(req: IncomingMessage): Promise<{ text?: string }> {

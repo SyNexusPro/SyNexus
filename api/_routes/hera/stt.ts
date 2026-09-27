@@ -3,7 +3,7 @@
  * Keys stay server-side.
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { useApiRoute, type ViteDevServer } from "../viteDevServer";
+import { useApiRoute, type ViteDevServer } from "../viteDevServer.js";
 import { requireHeraUser } from "../../../lib/server/heraGuard.js";
 
 const STT_PROMPT =

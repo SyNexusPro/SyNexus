@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { useApiRoute, type ViteDevServer } from "./viteDevServer";
+import { useApiRoute, type ViteDevServer } from "./viteDevServer.js";
 import { verifyOwnerGrant } from "../../lib/server/ownerGrant.js";
 
 type AnalyticsPayload = {

@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { useApiRoute, type ViteDevServer } from "../viteDevServer";
+import { useApiRoute, type ViteDevServer } from "../viteDevServer.js";
 import { buildTitanSystemPrompt, resolveDefaultCommanderPersona, type TitanPromptInput } from "../../../lib/server/titan/prompt.js";
 import { resolveTitanAuthPlan } from "../../../lib/server/titan/authPlan.js";
 import { guardTitanServerMessage } from "../../../lib/server/titan/sanitize.js";

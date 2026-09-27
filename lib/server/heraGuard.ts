@@ -39,14 +39,14 @@ export async function requireHeraUser(
   env: Record<string, string | undefined>,
 ): Promise<TitanAuthPlan | null> {
   const auth = await resolveTitanAuthPlan(req, env);
-  if (!auth.authenticated || !auth.userId) {
+  if (!auth.authenticated || (!auth.userId && !auth.owner)) {
     sendHeraJson(res, 401, { error: "sign_in_required" });
     return null;
   }
 
   const hour = 60 * 60 * 1000;
-  const userLimit = auth.plan === "PRO" ? 40 : 8;
-  const user = takeToken(`hera:user:${auth.userId}`, userLimit, hour);
+  const userLimit = auth.owner ? 200 : auth.plan === "PRO" ? 40 : 8;
+  const user = takeToken(`hera:user:${auth.userId ?? "owner"}`, userLimit, hour);
   if (!user.ok) {
     sendHeraJson(res, 429, { error: "rate_limited", retryAfterSec: user.retryAfterSec });
     return null;

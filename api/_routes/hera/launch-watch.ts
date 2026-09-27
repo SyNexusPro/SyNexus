@@ -3,7 +3,7 @@
  * Live public launch + social-lead snapshot for Hera. No secrets.
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { useApiRoute, type ViteDevServer } from "../viteDevServer";
+import { useApiRoute, type ViteDevServer } from "../viteDevServer.js";
 import {
   formatLaunchWatchBrief,
   launchWatchMeta,

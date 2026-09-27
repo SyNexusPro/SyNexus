@@ -1,0 +1,32 @@
+.enter-synexus {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  width: 100%;
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  padding: 13px 18px;
+  color: #071007;
+  background:
+    linear-gradient(110deg, var(--accent), #e8ff52 55%, var(--accent-cyan));
+  box-shadow: var(--glow);
+  text-align: center;
+}
+
+.enter-synexus span {
+  font-size: 0.88rem;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+}
+
+.enter-synexus small {
+  font-size: 0.67rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  opacity: 0.72;
+}
+
+.enter-synexus:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 3px;
+}

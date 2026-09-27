@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { useApiRoute, type ViteDevServer } from "../viteDevServer";
+import { useApiRoute, type ViteDevServer } from "../viteDevServer.js";
 import { supabaseAdminFromEnv } from "../../../lib/server/titan/authPlan.js";
 import { classifyEvent, shouldSendInstantPremium, type TitanSeverity } from "../../../lib/server/titan/classifyEvent.js";
 import { sendPremiumAlert } from "../../../lib/server/titan/sendPremiumAlert.js";

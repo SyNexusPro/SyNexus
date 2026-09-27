@@ -10,6 +10,7 @@ type RouteModule = { default: ApiHandler };
 const loaders: Record<string, () => Promise<RouteModule>> = {
   "/api/analytics": () => import("./_routes/analytics.js"),
   "/api/checkout": () => import("./_routes/checkout.js"),
+  "/api/community/access": () => import("./_routes/community/access.js"),
   "/api/dashboard": () => import("./_routes/dashboard.js"),
   "/api/cron/titan-daily": () => import("./_routes/cron/titan-daily.js"),
   "/api/cron/titan-discovery": () => import("./_routes/cron/titan-discovery.js"),

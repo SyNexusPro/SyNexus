@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { describeAuthError } from "../lib/authErrors";
 import { googleSignInAvailable } from "../lib/googleSignIn";
 import { signInWithOAuth } from "../lib/supabaseData";
 
@@ -33,9 +34,9 @@ export function GoogleSignInButton({ disabled = false, onError }: Props) {
           setBusy(true);
           try {
             await signInWithOAuth("google");
+            setBusy(false);
           } catch (err) {
-            const message = err instanceof Error ? err.message : "Google sign-in failed.";
-            onError?.(message);
+            onError?.(describeAuthError(err));
             setBusy(false);
           }
         })();

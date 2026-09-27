@@ -191,10 +191,13 @@ function generateFallbackHistory(token: Token, range: PriceHistoryRange): PriceH
 }
 
 async function fetchDexPairByAddress(address: string): Promise<DexPair | null> {
-  const response = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${address}`);
+  const response = await fetch(
+    `https://api.dexscreener.com/tokens/v1/solana/${encodeURIComponent(address)}`,
+  );
   if (!response.ok) return null;
-  const data = (await response.json()) as { pairs?: DexPair[] };
-  return (data.pairs ?? [])[0] ?? null;
+  const data = (await response.json()) as DexPair[] | { pairs?: DexPair[] };
+  const pairs = Array.isArray(data) ? data : (data.pairs ?? []);
+  return [...pairs].sort((a, b) => (b.liquidity?.usd ?? 0) - (a.liquidity?.usd ?? 0))[0] ?? null;
 }
 
 async function fetchDexPairBySearch(symbol: string, name: string): Promise<DexPair | null> {

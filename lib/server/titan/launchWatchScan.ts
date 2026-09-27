@@ -6,6 +6,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { shouldSendInstantPremium, type TitanSeverity } from "./classifyEvent.js";
 import { sendPremiumAlert } from "./sendPremiumAlert.js";
+import { fetchDexTokenRefs, type DexTokenRef } from "../market/dexscreener.js";
 
 export type LaunchLeadKind = "onchain_launch" | "social_post" | "news";
 
@@ -182,36 +183,44 @@ async function scanGeckoNewPools(): Promise<LaunchLead[]> {
   return leads.slice(0, 16);
 }
 
+function dexLead(row: DexTokenRef, source: string, title: string): LaunchLead | null {
+  const mint = row.tokenAddress?.trim();
+  if (!mint) return null;
+  const socials = uniqueSocials(...(row.links || []).map((link) => link.url));
+  const claimed = row.claimDate ? Date.parse(row.claimDate) : NaN;
+  return {
+    id: `dexprofile:${source}:${mint}`,
+    source,
+    kind: "onchain_launch",
+    title,
+    summary: (row.description || "Token just appeared on DexScreener.").slice(0, 180),
+    url: row.url || `https://dexscreener.com/solana/${mint}`,
+    symbol: null,
+    mint,
+    socials,
+    createdAtMs: Number.isFinite(claimed) ? claimed : Date.now(),
+    severity: socials.length ? "normal" : "low",
+  };
+}
+
 async function scanDexProfiles(): Promise<LaunchLead[]> {
-  const rows = (await fetchJson("https://api.dexscreener.com/token-profiles/latest/v1")) as Array<{
-    url?: string;
-    chainId?: string;
-    tokenAddress?: string;
-    description?: string;
-    links?: Array<{ type?: string; url?: string }>;
-  }>;
-  if (!Array.isArray(rows)) return [];
+  const [latest, updated, takeovers] = await Promise.all([
+    fetchDexTokenRefs(["https://api.dexscreener.com/token-profiles/latest/v1"]),
+    fetchDexTokenRefs(["https://api.dexscreener.com/token-profiles/recent-updates/v1"]),
+    fetchDexTokenRefs(["https://api.dexscreener.com/community-takeovers/latest/v1"]),
+  ]);
   const leads: LaunchLead[] = [];
-  for (const row of rows) {
-    if ((row.chainId || "").toLowerCase() !== "solana") continue;
-    const mint = row.tokenAddress?.trim();
-    if (!mint) continue;
-    const socials = uniqueSocials(...(row.links || []).map((l) => l.url));
-    leads.push({
-      id: `dexprofile:${mint}`,
-      source: "DexScreener profile",
-      kind: "onchain_launch",
-      title: "New Solana token profile published",
-      summary: (row.description || "Token profile just appeared on DexScreener.").slice(0, 180),
-      url: row.url || `https://dexscreener.com/solana/${mint}`,
-      symbol: null,
-      mint,
-      socials,
-      createdAtMs: Date.now(),
-      severity: socials.length ? "normal" : "low",
-    });
-  }
-  return leads.slice(0, 12);
+  const seen = new Set<string>();
+  const push = (row: DexTokenRef, source: string, title: string) => {
+    const lead = dexLead(row, source, title);
+    if (!lead || seen.has(lead.mint || lead.id)) return;
+    seen.add(lead.mint || lead.id);
+    leads.push(lead);
+  };
+  for (const row of latest) push(row, "DexScreener profile", "New Solana token profile published");
+  for (const row of updated) push(row, "DexScreener profile update", "Solana token profile updated");
+  for (const row of takeovers) push(row, "DexScreener takeover", "Solana community takeover");
+  return leads.slice(0, 18);
 }
 
 type RedditChild = {

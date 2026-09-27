@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { useApiRoute, type ViteDevServer } from "../viteDevServer";
+import { useApiRoute, type ViteDevServer } from "../viteDevServer.js";
 import { supabaseAdminFromEnv } from "../../../lib/server/titan/authPlan.js";
 import { whaleTrackMints } from "../../../lib/server/whale/config.js";
 import { detectDexVolumeWhales } from "../../../lib/server/whale/detect.js";

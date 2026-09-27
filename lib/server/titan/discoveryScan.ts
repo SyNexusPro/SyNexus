@@ -7,31 +7,16 @@ import {
 } from "./discoveryEval.js";
 import { shouldSendInstantPremium } from "./classifyEvent.js";
 import { sendPremiumAlert } from "./sendPremiumAlert.js";
+import {
+  bestPairByMint,
+  collectSolanaMints,
+  fetchDexJson,
+  fetchPairsForMints,
+  pairsFromDexPayload,
+  type DexPair,
+} from "../market/dexscreener.js";
 
 type Env = Record<string, string | undefined>;
-
-type DexPair = {
-  chainId?: string;
-  pairAddress?: string;
-  pairCreatedAt?: number;
-  priceUsd?: string | number;
-  txns?: { h24?: { buys?: number; sells?: number } };
-  volume?: { h24?: number; h1?: number };
-  priceChange?: { h24?: number; h1?: number };
-  liquidity?: { usd?: number };
-  boosts?: { active?: number };
-  baseToken?: { address?: string; name?: string; symbol?: string };
-  info?: { socials?: unknown[]; websites?: unknown[] };
-};
-
-async function fetchJson(url: string): Promise<unknown> {
-  const res = await fetch(url, {
-    headers: { accept: "application/json" },
-    signal: AbortSignal.timeout(12_000),
-  });
-  if (!res.ok) throw new Error(`fetch ${res.status} ${url}`);
-  return res.json();
-}
 
 function pairToInput(pair: DexPair): DiscoveryAssetInput | null {
   const mint = pair.baseToken?.address;
@@ -62,44 +47,14 @@ function pairToInput(pair: DexPair): DiscoveryAssetInput | null {
   };
 }
 
-/** Pull emerging Solana pairs from DexScreener profile/boost feeds + pair enrichment. */
+/** Pull emerging Solana pairs from current DexScreener boost, profile, and takeover feeds. */
 export async function scanEmergingSolanaAssets(limit = 24): Promise<DiscoveryEvaluation[]> {
-  const mintSet = new Set<string>();
+  const mintSet = new Set(await collectSolanaMints(30));
 
-  try {
-    const boosts = (await fetchJson("https://api.dexscreener.com/token-boosts/top/v1")) as Array<{
-      tokenAddress?: string;
-      chainId?: string;
-    }>;
-    for (const row of Array.isArray(boosts) ? boosts : []) {
-      if ((row.chainId || "").toLowerCase() !== "solana") continue;
-      if (row.tokenAddress) mintSet.add(row.tokenAddress);
-    }
-  } catch {
-    /* optional feed */
-  }
-
-  try {
-    const profiles = (await fetchJson("https://api.dexscreener.com/token-profiles/latest/v1")) as Array<{
-      tokenAddress?: string;
-      chainId?: string;
-    }>;
-    for (const row of Array.isArray(profiles) ? profiles : []) {
-      if ((row.chainId || "").toLowerCase() !== "solana") continue;
-      if (row.tokenAddress) mintSet.add(row.tokenAddress);
-    }
-  } catch {
-    /* optional feed */
-  }
-
-  // Fallback: Solana search for active tape if boost/profile empty
   if (mintSet.size < 6) {
     try {
-      const search = (await fetchJson(
-        "https://api.dexscreener.com/latest/dex/search?q=SOL",
-      )) as { pairs?: DexPair[] };
-      for (const pair of search.pairs || []) {
-        if ((pair.chainId || "").toLowerCase() !== "solana") continue;
+      const search = await fetchDexJson("https://api.dexscreener.com/latest/dex/search?q=SOL");
+      for (const pair of pairsFromDexPayload(search)) {
         const addr = pair.baseToken?.address;
         if (addr && addr !== "So11111111111111111111111111111111111111112") mintSet.add(addr);
         if (mintSet.size >= 30) break;
@@ -113,33 +68,11 @@ export async function scanEmergingSolanaAssets(limit = 24): Promise<DiscoveryEva
   if (!mints.length) return [];
 
   const evaluations: DiscoveryEvaluation[] = [];
-  // DexScreener allows comma-separated token addresses
-  for (let i = 0; i < mints.length; i += 10) {
-    const batch = mints.slice(i, i + 10);
-    try {
-      const data = (await fetchJson(
-        `https://api.dexscreener.com/latest/dex/tokens/${batch.join(",")}`,
-      )) as { pairs?: DexPair[] };
-      const pairs = data.pairs || [];
-      const bestByMint = new Map<string, DexPair>();
-      for (const pair of pairs) {
-        if ((pair.chainId || "").toLowerCase() !== "solana") continue;
-        const mint = pair.baseToken?.address;
-        if (!mint) continue;
-        const prev = bestByMint.get(mint);
-        const liq = Number(pair.liquidity?.usd) || 0;
-        const prevLiq = Number(prev?.liquidity?.usd) || 0;
-        if (!prev || liq > prevLiq) bestByMint.set(mint, pair);
-      }
-      for (const pair of bestByMint.values()) {
-        const input = pairToInput(pair);
-        if (!input) continue;
-        const evaluation = evaluateDiscovery(input);
-        if (evaluation.shouldReport) evaluations.push(evaluation);
-      }
-    } catch {
-      /* continue other batches */
-    }
+  for (const pair of bestPairByMint(await fetchPairsForMints(mints)).values()) {
+    const input = pairToInput(pair);
+    if (!input) continue;
+    const evaluation = evaluateDiscovery(input);
+    if (evaluation.shouldReport) evaluations.push(evaluation);
   }
 
   return evaluations

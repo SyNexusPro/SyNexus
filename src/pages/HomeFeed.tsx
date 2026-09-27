@@ -16,6 +16,7 @@ import { useOracleMarketFeed } from "../lib/useOracleMarketFeed";
 import { isNativeAndroid } from "../lib/bootExperience";
 import { sampleTokens } from "../data/tokens";
 import { HomeTape } from "../components/home/HomeTape";
+import { EnterSynexusButton } from "../community/EnterSynexusButton";
 
 type FeatureCard = {
   id: string;
@@ -237,6 +238,7 @@ export function HomeFeed() {
         </div>
 
         <HomeTape />
+        <EnterSynexusButton />
 
         <div className="home-feature-grid" role="list">
           {featureCards.map((card) => {

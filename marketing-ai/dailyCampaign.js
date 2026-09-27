@@ -17,7 +17,7 @@
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadMarketingEnv } from "./loadEnv.js";
-import { buildDailyPack, writePack, todayDirName, generateTikTokCaptions } from "./synexusMarketingBot.js";
+import { buildDailyPack, enrichPackWithLiveTape, writePack, todayDirName, generateTikTokCaptions } from "./synexusMarketingBot.js";
 import { postTikTokSlot, tiktokPostsPerDay } from "./tiktokScheduler.js";
 import { hasTikTokApiConfig } from "./platforms/tiktok.js";
 import { renderDailyVideo } from "./makeVideo.js";
@@ -63,7 +63,7 @@ export async function runDailyCampaign({ force = false, quiet = false } = {}) {
     console.log("═".repeat(48));
   }
 
-  const pack = buildDailyPack();
+  const pack = await enrichPackWithLiveTape(buildDailyPack());
   await writePack(pack, { quiet: true });
 
   let state = await readCampaignState(dayDir);

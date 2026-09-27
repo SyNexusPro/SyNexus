@@ -177,19 +177,29 @@ export async function respondToTitanMessage(
     try {
       const mint = mintMatch[1]!;
       const res = await fetch(
-        `https://api.dexscreener.com/latest/dex/tokens/${encodeURIComponent(mint)}`,
+        `https://api.dexscreener.com/tokens/v1/solana/${encodeURIComponent(mint)}`,
         { signal: handlers.signal },
       );
       if (res.ok) {
-        const json = (await res.json()) as {
-          pairs?: {
-            baseToken?: { symbol?: string };
-            priceUsd?: string;
-            priceChange?: { h24?: number };
-            liquidity?: { usd?: number };
-          }[];
-        };
-        const pair = json.pairs?.[0];
+        const json = (await res.json()) as
+          | {
+              baseToken?: { symbol?: string };
+              priceUsd?: string;
+              priceChange?: { h24?: number };
+              liquidity?: { usd?: number };
+            }[]
+          | {
+              pairs?: {
+                baseToken?: { symbol?: string };
+                priceUsd?: string;
+                priceChange?: { h24?: number };
+                liquidity?: { usd?: number };
+              }[];
+            };
+        const pairs = Array.isArray(json) ? json : (json.pairs ?? []);
+        const pair = [...pairs].sort(
+          (a, b) => (b.liquidity?.usd ?? 0) - (a.liquidity?.usd ?? 0),
+        )[0];
         if (pair?.baseToken?.symbol) {
           const price = Number(pair.priceUsd);
           const ch = Number(pair.priceChange?.h24 ?? 0);

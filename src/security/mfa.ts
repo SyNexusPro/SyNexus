@@ -68,9 +68,9 @@ export async function resolveMfaContinue(user?: User | null): Promise<MfaContinu
 }
 
 /** After password / OAuth / biometric session is established. */
-export async function continueMfaAfterAuth(): Promise<string | null> {
+export async function continueMfaAfterAuth(user?: User | null): Promise<string | null> {
   if (hasStoredOwnerGrant()) return null;
-  const next = await resolveMfaContinue();
+  const next = await resolveMfaContinue(user);
   if (next.action === "setup" || next.action === "verify") return next.path;
   return null;
 }
@@ -91,6 +91,24 @@ export type TotpEnrollment = {
   secret: string;
 };
 
+/** Drop leftover unverified factors, then start a fresh authenticator enrollment. */
+export async function startTotpSetup(friendlyName: string): Promise<TotpEnrollment | "verified"> {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const { data, error } = await supabase.auth.mfa.listFactors();
+  if (error || !data) {
+    throw new Error(error?.message || "Could not start authenticator setup. Try again.");
+  }
+  const verified = (data.totp ?? []).filter((factor) => factor.status === "verified");
+  if (verified.length) return "verified";
+  const stale = (data.all ?? []).filter(
+    (factor) => factor.factor_type === "totp" && factor.status !== "verified",
+  );
+  for (const factor of stale) {
+    await supabase.auth.mfa.unenroll({ factorId: factor.id });
+  }
+  return enrollTotpFactor(friendlyName);
+}
+
 export async function enrollTotpFactor(friendlyName: string): Promise<TotpEnrollment> {
   if (!supabase) throw new Error("Supabase is not configured.");
   const { data, error } = await supabase.auth.mfa.enroll({
@@ -98,7 +116,7 @@ export async function enrollTotpFactor(friendlyName: string): Promise<TotpEnroll
     friendlyName,
   });
   if (error || !data) {
-    throw new Error("Could not start authenticator setup. Try again.");
+    throw new Error(error?.message || "Could not start authenticator setup. Try again.");
   }
   const totp = data.totp;
   if (!totp?.qr_code || !totp.secret) {

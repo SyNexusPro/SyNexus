@@ -25,7 +25,7 @@ function scrollAuthPanelIntoView() {
 
 export function HomeHeroAuth({ isSimple = false }: Props) {
   const navigate = useNavigate();
-  const { linked } = useOperatorAuth();
+  const { linked, ownerUnlocked } = useOperatorAuth();
   const biometric = useBiometricLogin();
   const { name: titanName } = useTitanBotName();
   const [panel, setPanel] = useState<AuthPanel>(null);
@@ -96,7 +96,7 @@ export function HomeHeroAuth({ isSimple = false }: Props) {
           Open Pulse
         </Link>
         <InviteEarnButton className="landing-hero__actions--secondary" />
-        {!isSimple ? (
+        {!isSimple && !ownerUnlocked ? (
           <SynexusSubscribeButton className="landing-hero__actions--pro" label="SyNexusPro" />
         ) : null}
       </div>

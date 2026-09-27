@@ -1,4 +1,4 @@
-import { useApiRoute, type ViteDevServer } from "./viteDevServer";
+import { useApiRoute, type ViteDevServer } from "./viteDevServer.js";
 import {
   createSubscriptionCheckoutResponse,
   type CheckoutPayload,

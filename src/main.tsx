@@ -7,6 +7,7 @@ import { SynexusBootSequence } from "./components/SynexusBootSequence";
 import { initSecurityBot } from "./lib/securityBot";
 import { refreshOwnerAccess } from "./lib/ownerAccess";
 import { restoreAlwaysOnPlayReviewSession } from "./lib/googlePlayReviewAccess";
+import { installGoogleAuthReturn } from "./lib/googleAuthReturn";
 import { clearExpiredProDemo, restoreActiveProTrialGrant } from "./lib/proDemo";
 import { markNativePerformanceMode } from "./lib/nativePerformance";
 import { realtime } from "./lib/realtime/RealtimeManager";
@@ -20,6 +21,7 @@ clearExpiredProDemo();
 restoreActiveProTrialGrant();
 void refreshOwnerAccess();
 void restoreAlwaysOnPlayReviewSession();
+installGoogleAuthReturn();
 markNativePerformanceMode();
 realtime.start();
 

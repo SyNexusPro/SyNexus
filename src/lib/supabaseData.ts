@@ -1,6 +1,7 @@
 import type { Session, User } from "@supabase/supabase-js";
 import { isAlwaysOnLoginEmail } from "../config/googlePlayReview";
-import { authRedirectUrl, supabase } from "./supabaseClient";
+import { assertGoogleProviderEnabled } from "./googleSignIn";
+import { authRedirectUrl, googleAuthRedirectUrl, supabase } from "./supabaseClient";
 import { validateSignupPassword } from "./authCredentials";
 import { guardAuthAttempt } from "./securityBot";
 import { SIGNUP_CONFIRM_REDIRECT } from "./signupWelcome";
@@ -31,6 +32,22 @@ function flattenErrorDiagnostics(err: unknown): string {
  * Missing tables/functions (often `… does not exist`, PGRST schema cache) sometimes bubble up via auth
  * triggers or hooks; map to a concrete fix instead of a raw Postgres string.
  */
+function withAuthTimeout<T>(promise: Promise<T>, label: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`${label} timed out. Check your connection and try again.`)), 12_000);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      },
+    );
+  });
+}
+
 function throwIfStructuralDbFailure(err: unknown): never {
   const blob = flattenErrorDiagnostics(err).toLowerCase();
   const plainAuth =
@@ -92,14 +109,14 @@ export async function signUpWithEmail(
     throw new Error(passwordCheck.message ?? "Choose a stronger password.");
   }
   if (!supabase) throw new Error("Supabase env vars are missing.");
-  const { data, error } = await supabase.auth.signUp({
+  const { data, error } = await withAuthTimeout(supabase.auth.signUp({
     email,
     password,
     options: {
       emailRedirectTo: authRedirectUrl(SIGNUP_CONFIRM_REDIRECT),
       ...(normalizedUsername ? { data: { username: normalizedUsername } } : {}),
     },
-  });
+  }), "Sign-up");
   if (error) throwIfStructuralDbFailure(error);
   return data;
 }
@@ -129,7 +146,10 @@ export async function signInWithEmail(email: string, password: string) {
     throw new Error(authGuard.message ?? "Sign-in blocked by SyNexus security.");
   }
   if (!supabase) throw new Error("Supabase env vars are missing.");
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await withAuthTimeout(
+    supabase.auth.signInWithPassword({ email, password }),
+    "Sign-in",
+  );
   if (error) throwIfStructuralDbFailure(error);
   let session: Session | null = data.session;
   let user: User | null = data.user;
@@ -160,10 +180,12 @@ export async function signInWithMagicLink(email: string) {
 
 export async function signInWithOAuth(provider: "google") {
   if (!supabase) throw new Error("Supabase env vars are missing.");
+  await assertGoogleProviderEnabled();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: authRedirectUrl("/pulse"),
+      redirectTo: googleAuthRedirectUrl(),
+      skipBrowserRedirect: true,
       queryParams: {
         access_type: "offline",
         prompt: "select_account",
@@ -171,6 +193,18 @@ export async function signInWithOAuth(provider: "google") {
     },
   });
   if (error) throwIfStructuralDbFailure(error);
+  if (!data?.url) throw new Error("Google sign-in did not start. Try again.");
+
+  const { Capacitor } = await import("@capacitor/core");
+  if (Capacitor.isNativePlatform()) {
+    // Google blocks OAuth inside the Android WebView. Chrome Custom Tabs is allowed,
+    // and the app link below brings the login code back into this WebView.
+    const { Browser } = await import("@capacitor/browser");
+    await Browser.open({ url: data.url });
+    return data;
+  }
+
+  window.location.assign(data.url);
   return data;
 }
 

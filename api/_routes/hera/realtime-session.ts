@@ -3,9 +3,9 @@
  * Realtime fallback. OPENAI_API_KEY never leaves the server.
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { useApiRoute, type ConnectHandler, type ViteDevServer } from "../viteDevServer";
+import { useApiRoute, type ConnectHandler, type ViteDevServer } from "../viteDevServer.js";
 
-import { HERA_CONVERSATION_INSTRUCTIONS, HERA_VOICE_INSTRUCTIONS } from "../../../src/lib/hera/heraPrompt";
+import { HERA_CONVERSATION_INSTRUCTIONS, HERA_VOICE_INSTRUCTIONS } from "../../../src/lib/hera/heraPrompt.js";
 import { requireHeraUser } from "../../../lib/server/heraGuard.js";
 
 type Incoming = IncomingMessage & { body?: unknown };

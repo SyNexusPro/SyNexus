@@ -3,17 +3,11 @@
  * DexScreener is public. Helius keys stay on the realtime bridge.
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { useApiRoute, type ViteDevServer } from "./viteDevServer";
+import { useApiRoute, type ViteDevServer } from "./viteDevServer.js";
+import { collectSolanaMints, fetchPairsForMints, type DexPair } from "../../lib/server/market/dexscreener.js";
 
-type Pair = {
-  chainId?: string;
-  pairCreatedAt?: number;
+type Pair = DexPair & {
   priceUsd?: string;
-  priceChange?: { h24?: number };
-  volume?: { h24?: number };
-  liquidity?: { usd?: number };
-  fdv?: number;
-  marketCap?: number;
   baseToken?: { address?: string; symbol?: string; name?: string };
 };
 
@@ -80,27 +74,12 @@ function toToken(pair: Pair): DashboardToken | null {
   };
 }
 
-async function pairsFromBoosts(): Promise<Pair[]> {
-  const boosts = await fetch("https://api.dexscreener.com/token-boosts/top/v1");
-  if (!boosts.ok) return [];
-  const rows = (await boosts.json()) as { chainId?: string; tokenAddress?: string }[];
-  const addresses = rows
-    .filter((row) => (row.chainId ?? "").toLowerCase() === "solana" && row.tokenAddress)
-    .map((row) => row.tokenAddress as string)
-    .slice(0, 20);
-  if (!addresses.length) return [];
-  const pairs = await fetch(`https://api.dexscreener.com/tokens/v1/solana/${addresses.join(",")}`);
-  if (!pairs.ok) return [];
-  const data = (await pairs.json()) as Pair[] | { pairs?: Pair[] };
-  return Array.isArray(data) ? data : (data.pairs ?? []);
-}
-
 export async function loadDashboardTokens(): Promise<DashboardToken[]> {
   const now = Date.now();
   if (memory && now - memory.at < TTL_MS) return memory.tokens;
-  let pairs = await pairsFromBoosts();
+  let pairs = await fetchPairsForMints(await collectSolanaMints(30));
   if (pairs.length < 8) {
-    const response = await fetch("https://api.dexscreener.com/latest/dex/search/?q=bonk");
+    const response = await fetch("https://api.dexscreener.com/latest/dex/search?q=sol");
     if (response.ok) {
       const data = (await response.json()) as { pairs?: Pair[] };
       pairs = pairs.concat(data.pairs ?? []);

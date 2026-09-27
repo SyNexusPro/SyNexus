@@ -4,8 +4,8 @@
  * one shared /api/dashboard refresh plus Supabase Broadcast.
  */
 import type { Server } from "node:http";
-import type { ViteDevServer } from "../viteDevServer";
-import { loadDashboardTokens, type DashboardToken } from "../dashboard";
+import type { ViteDevServer } from "../viteDevServer.js";
+import { loadDashboardTokens, type DashboardToken } from "../dashboard.js";
 
 declare module "ws" {
   export default class WebSocket {

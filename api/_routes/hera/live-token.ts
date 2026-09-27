@@ -3,7 +3,7 @@
  * Verified DexScreener snapshot for Hera's LIVE stamp. No secrets.
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { useApiRoute, type ViteDevServer } from "../viteDevServer";
+import { useApiRoute, type ViteDevServer } from "../viteDevServer.js";
 import { fetchVerifiedTokenSnapshot, SYN_MINT_DEFAULT } from "../../../lib/server/titan/liveTokenIntel.js";
 
 function sendJson(res: ServerResponse, status: number, body: unknown): void {

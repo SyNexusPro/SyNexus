@@ -5,6 +5,7 @@ import { passwordStrengthLabel, validateSignupPassword } from "../lib/authCreden
 import { loadRememberedEmail, saveRememberedEmail } from "../lib/authRemember";
 import { hasSupabaseEnv, supabase } from "../lib/supabaseClient";
 import { signInAlwaysOnAccount } from "../lib/alwaysOnSignIn";
+import { clearOwnerAccess, unlockOwnerAccess } from "../lib/ownerAccess";
 import {
   signOut,
   signUpWithEmail,
@@ -27,6 +28,7 @@ import { LanguagePicker } from "./LanguagePicker";
 import { PasswordRevealToggle } from "./PasswordRevealToggle";
 import { GoogleAuthOption } from "./GoogleSignInButton";
 import { continueMfaAfterAuth } from "../security/mfa";
+import { readGoogleAuthError } from "../lib/googleAuthReturn";
 import { recordSecurityEvent } from "../security/securityEvents";
 
 const DEMO_SESSION_KEY = "synexus_demo_session";
@@ -57,9 +59,9 @@ export function QuickOperatorLogin({
   showTabs = true,
 }: Props) {
   const { t } = useTranslation();
-  const { linked } = useOperatorAuth();
+  const { linked, secondFactorPath } = useOperatorAuth();
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">(initialMode);
+  const [mode, setMode] = useState<"signin" | "signup" | "owner">(initialMode);
   const [email, setEmail] = useState(() => loadRememberedEmail() ?? "");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -81,6 +83,17 @@ export function QuickOperatorLogin({
     setMessage(null);
   }, [initialMode]);
 
+  useEffect(() => {
+    const stored = readGoogleAuthError();
+    if (stored) setMessage({ tone: "error", text: describeAuthError(new Error(stored)) });
+    const onOauthError = (event: Event) => {
+      const detail = (event as CustomEvent<string>).detail;
+      if (detail) setMessage({ tone: "error", text: describeAuthError(new Error(detail)) });
+    };
+    window.addEventListener("synexus-oauth-error", onOauthError);
+    return () => window.removeEventListener("synexus-oauth-error", onOauthError);
+  }, []);
+
   async function handleSubmit() {
     const trimmedEmail = email.trim();
     if (!trimmedEmail || !password) {
@@ -93,9 +106,22 @@ export function QuickOperatorLogin({
     }
 
     setBusy(true);
-    setMessage({ tone: "info", text: mode === "signup" ? "Creating account…" : "Signing in…" });
+    setMessage({
+      tone: "info",
+      text: mode === "signup" ? "Creating account…" : mode === "owner" ? "Checking owner access…" : "Signing in…",
+    });
 
     try {
+      if (mode === "owner") {
+        const result = await unlockOwnerAccess(trimmedEmail, password);
+        if (!result.ok) throw new Error(result.message);
+        saveRememberedEmail(trimmedEmail);
+        setPassword("");
+        setMessage({ tone: "success", text: result.message });
+        onSuccess?.({ mode: "signin", email: trimmedEmail });
+        return;
+      }
+
       if (!hasSupabaseEnv) {
         localStorage.setItem(DEMO_SESSION_KEY, `demo-${Date.now()}`);
         setMessage({ tone: "success", text: "Demo session started." });
@@ -126,7 +152,9 @@ export function QuickOperatorLogin({
         const verified = Boolean(user && result.session && isEmailVerified(user));
         if (!verified) {
           if (result.session && hasSupabaseEnv && supabase) {
-            await signOut();
+            window.setTimeout(() => {
+              void signOut();
+            }, 0);
           }
           savePendingVerificationEmail(trimmedEmail);
           setMessage({
@@ -139,7 +167,7 @@ export function QuickOperatorLogin({
         finishLinkedSession(user!.id);
         queueHeraSignupDemo();
         setMessage({ tone: "success", text: SIGNUP_WELCOME_ACTIVE });
-        const mfaPath = await continueMfaAfterAuth();
+        const mfaPath = await continueMfaAfterAuth(user);
         onSuccess?.({ mode: "signup", userId: user!.id, email: trimmedEmail });
         if (mfaPath) navigate(mfaPath, { replace: true });
         return;
@@ -165,7 +193,8 @@ export function QuickOperatorLogin({
             : "Signed in.",
       });
       void recordSecurityEvent({ eventType: "login_success", success: true });
-      const mfaPath = alwaysOn.godMode || alwaysOn.playReviewer ? null : await continueMfaAfterAuth();
+      const mfaPath =
+        alwaysOn.godMode || alwaysOn.playReviewer ? null : await continueMfaAfterAuth(signedInUser);
       onSuccess?.({
         mode: "signin",
         userId: signedInUser?.id,
@@ -178,6 +207,24 @@ export function QuickOperatorLogin({
     } finally {
       setBusy(false);
     }
+  }
+
+  if (secondFactorPath) {
+    return (
+      <div className="quick-login quick-login--linked">
+        <p className="quick-login__linked">Finish the second sign-in check to open your account.</p>
+        <button
+          type="button"
+          className="quick-login__submit"
+          onClick={() => {
+            onSuccess?.();
+            navigate(secondFactorPath);
+          }}
+        >
+          Continue verification
+        </button>
+      </div>
+    );
   }
 
   if (linked) {
@@ -196,6 +243,7 @@ export function QuickOperatorLogin({
               setBusy(true);
               try {
                 localStorage.removeItem(DEMO_SESSION_KEY);
+                clearOwnerAccess();
                 if (hasSupabaseEnv && supabase) {
                   await signOut();
                 }
@@ -236,10 +284,23 @@ export function QuickOperatorLogin({
           >
             Create account
           </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === "owner"}
+            className={`quick-login__tab${mode === "owner" ? " quick-login__tab--active" : ""}`}
+            onClick={() => setMode("owner")}
+          >
+            Owner
+          </button>
         </div>
       ) : (
         <p className="quick-login__mode-label">
-          {mode === "signup" ? `Create your ${SYNEXUS_BRAND_NAME} account` : `Sign in to ${SYNEXUS_BRAND_NAME}`}
+          {mode === "signup"
+            ? `Create your ${SYNEXUS_BRAND_NAME} account`
+            : mode === "owner"
+              ? "Owner sign-in"
+              : `Sign in to ${SYNEXUS_BRAND_NAME}`}
         </p>
       )}
 
@@ -249,7 +310,13 @@ export function QuickOperatorLogin({
         </p>
       ) : null}
 
-      <div className="quick-login__fields">
+      <form
+        className="quick-login__fields"
+        onSubmit={(event) => {
+          event.preventDefault();
+          void handleSubmit();
+        }}
+      >
         <label className="quick-login__field">
           <span>Email</span>
           <input
@@ -299,16 +366,19 @@ export function QuickOperatorLogin({
             <LanguagePicker embedded />
           </label>
         ) : null}
-      </div>
-
-      <button type="button" className="quick-login__submit" disabled={busy} onClick={() => void handleSubmit()}>
-        {busy ? "Working…" : mode === "signup" ? "Create account" : "Sign in"}
+      <button type="submit" className="quick-login__submit" disabled={busy}>
+        {busy ? "Working…" : mode === "signup" ? "Create account" : mode === "owner" ? "Unlock owner access" : "Sign in"}
       </button>
-      <GoogleAuthOption disabled={busy} onError={(text) => setMessage({ tone: "error", text })} />
+      </form>
+      {mode === "owner" ? (
+        <p className="quick-login__hint">Owner sign-in unlocks full Pro on this device. No subscription.</p>
+      ) : (
+        <GoogleAuthOption disabled={busy} onError={(text) => setMessage({ tone: "error", text })} />
+      )}
       {mode === "signup" ? (
         <p className="quick-login__hint">
-          After you confirm email, you must verify identity and add a valid debit or credit card. One person, one
-          account.
+          Confirm the email, then enter the 6-digit code from your authenticator app. That second check is required
+          each time you sign in.
         </p>
       ) : null}
     </section>

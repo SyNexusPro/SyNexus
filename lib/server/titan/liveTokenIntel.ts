@@ -2,6 +2,7 @@
  * Verified live token snapshot for Hera (DexScreener).
  * Each field is tagged LIVE or UNAVAILABLE — never invent missing numbers.
  */
+import { fetchDexJson, fetchPairsForMints, pairsFromDexPayload } from "../market/dexscreener.js";
 
 export const SYN_MINT_DEFAULT = "9naVtLAGKWYuEcGehe1BZ3DpiSLHjSNsaeFr2JPHpump";
 
@@ -294,17 +295,14 @@ export async function fetchVerifiedTokenSnapshot(opts: {
     const symbol = isSynSymbol(opts.symbol) ? "SYN" : opts.symbol || null;
     let pairs: DexPair[] = [];
     if (mint) {
-      const json = (await fetchJson(
-        `https://api.dexscreener.com/latest/dex/tokens/${encodeURIComponent(mint)}`,
-      )) as { pairs?: DexPair[] | null };
-      pairs = Array.isArray(json.pairs) ? json.pairs : [];
+      pairs = await fetchPairsForMints([mint]);
     }
     // Never fuzzy-search "SYN" — DexScreener collides with Synapse and others.
     if (!pairs.length && symbol && !isSynSymbol(symbol)) {
-      const json = (await fetchJson(
+      const json = await fetchDexJson(
         `https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(symbol)}`,
-      )) as { pairs?: DexPair[] | null };
-      pairs = Array.isArray(json.pairs) ? json.pairs : [];
+      );
+      pairs = pairsFromDexPayload(json);
     }
     const pair = pickPair(pairs, mint, symbol);
     if (!pair?.baseToken?.symbol) {

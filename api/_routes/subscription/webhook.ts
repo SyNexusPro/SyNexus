@@ -1,4 +1,4 @@
-import { useApiRoute, type ViteDevServer } from "../viteDevServer";
+import { useApiRoute, type ViteDevServer } from "../viteDevServer.js";
 import { processSquareWebhookEvent } from "../../../lib/server/square/webhook.js";
 
 /** Browser GET test message — also used as plain-text health check. */

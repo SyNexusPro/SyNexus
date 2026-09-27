@@ -30,3 +30,12 @@ export function authRedirectUrl(path = "/pulse"): string {
   if (typeof window === "undefined") return path;
   return `${window.location.origin}${path.startsWith("/") ? path : `/${path}`}`;
 }
+
+/**
+ * Keep the OAuth return on the origin that started PKCE. The verifier is stored
+ * by that origin, so crossing between synexus.pro, www, or a preview deployment
+ * can make an otherwise successful Google login fail during code exchange.
+ */
+export function googleAuthRedirectUrl(): string {
+  return authRedirectUrl("/pulse");
+}

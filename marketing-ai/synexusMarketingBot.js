@@ -204,6 +204,79 @@ export function growthMissionLine(date = new Date()) {
   return missions[idx];
 }
 
+const WRAPPED_SOL = "So11111111111111111111111111111111111111112";
+
+/** One live DexScreener line for posts. Empty string if the feed is down. */
+export async function liveSolanaTapeLine() {
+  const feeds = [
+    "https://api.dexscreener.com/token-boosts/latest/v1",
+    "https://api.dexscreener.com/token-profiles/latest/v1",
+    "https://api.dexscreener.com/community-takeovers/latest/v1",
+  ];
+  const mints = [];
+  const seen = new Set();
+  for (const url of feeds) {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      if (!res.ok) continue;
+      const rows = await res.json();
+      for (const row of Array.isArray(rows) ? rows : []) {
+        if ((row.chainId || "").toLowerCase() !== "solana") continue;
+        const mint = row.tokenAddress?.trim();
+        if (!mint || mint === WRAPPED_SOL || seen.has(mint)) continue;
+        seen.add(mint);
+        mints.push(mint);
+        if (mints.length >= 20) break;
+      }
+    } catch {
+      /* next feed */
+    }
+    if (mints.length >= 20) break;
+  }
+  if (!mints.length) return "";
+  try {
+    const res = await fetch(`https://api.dexscreener.com/tokens/v1/solana/${mints.join(",")}`, {
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return "";
+    const data = await res.json();
+    const pairs = Array.isArray(data) ? data : data.pairs || [];
+    const best = new Map();
+    for (const pair of pairs) {
+      const symbol = pair.baseToken?.symbol?.trim();
+      if (!symbol || symbol.toUpperCase() === "SOL") continue;
+      const key = symbol.toUpperCase();
+      const prev = best.get(key);
+      const liq = Number(pair.liquidity?.usd) || 0;
+      if (!prev || liq > (Number(prev.liquidity?.usd) || 0)) best.set(key, pair);
+    }
+    const ranked = [...best.values()]
+      .sort((a, b) => Math.abs(Number(b.priceChange?.m5) || 0) - Math.abs(Number(a.priceChange?.m5) || 0))
+      .slice(0, 3);
+    if (!ranked.length) return "";
+    const bits = ranked.map((pair) => {
+      const ch = Number(pair.priceChange?.m5) || 0;
+      const sign = ch >= 0 ? "+" : "";
+      return `$${pair.baseToken.symbol} ${sign}${ch.toFixed(1)}% 5m`;
+    });
+    return `Live Solana tape (DexScreener): ${bits.join(" · ")}. Scan before you trade.`;
+  } catch {
+    return "";
+  }
+}
+
+/** @param {Record<string, string>} pack */
+export async function enrichPackWithLiveTape(pack) {
+  const line = await liveSolanaTapeLine();
+  if (!line) return pack;
+  return {
+    ...pack,
+    telegram: `${pack.telegram}\n\n${line}`,
+    discord: `${pack.discord}\n\n${line}`,
+    x: `${pack.x}\n\n${line}`,
+  };
+}
+
 /** @returns {Record<string, string>} */
 export function buildDailyPack(now = Date.now()) {
   return {
@@ -375,7 +448,7 @@ async function main() {
 
   const run = async () => {
     const now = Date.now();
-    const pack = buildDailyPack(now);
+    const pack = await enrichPackWithLiveTape(buildDailyPack(now));
 
     if (channel) {
       const key = channel === "mission" ? "mission" : channel;
