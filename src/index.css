@@ -14772,8 +14772,15 @@ body:has(.oracle-chat--presence) .titan-sheet-backdrop {
 }
 
 .synexus-sec__phone-card {
+  position: relative;
+  z-index: 3;
   margin-top: max(4vh, 16px);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.46), 0 0 32px rgba(137, 255, 47, 0.07);
+}
+
+.synexus-sec__phone-card .synexus-sec__btn {
+  min-height: 52px;
+  pointer-events: auto;
 }
 
 .synexus-sec__phone {

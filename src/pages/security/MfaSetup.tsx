@@ -45,32 +45,34 @@ export function MfaSetup() {
     typeof location.state === "object" &&
     location.state &&
     "from" in location.state &&
-    typeof location.state.from === "string"
+    typeof location.state.from === "string" &&
+    location.state.from !== "/security/setup"
       ? location.state.from
       : "/pulse";
   const inputs = useRef<Array<HTMLInputElement | null>>([]);
+  const verifyingRef = useRef(false);
   const [step, setStep] = useState<Step>("phone");
   const [country, setCountry] = useState("+1");
   const [nationalNumber, setNationalNumber] = useState("");
   const [factorId, setFactorId] = useState("");
   const [factorInitiallyVerified, setFactorInitiallyVerified] = useState(false);
-  const [changeAfterVerify, setChangeAfterVerify] = useState(false);
   const [challengeId, setChallengeId] = useState("");
   const [maskedPhone, setMaskedPhone] = useState("your phone");
   const [digits, setDigits] = useState(["", "", "", "", "", ""]);
   const [cooldown, setCooldown] = useState(0);
-  const [busy, setBusy] = useState(true);
-  const [status, setStatus] = useState<string | null>("Checking your security methods…");
+  const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function sendChallenge(id: string) {
-    setStatus("Sending your SMS code securely through Supabase…");
+    setStatus("Texting your 6-digit code…");
     const challenge = await challengePhoneMfa(id);
     setChallengeId(challenge);
     setCooldown(PHONE_RESEND_SECONDS);
     setDigits(["", "", "", "", "", ""]);
     setStep("code");
     setStatus(null);
+    return challenge;
   }
 
   useEffect(() => {
@@ -81,16 +83,19 @@ export function MfaSetup() {
         setFactorId(factors[0].id);
         setFactorInitiallyVerified(true);
         setMaskedPhone(maskPhoneNumber(factors[0].phone));
-        await sendChallenge(factors[0].id);
+        setBusy(true);
+        try {
+          await sendChallenge(factors[0].id);
+        } finally {
+          if (alive) setBusy(false);
+        }
       })
       .catch((err) => {
-        if (alive) setError(err instanceof Error ? err.message : "Could not send the SMS code.");
-      })
-      .finally(() => {
-        if (alive) {
-          setBusy(false);
-          setStatus(null);
-        }
+        if (!alive) return;
+        setError(err instanceof Error ? err.message : "Could not send the SMS code.");
+        setStatus(null);
+        setBusy(false);
+        setStep("phone");
       });
     return () => {
       alive = false;
@@ -107,19 +112,23 @@ export function MfaSetup() {
     if (step === "code") inputs.current[0]?.focus();
   }, [step]);
 
+  function composedPhone(): string {
+    let localDigits = nationalNumber.replace(/\D/g, "").replace(/^0+/, "");
+    const countryDigits = country.slice(1);
+    if (localDigits.startsWith(countryDigits) && localDigits.length - countryDigits.length >= 7) {
+      localDigits = localDigits.slice(countryDigits.length);
+    }
+    return `${country}${localDigits}`;
+  }
+
   async function enrollAndSend(event?: FormEvent<HTMLFormElement>) {
     event?.preventDefault();
     if (busy) return;
+    const phone = composedPhone();
     setBusy(true);
     setError(null);
-    setStatus("Securing your phone number with Supabase…");
+    setStatus("Sending verification code…");
     try {
-      let localDigits = nationalNumber.replace(/\D/g, "").replace(/^0+/, "");
-      const countryDigits = country.slice(1);
-      if (localDigits.startsWith(countryDigits) && localDigits.length - countryDigits.length >= 7) {
-        localDigits = localDigits.slice(countryDigits.length);
-      }
-      const phone = `${country}${localDigits}`;
       const enrolled = await enrollPhoneMfa(phone);
       setFactorId(enrolled.factorId);
       setFactorInitiallyVerified(false);
@@ -139,14 +148,17 @@ export function MfaSetup() {
       setDigits((current) => current.map((digit, index) => (index === start ? "" : digit)));
       return;
     }
-    setDigits((current) => {
-      const next = [...current];
-      incoming.slice(0, 6 - start).split("").forEach((digit, offset) => {
-        next[start + offset] = digit;
-      });
-      return next;
+    const next = Array.from({ length: 6 }, (_, index) => digits[index] ?? "");
+    incoming.slice(0, 6 - start).split("").forEach((digit, offset) => {
+      next[start + offset] = digit;
     });
+    setDigits(next);
     inputs.current[Math.min(5, start + incoming.length)]?.focus();
+    if (next.join("").length === 6) {
+      window.setTimeout(() => {
+        void verifyCode(next.join(""));
+      }, 0);
+    }
   }
 
   function handlePaste(event: ClipboardEvent<HTMLInputElement>) {
@@ -160,26 +172,31 @@ export function MfaSetup() {
     if (event.key === "ArrowRight" && index < 5) inputs.current[index + 1]?.focus();
   }
 
-  async function verifyCode() {
-    if (busy || !factorId || !challengeId || digits.join("").length !== 6) return;
+  async function verifyCode(rawCode = digits.join("")) {
+    if (verifyingRef.current || busy) return;
+    const code = rawCode.replace(/\D/g, "").slice(0, 6);
+    if (code.length !== 6) {
+      setError("Enter the complete 6-digit verification code.");
+      return;
+    }
+    verifyingRef.current = true;
     setBusy(true);
     setError(null);
     setStatus("Verifying your secure code…");
     try {
-      await verifyPhoneMfa(factorId, challengeId, digits.join(""));
-      markRecentStepUp();
-      if (changeAfterVerify) {
-        await unenrollPhoneFactor(factorId);
-        setFactorId("");
-        setChallengeId("");
-        setFactorInitiallyVerified(false);
-        setChangeAfterVerify(false);
-        setNationalNumber("");
-        setDigits(["", "", "", "", "", ""]);
-        setCooldown(0);
-        setStep("phone");
-        return;
+      let activeChallenge = challengeId;
+      let activeFactor = factorId;
+      if (!activeFactor) {
+        const factors = await listPhoneMfaFactors(false);
+        activeFactor = factors[0]?.id ?? "";
+        setFactorId(activeFactor);
       }
+      if (!activeFactor) throw new Error("Phone verification is not ready. Send a new code.");
+      if (!activeChallenge) {
+        activeChallenge = await sendChallenge(activeFactor);
+      }
+      await verifyPhoneMfa(activeFactor, activeChallenge, code);
+      markRecentStepUp();
       setStep("success");
       window.setTimeout(() => navigate(returnPath, { replace: true }), 650);
     } catch (err) {
@@ -188,17 +205,24 @@ export function MfaSetup() {
       setDigits(["", "", "", "", "", ""]);
       inputs.current[0]?.focus();
     } finally {
+      verifyingRef.current = false;
       setBusy(false);
     }
   }
 
   async function resendCode() {
-    if (busy || cooldown > 0 || !factorId) return;
+    if (busy || cooldown > 0) return;
     setBusy(true);
     setError(null);
-    setStatus("Sending a new SMS code…");
     try {
-      await sendChallenge(factorId);
+      let activeFactor = factorId;
+      if (!activeFactor) {
+        const factors = await listPhoneMfaFactors(false);
+        activeFactor = factors[0]?.id ?? "";
+        setFactorId(activeFactor);
+      }
+      if (!activeFactor) throw new Error("Enter your phone number again to send a new code.");
+      await sendChallenge(activeFactor);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not resend the code.");
       setStatus(null);
@@ -209,22 +233,18 @@ export function MfaSetup() {
 
   async function changePhone() {
     if (busy) return;
-    if (factorInitiallyVerified) {
-      setChangeAfterVerify(true);
-      setError("Verify the current phone first, then you can securely enter a new number.");
-      inputs.current[0]?.focus();
-      return;
-    }
-    if (!window.confirm("Remove this phone enrollment and enter a different number?")) return;
     setBusy(true);
     setError(null);
     try {
-      if (factorId) await unenrollPhoneFactor(factorId);
+      if (factorId && !factorInitiallyVerified) {
+        await unenrollPhoneFactor(factorId);
+      }
       setFactorId("");
       setChallengeId("");
       setNationalNumber("");
       setDigits(["", "", "", "", "", ""]);
       setCooldown(0);
+      setStatus(null);
       setStep("phone");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not change the phone number.");
@@ -232,6 +252,8 @@ export function MfaSetup() {
       setBusy(false);
     }
   }
+
+  const canSend = nationalNumber.replace(/\D/g, "").length >= 7;
 
   return (
     <div className="page synexus-sec">
@@ -270,8 +292,15 @@ export function MfaSetup() {
                   aria-label="Mobile phone number"
                 />
               </div>
-              <button type="submit" className="synexus-sec__btn" disabled={busy || nationalNumber.replace(/\D/g, "").length < 7}>
-                {busy ? "Please wait…" : "Send Verification Code"}
+              <button
+                type="submit"
+                className="synexus-sec__btn"
+                disabled={busy || !canSend}
+                onClick={() => {
+                  if (!canSend) setError("Enter a valid mobile number, then tap Send Verification Code.");
+                }}
+              >
+                {busy ? "Sending…" : "Send Verification Code"}
               </button>
             </form>
           </>
@@ -302,7 +331,12 @@ export function MfaSetup() {
                 />
               ))}
             </div>
-            <button type="button" className="synexus-sec__btn" disabled={busy || digits.join("").length !== 6} onClick={() => void verifyCode()}>
+            <button
+              type="button"
+              className="synexus-sec__btn"
+              disabled={busy || digits.join("").length !== 6}
+              onClick={() => void verifyCode()}
+            >
               {busy ? "Verifying…" : "Verify & Continue"}
             </button>
             <div className="synexus-sec__phone-actions">
