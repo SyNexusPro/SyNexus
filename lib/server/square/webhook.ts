@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { logRevenue } from "../../treasury/treasuryCore.mjs";
 import { readSquareConfig, type SquareEnv } from "./config.js";
 import { applyCardPaymentObject } from "./cardVerify.js";
@@ -92,7 +92,7 @@ function usdFromCents(cents: unknown): number {
 }
 
 async function upsertPaidPlan(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseClient,
   userId: string,
   plan: PaidPlan | "FREE",
 ) {

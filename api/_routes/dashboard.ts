@@ -6,10 +6,7 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import { useApiRoute, type ViteDevServer } from "./viteDevServer.js";
 import { collectSolanaMints, fetchPairsForMints, type DexPair } from "../../lib/server/market/dexscreener.js";
 
-type Pair = DexPair & {
-  priceUsd?: string;
-  baseToken?: { address?: string; symbol?: string; name?: string };
-};
+type Pair = DexPair;
 
 export type DashboardToken = {
   id: string;

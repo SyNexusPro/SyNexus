@@ -110,7 +110,7 @@ export async function fetchLiveSolanaWatchlist(
   }
 
   const candidates: LiveMarketCandidate[] = [...byMint.values()]
-    .map((pair) => {
+    .map((pair): LiveMarketCandidate | null => {
       const liq = Number(pair.liquidity?.usd) || 0;
       const vol = Number(pair.volume?.h24) || 0;
       if (liq < 20_000 && vol < 50_000) return null;
@@ -127,7 +127,7 @@ export async function fetchLiveSolanaWatchlist(
         score: scorePair(pair),
       };
     })
-    .filter((c): c is LiveMarketCandidate => Boolean(c))
+    .filter((c): c is LiveMarketCandidate => c !== null)
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);
 

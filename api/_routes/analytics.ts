@@ -162,7 +162,7 @@ async function buildAnalyticsSummary(days: number) {
 }
 
 async function handleAnalyticsRequest(payload: AnalyticsPayload) {
-  if (!verifyOwnerGrant(payload.grant, process.env)) {
+  if (!payload.grant || !verifyOwnerGrant(payload.grant, process.env)) {
     return { statusCode: 401, body: { error: "Owner command code required." } };
   }
 

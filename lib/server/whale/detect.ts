@@ -78,7 +78,6 @@ export function parseHeliusWhaleEvents(
       const t = tr as Record<string, unknown>;
       const mint = typeof t.mint === "string" ? t.mint : null;
       if (!mint) continue;
-      const usdAmount = Number(t.tokenAmount ?? t.amount ?? 0);
       // Without USD, skip unless env allows SOL-native heuristic later
       const explicitUsd = Number(t.usdAmount ?? t.usd_amount ?? 0);
       const amount = Number.isFinite(explicitUsd) && explicitUsd > 0 ? explicitUsd : 0;
