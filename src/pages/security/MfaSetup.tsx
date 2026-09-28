@@ -7,15 +7,14 @@ import {
   type KeyboardEvent,
 } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { supabase } from "../../lib/supabaseClient";
 import { markRecentStepUp } from "../../security/mfa";
 import {
-  challengePhoneMfa,
-  enrollPhoneMfa,
-  listPhoneMfaFactors,
+  isPhoneVerified,
   maskPhoneNumber,
   PHONE_RESEND_SECONDS,
-  unenrollPhoneFactor,
-  verifyPhoneMfa,
+  sendPhoneVerificationSms,
+  verifyPhoneSmsCode,
 } from "../../security/phoneVerification";
 
 const COUNTRIES = [
@@ -54,53 +53,25 @@ export function MfaSetup() {
   const [step, setStep] = useState<Step>("phone");
   const [country, setCountry] = useState("+1");
   const [nationalNumber, setNationalNumber] = useState("");
-  const [factorId, setFactorId] = useState("");
-  const [factorInitiallyVerified, setFactorInitiallyVerified] = useState(false);
-  const [challengeId, setChallengeId] = useState("");
-  const [maskedPhone, setMaskedPhone] = useState("your phone");
+  const [phone, setPhone] = useState("");
   const [digits, setDigits] = useState(["", "", "", "", "", ""]);
   const [cooldown, setCooldown] = useState(0);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function sendChallenge(id: string) {
-    setStatus("Texting your 6-digit code…");
-    const challenge = await challengePhoneMfa(id);
-    setChallengeId(challenge);
-    setCooldown(PHONE_RESEND_SECONDS);
-    setDigits(["", "", "", "", "", ""]);
-    setStep("code");
-    setStatus(null);
-    return challenge;
-  }
-
   useEffect(() => {
     let alive = true;
-    void listPhoneMfaFactors()
-      .then(async (factors) => {
-        if (!alive || !factors[0]) return;
-        setFactorId(factors[0].id);
-        setFactorInitiallyVerified(true);
-        setMaskedPhone(maskPhoneNumber(factors[0].phone));
-        setBusy(true);
-        try {
-          await sendChallenge(factors[0].id);
-        } finally {
-          if (alive) setBusy(false);
-        }
-      })
-      .catch((err) => {
-        if (!alive) return;
-        setError(err instanceof Error ? err.message : "Could not send the SMS code.");
-        setStatus(null);
-        setBusy(false);
-        setStep("phone");
-      });
+    void supabase?.auth.getUser().then(({ data }) => {
+      if (!alive) return;
+      if (isPhoneVerified(data.user)) {
+        navigate(returnPath, { replace: true });
+      }
+    });
     return () => {
       alive = false;
     };
-  }, []);
+  }, [navigate, returnPath]);
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -121,19 +92,19 @@ export function MfaSetup() {
     return `${country}${localDigits}`;
   }
 
-  async function enrollAndSend(event?: FormEvent<HTMLFormElement>) {
+  async function sendCode(event?: FormEvent<HTMLFormElement>) {
     event?.preventDefault();
     if (busy) return;
-    const phone = composedPhone();
     setBusy(true);
     setError(null);
-    setStatus("Sending verification code…");
+    setStatus("Sending a 6-digit code by SMS…");
     try {
-      const enrolled = await enrollPhoneMfa(phone);
-      setFactorId(enrolled.factorId);
-      setFactorInitiallyVerified(false);
-      setMaskedPhone(maskPhoneNumber(enrolled.phone));
-      await sendChallenge(enrolled.factorId);
+      const confirmed = await sendPhoneVerificationSms(composedPhone());
+      setPhone(confirmed);
+      setDigits(["", "", "", "", "", ""]);
+      setCooldown(PHONE_RESEND_SECONDS);
+      setStep("code");
+      setStatus("Code sent. Check your texts.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not send the verification code.");
       setStatus(null);
@@ -156,7 +127,7 @@ export function MfaSetup() {
     inputs.current[Math.min(5, start + incoming.length)]?.focus();
     if (next.join("").length === 6) {
       window.setTimeout(() => {
-        void verifyCode(next.join(""));
+        void confirmCode(next.join(""));
       }, 0);
     }
   }
@@ -172,7 +143,7 @@ export function MfaSetup() {
     if (event.key === "ArrowRight" && index < 5) inputs.current[index + 1]?.focus();
   }
 
-  async function verifyCode(rawCode = digits.join("")) {
+  async function confirmCode(rawCode = digits.join("")) {
     if (verifyingRef.current || busy) return;
     const code = rawCode.replace(/\D/g, "").slice(0, 6);
     if (code.length !== 6) {
@@ -182,25 +153,15 @@ export function MfaSetup() {
     verifyingRef.current = true;
     setBusy(true);
     setError(null);
-    setStatus("Verifying your secure code…");
+    setStatus("Verifying your code…");
     try {
-      let activeChallenge = challengeId;
-      let activeFactor = factorId;
-      if (!activeFactor) {
-        const factors = await listPhoneMfaFactors(false);
-        activeFactor = factors[0]?.id ?? "";
-        setFactorId(activeFactor);
-      }
-      if (!activeFactor) throw new Error("Phone verification is not ready. Send a new code.");
-      if (!activeChallenge) {
-        activeChallenge = await sendChallenge(activeFactor);
-      }
-      await verifyPhoneMfa(activeFactor, activeChallenge, code);
+      await verifyPhoneSmsCode(phone || composedPhone(), code);
       markRecentStepUp();
+      setStatus(null);
       setStep("success");
       window.setTimeout(() => navigate(returnPath, { replace: true }), 650);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Verification failed.");
+      setError(err instanceof Error ? err.message : "That verification code is invalid.");
       setStatus(null);
       setDigits(["", "", "", "", "", ""]);
       inputs.current[0]?.focus();
@@ -212,45 +173,7 @@ export function MfaSetup() {
 
   async function resendCode() {
     if (busy || cooldown > 0) return;
-    setBusy(true);
-    setError(null);
-    try {
-      let activeFactor = factorId;
-      if (!activeFactor) {
-        const factors = await listPhoneMfaFactors(false);
-        activeFactor = factors[0]?.id ?? "";
-        setFactorId(activeFactor);
-      }
-      if (!activeFactor) throw new Error("Enter your phone number again to send a new code.");
-      await sendChallenge(activeFactor);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not resend the code.");
-      setStatus(null);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function changePhone() {
-    if (busy) return;
-    setBusy(true);
-    setError(null);
-    try {
-      if (factorId && !factorInitiallyVerified) {
-        await unenrollPhoneFactor(factorId);
-      }
-      setFactorId("");
-      setChallengeId("");
-      setNationalNumber("");
-      setDigits(["", "", "", "", "", ""]);
-      setCooldown(0);
-      setStatus(null);
-      setStep("phone");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not change the phone number.");
-    } finally {
-      setBusy(false);
-    }
+    await sendCode();
   }
 
   const canSend = nationalNumber.replace(/\D/g, "").length >= 7;
@@ -262,13 +185,13 @@ export function MfaSetup() {
 
         {step === "phone" ? (
           <>
-            <h1 id="mfa-setup-title">Secure Your SyNexus Account</h1>
+            <h1 id="mfa-setup-title">Verify Your Phone</h1>
             <p className="synexus-sec__lede">
-              Add your phone number to protect your account. We&apos;ll text you a 6-digit verification code.
+              After signing in, add your mobile number. We&apos;ll text a 6-digit code through Supabase to protect your account.
             </p>
             {error ? <p className="synexus-sec__error" role="alert">{error}</p> : null}
             {status ? <p className="synexus-sec__note" role="status">{status}</p> : null}
-            <form onSubmit={(event) => void enrollAndSend(event)}>
+            <form onSubmit={(event) => void sendCode(event)}>
               <label className="synexus-sec__label" htmlFor="mfa-country">Country</label>
               <select
                 id="mfa-country"
@@ -309,7 +232,7 @@ export function MfaSetup() {
         {step === "code" ? (
           <>
             <h1 id="mfa-setup-title">Enter Verification Code</h1>
-            <p className="synexus-sec__lede">We sent a 6-digit code to {maskedPhone}.</p>
+            <p className="synexus-sec__lede">We sent a 6-digit code to {maskPhoneNumber(phone)}.</p>
             {error ? <p className="synexus-sec__error" role="alert">{error}</p> : null}
             {status ? <p className="synexus-sec__note" role="status">{status}</p> : null}
             <div className="synexus-sec__otp" aria-label="Six-digit SMS verification code">
@@ -335,7 +258,7 @@ export function MfaSetup() {
               type="button"
               className="synexus-sec__btn"
               disabled={busy || digits.join("").length !== 6}
-              onClick={() => void verifyCode()}
+              onClick={() => void confirmCode()}
             >
               {busy ? "Verifying…" : "Verify & Continue"}
             </button>
@@ -343,7 +266,17 @@ export function MfaSetup() {
               <button type="button" className="synexus-sec__text-btn" disabled={busy || cooldown > 0} onClick={() => void resendCode()}>
                 {cooldown > 0 ? `Resend code in ${cooldown}s` : "Resend Code"}
               </button>
-              <button type="button" className="synexus-sec__text-btn" disabled={busy} onClick={() => void changePhone()}>
+              <button
+                type="button"
+                className="synexus-sec__text-btn"
+                disabled={busy}
+                onClick={() => {
+                  setError(null);
+                  setStatus(null);
+                  setDigits(["", "", "", "", "", ""]);
+                  setStep("phone");
+                }}
+              >
                 Back / change phone number
               </button>
             </div>

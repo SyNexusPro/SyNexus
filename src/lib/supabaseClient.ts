@@ -7,8 +7,8 @@ import { createClient } from "@supabase/supabase-js";
  * For auth in production, add your site URL under Supabase → Authentication → URL configuration
  * (e.g. `https://www.synexus.pro`) and `/pulse`, `/security/setup`, `/security/verify`
  * on Redirect URLs. Enable the Google provider there for “Continue with Google”.
- * Configure the Twilio Verify provider under Authentication → MFA for phone factors.
- * TOTP remains visible only as a legacy/optional factor in Security Settings.
+ * Configure Phone Auth with Twilio Verify under Authentication → Providers.
+ * TOTP remains optional in Security Settings.
  */
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;

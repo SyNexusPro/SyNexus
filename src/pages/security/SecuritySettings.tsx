@@ -14,17 +14,13 @@ import {
   verifyTotpCode,
 } from "../../security/mfa";
 import { enrollDevicePasskey, passkeysAvailable } from "../../security/passkeys";
-import {
-  listPhoneMfaFactors,
-  maskPhoneNumber,
-  type PhoneMfaFactor,
-} from "../../security/phoneVerification";
+import { isPhoneVerified, maskPhoneNumber } from "../../security/phoneVerification";
 import { listOwnSecurityEvents, recordSecurityEvent, type SecurityEventRow } from "../../security/securityEvents";
 
 export function SecuritySettings() {
   const navigate = useNavigate();
   const [aal, setAal] = useState("aal1");
-  const [phoneFactors, setPhoneFactors] = useState<PhoneMfaFactor[]>([]);
+  const [verifiedPhone, setVerifiedPhone] = useState("");
   const [factors, setFactors] = useState<ListedFactor[]>([]);
   const [events, setEvents] = useState<SecurityEventRow[]>([]);
   const [password, setPassword] = useState("");
@@ -36,16 +32,16 @@ export function SecuritySettings() {
   const [message, setMessage] = useState<string | null>(null);
 
   async function refresh() {
-    const [assurance, listed, phones, log] = await Promise.all([
+    const [assurance, listed, log, userResult] = await Promise.all([
       getAssurance(),
       listVerifiedTotpFactors(),
-      listPhoneMfaFactors(),
       listOwnSecurityEvents(),
+      supabase?.auth.getUser(),
     ]);
     setAal(assurance.currentLevel);
     setFactors(listed);
-    setPhoneFactors(phones);
     setEvents(log);
+    setVerifiedPhone(isPhoneVerified(userResult?.data.user) ? userResult?.data.user?.phone ?? "" : "");
   }
 
   useEffect(() => {
@@ -166,16 +162,8 @@ export function SecuritySettings() {
 
         {message ? <p className="synexus-sec__note">{message}</p> : null}
 
-        <h2 className="synexus-sec__h2">Phone MFA</h2>
-        {phoneFactors.length ? (
-          <ul className="synexus-sec__list">
-            {phoneFactors.map((factor) => (
-              <li key={factor.id}>✓ {factor.friendlyName} · {maskPhoneNumber(factor.phone)}</li>
-            ))}
-          </ul>
-        ) : (
-          <p>Phone MFA enrollment required</p>
-        )}
+        <h2 className="synexus-sec__h2">Verified phone</h2>
+        <p>{verifiedPhone ? `✓ ${maskPhoneNumber(verifiedPhone)}` : "Phone verification required"}</p>
 
         <h2 className="synexus-sec__h2">Authenticator app (optional)</h2>
         <p>{factors.length ? "✓ Extra sign-in protection enabled" : "Not enabled"}</p>
