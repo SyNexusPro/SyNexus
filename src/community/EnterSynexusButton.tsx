@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   COMMUNITY_ENTRY_LABEL,
@@ -5,24 +6,42 @@ import {
   isCommunityEnabled,
 } from "../config/community";
 import { useOperatorAuth } from "../hooks/useOperatorAuth";
+import { fetchCommunityAccess } from "./services/communityAccess";
 import "./enterSynexusButton.css";
 
 /**
- * Community entry is intentionally unavailable before account creation/sign-in.
- * The destination still performs its authoritative server entitlement check.
+ * Shown only to signed-in, second-factor-verified members whose plan the server
+ * reports as PRO (or owner). Visibility is cosmetic: /community re-checks
+ * membership server-side and the database enforces RLS.
  */
 export function EnterSynexusButton() {
   const { userId, ready, secondFactorPath } = useOperatorAuth();
   const hasMemberAccount = Boolean(userId && !userId.startsWith("demo-"));
+  const eligibleSession = isCommunityEnabled() && ready && hasMemberAccount && !secondFactorPath;
+  const [isMember, setIsMember] = useState(false);
 
-  if (
-    !isCommunityEnabled() ||
-    !ready ||
-    !hasMemberAccount ||
-    secondFactorPath
-  ) {
-    return null;
-  }
+  useEffect(() => {
+    if (!eligibleSession) {
+      setIsMember(false);
+      return;
+    }
+    const controller = new AbortController();
+    void fetchCommunityAccess(controller.signal).then(
+      (access) => {
+        setIsMember(
+          access.userId !== null &&
+            access.reason !== "account_restricted" &&
+            (access.plan === "PRO" || access.owner),
+        );
+      },
+      () => {
+        if (!controller.signal.aborted) setIsMember(false);
+      },
+    );
+    return () => controller.abort();
+  }, [eligibleSession, userId]);
+
+  if (!eligibleSession || !isMember) return null;
 
   return (
     <Link
@@ -31,7 +50,7 @@ export function EnterSynexusButton() {
       aria-label="Enter the members-only SyNexus Community"
     >
       <span>{COMMUNITY_ENTRY_LABEL}</span>
-      <small>Members-only community</small>
+      <small>Members-only crypto social network</small>
     </Link>
   );
 }

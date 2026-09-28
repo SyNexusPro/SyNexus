@@ -1,32 +1,53 @@
 .enter-synexus {
   display: grid;
   justify-items: center;
-  gap: 2px;
+  gap: 4px;
   width: 100%;
-  border: 1px solid var(--border-strong);
+  margin: 4px 0 8px;
+  border: 2px solid var(--accent);
   border-radius: 16px;
-  padding: 13px 18px;
-  color: #071007;
+  padding: 18px 20px;
+  color: #f4ffe0;
   background:
-    linear-gradient(110deg, var(--accent), #e8ff52 55%, var(--accent-cyan));
-  box-shadow: var(--glow);
+    radial-gradient(ellipse at 50% 0%, rgba(137, 255, 47, 0.28), transparent 70%),
+    linear-gradient(180deg, #071a06, #000);
+  box-shadow: var(--glow), inset 0 0 24px rgba(137, 255, 47, 0.12);
   text-align: center;
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .enter-synexus span {
-  font-size: 0.88rem;
+  background: linear-gradient(180deg, #eaffb0 0%, #9dff2f 50%, #39d916 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 10px rgba(137, 255, 47, 0.55));
+  font-size: clamp(1.3rem, 6vw, 1.7rem);
   font-weight: 950;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
 }
 
 .enter-synexus small {
-  font-size: 0.67rem;
+  color: var(--text-muted);
+  font-size: 0.72rem;
   font-weight: 750;
-  letter-spacing: 0.04em;
-  opacity: 0.72;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.enter-synexus:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 44px rgba(137, 255, 47, 0.42), inset 0 0 24px rgba(137, 255, 47, 0.18);
 }
 
 .enter-synexus:focus-visible {
   outline: 2px solid var(--text);
   outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .enter-synexus {
+    transition: none;
+  }
 }

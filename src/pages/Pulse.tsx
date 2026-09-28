@@ -52,6 +52,7 @@ import { WalletPerformanceDashboard } from "../components/WalletPerformanceDashb
 import { OracleAdminControlCenter } from "../components/OracleAdminControlCenter";
 import { UIModeToggle } from "../components/UIModeToggle";
 import { HeraListenSettings } from "../components/HeraListenSettings";
+import { EnterSynexusButton } from "../community/EnterSynexusButton";
 import { notifySynexusPlanChanged, SYNEXUS_PLAN_CHANGED } from "../hooks/useSynexusPlan";
 import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
 import { useBiometricLogin } from "../hooks/useBiometricLogin";
@@ -1166,6 +1167,8 @@ export function Pulse() {
             : `Sentinel grid, alerts, and operator tools — sign in via Login in the nav.`}
         </p>
       </section>
+
+      <EnterSynexusButton />
 
       <HeraListenSettings />
 
