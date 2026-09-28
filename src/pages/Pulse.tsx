@@ -34,6 +34,7 @@ import {
 import { recordTrustedPlanGrant, enforceStoredPlan } from "../lib/securityBot";
 import { applyGooglePlayReviewAccess } from "../lib/googlePlayReviewAccess";
 import { isBackgroundAuthRefresh, shouldReloadOperatorSession } from "../lib/authEvents";
+import { passwordResetInboxMessage } from "../lib/passwordRecovery";
 import { signInAlwaysOnAccount } from "../lib/alwaysOnSignIn";
 import { attachPendingInvite, syncInviteRewardForUser } from "../lib/inviteEarn";
 import {
@@ -41,7 +42,6 @@ import {
   hasStoredOwnerGrant,
   OWNER_ACCESS_CHANGED,
   refreshOwnerAccess,
-  unlockOwnerAccess,
 } from "../lib/ownerAccess";
 import { ProTrialBanner } from "../components/ProTrialBanner";
 import { ProDemoButton } from "../components/ProDemoButton";
@@ -585,27 +585,6 @@ export function Pulse() {
       });
   }, [userId]);
 
-  async function handleOwnerUnlock() {
-    if (authBusy) return;
-    if (!email || !password) {
-      setAuthMessage({ tone: "error", text: "Enter your god mode ID and key." });
-      return;
-    }
-    try {
-      setAuthBusy(true);
-      setAuthMessage({ tone: "info", text: "Verifying god mode credentials…" });
-      const result = await unlockOwnerAccess(email, password);
-      if (!result.ok) {
-        setAuthMessage({ tone: "error", text: result.message });
-        return;
-      }
-      setPlan("PRO");
-      setAuthMessage({ tone: "success", text: result.message });
-    } finally {
-      setAuthBusy(false);
-    }
-  }
-
   async function completeAuthWithBiometricOffer(
     session: { refresh_token?: string | null } | null | undefined,
     authEmail: string,
@@ -973,7 +952,7 @@ export function Pulse() {
       trackSiteEvent("password_reset_requested", { path: "/pulse" });
       setAuthMessage({
         tone: "success",
-        text: "Reset link sent. Check your email and choose a new access key.",
+        text: passwordResetInboxMessage(email.trim()),
       });
     } catch (err) {
       setAuthMessage({ tone: "error", text: describeAuthError(err) });
@@ -1313,7 +1292,6 @@ export function Pulse() {
         onSignUp={() => void handleSignUp()}
         onSignIn={() => void handleSignIn()}
         onSignOut={() => void handleSignOut()}
-        onOwnerUnlock={() => void handleOwnerUnlock()}
         onBiometricSignIn={() => void handleBiometricSignIn()}
         onEnableBiometric={() => void handleEnableBiometric()}
         onDisableBiometric={() => void handleDisableBiometric()}
@@ -1324,7 +1302,6 @@ export function Pulse() {
         onContinueToSignIn={handleContinueToSignIn}
         onOauthError={(text) => setAuthMessage({ tone: "error", text })}
         ownerUnlocked={ownerUnlocked}
-        initialMode={godModeEntry ? "command" : undefined}
         />
       </div>
 

@@ -5,8 +5,9 @@ import { passwordStrengthLabel, validateSignupPassword } from "../lib/authCreden
 import { loadRememberedEmail, saveRememberedEmail } from "../lib/authRemember";
 import { hasSupabaseEnv, supabase } from "../lib/supabaseClient";
 import { signInAlwaysOnAccount } from "../lib/alwaysOnSignIn";
-import { clearOwnerAccess, unlockOwnerAccess } from "../lib/ownerAccess";
+import { clearOwnerAccess } from "../lib/ownerAccess";
 import {
+  requestPasswordReset,
   signOut,
   signUpWithEmail,
   upsertSignupProfile,
@@ -21,6 +22,7 @@ import {
   signupConfirmInboxMessage,
 } from "../lib/signupWelcome";
 import { describeAuthError } from "../lib/authErrors";
+import { passwordResetInboxMessage } from "../lib/passwordRecovery";
 import { attachPendingInvite, syncInviteRewardForUser } from "../lib/inviteEarn";
 import { syncProTrialForUser } from "../lib/proDemo";
 import { queueHeraSignupDemo } from "../lib/heraSignupDemo";
@@ -63,7 +65,7 @@ export function QuickOperatorLogin({
   const { t } = useTranslation();
   const { linked, secondFactorPath } = useOperatorAuth();
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup" | "owner">(initialMode);
+  const [mode, setMode] = useState<"signin" | "signup">(initialMode);
   const [email, setEmail] = useState(() => loadRememberedEmail() ?? "");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -96,6 +98,33 @@ export function QuickOperatorLogin({
     return () => window.removeEventListener("synexus-oauth-error", onOauthError);
   }, []);
 
+  async function handleForgotPassword() {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      setMessage({ tone: "error", text: "Enter your email first, then request a reset link." });
+      return;
+    }
+    if (!hasSupabaseEnv) {
+      setMessage({ tone: "error", text: "Password reset requires Supabase sign-in." });
+      return;
+    }
+    setBusy(true);
+    setMessage({ tone: "info", text: "Sending password reset link…" });
+    try {
+      await requestPasswordReset(trimmedEmail);
+      saveRememberedEmail(trimmedEmail);
+      setPassword("");
+      setMessage({
+        tone: "success",
+        text: passwordResetInboxMessage(trimmedEmail),
+      });
+    } catch (err) {
+      setMessage({ tone: "error", text: describeAuthError(err) });
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function handleSubmit() {
     const trimmedEmail = email.trim();
     if (!trimmedEmail || !password) {
@@ -110,20 +139,10 @@ export function QuickOperatorLogin({
     setBusy(true);
     setMessage({
       tone: "info",
-      text: mode === "signup" ? "Creating account…" : mode === "owner" ? "Checking owner access…" : "Signing in…",
+      text: mode === "signup" ? "Creating account…" : "Signing in…",
     });
 
     try {
-      if (mode === "owner") {
-        const result = await unlockOwnerAccess(trimmedEmail, password);
-        if (!result.ok) throw new Error(result.message);
-        saveRememberedEmail(trimmedEmail);
-        setPassword("");
-        setMessage({ tone: "success", text: result.message });
-        onSuccess?.({ mode: "signin", email: trimmedEmail });
-        return;
-      }
-
       if (!hasSupabaseEnv) {
         localStorage.setItem(DEMO_SESSION_KEY, `demo-${Date.now()}`);
         setMessage({ tone: "success", text: "Demo session started." });
@@ -288,23 +307,12 @@ export function QuickOperatorLogin({
           >
             Create account
           </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={mode === "owner"}
-            className={`quick-login__tab${mode === "owner" ? " quick-login__tab--active" : ""}`}
-            onClick={() => setMode("owner")}
-          >
-            Owner
-          </button>
         </div>
       ) : (
         <p className="quick-login__mode-label">
           {mode === "signup"
             ? `Create your ${SYNEXUS_BRAND_NAME} account`
-            : mode === "owner"
-              ? "Owner sign-in"
-              : `Sign in to ${SYNEXUS_BRAND_NAME}`}
+            : `Sign in to ${SYNEXUS_BRAND_NAME}`}
         </p>
       )}
 
@@ -363,6 +371,16 @@ export function QuickOperatorLogin({
             />
           </div>
           {passwordHint ? <span className="quick-login__hint">{passwordHint}</span> : null}
+          {mode === "signin" && hasSupabaseEnv ? (
+            <button
+              type="button"
+              className="quick-login__forgot"
+              disabled={busy || !email.trim()}
+              onClick={() => void handleForgotPassword()}
+            >
+              Forgot password?
+            </button>
+          ) : null}
         </label>
         {mode === "signup" ? (
           <label className="quick-login__field">
@@ -371,14 +389,10 @@ export function QuickOperatorLogin({
           </label>
         ) : null}
       <button type="submit" className="quick-login__submit" disabled={busy}>
-        {busy ? "Working…" : mode === "signup" ? "Create account" : mode === "owner" ? "Unlock owner access" : "Sign in"}
+        {busy ? "Working…" : mode === "signup" ? "Create account" : "Sign in"}
       </button>
       </form>
-      {mode === "owner" ? (
-        <p className="quick-login__hint">Owner sign-in unlocks full Pro on this device. No subscription.</p>
-      ) : (
-        <GoogleAuthOption disabled={busy} onError={(text) => setMessage({ tone: "error", text })} />
-      )}
+      <GoogleAuthOption disabled={busy} onError={(text) => setMessage({ tone: "error", text })} />
       {mode === "signup" ? (
         <p className="quick-login__hint">
           Confirm the email, then enter the 6-digit code from your authenticator app. That second check is required

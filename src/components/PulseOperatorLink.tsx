@@ -34,7 +34,6 @@ type PulseOperatorLinkProps = {
   onSignUp: () => void;
   onSignIn: () => void;
   onSignOut: () => void;
-  onOwnerUnlock: () => void;
   onBiometricSignIn: () => void;
   onEnableBiometric: () => void;
   onDisableBiometric: () => void;
@@ -46,7 +45,7 @@ type PulseOperatorLinkProps = {
   onOauthError?: (message: string) => void;
   ownerUnlocked?: boolean;
   variant?: "default" | "oracle";
-  initialMode?: "return" | "link" | "command";
+  initialMode?: "return" | "link";
 };
 
 function maskEmail(email: string): string {
@@ -91,7 +90,6 @@ export function PulseOperatorLink({
   onSignUp,
   onSignIn,
   onSignOut,
-  onOwnerUnlock,
   onBiometricSignIn,
   onEnableBiometric,
   onDisableBiometric,
@@ -106,7 +104,7 @@ export function PulseOperatorLink({
   initialMode,
 }: PulseOperatorLinkProps) {
   const { name: titanBotName } = useTitanBotName();
-  const [mode, setMode] = useState<"return" | "link" | "command">(
+  const [mode, setMode] = useState<"return" | "link">(
     initialMode ?? (variant === "oracle" ? "link" : "return"),
   );
   const [signInMethod, setSignInMethod] = useState<SignInMethod>("password");
@@ -333,16 +331,13 @@ export function PulseOperatorLink({
     );
   }
 
-  const showPasswordField =
-    mode === "command" || mode === "link" || (mode === "return" && signInMethod === "password");
+  const showPasswordField = mode === "link" || (mode === "return" && signInMethod === "password");
   const submitLabel =
-    mode === "command"
-      ? "Enter god mode"
-      : mode === "link"
-        ? "Establish operator link"
-        : signInMethod === "magic"
-          ? "Email me a sign-in link"
-          : "Reconnect to SyNexus";
+    mode === "link"
+      ? "Establish operator link"
+      : signInMethod === "magic"
+        ? "Email me a sign-in link"
+        : "Reconnect to SyNexus";
 
   return (
     <section
@@ -417,15 +412,6 @@ export function PulseOperatorLink({
         >
           New link
         </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mode === "command"}
-          className={`operator-link__tab${mode === "command" ? " operator-link__tab--active" : ""}`}
-          onClick={() => setMode("command")}
-        >
-          God mode
-        </button>
       </div>
 
       {mode === "return" && hasSupabaseEnv ? (
@@ -464,29 +450,26 @@ export function PulseOperatorLink({
         onSubmit={(event) => {
           event.preventDefault();
           if (authBusy) return;
-          if (mode === "command") onOwnerUnlock();
-          else if (mode === "link") onSignUp();
+          if (mode === "link") onSignUp();
           else if (signInMethod === "magic") onMagicLink();
           else onSignIn();
         }}
       >
         <label className="operator-link__field">
-          <span>{mode === "command" ? "God mode ID" : "Operator email"}</span>
+          <span>Operator email</span>
           <input
-            type={mode === "command" ? "text" : "email"}
-            autoComplete={mode === "command" ? "username" : "email"}
-            inputMode={mode === "command" ? "text" : "email"}
+            type="email"
+            autoComplete="email"
+            inputMode="email"
             value={email}
             disabled={authBusy}
-            placeholder={mode === "command" ? "owner-id@synexus.local" : "you@email.com"}
+            placeholder="you@email.com"
             onChange={(event) => onEmailChange(event.target.value)}
           />
         </label>
         {showPasswordField ? (
           <label className="operator-link__field">
-            <span>
-              {mode === "command" ? "God mode key" : mode === "link" ? "Choose access key" : "Access key"}
-            </span>
+            <span>{mode === "link" ? "Choose access key" : "Access key"}</span>
             <div className="operator-link__password-wrap">
               <input
                 type={showPassword ? "text" : "password"}
@@ -502,6 +485,16 @@ export function PulseOperatorLink({
                 onToggle={() => setShowPassword((v) => !v)}
               />
             </div>
+            {mode === "return" && signInMethod === "password" && hasSupabaseEnv ? (
+              <button
+                type="button"
+                className="operator-link__text-action operator-link__text-action--under-field"
+                disabled={authBusy || !email.trim()}
+                onClick={onForgotPassword}
+              >
+                Forgot password?
+              </button>
+            ) : null}
             {mode === "link" && signupPasswordHint ? (
               <span className="operator-link__password-hint">{signupPasswordHint}</span>
             ) : null}
@@ -517,17 +510,6 @@ export function PulseOperatorLink({
             <LanguagePicker embedded />
           </label>
         ) : null}
-      {mode === "return" && signInMethod === "password" && hasSupabaseEnv ? (
-        <button
-          type="button"
-          className="operator-link__text-action"
-          disabled={authBusy || !email.trim()}
-          onClick={onForgotPassword}
-        >
-          Forgot access key?
-        </button>
-      ) : null}
-
       <button
         type="submit"
         className="operator-link__submit"
@@ -536,16 +518,9 @@ export function PulseOperatorLink({
         {authBusy ? "Linking…" : submitLabel}
       </button>
       </form>
-      {mode !== "command" ? (
-        <GoogleAuthOption disabled={authBusy} onError={onOauthError} />
-      ) : null}
+      <GoogleAuthOption disabled={authBusy} onError={onOauthError} />
 
-      {mode === "command" ? (
-        <p className="operator-link__footnote">
-          God mode unlocks everything on this device — no subscription. Or use{" "}
-          <Link to="/god">/god</Link> for a dedicated login.
-        </p>
-      ) : !hasSupabaseEnv ? (
+      {!hasSupabaseEnv ? (
         <p className="operator-link__footnote">Demo mode — server keys unlock permanent operator links.</p>
       ) : !canUseBiometric && biometricSupport?.native === false ? (
         <p className="operator-link__footnote">

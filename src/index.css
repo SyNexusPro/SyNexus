@@ -4081,6 +4081,10 @@ html:has(.app-shell--home) #root {
   color: #baff2f;
 }
 
+.operator-link__text-action--under-field {
+  margin: 6px 0 0;
+}
+
 .operator-link__password-hint,
 .operator-link__magic-note {
   margin: 4px 0 0;
@@ -11587,6 +11591,31 @@ html:has(.app-shell--home) #root {
 .quick-login__hint {
   font-size: 0.68rem;
   color: rgba(137, 255, 47, 0.75);
+}
+
+.quick-login__forgot {
+  display: block;
+  width: fit-content;
+  margin: 6px 0 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  color: rgba(188, 230, 200, 0.78);
+  cursor: pointer;
+}
+
+.quick-login__forgot:hover:not(:disabled) {
+  color: #baff2f;
+}
+
+.quick-login__forgot:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .quick-login__message {

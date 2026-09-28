@@ -1,7 +1,8 @@
 import type { Session, User } from "@supabase/supabase-js";
 import { isAlwaysOnLoginEmail } from "../config/googlePlayReview";
 import { assertGoogleProviderEnabled } from "./googleSignIn";
-import { authRedirectUrl, googleAuthRedirectUrl, supabase } from "./supabaseClient";
+import { emailAuthRedirectUrl, googleAuthRedirectUrl, supabase } from "./supabaseClient";
+import { PASSWORD_RECOVERY_REDIRECT } from "./passwordRecovery";
 import { validateSignupPassword } from "./authCredentials";
 import { guardAuthAttempt } from "./securityBot";
 import { SIGNUP_CONFIRM_REDIRECT } from "./signupWelcome";
@@ -113,7 +114,7 @@ export async function signUpWithEmail(
     email,
     password,
     options: {
-      emailRedirectTo: authRedirectUrl(SIGNUP_CONFIRM_REDIRECT),
+      emailRedirectTo: emailAuthRedirectUrl(SIGNUP_CONFIRM_REDIRECT),
       ...(normalizedUsername ? { data: { username: normalizedUsername } } : {}),
     },
   }), "Sign-up");
@@ -131,7 +132,7 @@ export async function resendSignupVerificationEmail(email: string) {
     type: "signup",
     email: email.trim(),
     options: {
-      emailRedirectTo: authRedirectUrl(SIGNUP_CONFIRM_REDIRECT),
+      emailRedirectTo: emailAuthRedirectUrl(SIGNUP_CONFIRM_REDIRECT),
     },
   });
   if (error) throwIfStructuralDbFailure(error);
@@ -170,7 +171,7 @@ export async function signInWithMagicLink(email: string) {
   const { data, error } = await supabase.auth.signInWithOtp({
     email: email.trim(),
     options: {
-      emailRedirectTo: authRedirectUrl("/pulse"),
+      emailRedirectTo: emailAuthRedirectUrl("/pulse"),
       shouldCreateUser: false,
     },
   });
@@ -215,7 +216,7 @@ export async function requestPasswordReset(email: string) {
   }
   if (!supabase) throw new Error("Supabase env vars are missing.");
   const { data, error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-    redirectTo: authRedirectUrl("/pulse?auth=recovery"),
+    redirectTo: emailAuthRedirectUrl(PASSWORD_RECOVERY_REDIRECT),
   });
   if (error) throwIfStructuralDbFailure(error);
   return data;

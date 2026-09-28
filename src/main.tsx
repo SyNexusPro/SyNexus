@@ -8,6 +8,7 @@ import { initSecurityBot } from "./lib/securityBot";
 import { refreshOwnerAccess } from "./lib/ownerAccess";
 import { restoreAlwaysOnPlayReviewSession } from "./lib/googlePlayReviewAccess";
 import { installGoogleAuthReturn } from "./lib/googleAuthReturn";
+import { routePasswordRecoveryToPulse } from "./lib/passwordRecovery";
 import { clearExpiredProDemo, restoreActiveProTrialGrant } from "./lib/proDemo";
 import { markNativePerformanceMode } from "./lib/nativePerformance";
 import { realtime } from "./lib/realtime/RealtimeManager";
@@ -15,6 +16,7 @@ import { migrateLegacyStorageKeys } from "./lib/legacyStorageMigrate";
 import "./i18n";
 import "./index.css";
 
+routePasswordRecoveryToPulse();
 migrateLegacyStorageKeys();
 initSecurityBot();
 clearExpiredProDemo();

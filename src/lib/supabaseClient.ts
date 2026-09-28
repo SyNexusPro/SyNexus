@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { PUBLIC_SITE_URL } from "../config/site";
 
 /**
  * Values come from import.meta.env — filled at **build time** on Vercel from `VITE_SUPABASE_*`
@@ -27,9 +28,31 @@ export const supabase = hasSupabaseEnv
     })
   : null;
 
+function normalizeAuthPath(path: string): string {
+  return path.startsWith("/") ? path : `/${path}`;
+}
+
+/** Same-origin redirects (OAuth PKCE must stay on the tab that started sign-in). */
 export function authRedirectUrl(path = "/pulse"): string {
-  if (typeof window === "undefined") return path;
-  return `${window.location.origin}${path.startsWith("/") ? path : `/${path}`}`;
+  if (typeof window === "undefined") {
+    return `${PUBLIC_SITE_URL.replace(/\/$/, "")}${normalizeAuthPath(path)}`;
+  }
+  return `${window.location.origin}${normalizeAuthPath(path)}`;
+}
+
+/**
+ * Links inside Supabase emails (reset, confirm, magic link). Always use the public
+ * site URL so messages never point at Vercel preview deployments or SSO gates.
+ */
+export function emailAuthRedirectUrl(path = "/pulse"): string {
+  const normalizedPath = normalizeAuthPath(path);
+  if (typeof window !== "undefined") {
+    const origin = window.location.origin;
+    if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)) {
+      return `${origin}${normalizedPath}`;
+    }
+  }
+  return `${PUBLIC_SITE_URL.replace(/\/$/, "")}${normalizedPath}`;
 }
 
 /**
