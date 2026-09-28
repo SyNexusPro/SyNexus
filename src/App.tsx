@@ -66,6 +66,9 @@ const SiteAnalytics = lazy(() =>
   import("./pages/SiteAnalytics").then((m) => ({ default: m.SiteAnalytics })),
 );
 const GodMode = lazy(() => import("./pages/GodMode").then((m) => ({ default: m.GodMode })));
+const ResetPassword = lazy(() =>
+  import("./pages/ResetPassword").then((m) => ({ default: m.ResetPassword })),
+);
 const Pricing = lazy(() => import("./pages/Pricing").then((m) => ({ default: m.Pricing })));
 const RefundPolicy = lazy(() =>
   import("./pages/RefundPolicy").then((m) => ({ default: m.RefundPolicy })),
@@ -155,6 +158,7 @@ export default function App() {
               }
             />
             <Route path="god" element={<GodMode />} />
+            <Route path="reset-password" element={<ResetPassword />} />
             <Route path="invite" element={<InviteEarn />} />
             <Route path="invite/:code" element={<InviteEarn />} />
             <Route path="pricing" element={<Pricing />} />

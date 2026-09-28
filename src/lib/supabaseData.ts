@@ -2,7 +2,6 @@ import type { Session, User } from "@supabase/supabase-js";
 import { isAlwaysOnLoginEmail } from "../config/googlePlayReview";
 import { assertGoogleProviderEnabled } from "./googleSignIn";
 import { emailAuthRedirectUrl, googleAuthRedirectUrl, supabase } from "./supabaseClient";
-import { PASSWORD_RECOVERY_REDIRECT } from "./passwordRecovery";
 import { validateSignupPassword } from "./authCredentials";
 import { guardAuthAttempt } from "./securityBot";
 import { SIGNUP_CONFIRM_REDIRECT } from "./signupWelcome";
@@ -215,8 +214,11 @@ export async function requestPasswordReset(email: string) {
     throw new Error(authGuard.message ?? "Reset blocked by SyNexus security.");
   }
   if (!supabase) throw new Error("Supabase env vars are missing.");
+  if (typeof window === "undefined") {
+    throw new Error("Password reset must be requested from the app.");
+  }
   const { data, error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-    redirectTo: emailAuthRedirectUrl(PASSWORD_RECOVERY_REDIRECT),
+    redirectTo: `${window.location.origin}/reset-password`,
   });
   if (error) throwIfStructuralDbFailure(error);
   return data;
