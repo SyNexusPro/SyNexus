@@ -23,6 +23,7 @@ import {
   toAtomicAmount,
   walletSignAndSend,
 } from "../lib/solanaWallet";
+import { WALLETCONNECT_WALLET_NAME } from "../lib/walletConnectSolana";
 import { loadSwapHistory, recordSwapHistory, type SwapHistoryRecord } from "../lib/swapHistory";
 import { assessSwapToken, priceImpactGate, type SwapSafetyReport } from "../lib/swapSafety";
 import { calculateTradeFeeUsd, formatFeeUsd, formatTradingFeeRate, getTradingFeeBps } from "../lib/tradingFees";
@@ -67,6 +68,7 @@ function TradeScreen() {
   const [params] = useSearchParams();
   const plan = useSynexusPlan();
   const wallet = useSolanaWallet();
+  const hasInstalledWallet = wallet.wallets.some((w) => w.kind !== WALLETCONNECT_WALLET_NAME);
   const feeBps = getTradingFeeBps(plan);
   const feeAccount = jupiterFeeAccount();
 
@@ -458,45 +460,44 @@ function TradeScreen() {
               Disconnect
             </button>
           </>
-        ) : wallet.available ? (
-          <>
-            <p className="trade-page__hint">
-              Pick any Solana wallet you have installed. The private key stays in the wallet.
-            </p>
-            <div className="trade-page__actions">
-              {wallet.wallets.map((w) => (
-                <button
-                  key={w.kind}
-                  type="button"
-                  className="trade-page__cta trade-page__cta--wallet"
-                  disabled={wallet.busy}
-                  onClick={() => void wallet.connect(w.kind)}
-                >
-                  {w.icon ? <img src={w.icon} alt="" width={22} height={22} /> : null}
-                  Connect {w.kind}
-                </button>
-              ))}
-            </div>
-          </>
         ) : (
           <>
             <p className="trade-page__hint">
-              No Solana wallet detected. Install any Solana wallet extension (Phantom, Solflare, Backpack, OKX,
-              Coinbase, and more), or on mobile open this page inside your wallet&apos;s browser.
+              {hasInstalledWallet
+                ? "Pick any Solana wallet. The private key stays in the wallet."
+                : "No wallet extension detected. Use WalletConnect to scan with any Solana wallet app, install a Solana wallet extension, or open this page inside your wallet's browser."}
             </p>
-            <div className="trade-page__actions">
-              {walletBrowseLinks().map((link) => (
-                <a
-                  key={link.name}
-                  className="trade-page__cta"
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Open in {link.name}
-                </a>
-              ))}
-            </div>
+            {wallet.wallets.length ? (
+              <div className="trade-page__actions">
+                {wallet.wallets.map((w) => (
+                  <button
+                    key={w.kind}
+                    type="button"
+                    className="trade-page__cta trade-page__cta--wallet"
+                    disabled={wallet.busy}
+                    onClick={() => void wallet.connect(w.kind)}
+                  >
+                    {w.icon ? <img src={w.icon} alt="" width={22} height={22} /> : null}
+                    {w.kind === WALLETCONNECT_WALLET_NAME ? "WalletConnect (scan QR)" : `Connect ${w.kind}`}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+            {hasInstalledWallet ? null : (
+              <div className="trade-page__actions">
+                {walletBrowseLinks().map((link) => (
+                  <a
+                    key={link.name}
+                    className="trade-page__cta trade-page__cta--secondary"
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Open in {link.name}
+                  </a>
+                ))}
+              </div>
+            )}
           </>
         )}
         {wallet.error ? <p className="trade-page__error">{wallet.error}</p> : null}

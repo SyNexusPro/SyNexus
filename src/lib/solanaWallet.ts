@@ -1,5 +1,11 @@
 import { Connection, PublicKey, VersionedTransaction } from "@solana/web3.js";
 import { JUPITER_SOL_MINT } from "./solanaTradeLinks";
+import {
+  WALLETCONNECT_ICON,
+  WALLETCONNECT_WALLET_NAME,
+  createWalletConnectProvider,
+  isWalletConnectConfigured,
+} from "./walletConnectSolana";
 
 const TOKEN_PROGRAM_ID = new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
 const TOKEN_2022_PROGRAM_ID = new PublicKey("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb");
@@ -84,6 +90,7 @@ const standardWallets = new Set<StandardWallet>();
 const standardAdapters = new WeakMap<StandardWallet, SolanaWalletProvider>();
 const walletListeners = new Set<() => void>();
 let standardDiscoveryStarted = false;
+let walletConnectProvider: SolanaWalletProvider | null = null;
 
 function isSolanaStandardWallet(wallet: StandardWallet): boolean {
   const features = wallet.features ?? {};
@@ -273,6 +280,10 @@ export function detectSolanaProviders(): DetectedSolanaWallet[] {
     if (seen.has(key)) continue;
     seen.add(key);
     found.push(legacy);
+  }
+  if (isWalletConnectConfigured() && !seen.has(normalizeWalletName(WALLETCONNECT_WALLET_NAME))) {
+    walletConnectProvider ??= createWalletConnectProvider();
+    found.push({ kind: WALLETCONNECT_WALLET_NAME, icon: WALLETCONNECT_ICON, provider: walletConnectProvider });
   }
   return found;
 }

@@ -5,6 +5,8 @@ interface ImportMetaEnv {
   readonly VITE_SUPABASE_ANON_KEY: string;
   readonly VITE_BIRDEYE_API_KEY?: string;
   readonly VITE_SOLANA_RPC_URL?: string;
+  /** Reown / WalletConnect Cloud project ID (public, domain-allowlisted). Enables the WalletConnect QR option. */
+  readonly VITE_WALLETCONNECT_PROJECT_ID?: string;
   /** In-app Trade/Swap. Must be the string "true" to include the /trade route. Default off. */
   readonly VITE_TRADING_ENABLED?: string;
   /** Second flag required to show Trade on native Android (Play Store stays intelligence-only). */
