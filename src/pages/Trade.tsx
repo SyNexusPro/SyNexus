@@ -18,8 +18,8 @@ import {
 import { JUPITER_SOL_MINT } from "../lib/solanaTradeLinks";
 import {
   maxSpendable,
-  phantomBrowseUrl,
   shortenAddress,
+  walletBrowseLinks,
   toAtomicAmount,
   walletSignAndSend,
 } from "../lib/solanaWallet";
@@ -460,17 +460,20 @@ function TradeScreen() {
           </>
         ) : wallet.available ? (
           <>
-            <p className="trade-page__hint">Connect Phantom or Solflare. The private key stays in the wallet.</p>
+            <p className="trade-page__hint">
+              Pick any Solana wallet you have installed. The private key stays in the wallet.
+            </p>
             <div className="trade-page__actions">
-              {(wallet.kinds.length ? wallet.kinds : (["Phantom", "Solflare"] as const)).map((k) => (
+              {wallet.wallets.map((w) => (
                 <button
-                  key={k}
+                  key={w.kind}
                   type="button"
-                  className="trade-page__cta"
+                  className="trade-page__cta trade-page__cta--wallet"
                   disabled={wallet.busy}
-                  onClick={() => void wallet.connect(k)}
+                  onClick={() => void wallet.connect(w.kind)}
                 >
-                  Connect {k}
+                  {w.icon ? <img src={w.icon} alt="" width={22} height={22} /> : null}
+                  Connect {w.kind}
                 </button>
               ))}
             </div>
@@ -478,12 +481,22 @@ function TradeScreen() {
         ) : (
           <>
             <p className="trade-page__hint">
-              No wallet extension detected. Install Phantom or Solflare, or open this page inside the wallet
-              browser.
+              No Solana wallet detected. Install any Solana wallet extension (Phantom, Solflare, Backpack, OKX,
+              Coinbase, and more), or on mobile open this page inside your wallet&apos;s browser.
             </p>
-            <a className="trade-page__cta" href={phantomBrowseUrl()} target="_blank" rel="noopener noreferrer">
-              Open in Phantom
-            </a>
+            <div className="trade-page__actions">
+              {walletBrowseLinks().map((link) => (
+                <a
+                  key={link.name}
+                  className="trade-page__cta"
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Open in {link.name}
+                </a>
+              ))}
+            </div>
           </>
         )}
         {wallet.error ? <p className="trade-page__error">{wallet.error}</p> : null}

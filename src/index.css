@@ -14406,6 +14406,20 @@ body:has(.oracle-chat--presence) .titan-sheet-backdrop {
   margin-top: 10px;
 }
 
+.trade-page__cta--wallet {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.trade-page__cta--wallet img {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
 .trade-page__cta {
   width: 100%;
   margin-top: 8px;
