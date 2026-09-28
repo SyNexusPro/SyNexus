@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import type { BiometricSupport } from "../lib/biometricLogin";
+import { isGooglePlayReviewEmail } from "../config/googlePlayReview";
 import { SYNEXUS_PRO_TRIAL_DAYS } from "../config/proTrial";
 import { useTitanBotName } from "../hooks/useTitanBotName";
 import { PasswordRevealToggle } from "./PasswordRevealToggle";
@@ -108,8 +109,14 @@ export function PulseOperatorLink({
   const [mode, setMode] = useState<"return" | "link" | "command">(
     initialMode ?? (variant === "oracle" ? "link" : "return"),
   );
-  const [signInMethod, setSignInMethod] = useState<SignInMethod>("magic");
+  const [signInMethod, setSignInMethod] = useState<SignInMethod>("password");
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    if (isGooglePlayReviewEmail(email)) {
+      setSignInMethod("password");
+    }
+  }, [email]);
   const [confirmPassword, setConfirmPassword] = useState("");
   const linked = Boolean(userId);
   const sessionActive = linked || ownerUnlocked;

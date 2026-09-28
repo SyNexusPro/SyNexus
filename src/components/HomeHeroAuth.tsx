@@ -81,6 +81,10 @@ export function HomeHeroAuth({ isSimple = false }: Props) {
       void attachPendingInvite();
       void syncInviteRewardForUser();
     }
+    if (result?.playReviewer || result?.godMode) {
+      navigate(result?.mode === "signup" ? "/" : "/pulse");
+      return;
+    }
     const mfaPath = await continueMfaAfterAuth();
     if (mfaPath) {
       navigate(mfaPath, { replace: true });

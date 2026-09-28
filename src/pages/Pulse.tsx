@@ -33,6 +33,7 @@ import {
 } from "../data/syntheticWatchers";
 import { recordTrustedPlanGrant, enforceStoredPlan } from "../lib/securityBot";
 import { applyGooglePlayReviewAccess } from "../lib/googlePlayReviewAccess";
+import { isBackgroundAuthRefresh, shouldReloadOperatorSession } from "../lib/authEvents";
 import { signInAlwaysOnAccount } from "../lib/alwaysOnSignIn";
 import { attachPendingInvite, syncInviteRewardForUser } from "../lib/inviteEarn";
 import {
@@ -409,6 +410,8 @@ export function Pulse() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
+      if (isBackgroundAuthRefresh(event)) return;
+
       if (event === "PASSWORD_RECOVERY") {
         setRecoveryMode(true);
         setAuthMessage({ tone: "info", text: "Choose a new access key to finish resetting." });
@@ -494,7 +497,9 @@ export function Pulse() {
         });
       }
 
-      void loadData(signedInUser);
+      if (shouldReloadOperatorSession(event)) {
+        void loadData(signedInUser);
+      }
     });
 
     return () => subscription.unsubscribe();

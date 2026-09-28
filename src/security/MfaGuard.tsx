@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import type { User } from "@supabase/supabase-js";
 import { Navigate, useLocation } from "react-router-dom";
+import { isBackgroundAuthRefresh } from "../lib/authEvents";
 import { isEmailVerified } from "../lib/emailVerification";
 import { hasSupabaseEnv, supabase } from "../lib/supabaseClient";
 import {
@@ -44,7 +45,8 @@ export function MfaGuard({ children }: { children: ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (isBackgroundAuthRefresh(event)) return;
       const user = session?.user ?? null;
       window.setTimeout(() => {
         void decide(user);
@@ -60,7 +62,7 @@ export function MfaGuard({ children }: { children: ReactNode }) {
       window.clearTimeout(fallback);
       subscription.unsubscribe();
     };
-  }, [location.key]);
+  }, []);
 
   if (state === "loading") {
     return (

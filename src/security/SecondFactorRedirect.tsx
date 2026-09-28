@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { isBackgroundAuthRefresh } from "../lib/authEvents";
 import { isEmailVerified } from "../lib/emailVerification";
 import { hasStoredOwnerGrant } from "../lib/ownerAccess";
 import { supabase } from "../lib/supabaseClient";
@@ -59,7 +60,7 @@ export function SecondFactorRedirect() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_OUT") return;
+      if (event === "SIGNED_OUT" || isBackgroundAuthRefresh(event)) return;
       window.setTimeout(() => {
         void sendIfNeeded();
       }, 0);

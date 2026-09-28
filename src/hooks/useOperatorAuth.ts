@@ -6,6 +6,7 @@ import { hasStoredOwnerGrant, OWNER_ACCESS_CHANGED } from "../lib/ownerAccess";
 import { isEmailVerified } from "../lib/emailVerification";
 import { isAlwaysOnLoginEmail } from "../config/googlePlayReview";
 import { applyGooglePlayReviewAccess } from "../lib/googlePlayReviewAccess";
+import { isBackgroundAuthRefresh } from "../lib/authEvents";
 import { isMfaPolicyExemptEmail, resolveMfaContinue, sessionSatisfiesProtectedAccess } from "../security/mfa";
 
 const DEMO_SESSION_KEY = "synexus_demo_session";
@@ -93,7 +94,8 @@ export function useOperatorAuth() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (isBackgroundAuthRefresh(event)) return;
       const user = session?.user ?? null;
       window.setTimeout(() => {
         void applyUser(user);

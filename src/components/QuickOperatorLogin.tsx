@@ -37,6 +37,8 @@ export type QuickOperatorAuthResult = {
   mode: "signin" | "signup";
   userId?: string;
   email?: string;
+  playReviewer?: boolean;
+  godMode?: boolean;
 };
 
 type Props = {
@@ -199,6 +201,8 @@ export function QuickOperatorLogin({
         mode: "signin",
         userId: signedInUser?.id,
         email: trimmedEmail,
+        playReviewer: alwaysOn.playReviewer,
+        godMode: alwaysOn.godMode,
       });
       if (mfaPath) navigate(mfaPath, { replace: true });
     } catch (err) {
