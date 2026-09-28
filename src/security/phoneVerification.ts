@@ -33,6 +33,31 @@ export function isPhoneVerified(user: User | null | undefined): boolean {
   return Boolean(user?.phone?.trim() && user.phone_confirmed_at);
 }
 
+let freshUserRequest: Promise<User | null> | null = null;
+let freshUserCache: { user: User | null; at: number } | null = null;
+const FRESH_USER_TTL_MS = 5_000;
+
+/** Server-confirmed user, deduplicated so auth listeners do not stampede /user. */
+export async function getFreshAuthUser(): Promise<User | null> {
+  if (!supabase) return null;
+  if (freshUserCache && Date.now() - freshUserCache.at < FRESH_USER_TTL_MS) return freshUserCache.user;
+  if (freshUserRequest) return freshUserRequest;
+  const client = supabase;
+  freshUserRequest = (async () => {
+    try {
+      const { data, error } = await withAuthTimeout(client.auth.getUser());
+      const user = error ? null : data.user;
+      freshUserCache = { user, at: Date.now() };
+      return user;
+    } catch {
+      return null;
+    } finally {
+      freshUserRequest = null;
+    }
+  })();
+  return freshUserRequest;
+}
+
 export function normalizePhoneNumber(value: string): string | null {
   const compact = value.trim().replace(/[\s().-]/g, "");
   if (!/^\+[1-9]\d{7,14}$/.test(compact)) return null;
@@ -99,7 +124,7 @@ export async function verifyPhoneSmsCode(phoneValue: string, code: string): Prom
   if (!phone) throw new Error("Enter a valid mobile number and request a new code.");
   if (digits.length !== 6) throw new Error("Enter the complete 6-digit verification code.");
 
-  const { error } = await withAuthTimeout(
+  const { data, error } = await withAuthTimeout(
     supabase.auth.verifyOtp({
       phone,
       token: digits,
@@ -111,12 +136,22 @@ export async function verifyPhoneSmsCode(phoneValue: string, code: string): Prom
     throw phoneError(error.message, "That verification code is invalid.", "verify");
   }
 
-  await supabase.auth.refreshSession();
-  const { data, error: userError } = await withAuthTimeout(supabase.auth.getUser());
-  if (userError || !isPhoneVerified(data.user)) {
+  freshUserCache = null;
+  let user = data.user && isPhoneVerified(data.user) ? data.user : await getFreshAuthUser();
+  if (!isPhoneVerified(user)) {
+    freshUserCache = null;
+    user = await getFreshAuthUser();
+  }
+  if (!user || !isPhoneVerified(user)) {
     void recordSecurityEvent({ eventType: "phone_verification_failure", success: false });
     throw new Error("Phone verification did not finish. Send a new code and try again.");
   }
+
+  // Persist the verified phone into the stored session so guards read it locally.
+  const client = supabase;
+  void withAuthTimeout(client.auth.refreshSession()).catch(() => {
+    /* guards fall back to getFreshAuthUser */
+  });
   void recordSecurityEvent({ eventType: "phone_verification_success", success: true });
-  return data.user;
+  return user;
 }

@@ -7,9 +7,9 @@ import {
   type KeyboardEvent,
 } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { supabase } from "../../lib/supabaseClient";
 import { markRecentStepUp } from "../../security/mfa";
 import {
+  getFreshAuthUser,
   isPhoneVerified,
   maskPhoneNumber,
   PHONE_RESEND_SECONDS,
@@ -62,11 +62,8 @@ export function MfaSetup() {
 
   useEffect(() => {
     let alive = true;
-    void supabase?.auth.getUser().then(({ data }) => {
-      if (!alive) return;
-      if (isPhoneVerified(data.user)) {
-        navigate(returnPath, { replace: true });
-      }
+    void getFreshAuthUser().then((user) => {
+      if (alive && isPhoneVerified(user)) navigate(returnPath, { replace: true });
     });
     return () => {
       alive = false;

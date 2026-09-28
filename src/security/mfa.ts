@@ -3,7 +3,7 @@ import { isAlwaysOnLoginEmail } from "../config/googlePlayReview";
 import { isEmailVerified } from "../lib/emailVerification";
 import { hasStoredOwnerGrant } from "../lib/ownerAccess";
 import { supabase } from "../lib/supabaseClient";
-import { isPhoneVerified } from "./phoneVerification";
+import { getFreshAuthUser, isPhoneVerified } from "./phoneVerification";
 import { recordSecurityEvent } from "./securityEvents";
 
 export const MFA_SETUP_PATH = "/security/setup";
@@ -61,9 +61,9 @@ export async function resolveMfaContinue(user?: User | null): Promise<MfaContinu
   let sessionUser = user === undefined ? await getVerifiedSessionUser() : user;
   if (!sessionUser) return { action: "unsigned" };
   if (isMfaPolicyExemptEmail(sessionUser.email)) return { action: "ok" };
-  if (!isPhoneVerified(sessionUser) && supabase) {
-    const { data } = await supabase.auth.getUser();
-    if (data.user) sessionUser = data.user;
+  if (!isPhoneVerified(sessionUser)) {
+    const fresh = await getFreshAuthUser();
+    if (fresh) sessionUser = fresh;
   }
   if (isPhoneVerified(sessionUser)) return { action: "ok" };
   const totpFactors = await listVerifiedTotpFactors();
@@ -88,7 +88,8 @@ export async function sessionSatisfiesProtectedAccess(): Promise<boolean> {
   if (!user) return false;
   if (isMfaPolicyExemptEmail(user.email)) return true;
   if (!isEmailVerified(user)) return false;
-  return isPhoneVerified(user);
+  if (isPhoneVerified(user)) return true;
+  return isPhoneVerified(await getFreshAuthUser());
 }
 
 export type TotpEnrollment = {
@@ -196,7 +197,7 @@ export async function unenrollFactor(factorId: string): Promise<void> {
   const factors = await listVerifiedTotpFactors();
   if (!factors.some((factor) => factor.id === factorId)) throw new Error("Authenticator not found.");
   const sessionUser = await getVerifiedSessionUser();
-  if (!isPhoneVerified(sessionUser)) {
+  if (!isPhoneVerified(sessionUser) && !isPhoneVerified(await getFreshAuthUser())) {
     throw new Error("Verify your phone number before removing an authenticator.");
   }
   const { currentLevel } = await getAssurance();
