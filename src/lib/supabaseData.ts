@@ -32,7 +32,7 @@ function flattenErrorDiagnostics(err: unknown): string {
  * Missing tables/functions (often `… does not exist`, PGRST schema cache) sometimes bubble up via auth
  * triggers or hooks; map to a concrete fix instead of a raw Postgres string.
  */
-function withAuthTimeout<T>(promise: Promise<T>, label: string): Promise<T> {
+function withAuthTimeout<T>(promise: PromiseLike<T>, label: string): Promise<T> {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error(`${label} timed out. Check your connection and try again.`)), 12_000);
     promise.then(
@@ -100,7 +100,8 @@ export async function signUpWithEmail(
   password: string,
   normalizedUsername?: string,
 ) {
-  const authGuard = guardAuthAttempt("sign_up", email, password);
+  const normalizedEmail = email.trim().toLowerCase();
+  const authGuard = guardAuthAttempt("sign_up", normalizedEmail, password);
   if (!authGuard.allowed) {
     throw new Error(authGuard.message ?? "Sign-up blocked by SyNexus security.");
   }
@@ -110,7 +111,7 @@ export async function signUpWithEmail(
   }
   if (!supabase) throw new Error("Supabase env vars are missing.");
   const { data, error } = await withAuthTimeout(supabase.auth.signUp({
-    email,
+    email: normalizedEmail,
     password,
     options: {
       emailRedirectTo: emailAuthRedirectUrl(SIGNUP_CONFIRM_REDIRECT),
@@ -127,13 +128,16 @@ export async function resendSignupVerificationEmail(email: string) {
     throw new Error(authGuard.message ?? "Verification resend blocked by SyNexus security.");
   }
   if (!supabase) throw new Error("Supabase env vars are missing.");
-  const { data, error } = await supabase.auth.resend({
-    type: "signup",
-    email: email.trim(),
-    options: {
-      emailRedirectTo: emailAuthRedirectUrl(SIGNUP_CONFIRM_REDIRECT),
-    },
-  });
+  const { data, error } = await withAuthTimeout(
+    supabase.auth.resend({
+      type: "signup",
+      email: email.trim().toLowerCase(),
+      options: {
+        emailRedirectTo: emailAuthRedirectUrl(SIGNUP_CONFIRM_REDIRECT),
+      },
+    }),
+    "Verification email",
+  );
   if (error) throwIfStructuralDbFailure(error);
   return data;
 }
@@ -208,18 +212,35 @@ export async function signInWithOAuth(provider: "google") {
   return data;
 }
 
+/**
+ * Emails a recovery code. No `redirectTo` is passed on purpose — the operator finishes
+ * the reset inside SyNexus by typing the code, so the mail never links out to another host.
+ */
 export async function requestPasswordReset(email: string) {
   const authGuard = guardAuthAttempt("sign_in", email);
   if (!authGuard.allowed) {
     throw new Error(authGuard.message ?? "Reset blocked by SyNexus security.");
   }
   if (!supabase) throw new Error("Supabase env vars are missing.");
-  if (typeof window === "undefined") {
-    throw new Error("Password reset must be requested from the app.");
-  }
-  const { data, error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-    redirectTo: `${window.location.origin}/reset-password`,
-  });
+  const { data, error } = await withAuthTimeout(
+    supabase.auth.resetPasswordForEmail(email.trim().toLowerCase()),
+    "Recovery code",
+  );
+  if (error) throwIfStructuralDbFailure(error);
+  return data;
+}
+
+/** Exchanges the emailed recovery code for the short-lived session that allows a password change. */
+export async function verifyPasswordRecoveryCode(email: string, recoveryCode: string) {
+  if (!supabase) throw new Error("Supabase env vars are missing.");
+  const { data, error } = await withAuthTimeout(
+    supabase.auth.verifyOtp({
+      email: email.trim().toLowerCase(),
+      token: recoveryCode.trim(),
+      type: "recovery",
+    }),
+    "Recovery code check",
+  );
   if (error) throwIfStructuralDbFailure(error);
   return data;
 }
@@ -230,7 +251,10 @@ export async function updatePassword(newPassword: string) {
     throw new Error(passwordCheck.message ?? "Choose a stronger password.");
   }
   if (!supabase) throw new Error("Supabase env vars are missing.");
-  const { data, error } = await supabase.auth.updateUser({ password: newPassword });
+  const { data, error } = await withAuthTimeout(
+    supabase.auth.updateUser({ password: newPassword }),
+    "Password update",
+  );
   if (error) throwIfStructuralDbFailure(error);
   return data;
 }
@@ -337,11 +361,14 @@ export async function upsertSignupProfile(
 
 export async function upsertProfile(userId: string, displayName: string, username: string) {
   if (!supabase) throw new Error("Supabase env vars are missing.");
-  const { error } = await supabase.from("profiles").upsert({
-    id: userId,
-    display_name: displayName,
-    username,
-  });
+  const { error } = await withAuthTimeout(
+    supabase.from("profiles").upsert({
+      id: userId,
+      display_name: displayName,
+      username,
+    }),
+    "Profile setup",
+  );
   if (error) throw error;
 }
 

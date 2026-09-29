@@ -9,6 +9,18 @@ export function describeAuthError(err: unknown): string {
   if (lower.includes("email not confirmed")) {
     return "Confirm your email before signing in.";
   }
+  if (lower.includes("invalid email") || lower.includes("email address is invalid")) {
+    return "Enter a valid email address.";
+  }
+  if (lower.includes("signup") && (lower.includes("disabled") || lower.includes("not allowed"))) {
+    return "Account creation is temporarily unavailable. Please try again later.";
+  }
+  if (lower.includes("password") && (lower.includes("weak") || lower.includes("least"))) {
+    return msg;
+  }
+  if (lower.includes("failed to fetch") || lower.includes("network")) {
+    return "Could not reach the sign-up service. Check your connection and try again.";
+  }
   if (lower.includes("banned") || lower.includes("user is disabled") || lower.includes("user_banned")) {
     return "This account is disabled in Supabase. Re-enable it under Authentication → Users, or run npm run owner:enable.";
   }
@@ -45,6 +57,9 @@ export function describeAuthError(err: unknown): string {
   ) {
     return AUTH_USER_FRIENDLY_ERROR;
   }
+  // Surface whatever Supabase actually said — a blank generic message reads as a frozen screen.
+  const trimmed = msg.trim();
+  if (trimmed && trimmed !== "[object Object]" && !lower.startsWith("undefined")) return trimmed;
   return AUTH_USER_FRIENDLY_ERROR;
 }
 

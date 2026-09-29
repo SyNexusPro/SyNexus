@@ -32,3 +32,11 @@ export function hasSignupWelcomeParam(): boolean {
   if (typeof window === "undefined") return false;
   return new URLSearchParams(window.location.search).get("welcome") === "1";
 }
+
+/** Remove only the signup marker without discarding scan, checkout, or other deep-link state. */
+export function clearSignupWelcomeParam(): void {
+  if (typeof window === "undefined") return;
+  const url = new URL(window.location.href);
+  url.searchParams.delete("welcome");
+  window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+}

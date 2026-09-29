@@ -25,7 +25,6 @@ type PulseOperatorLinkProps = {
   biometricSupport: BiometricSupport | null;
   biometricEnrolled: boolean;
   biometricEmailHint: string | null;
-  recoveryMode?: boolean;
   emailVerificationPending?: boolean;
   pendingVerificationEmail?: string | null;
   signupPasswordHint?: string | null;
@@ -39,7 +38,6 @@ type PulseOperatorLinkProps = {
   onDisableBiometric: () => void;
   onMagicLink: () => void;
   onForgotPassword: () => void;
-  onUpdatePassword: (password: string) => void;
   onResendVerification: () => void;
   onContinueToSignIn: () => void;
   onOauthError?: (message: string) => void;
@@ -81,7 +79,6 @@ export function PulseOperatorLink({
   biometricSupport,
   biometricEnrolled,
   biometricEmailHint,
-  recoveryMode = false,
   emailVerificationPending = false,
   pendingVerificationEmail = null,
   signupPasswordHint,
@@ -95,7 +92,6 @@ export function PulseOperatorLink({
   onDisableBiometric,
   onMagicLink,
   onForgotPassword,
-  onUpdatePassword,
   onResendVerification,
   onContinueToSignIn,
   onOauthError,
@@ -115,7 +111,6 @@ export function PulseOperatorLink({
       setSignInMethod("password");
     }
   }, [email]);
-  const [confirmPassword, setConfirmPassword] = useState("");
   const linked = Boolean(userId);
   const sessionActive = linked || ownerUnlocked;
   const isDemo = userId?.startsWith("demo-") ?? false;
@@ -129,76 +124,6 @@ export function PulseOperatorLink({
   }, [isDemo, userEmail]);
 
   const initials = operatorInitials(operatorName, userEmail);
-
-  if (recoveryMode && hasSupabaseEnv) {
-    const passwordsMatch = password.length > 0 && password === confirmPassword;
-    return (
-      <section className="operator-link" aria-label="Set a new password">
-        <header className="operator-link__head">
-          <p className="operator-link__eyebrow">Secure reset</p>
-          <h2 className="operator-link__title">Choose a new access key</h2>
-          <p className="operator-link__lede">
-            Use at least 10 characters with letters and numbers. We never store your password in plain text.
-          </p>
-        </header>
-
-        <p className={`operator-link__message operator-link__message--${authMessage.tone}`} role="status">
-          {authMessage.text}
-        </p>
-
-        <div className="operator-link__fields">
-          <label className="operator-link__field">
-            <span>New access key</span>
-            <div className="operator-link__password-wrap">
-              <input
-                type={showPassword ? "text" : "password"}
-                autoComplete="new-password"
-                value={password}
-                disabled={authBusy}
-                placeholder="••••••••••"
-                onChange={(event) => onPasswordChange(event.target.value)}
-              />
-              <PasswordRevealToggle
-                revealed={showPassword}
-                disabled={authBusy}
-                onToggle={() => setShowPassword((v) => !v)}
-              />
-            </div>
-            {signupPasswordHint ? (
-              <span className="operator-link__password-hint">{signupPasswordHint}</span>
-            ) : null}
-          </label>
-          <label className="operator-link__field">
-            <span>Confirm access key</span>
-            <div className="operator-link__password-wrap">
-              <input
-                type={showPassword ? "text" : "password"}
-                autoComplete="new-password"
-                value={confirmPassword}
-                disabled={authBusy}
-                placeholder="••••••••••"
-                onChange={(event) => setConfirmPassword(event.target.value)}
-              />
-              <PasswordRevealToggle
-                revealed={showPassword}
-                disabled={authBusy}
-                onToggle={() => setShowPassword((v) => !v)}
-              />
-            </div>
-          </label>
-        </div>
-
-        <button
-          type="button"
-          className="operator-link__submit"
-          disabled={authBusy || !passwordsMatch}
-          onClick={() => onUpdatePassword(password)}
-        >
-          {authBusy ? "Saving…" : "Save new access key"}
-        </button>
-      </section>
-    );
-  }
 
   if (emailVerificationPending && hasSupabaseEnv && !ownerUnlocked) {
     const maskedPending = pendingVerificationEmail ? maskEmail(pendingVerificationEmail) : "your inbox";

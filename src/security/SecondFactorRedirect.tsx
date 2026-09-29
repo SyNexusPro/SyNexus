@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { isBackgroundAuthRefresh } from "../lib/authEvents";
+import { isInteractiveAuthFlowRunning } from "../lib/authFlowGuard";
 import { isEmailVerified } from "../lib/emailVerification";
 import { hasStoredOwnerGrant } from "../lib/ownerAccess";
 import { supabase } from "../lib/supabaseClient";
@@ -10,6 +11,7 @@ import {
   MFA_SETUP_PATH,
   MFA_VERIFY_PATH,
   resolveMfaContinue,
+  type MfaContinue,
 } from "./mfa";
 
 /**
@@ -35,18 +37,27 @@ export function SecondFactorRedirect() {
     if (!supabase) return;
     if (
       location.pathname === MFA_SETUP_PATH ||
-      location.pathname === MFA_VERIFY_PATH
+      location.pathname === MFA_VERIFY_PATH ||
+      location.pathname === "/reset-password"
     ) return;
 
     let alive = true;
 
     async function sendIfNeeded() {
       if (!alive || hasStoredOwnerGrant()) return;
+      // Sign-up and password recovery own their own navigation; redirecting from
+      // under them restarts the form and can bounce between auth screens.
+      if (isInteractiveAuthFlowRunning()) return;
       const params = new URLSearchParams(window.location.search);
       if (params.has("code") || params.has("error") || params.has("error_description")) return;
       const user = await getVerifiedSessionUser();
       if (!alive || !user || !isEmailVerified(user) || isMfaPolicyExemptEmail(user.email)) return;
-      const next = await resolveMfaContinue(user);
+      let next: MfaContinue;
+      try {
+        next = await resolveMfaContinue(user);
+      } catch {
+        return;
+      }
       if (!alive) return;
       if (next.action === "setup" || next.action === "verify") {
         navigate(next.path, { replace: true, state: { from: location.pathname } });

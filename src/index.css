@@ -2752,6 +2752,24 @@ html:has(.app-shell--home) #root {
   animation: pulse-glow 1.2s ease-in-out infinite;
 }
 
+.detail-loading__message {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--accent-cyan);
+}
+
+.detail-loading__retry {
+  margin-top: 16px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid rgba(0, 229, 255, 0.45);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--accent-cyan);
+  font: inherit;
+  cursor: pointer;
+}
+
 @keyframes pulse-glow {
   0%,
   100% {
@@ -4091,6 +4109,31 @@ html:has(.app-shell--home) #root {
   font-size: 0.68rem;
   line-height: 1.4;
   color: rgba(160, 180, 165, 0.78);
+}
+
+/* ----- Password recovery (emailed code) ----- */
+.password-recovery__code {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.4em;
+  text-align: center;
+  text-indent: 0.4em;
+}
+
+.password-recovery .operator-link__text-action {
+  margin: 10px auto 0;
+}
+
+@media (max-width: 480px) {
+  .password-recovery .operator-link__submit,
+  .password-recovery .operator-link__field input {
+    min-height: 48px;
+  }
+
+  .password-recovery__code {
+    font-size: 1.2rem;
+    letter-spacing: 0.3em;
+  }
 }
 
 /* ----- God mode login (/god) ----- */

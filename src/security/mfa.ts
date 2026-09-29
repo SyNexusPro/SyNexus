@@ -20,6 +20,30 @@ export type MfaContinue =
 
 const VERIFY_COOLDOWN_MS = 1400;
 let lastVerifyAt = 0;
+const MFA_RESOLUTION_CACHE_MS = 1500;
+const MFA_RESOLUTION_TIMEOUT_MS = 10_000;
+let pendingMfaResolution:
+  | { userId: string; promise: Promise<MfaContinue>; resolvedAt: number }
+  | null = null;
+
+function withMfaResolutionTimeout(promise: Promise<MfaContinue>): Promise<MfaContinue> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(
+      () => reject(new Error("Security check timed out. Check your connection and try again.")),
+      MFA_RESOLUTION_TIMEOUT_MS,
+    );
+    promise.then(
+      (result) => {
+        clearTimeout(timer);
+        resolve(result);
+      },
+      (err: unknown) => {
+        clearTimeout(timer);
+        reject(err instanceof Error ? err : new Error("Security check failed. Try again."));
+      },
+    );
+  });
+}
 
 export function isMfaPolicyExemptEmail(email: string | null | undefined): boolean {
   return isAlwaysOnLoginEmail(email);
@@ -57,8 +81,7 @@ export async function getVerifiedSessionUser(): Promise<User | null> {
   return data.session.user;
 }
 
-export async function resolveMfaContinue(user?: User | null): Promise<MfaContinue> {
-  let sessionUser = user === undefined ? await getVerifiedSessionUser() : user;
+async function resolveMfaForUser(sessionUser: User): Promise<MfaContinue> {
   if (!sessionUser) return { action: "unsigned" };
   if (isMfaPolicyExemptEmail(sessionUser.email)) return { action: "ok" };
   if (!isPhoneVerified(sessionUser)) {
@@ -74,22 +97,65 @@ export async function resolveMfaContinue(user?: User | null): Promise<MfaContinu
   return { action: "setup", path: MFA_SETUP_PATH };
 }
 
+export async function resolveMfaContinue(user?: User | null): Promise<MfaContinue> {
+  const sessionUser = user === undefined ? await getVerifiedSessionUser() : user;
+  if (!sessionUser) return { action: "unsigned" };
+
+  const cached = pendingMfaResolution;
+  if (
+    cached?.userId === sessionUser.id &&
+    (cached.resolvedAt === 0 || Date.now() - cached.resolvedAt < MFA_RESOLUTION_CACHE_MS)
+  ) {
+    return cached.promise;
+  }
+
+  const entry = {
+    userId: sessionUser.id,
+    promise: withMfaResolutionTimeout(resolveMfaForUser(sessionUser)),
+    resolvedAt: 0,
+  };
+  pendingMfaResolution = entry;
+  void entry.promise.then(
+    () => {
+      entry.resolvedAt = Date.now();
+    },
+    () => {
+      if (pendingMfaResolution === entry) pendingMfaResolution = null;
+    },
+  );
+  return entry.promise;
+}
+
+/**
+ * A just-created account cannot own a verified phone or authenticator factor, so the
+ * destination is already known. Resolving it locally keeps sign-up from blocking on
+ * three auth round trips; the guard on the destination still enforces the same policy.
+ */
+export function mfaPathForNewSignup(user: User | null | undefined): string | null {
+  if (!user || hasStoredOwnerGrant()) return null;
+  if (isMfaPolicyExemptEmail(user.email)) return null;
+  if (isPhoneVerified(user)) return null;
+  return MFA_SETUP_PATH;
+}
+
 /** After password / OAuth / biometric session is established. */
 export async function continueMfaAfterAuth(user?: User | null): Promise<string | null> {
   if (hasStoredOwnerGrant()) return null;
-  const next = await resolveMfaContinue(user);
-  if (next.action === "setup" || next.action === "verify") return next.path;
-  return null;
+  try {
+    const next = await resolveMfaContinue(user);
+    if (next.action === "setup" || next.action === "verify") return next.path;
+    return null;
+  } catch {
+    // A stalled check must not turn a successful sign-in into an error or a setup redirect.
+    return null;
+  }
 }
 
 export async function sessionSatisfiesProtectedAccess(): Promise<boolean> {
   if (hasStoredOwnerGrant()) return true;
   const user = await getVerifiedSessionUser();
-  if (!user) return false;
-  if (isMfaPolicyExemptEmail(user.email)) return true;
-  if (!isEmailVerified(user)) return false;
-  if (isPhoneVerified(user)) return true;
-  return isPhoneVerified(await getFreshAuthUser());
+  if (!user || !isEmailVerified(user)) return false;
+  return (await resolveMfaContinue(user)).action === "ok";
 }
 
 export type TotpEnrollment = {

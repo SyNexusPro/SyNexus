@@ -8,14 +8,12 @@ import {
   fetchTrackedTokens,
   fetchWatchlistTokens,
   getCurrentUser,
-  requestPasswordReset,
   signInWithMagicLink,
   signOut,
   signUpWithEmail,
   resendSignupVerificationEmail,
   restoreSessionFromRefreshToken,
   updatePaidPlan,
-  updatePassword,
   upsertSignupProfile,
   validateSignupPassword,
 } from "../lib/supabaseData";
@@ -34,7 +32,14 @@ import {
 import { recordTrustedPlanGrant, enforceStoredPlan } from "../lib/securityBot";
 import { applyGooglePlayReviewAccess } from "../lib/googlePlayReviewAccess";
 import { isBackgroundAuthRefresh, shouldReloadOperatorSession } from "../lib/authEvents";
-import { passwordResetInboxMessage } from "../lib/passwordRecovery";
+import {
+  beginInteractiveAuthFlow,
+  endInteractiveAuthFlow,
+  isInteractiveAuthFlowRunning,
+} from "../lib/authFlowGuard";
+import { withTimeout } from "../lib/withTimeout";
+import { PasswordRecoveryPanel } from "../components/PasswordRecoveryPanel";
+import { PASSWORD_RECOVERY_SUCCESS } from "../lib/passwordRecovery";
 import { signInAlwaysOnAccount } from "../lib/alwaysOnSignIn";
 import { attachPendingInvite, syncInviteRewardForUser } from "../lib/inviteEarn";
 import {
@@ -76,7 +81,7 @@ import {
   saveIntroOperatorName,
 } from "../lib/oracleSupremeConversation";
 import { hasSupabaseEnv, supabase } from "../lib/supabaseClient";
-import { continueMfaAfterAuth } from "../security/mfa";
+import { continueMfaAfterAuth, mfaPathForNewSignup } from "../security/mfa";
 import { recordSecurityEvent } from "../security/securityEvents";
 import { saveTitanBotName } from "../lib/titanBotName";
 import { useTitanBotName } from "../hooks/useTitanBotName";
@@ -96,6 +101,7 @@ import { SYNEXUS_PRO_PRICE_LABEL, SYNEXUS_PRO_SUBSCRIBE_LABEL } from "../config/
 import { SYNEXUS_PRO_TRIAL_DAYS, SYNEXUS_PRO_TRIAL_LABEL } from "../config/proTrial";
 import {
   SIGNUP_WELCOME_ACTIVE,
+  clearSignupWelcomeParam,
   consumeAwaitingSignupWelcome,
   hasSignupWelcomeParam,
   markAwaitingSignupWelcome,
@@ -207,6 +213,7 @@ export function Pulse() {
   const { name: titanBotName } = useTitanBotName();
   const biometric = useBiometricLogin();
   const pendingAuthMethod = useRef<"password" | "signup" | "biometric" | null>(null);
+  const signupSubmitting = useRef(false);
 
   const signupPasswordHint = useMemo(() => {
     if (!password) return null;
@@ -412,9 +419,21 @@ export function Pulse() {
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (isBackgroundAuthRefresh(event)) return;
 
+      // Sign-up and password recovery own the screen while they run. A SIGNED_IN
+      // from verifying a recovery code must not close that screen or enroll biometrics.
+      if (isInteractiveAuthFlowRunning()) {
+        if (event === "PASSWORD_RECOVERY") setRecoveryMode(true);
+        if (event === "SIGNED_OUT") {
+          setUserId(null);
+          setUserEmail(null);
+          setPassword("");
+        }
+        return;
+      }
+
       if (event === "PASSWORD_RECOVERY") {
         setRecoveryMode(true);
-        setAuthMessage({ tone: "info", text: "Choose a new access key to finish resetting." });
+        setAuthMessage({ tone: "info", text: "Enter your recovery code and choose a new password." });
         return;
       }
 
@@ -455,11 +474,12 @@ export function Pulse() {
       setUserEmail(signedInUser.email ?? null);
       if (signedInUser.email) saveRememberedEmail(signedInUser.email);
 
+      let signedInMethod: "password" | "signup" | "biometric" | null = null;
       if (event === "SIGNED_IN") {
         setPassword("");
         setRecoveryMode(false);
         const showWelcome = hasSignupWelcomeParam() || consumeAwaitingSignupWelcome();
-        window.history.replaceState(null, "", window.location.pathname);
+        clearSignupWelcomeParam();
         const trialStarted = syncProTrialForUser(signedInUser.id);
         if (trialStarted) {
           setPlan("PRO");
@@ -475,6 +495,7 @@ export function Pulse() {
           text: verifiedMessage,
         });
         const method = pendingAuthMethod.current;
+        signedInMethod = method;
         pendingAuthMethod.current = null;
         if (method === "signup" || showWelcome) {
           queueHeraSignupDemo();
@@ -492,12 +513,15 @@ export function Pulse() {
           });
         }
         void recordSecurityEvent({ eventType: "login_success", success: true });
-        void continueMfaAfterAuth().then((path) => {
-          if (path) navigate(path, { replace: true });
-        });
+        // A submit handler in flight (sign-up, password recovery) navigates on its own.
+        if (method !== "signup" && !isInteractiveAuthFlowRunning()) {
+          void continueMfaAfterAuth().then((path) => {
+            if (path) navigate(path, { replace: true });
+          });
+        }
       }
 
-      if (shouldReloadOperatorSession(event)) {
+      if (shouldReloadOperatorSession(event) && signedInMethod !== "signup") {
         void loadData(signedInUser);
       }
     });
@@ -506,7 +530,7 @@ export function Pulse() {
   }, []);
 
   useEffect(() => {
-    if (!appActive) return;
+    if (!appActive || authBusy) return;
     const pollMs = nativePollIntervalMs(plan === "PRO" ? 8_000 : 12_000);
     const id = window.setInterval(() => {
       void refreshMarketSignals().catch(() => {
@@ -514,7 +538,7 @@ export function Pulse() {
       });
     }, pollMs);
     return () => window.clearInterval(id);
-  }, [appActive, plan]);
+  }, [appActive, authBusy, plan]);
 
   useEffect(() => {
     if (!userId || userId.startsWith("demo-")) return;
@@ -528,7 +552,7 @@ export function Pulse() {
       notifySynexusPlanChanged();
     }
     setAuthMessage({ tone: "success", text: SIGNUP_WELCOME_ACTIVE });
-    window.history.replaceState(null, "", window.location.pathname);
+    clearSignupWelcomeParam();
   }, [userId]);
 
   useEffect(() => {
@@ -636,13 +660,16 @@ export function Pulse() {
   }
 
   async function handleSignUp() {
-    if (authBusy) return;
-    if (!email || !password) {
+    if (authBusy || signupSubmitting.current) return;
+    const signupEmailInput = email.trim().toLowerCase();
+    if (!signupEmailInput || !password) {
       setAuthMessage({ tone: "error", text: "Enter an email and password before signing up." });
       return;
     }
+    signupSubmitting.current = true;
+    beginInteractiveAuthFlow();
+    setAuthBusy(true);
     try {
-      setAuthBusy(true);
       setAuthMessage({ tone: "info", text: "Connecting to SyNexus..." });
       if (!hasSupabaseEnv) {
         const demoId = `demo-${Date.now()}`;
@@ -655,10 +682,10 @@ export function Pulse() {
         return;
       }
       pendingAuthMethod.current = "signup";
-      const result = await signUpWithEmail(email, password);
+      const result = await withTimeout(signUpWithEmail(signupEmailInput, password));
       localStorage.removeItem(DEMO_SESSION_KEY);
       const signupUser = result.session?.user ?? result.user ?? null;
-      const signupEmail = signupUser?.email ?? email;
+      const signupEmail = signupUser?.email ?? signupEmailInput;
       setPassword("");
       const needsVerification = !signupUser || !isEmailVerified(signupUser);
       if (needsVerification) {
@@ -686,11 +713,9 @@ export function Pulse() {
       setUserEmail(signupEmail);
       saveRememberedEmail(signupEmail);
       if (result.session && signupUser) {
-        try {
-          await upsertSignupProfile(signupUser.id, signupEmail, "");
-        } catch {
-          /* profile row may already exist */
-        }
+        void upsertSignupProfile(signupUser.id, signupEmail, "").catch(() => {
+          /* signup succeeded; profile can be completed after authentication */
+        });
       }
       const message = SIGNUP_WELCOME_ACTIVE;
       if (result.session && signupUser) {
@@ -701,7 +726,6 @@ export function Pulse() {
           setPlan("PRO");
           notifySynexusPlanChanged();
         }
-        void loadData(signupUser);
         queueHeraSignupDemo();
         setAuthMessage({
           tone: "success",
@@ -709,17 +733,16 @@ export function Pulse() {
         });
         pendingAuthMethod.current = null;
         trackSiteEvent("sign_up", { path: "/pulse" });
-        void refreshMarketSignals();
-        const mfaPath = await continueMfaAfterAuth(signupUser);
+        const mfaPath = mfaPathForNewSignup(signupUser);
         if (mfaPath) navigate(mfaPath, { replace: true });
         return;
       } else {
         setAuthMessage({ tone: "success", text: message });
         pendingAuthMethod.current = null;
         trackSiteEvent("sign_up", { path: "/pulse" });
-        void refreshMarketSignals();
       }
     } catch (err) {
+      console.error("SIGNUP ERROR:", err);
       pendingAuthMethod.current = null;
       const friendlyMessage =
         (err as Error).message?.toLowerCase().includes("rate")
@@ -727,6 +750,8 @@ export function Pulse() {
           : describeAuthError(err);
       setAuthMessage({ tone: "error", text: friendlyMessage });
     } finally {
+      signupSubmitting.current = false;
+      endInteractiveAuthFlow();
       setAuthBusy(false);
     }
   }
@@ -751,8 +776,9 @@ export function Pulse() {
         return;
       }
       pendingAuthMethod.current = "password";
-      const alwaysOn = await signInAlwaysOnAccount(email, password);
+      const alwaysOn = await withTimeout(signInAlwaysOnAccount(email, password));
       if (!alwaysOn.ok) {
+        pendingAuthMethod.current = null;
         setAuthMessage({ tone: "error", text: alwaysOn.message });
         return;
       }
@@ -765,6 +791,7 @@ export function Pulse() {
         return;
       }
       if (!signedIn) {
+        pendingAuthMethod.current = null;
         setAuthMessage({
           tone: "error",
           text: "Sign-in did not finish. Confirm your email or reset your password.",
@@ -937,50 +964,36 @@ export function Pulse() {
     }
   }
 
-  async function handleForgotPassword() {
+  /** Opens the in-app recovery-code screen; nothing is emailed until the operator confirms there. */
+  function handleForgotPassword() {
     if (authBusy) return;
-    if (!email.trim()) {
-      setAuthMessage({ tone: "error", text: "Enter your email first, then request a reset link." });
+    if (!hasSupabaseEnv) {
+      setAuthMessage({ tone: "error", text: "Password recovery requires Supabase sign-in." });
       return;
     }
-    try {
-      setAuthBusy(true);
-      setAuthMessage({ tone: "info", text: "Sending password reset link…" });
-      await requestPasswordReset(email);
-      saveRememberedEmail(email);
-      setPassword("");
-      trackSiteEvent("password_reset_requested", { path: "/pulse" });
-      setAuthMessage({
-        tone: "success",
-        text: passwordResetInboxMessage(email.trim()),
-      });
-    } catch (err) {
-      setAuthMessage({ tone: "error", text: describeAuthError(err) });
-    } finally {
-      setAuthBusy(false);
-    }
+    setPassword("");
+    trackSiteEvent("password_reset_requested", { path: "/pulse" });
+    setRecoveryMode(true);
   }
 
-  async function handleUpdatePassword(newPassword: string) {
-    if (authBusy) return;
-    try {
-      setAuthBusy(true);
-      setAuthMessage({ tone: "info", text: "Updating access key…" });
-      await updatePassword(newPassword);
-      setPassword("");
-      setRecoveryMode(false);
-      window.history.replaceState(null, "", window.location.pathname);
-      const user = await getCurrentUser();
-      if (user) {
-        setUserId(user.id);
-        setUserEmail(user.email ?? null);
-        void loadData(user);
-      }
-      setAuthMessage({ tone: "success", text: "Access key updated. Your session is secure." });
-    } catch (err) {
-      setAuthMessage({ tone: "error", text: describeAuthError(err) });
-    } finally {
-      setAuthBusy(false);
+  function handleRecoveryClosed(recoveredEmail?: string) {
+    setRecoveryMode(false);
+    if (recoveredEmail) {
+      setEmail(recoveredEmail);
+      saveRememberedEmail(recoveredEmail);
+    }
+    if (typeof window !== "undefined" && window.location.search.includes("auth=recovery")) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("auth");
+      window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+    }
+    if (recoveredEmail !== undefined) {
+      setAuthMessage({ tone: "success", text: PASSWORD_RECOVERY_SUCCESS });
+    } else {
+      setAuthMessage({
+        tone: "info",
+        text: "Secure operator channel ready — link below to save your SyNexus data.",
+      });
     }
   }
 
@@ -1269,6 +1282,13 @@ export function Pulse() {
       </section>
 
       <div id="pulse-operator-link">
+        {recoveryMode && hasSupabaseEnv ? (
+          <PasswordRecoveryPanel
+            initialEmail={email}
+            onFinished={(recoveredEmail) => handleRecoveryClosed(recoveredEmail)}
+            onCancel={() => handleRecoveryClosed()}
+          />
+        ) : (
         <PulseOperatorLink
         userId={userId}
         operatorName={operatorName}
@@ -1283,7 +1303,6 @@ export function Pulse() {
         biometricSupport={biometric.support}
         biometricEnrolled={biometric.enrolled}
         biometricEmailHint={biometric.emailHint}
-        recoveryMode={recoveryMode}
         emailVerificationPending={emailVerificationPending}
         pendingVerificationEmail={pendingVerificationEmail}
         signupPasswordHint={signupPasswordHint}
@@ -1296,13 +1315,13 @@ export function Pulse() {
         onEnableBiometric={() => void handleEnableBiometric()}
         onDisableBiometric={() => void handleDisableBiometric()}
         onMagicLink={() => void handleMagicLink()}
-        onForgotPassword={() => void handleForgotPassword()}
-        onUpdatePassword={(next) => void handleUpdatePassword(next)}
+        onForgotPassword={handleForgotPassword}
         onResendVerification={() => void handleResendVerification()}
         onContinueToSignIn={handleContinueToSignIn}
         onOauthError={(text) => setAuthMessage({ tone: "error", text })}
         ownerUnlocked={ownerUnlocked}
         />
+        )}
       </div>
 
       <div className="pulse-card">
