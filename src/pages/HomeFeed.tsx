@@ -17,6 +17,8 @@ import { isNativeAndroid } from "../lib/bootExperience";
 import { sampleTokens, type Token } from "../data/tokens";
 import { searchTradeTokens } from "../services/marketDataService";
 import { HomeTape } from "../components/home/HomeTape";
+import { EnterSynexusButton } from "../community/EnterSynexusButton";
+import { useHeraWakeWordSetting } from "../hooks/useHeraWakeWordSetting";
 
 type FeatureCard = {
   id: string;
@@ -39,6 +41,7 @@ export function HomeFeed() {
   const { isSimple } = useSynexusUIMode();
   const appActive = useAppIsActive();
   const nativeAndroid = isNativeAndroid();
+  const { enabled: listenEnabled } = useHeraWakeWordSetting();
   const [searchParams] = useSearchParams();
   const scanQuery = searchParams.get("scan")?.trim() ?? "";
   /** Defer heavy home panels on Android so first paint / nav stay responsive. */
@@ -250,6 +253,7 @@ export function HomeFeed() {
             fetchPriority="high"
           />
           <h1 className="home-command__headline">One AI. Unlimited Intelligence.</h1>
+          {listenEnabled && !nativeAndroid ? <EnterSynexusButton /> : null}
           <p className="home-command__lede">
             Markets. Business. Security. Automation. All Connected.
           </p>

@@ -833,7 +833,7 @@ html.hera-mode #root {
   padding-left: 12px;
   padding-right: 12px;
   padding-top: calc(8px + env(safe-area-inset-top, 0px));
-  padding-bottom: calc(var(--nav-height) + var(--safe-bottom) + 78px);
+  padding-bottom: calc(var(--nav-height) + var(--safe-bottom) + 16px);
 }
 
 /* Kill matte #0d0d0d bleed behind the home command screen */

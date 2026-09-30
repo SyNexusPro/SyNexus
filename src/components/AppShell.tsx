@@ -5,8 +5,6 @@ import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
 import { useTitanChatOpen } from "../hooks/useTitanChatOpen";
 import { RouteErrorBoundary } from "./RouteErrorBoundary";
 import { BottomNav } from "./BottomNav";
-import { EnterSynexusButton } from "../community/EnterSynexusButton";
-import { isNativeAndroid } from "../lib/bootExperience";
 import { UIModeToggle } from "./UIModeToggle";
 import { TitanSheet } from "./TitanSheet";
 import { HeraWakeWordHost } from "./HeraWakeWordHost";
@@ -18,7 +16,6 @@ import { OnboardingTour } from "./OnboardingTour";
 import { SYNEXUS_VAULT_PATH, SYNEXUS_VAULT_PRODUCT_NAME } from "../config/walletComingSoon";
 import { isTradingEnabled } from "../config/trading";
 import { SecondFactorRedirect } from "../security/SecondFactorRedirect";
-import { useHeraWakeWordSetting } from "../hooks/useHeraWakeWordSetting";
 
 export function AppShell() {
   return (
@@ -34,7 +31,6 @@ function AppShellFrame() {
   const isHome = useLocation().pathname === "/";
   const heraOpen = useTitanChatOpen();
   const trading = isTradingEnabled();
-  const { enabled: listenEnabled } = useHeraWakeWordSetting();
 
   return (
     <div
@@ -172,14 +168,7 @@ function AppShellFrame() {
       </div>
       <TitanSheet />
       <HeraWakeWordHost />
-      {isHome && !isNativeAndroid() ? (
-        <div className="home-bottom-dock">
-          <BottomNav />
-          {listenEnabled ? <EnterSynexusButton /> : null}
-        </div>
-      ) : (
-        <BottomNav />
-      )}
+      <BottomNav />
       <OnboardingTour />
     </div>
   );
