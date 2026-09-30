@@ -1,13 +1,21 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { isTradingEnabled, tradePath } from "../../config/trading";
 import { assessSwapToken } from "../../lib/swapSafety";
 import { realtime } from "../../lib/realtime/RealtimeManager";
 import { useRealtimeDashboard } from "../../lib/realtime/useRealtimeDashboard";
 import type { TapeToken } from "../../lib/realtime/types";
 import { buildTokenFromPartial } from "../../data/tokens";
+import { searchTradeTokens } from "../../services/marketDataService";
+import { withTimeout } from "../../lib/withTimeout";
 
 const WATCH_KEY = "synexus_watchlist_ids";
+const SOLANA_MINT = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+
+function solanaRouteId(value: string | null | undefined): string | null {
+  const id = value?.trim() ?? "";
+  return SOLANA_MINT.test(id) ? id : null;
+}
 
 function readWatchIds(): string[] {
   try {
@@ -51,6 +59,7 @@ function asToken(row: TapeToken) {
 
 export function HomeTape() {
   const dash = useRealtimeDashboard();
+  const navigate = useNavigate();
   const trading = isTradingEnabled();
   const [tab, setTab] = useState<"watch" | "trending" | "new">("trending");
   const [query, setQuery] = useState("");
@@ -58,7 +67,11 @@ export function HomeTape() {
   const [selected, setSelected] = useState<TapeToken | null>(null);
   const [hera, setHera] = useState("");
   const [prevPrice, setPrevPrice] = useState<number | null>(null);
+  const [lookupBusy, setLookupBusy] = useState(false);
+  const [lookupError, setLookupError] = useState<string | null>(null);
   const streamRef = useRef(0);
+  const lookupGen = useRef(0);
+  const lookupBusyRef = useRef(false);
 
   useEffect(() => () => window.clearInterval(streamRef.current), []);
 
@@ -82,6 +95,10 @@ export function HomeTape() {
   }, [dash.tokens, query, tab, watchIds]);
 
   function openToken(token: TapeToken) {
+    lookupGen.current += 1;
+    lookupBusyRef.current = false;
+    setLookupBusy(false);
+    setLookupError(null);
     setSelected(token);
     setPrevPrice(token.priceUsd);
     setHera("");
@@ -97,6 +114,64 @@ export function HomeTape() {
       }
     }, 28);
     realtime.publish("SCAN_COMPLETE", token.symbol, token.mint);
+    const routeId = solanaRouteId(token.mint || token.id);
+    if (!routeId) {
+      setLookupError(`${token.symbol} doesn't have a Solana mint, so it can't be opened.`);
+      return;
+    }
+    navigate(`/token/${encodeURIComponent(routeId)}`);
+  }
+
+  async function submitSearch(event?: FormEvent) {
+    event?.preventDefault();
+    const q = query.trim();
+    if (!q || lookupBusyRef.current) return;
+
+    const localMatches = dash.tokens.filter((token) => {
+      const lower = q.toLowerCase();
+      return (
+        token.symbol.toLowerCase() === lower ||
+        token.mint.toLowerCase() === lower ||
+        token.name.toLowerCase() === lower
+      );
+    });
+    if (localMatches.length > 1 && !/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(q)) {
+      setLookupError("Several tokens use that name. Paste the mint address.");
+      return;
+    }
+    const local = localMatches[0];
+    if (local) {
+      openToken(local);
+      return;
+    }
+
+    const gen = ++lookupGen.current;
+    lookupBusyRef.current = true;
+    setLookupBusy(true);
+    setLookupError(null);
+    try {
+      const hits = await withTimeout(searchTradeTokens(q));
+      if (gen !== lookupGen.current) return;
+      if (hits.length > 1 && !/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(q)) {
+        setLookupError("Several tokens use that name. Paste the mint address.");
+        return;
+      }
+      const token = hits[0];
+      const routeId = solanaRouteId(token?.mintAddress);
+      if (!token || !routeId) {
+        setLookupError(`No token found for “${q}”. Check the symbol or paste a Solana mint address.`);
+        return;
+      }
+      navigate(`/token/${encodeURIComponent(routeId)}`);
+    } catch (err) {
+      if (gen !== lookupGen.current) return;
+      setLookupError(err instanceof Error ? err.message : "Token lookup failed. Check your connection and try again.");
+    } finally {
+      if (gen === lookupGen.current) {
+        lookupBusyRef.current = false;
+        setLookupBusy(false);
+      }
+    }
   }
 
   function toggleWatch(token: TapeToken) {
@@ -115,19 +190,36 @@ export function HomeTape() {
 
   return (
     <section className="home-tape" aria-label="Live markets">
-      <div className="home-tape__bar">
+      <form className="home-tape__bar" onSubmit={(event) => void submitSearch(event)}>
         <input
           className="home-tape__search"
           value={query}
           placeholder="Search token, symbol, or mint"
           aria-label="Search tokens"
-          onChange={(event) => setQuery(event.target.value)}
+          enterKeyHint="search"
+          onKeyDown={(event) => {
+            if (event.key !== "Enter") return;
+            event.preventDefault();
+            void submitSearch();
+          }}
+          onChange={(event) => {
+            setQuery(event.target.value);
+            setLookupError(null);
+          }}
         />
+        <button type="submit" className="home-tape__tab" disabled={lookupBusy || !query.trim()}>
+          {lookupBusy ? "Searching…" : "Search"}
+        </button>
         <p className="home-tape__wallet">
           {dash.connected ? "Live" : dash.source === "live" ? "Synced" : "Cached"}
           {dash.walletSol != null ? ` · ${dash.walletSol.toFixed(3)} SOL` : ""}
         </p>
-      </div>
+      </form>
+      {lookupError ? (
+        <p className="home-tape__empty" role="alert">
+          {lookupError}
+        </p>
+      ) : null}
       <div className="home-tape__tabs" role="tablist">
         {(
           [

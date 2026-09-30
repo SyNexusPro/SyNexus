@@ -311,7 +311,14 @@ function TradeScreen() {
     if (!q) return;
     setStatusKind("loading");
     setStatus("Looking up token…");
-    const token = await lookupTokenByQuery(q, tokenPool);
+    const hits = await searchTradeTokens(q, tokenPool);
+    if (hits.length > 1 && !/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(q)) {
+      setSearchHits(hits);
+      setStatusKind("idle");
+      setStatus("Several tokens use that name. Pick one by mint.");
+      return;
+    }
+    const token = hits[0];
     if (!token?.mintAddress) {
       setStatusKind("error");
       setStatus("Token not found. Paste a Solana mint address or ticker.");

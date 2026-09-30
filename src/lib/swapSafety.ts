@@ -1,5 +1,5 @@
 import type { Token } from "../data/tokens";
-import { synexusRiskBandLabel } from "../data/tokens";
+import { tokenRiskLabel } from "../data/tokens";
 import { analyzeShouldIBuy, type BuyVerdict } from "./shouldIBuy";
 import { evaluateTokenDiscovery, type TitanDiscoveryEvaluation } from "./titanDiscovery";
 import { buildTradeScorecard, type TradeScorecard } from "./tradeScorecard";
@@ -34,7 +34,7 @@ export function assessSwapToken(token: Token): SwapSafetyReport {
     explanation: buy.explanation,
     card,
     discovery,
-    riskLabel: synexusRiskBandLabel(token.guardianRisk),
+    riskLabel: tokenRiskLabel(token),
     guardianMessage: token.guardianMessage,
     swapAllowed: !blocked,
     requiresRiskAck: buy.verdict === "HIGH_RISK",

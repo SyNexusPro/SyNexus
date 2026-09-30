@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import type { Token } from "../data/tokens";
 import { SENTINEL_LANE_IDS, SENTINEL_LANES } from "../config/sentinels";
-import { synexusRiskBandLabel } from "../data/tokens";
+import { tokenRiskLabel } from "../data/tokens";
 import { useAppIsActive } from "../hooks/useAppIsActive";
 import { isNativeAndroid } from "../lib/bootExperience";
 import { nativePollIntervalMs } from "../lib/nativePerformance";
@@ -25,7 +25,7 @@ const SENTINEL_LANES_UI = SENTINEL_LANE_IDS.map((id) => ({
 function laneStatus(token: Token, laneId: (typeof SENTINEL_LANE_IDS)[number]): string {
   switch (laneId) {
     case "aegis":
-      return synexusRiskBandLabel(token.guardianRisk);
+      return tokenRiskLabel(token);
     case "pulse":
       return token.change24hPct >= 0
         ? `+${token.change24hPct.toFixed(1)}% 24h`
@@ -84,7 +84,7 @@ export function SynexusLiveScanner({ tokens, feedSource, dexLiveCount, loading, 
               <span className="synexus-scanner__symbol">{active.symbol}</span>
               <span className="synexus-scanner__name">{active.name}</span>
               <span className={`synexus-scanner__risk ${riskClass(active.guardianRisk)}`}>
-                {synexusRiskBandLabel(active.guardianRisk)}
+                {tokenRiskLabel(active)}
               </span>
             </div>
 

@@ -1,5 +1,5 @@
 import type { Token } from "../data/tokens";
-import { synexusRiskBandLabel } from "../data/tokens";
+import { tokenRiskLabel } from "../data/tokens";
 import { heraDataAsOfLine } from "./hera/formatLiveStamp";
 import { resolveOracleTokenQuery } from "./oracleCryptoBrain";
 import type { OracleConversationContext } from "./oracleSupremeConversation";
@@ -31,7 +31,7 @@ function formatPct(value: number): string {
 function instantPriceRead(token: Token): string {
   return `${token.symbol}: ${formatUsd(token.priceUsd)} · 24h ${formatPct(token.change24hPct)}${
     token.priceMove1hPct != null ? ` · 1h ${formatPct(token.priceMove1hPct)}` : ""
-  } · liq ${formatUsd(token.liquidityUsd)} · ${synexusRiskBandLabel(token.guardianRisk)} band`;
+  } · liq ${formatUsd(token.liquidityUsd)} · ${tokenRiskLabel(token)}`;
 }
 
 /**
@@ -43,7 +43,10 @@ export function tryInstantCryptoAnswer(text: string, ctx: OracleConversationCont
   if (!trimmed || !isInstantCryptoPath(trimmed)) return null;
 
   const token = resolveOracleTokenQuery(trimmed, ctx.tokens);
-  if (!token) return null;
-  if (token.mintAddress || token.symbol.toUpperCase() === "SYN") return null;
+  if (!token?.mintAddress) return null;
+  const sameMint = ctx.tokens.filter(
+    (item) => item.symbol.toUpperCase() === token.symbol.toUpperCase() && item.mintAddress,
+  );
+  if (sameMint.length !== 1) return null;
   return `${instantPriceRead(token)}\n${heraDataAsOfLine(Date.now(), "live pool")}`;
 }

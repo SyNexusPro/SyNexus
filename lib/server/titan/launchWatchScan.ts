@@ -6,7 +6,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { shouldSendInstantPremium, type TitanSeverity } from "./classifyEvent.js";
 import { sendPremiumAlert } from "./sendPremiumAlert.js";
-import { fetchDexTokenRefs, type DexTokenRef } from "../market/dexscreener.js";
+import { fetchDexTokenRefsAllChains, type DexTokenRef } from "../market/dexscreener.js";
 
 export type LaunchLeadKind = "onchain_launch" | "social_post" | "news";
 
@@ -130,41 +130,61 @@ async function scanPumpFun(): Promise<LaunchLead[]> {
   return leads;
 }
 
-async function scanGeckoNewPools(): Promise<LaunchLead[]> {
-  const json = (await fetchJson(
-    "https://api.geckoterminal.com/api/v2/networks/solana/new_pools?page=1",
-  )) as {
-    data?: Array<{
-      id?: string;
-      attributes?: {
-        address?: string;
-        name?: string;
-        pool_created_at?: string;
-        base_token_price_usd?: string;
-        fdv_usd?: string;
-        reserve_in_usd?: string;
-      };
-      relationships?: {
-        dex?: { data?: { id?: string } };
-        base_token?: { data?: { id?: string } };
-      };
-    }>;
+const GECKO_NETWORKS = [
+  "solana",
+  "eth",
+  "base",
+  "bsc",
+  "arbitrum",
+  "polygon_pos",
+  "avax",
+  "optimism",
+  "sui-network",
+  "ton",
+  "hyperliquid",
+  "scroll",
+  "linea",
+  "blast",
+  "world-chain",
+  "cronos",
+] as const;
+
+type GeckoPoolRow = {
+  id?: string;
+  attributes?: {
+    address?: string;
+    name?: string;
+    pool_created_at?: string;
+    base_token_price_usd?: string;
+    fdv_usd?: string;
+    reserve_in_usd?: string;
   };
+  relationships?: {
+    dex?: { data?: { id?: string } };
+    base_token?: { data?: { id?: string } };
+    network?: { data?: { id?: string } };
+  };
+};
+
+function geckoLeads(rows: GeckoPoolRow[], fallbackNetwork: string | null): LaunchLead[] {
   const leads: LaunchLead[] = [];
-  for (const pool of json.data || []) {
+  for (const pool of rows) {
     const a = pool.attributes;
     const dex = pool.relationships?.dex?.data?.id || "unknown";
     const tokenId = pool.relationships?.base_token?.data?.id || "";
-    const mint = tokenId.replace(/^solana_/i, "") || null;
+    const split = tokenId.indexOf("_");
+    const fromId = split > 0 ? tokenId.slice(0, split).toLowerCase() : "";
+    const network = (pool.relationships?.network?.data?.id || fromId || fallbackNetwork || "unknown").toLowerCase();
+    const mint = split > 0 ? tokenId.slice(split + 1) : null;
     const name = a?.name || "New pool";
     const createdAtMs = a?.pool_created_at ? Date.parse(a.pool_created_at) : Date.now();
     if (!Number.isFinite(createdAtMs)) continue;
     const ticker = name.split(" / ")[0] || name;
     leads.push({
-      id: `gecko:${a?.address || pool.id || name}`,
-      source: `GeckoTerminal · ${dex}`,
+      id: `gecko:${network}:${a?.address || pool.id || name}`,
+      source: `GeckoTerminal · ${network} · ${dex}`,
       kind: "onchain_launch",
-      title: `${name} new Solana pool`,
+      title: `${name} new pool on ${network}`,
       summary: [
         dex,
         a?.reserve_in_usd ? `liq $${Number(a.reserve_in_usd).toFixed(0)}` : null,
@@ -172,7 +192,7 @@ async function scanGeckoNewPools(): Promise<LaunchLead[]> {
       ]
         .filter(Boolean)
         .join(" · "),
-      url: a?.address ? `https://www.geckoterminal.com/solana/pools/${a.address}` : null,
+      url: a?.address ? `https://www.geckoterminal.com/${network}/pools/${a.address}` : null,
       symbol: ticker,
       mint,
       socials: [],
@@ -180,7 +200,22 @@ async function scanGeckoNewPools(): Promise<LaunchLead[]> {
       severity: "normal",
     });
   }
-  return leads.slice(0, 16);
+  return leads;
+}
+
+async function scanGeckoUrl(url: string, fallbackNetwork: string | null): Promise<LaunchLead[]> {
+  const json = (await fetchJson(url)) as { data?: GeckoPoolRow[] };
+  return geckoLeads(json.data || [], fallbackNetwork);
+}
+
+async function scanGeckoNewPools(): Promise<LaunchLead[]> {
+  const batches = await Promise.all([
+    settled(scanGeckoUrl("https://api.geckoterminal.com/api/v2/networks/new_pools?page=1", null)),
+    ...GECKO_NETWORKS.map((network) =>
+      settled(scanGeckoUrl(`https://api.geckoterminal.com/api/v2/networks/${network}/new_pools?page=1`, network)),
+    ),
+  ]);
+  return batches.flat();
 }
 
 function dexLead(row: DexTokenRef, source: string, title: string): LaunchLead | null {
@@ -194,7 +229,7 @@ function dexLead(row: DexTokenRef, source: string, title: string): LaunchLead | 
     kind: "onchain_launch",
     title,
     summary: (row.description || "Token just appeared on DexScreener.").slice(0, 180),
-    url: row.url || `https://dexscreener.com/solana/${mint}`,
+    url: row.url || (row.chainId ? `https://dexscreener.com/${row.chainId}/${mint}` : null),
     symbol: null,
     mint,
     socials,
@@ -205,22 +240,25 @@ function dexLead(row: DexTokenRef, source: string, title: string): LaunchLead | 
 
 async function scanDexProfiles(): Promise<LaunchLead[]> {
   const [latest, updated, takeovers] = await Promise.all([
-    fetchDexTokenRefs(["https://api.dexscreener.com/token-profiles/latest/v1"]),
-    fetchDexTokenRefs(["https://api.dexscreener.com/token-profiles/recent-updates/v1"]),
-    fetchDexTokenRefs(["https://api.dexscreener.com/community-takeovers/latest/v1"]),
+    fetchDexTokenRefsAllChains(["https://api.dexscreener.com/token-profiles/latest/v1"]),
+    fetchDexTokenRefsAllChains(["https://api.dexscreener.com/token-profiles/recent-updates/v1"]),
+    fetchDexTokenRefsAllChains(["https://api.dexscreener.com/community-takeovers/latest/v1"]),
   ]);
   const leads: LaunchLead[] = [];
   const seen = new Set<string>();
   const push = (row: DexTokenRef, source: string, title: string) => {
-    const lead = dexLead(row, source, title);
-    if (!lead || seen.has(lead.mint || lead.id)) return;
-    seen.add(lead.mint || lead.id);
+    const chain = (row.chainId || "unknown").toLowerCase();
+    const lead = dexLead(row, `${source} · ${chain}`, `${title} · ${chain}`);
+    if (!lead) return;
+    const key = `${chain}:${lead.mint || lead.id}`;
+    if (seen.has(key)) return;
+    seen.add(key);
     leads.push(lead);
   };
-  for (const row of latest) push(row, "DexScreener profile", "New Solana token profile published");
-  for (const row of updated) push(row, "DexScreener profile update", "Solana token profile updated");
-  for (const row of takeovers) push(row, "DexScreener takeover", "Solana community takeover");
-  return leads.slice(0, 18);
+  for (const row of latest) push(row, "DexScreener profile", "New token profile");
+  for (const row of updated) push(row, "DexScreener profile update", "Token profile updated");
+  for (const row of takeovers) push(row, "DexScreener takeover", "Community takeover");
+  return leads;
 }
 
 type RedditChild = {
@@ -351,7 +389,7 @@ function dedupeLeads(leads: LaunchLead[]): LaunchLead[] {
   const seen = new Set<string>();
   const out: LaunchLead[] = [];
   for (const lead of leads) {
-    const key = (lead.mint || lead.id).toLowerCase();
+    const key = lead.id.toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);
     out.push(lead);
@@ -368,7 +406,7 @@ export async function scanLaunchWatch(env: Env = process.env): Promise<LaunchLea
     settled(scanNews()),
     settled(scanX(env)),
   ]);
-  return sortLeads(dedupeLeads(batches.flat())).slice(0, 40);
+  return sortLeads(dedupeLeads(batches.flat()));
 }
 
 function formatClock(date: Date, timeZone?: string | null): string {
@@ -384,6 +422,20 @@ function formatClock(date: Date, timeZone?: string | null): string {
   }
 }
 
+function diverseLeads(leads: LaunchLead[]): LaunchLead[] {
+  const counts = new Map<string, number>();
+  const out: LaunchLead[] = [];
+  for (const lead of leads) {
+    const limit = lead.source === "pump.fun" ? 8 : 2;
+    const n = counts.get(lead.source) ?? 0;
+    if (n >= limit) continue;
+    counts.set(lead.source, n + 1);
+    out.push(lead);
+    if (out.length >= 36) break;
+  }
+  return out;
+}
+
 export function formatLaunchWatchBrief(leads: LaunchLead[], timeZone?: string | null): string {
   const now = new Date();
   const asOfLocal = formatClock(now, timeZone);
@@ -391,11 +443,11 @@ export function formatLaunchWatchBrief(leads: LaunchLead[], timeZone?: string | 
   if (!leads.length) {
     return [
       `LIVE LAUNCH WATCH captured at ${asOfLocal} (${asOfIso}).`,
-      "No public launch posts or new Solana coins were retrieved this pass.",
+      "No public launch posts or new coins were retrieved this pass.",
       "Do not invent launches, mints, or social posts.",
     ].join("\n");
   }
-  const onchain = leads.filter((l) => l.kind === "onchain_launch").slice(0, 10);
+  const onchain = diverseLeads(leads.filter((l) => l.kind === "onchain_launch"));
   const social = leads.filter((l) => l.kind !== "onchain_launch").slice(0, 8);
   const line = (lead: LaunchLead) => {
     const ageMin = Math.max(0, Math.round((Date.now() - lead.createdAtMs) / 60_000));
@@ -404,10 +456,10 @@ export function formatLaunchWatchBrief(leads: LaunchLead[], timeZone?: string | 
   };
   return [
     `LIVE LAUNCH WATCH captured at ${asOfLocal} (${asOfIso}).`,
-    "Public surfaces only: pump.fun newest coins, GeckoTerminal new Solana pools, DexScreener profiles, Reddit launch threads, crypto headlines" +
+    "Public surfaces only: pump.fun coins still being created, GeckoTerminal new pools on indexed networks, DexScreener profiles on every chain in that feed, Reddit launch threads, crypto headlines" +
       (leads.some((l) => l.source === "X") ? ", X recent search" : "") +
       ".",
-    "These are leads, not buy signals. Hype is not quality. Separate confirmed on-chain launches from social speculation. Never invent a mint that is not listed.",
+    "These are the newest public rows, not a stored copy of every coin. If a coin is missing, that feed did not return it. Hype is not quality. Separate confirmed on-chain launches from social speculation. Never invent a mint that is not listed.",
     onchain.length ? "Newest on-chain launches:" : "",
     ...onchain.map(line),
     social.length ? "Social / news posts about launches:" : "",
@@ -426,7 +478,7 @@ export function needsLaunchWatchFetch(message: string, intentHint?: string | nul
       lower,
     ) &&
     /\b(coin|token|crypto|solana|meme|launch|post|anyone|who|what|scan|watch|alpha|lead)\b/.test(lower)
-  ) || /\b(anyone posting|what('?s| is) launching|new launches?|launch watch|social scan)\b/.test(lower);
+  ) || /\b(anyone posting|what('?s| is) launching|new launches?|launch watch|social scan|being made|just created|new pools?|every (single )?(coin|token)|every platform|any chain|any platform)\b/.test(lower);
 }
 
 export async function persistLaunchLeads(

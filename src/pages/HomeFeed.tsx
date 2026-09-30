@@ -14,7 +14,8 @@ import { enableHeraWakeWordFromUi } from "../lib/hera/wakeWord";
 import { useAppIsActive } from "../hooks/useAppIsActive";
 import { useOracleMarketFeed } from "../lib/useOracleMarketFeed";
 import { isNativeAndroid } from "../lib/bootExperience";
-import { sampleTokens } from "../data/tokens";
+import { sampleTokens, type Token } from "../data/tokens";
+import { searchTradeTokens } from "../services/marketDataService";
 import { HomeTape } from "../components/home/HomeTape";
 
 type FeatureCard = {
@@ -92,6 +93,8 @@ export function HomeFeed() {
   const dexLiveCount = feedSource === "live" ? allTokens.length : 0;
   const [feedError, setFeedError] = useState<string | null>(null);
   const [coinSearch, setCoinSearch] = useState("");
+  const [searchedTokens, setSearchedTokens] = useState<Token[]>([]);
+  const [searchingTokens, setSearchingTokens] = useState(false);
 
   useEffect(() => {
     if (!toolsReady) return;
@@ -102,15 +105,31 @@ export function HomeFeed() {
     }
   }, [feedLoading, feedTokens.length, toolsReady]);
 
-  const searchedTokens = useMemo(() => {
-    const query = coinSearch.trim().toLowerCase();
-    if (!query) return [];
-
-    return allTokens.filter((token) =>
-      [token.name, token.symbol, token.mintAddress ?? ""].some((value) =>
-        value.toLowerCase().includes(query),
-      ),
-    );
+  useEffect(() => {
+    const query = coinSearch.trim();
+    if (query.length < 2) {
+      setSearchedTokens([]);
+      setSearchingTokens(false);
+      return;
+    }
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      setSearchingTokens(true);
+      void searchTradeTokens(query, allTokens)
+        .then((hits) => {
+          if (!cancelled) setSearchedTokens(hits);
+        })
+        .catch(() => {
+          if (!cancelled) setSearchedTokens([]);
+        })
+        .finally(() => {
+          if (!cancelled) setSearchingTokens(false);
+        });
+    }, 320);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
   }, [allTokens, coinSearch]);
 
   const featureCards: FeatureCard[] = [
@@ -346,17 +365,19 @@ export function HomeFeed() {
                 aria-label="Search tokens"
               />
               {coinSearch.trim() ? (
-                searchedTokens.length ? (
+                searchingTokens ? (
+                  <p className="coin-search-panel__empty">Searching tokens…</p>
+                ) : searchedTokens.length ? (
                   <ul className="token-list coin-search-panel__results">
                     {searchedTokens.slice(0, nativeAndroid ? 8 : 40).map((token) => (
-                      <li key={`search-${token.id}`}>
+                      <li key={`search-${token.mintAddress ?? token.id}`}>
                         <TokenCard token={token} />
                       </li>
                     ))}
                   </ul>
                 ) : (
                   <p className="coin-search-panel__empty">
-                    No matching tokens in the SyNexus feed. Try SOL, SYN, BONK, or PEPE.
+                    No matching mints from the sources that responded. Paste a mint address if the symbol is shared.
                   </p>
                 )
               ) : null}

@@ -5,6 +5,7 @@ import { emailAuthRedirectUrl, googleAuthRedirectUrl, supabase } from "./supabas
 import { validateSignupPassword } from "./authCredentials";
 import { guardAuthAttempt } from "./securityBot";
 import { SIGNUP_CONFIRM_REDIRECT } from "./signupWelcome";
+import { emitSynexusEvent } from "./synexus/eventBus";
 
 export { validateSignupPassword };
 
@@ -482,6 +483,13 @@ export async function submitTokenReport(
     details: details ?? null,
   });
   if (error) throw error;
+  emitSynexusEvent({
+    name: "CONTENT_REPORTED",
+    at: Date.now(),
+    mint: tokenAddress ?? null,
+    source: "token_reports",
+    detail: `${tokenSymbol}: ${reason}`,
+  });
 }
 
 export async function fetchGuardianAlerts() {

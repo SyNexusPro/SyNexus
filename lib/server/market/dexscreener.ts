@@ -92,11 +92,31 @@ export async function collectSolanaMints(limit = 30): Promise<string[]> {
   return mints;
 }
 
+function chainRefs(rows: unknown): DexTokenRef[] {
+  if (!Array.isArray(rows)) return [];
+  return (rows as DexTokenRef[]).filter(
+    (row) => Boolean(row.chainId?.trim()) && Boolean(row.tokenAddress?.trim()),
+  );
+}
+
 export async function fetchDexTokenRefs(urls: readonly string[]): Promise<DexTokenRef[]> {
   const out: DexTokenRef[] = [];
   for (const url of urls) {
     try {
       out.push(...solanaRefs(await fetchDexJson(url)));
+    } catch {
+      /* optional feed */
+    }
+  }
+  return out;
+}
+
+/** Latest profiles on every chain DexScreener includes in that feed. */
+export async function fetchDexTokenRefsAllChains(urls: readonly string[]): Promise<DexTokenRef[]> {
+  const out: DexTokenRef[] = [];
+  for (const url of urls) {
+    try {
+      out.push(...chainRefs(await fetchDexJson(url)));
     } catch {
       /* optional feed */
     }

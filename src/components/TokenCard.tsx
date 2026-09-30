@@ -5,7 +5,7 @@ import { useSynexusPlan } from "../hooks/useSynexusPlan";
 import { TokenLogo } from "./TokenLogo";
 import { ScanHealthPanel } from "./ScanHealthPanel";
 import { TradeIntelBuyLink } from "./TradeIntelBuyLink";
-import { type GuardianRisk, type Token, synexusRiskBandLabel } from "../data/tokens";
+import { type GuardianRisk, type Token, tokenRiskLabel } from "../data/tokens";
 import { SYN_MINT, SYN_PUMPFUN_URL } from "../config/synToken";
 
 const riskStyles: Record<
@@ -85,7 +85,7 @@ export function TokenCard({ token }: Props) {
             className="token-card__risk-dot"
             style={{ background: risk.dot }}
           />
-          The SyNexus · {synexusRiskBandLabel(token.guardianRisk)}
+          The SyNexus · {tokenRiskLabel(token)}
         </div>
       </div>
       <div className="token-card__bottom">

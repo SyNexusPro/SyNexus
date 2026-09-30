@@ -4,12 +4,12 @@ export type GuardianStatus = "SAFE" | "WARNING" | "DANGER";
 
 export type GuardianEngineInput = {
   tokenName: string;
-  liquidityUsd: number;
-  topWalletPct: number;
-  top5WalletsPct: number;
-  top10WalletsPct: number;
-  tokenAgeHours: number;
-  priceMove1hPct: number;
+  liquidityUsd: number | null;
+  topWalletPct: number | null;
+  top5WalletsPct: number | null;
+  top10WalletsPct: number | null;
+  tokenAgeHours: number | null;
+  priceMove1hPct: number | null;
   priceMove24hPct: number;
   sharpPumpThenDump: boolean;
   highVolumeLowLiquidity: boolean;
@@ -17,11 +17,11 @@ export type GuardianEngineInput = {
   similarToMajorTokenName: boolean;
   similarTickerToKnownToken: boolean;
   fakeBrandingImpersonation: boolean;
-  reports24h: number;
+  reports24h: number | null;
   repeatedScamCategoryReports: boolean;
   missingSocialsOrWebsite: boolean;
   brokenWebsiteOrDeadSocials: boolean;
-  riskyMintOrFreezeAuthorityActive: boolean;
+  riskyMintOrFreezeAuthorityActive: boolean | null;
 };
 
 export type GuardianEngineResult = {
@@ -148,42 +148,44 @@ export function evaluateGuardianRisk(
 
   // Liquidity
   add(
-    input.liquidityUsd < config.liquidity.criticalUsd,
+    input.liquidityUsd != null && input.liquidityUsd < config.liquidity.criticalUsd,
     config.liquidity.criticalScore,
     `Liquidity is under $${config.liquidity.criticalUsd.toLocaleString()}, so exits can fail quickly.`,
   );
   add(
-    input.liquidityUsd >= config.liquidity.criticalUsd &&
+    input.liquidityUsd != null &&
+      input.liquidityUsd >= config.liquidity.criticalUsd &&
       input.liquidityUsd <= config.liquidity.lowUsd,
     config.liquidity.lowScore,
     `Liquidity is between $${config.liquidity.criticalUsd.toLocaleString()} and $${config.liquidity.lowUsd.toLocaleString()}, which is still fragile.`,
   );
 
-  // Holder concentration
+  // Holder concentration — skipped when the chain did not report it
   add(
-    input.topWalletPct > config.concentration.topWalletPct,
+    input.topWalletPct != null && input.topWalletPct > config.concentration.topWalletPct,
     config.concentration.topWalletScore,
     `Top wallet controls more than ${config.concentration.topWalletPct}% of supply.`,
   );
   add(
-    input.top5WalletsPct > config.concentration.top5WalletsPct,
+    input.top5WalletsPct != null && input.top5WalletsPct > config.concentration.top5WalletsPct,
     config.concentration.top5Score,
     `Top 5 wallets hold over ${config.concentration.top5WalletsPct}% combined.`,
   );
   add(
-    input.top10WalletsPct > config.concentration.top10WalletsPct,
+    input.top10WalletsPct != null && input.top10WalletsPct > config.concentration.top10WalletsPct,
     config.concentration.top10Score,
     `Top 10 wallets hold over ${config.concentration.top10WalletsPct}%, increasing concentration risk.`,
   );
 
   // Token age
   add(
-    input.tokenAgeHours < config.age.under24hLimitHours,
+    input.tokenAgeHours != null && input.tokenAgeHours < config.age.under24hLimitHours,
     config.age.under24hScore,
     "Token is under 24 hours old.",
   );
   add(
-    input.tokenAgeHours >= config.age.under24hLimitHours &&
+    input.tokenAgeHours != null &&
+      input.tokenAgeHours >= config.age.under24hLimitHours &&
       input.tokenAgeHours < config.age.under7dLimitHours,
     config.age.under7dScore,
     "Token is under 7 days old and still unproven.",
@@ -191,7 +193,7 @@ export function evaluateGuardianRisk(
 
   // Volatility
   add(
-    Math.abs(input.priceMove1hPct) > config.volatility.move1hPct,
+    input.priceMove1hPct != null && Math.abs(input.priceMove1hPct) > config.volatility.move1hPct,
     config.volatility.move1hScore,
     `1h move is over ${config.volatility.move1hPct}%, showing unstable short-term action.`,
   );
@@ -237,12 +239,13 @@ export function evaluateGuardianRisk(
 
   // Community reports
   add(
-    input.reports24h >= config.reports.reports20Threshold,
+    input.reports24h != null && input.reports24h >= config.reports.reports20Threshold,
     config.reports.reports20Score,
     `${config.reports.reports20Threshold}+ community reports arrived in the last 24h.`,
   );
   add(
-    input.reports24h >= config.reports.reports5Threshold &&
+    input.reports24h != null &&
+      input.reports24h >= config.reports.reports5Threshold &&
       input.reports24h < config.reports.reports20Threshold,
     config.reports.reports5Score,
     `${config.reports.reports5Threshold}+ community reports arrived in the last 24h.`,
@@ -265,7 +268,7 @@ export function evaluateGuardianRisk(
     "Website or socials appear broken or inactive.",
   );
   add(
-    input.riskyMintOrFreezeAuthorityActive,
+    input.riskyMintOrFreezeAuthorityActive === true,
     config.metadata.activeAuthorityScore,
     "Mint or freeze authority is still active in a risky setup.",
   );
@@ -285,7 +288,7 @@ export function evaluateGuardianRisk(
       config.confidence.max,
       config.confidence.base +
         reasons.length * config.confidence.reasonBoost +
-        (input.reports24h > 0 ? config.confidence.reportsBoost : 0),
+        (input.reports24h != null && input.reports24h > 0 ? config.confidence.reportsBoost : 0),
     ),
   );
 

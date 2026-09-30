@@ -1,4 +1,5 @@
 import { supabase } from "../../lib/supabaseClient";
+import { publishAuthorizedPosts } from "../../lib/synexus/eventBus";
 
 export type CommunityPost = {
   id: string;
@@ -134,7 +135,9 @@ export async function fetchFeed(filter: FeedFilter, limit = 30): Promise<Communi
       : query.order("created_at", { ascending: false });
   const { data, error } = await query.limit(limit);
   if (error) throw friendlyError(error.message, "Could not load the feed.");
-  return decorate((data ?? []) as PostRow[]);
+  const posts = await decorate((data ?? []) as PostRow[]);
+  publishAuthorizedPosts(posts);
+  return posts;
 }
 
 export async function createPost(body: string, communityId: string | null): Promise<void> {

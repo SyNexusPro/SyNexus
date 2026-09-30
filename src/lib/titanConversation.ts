@@ -2,6 +2,7 @@ import { isTopMoversQuestion, parseMoverTimeframeFromText } from "./moverTimefra
 import { publishHeraLiveMeta, type HeraLiveMeta } from "./hera/liveIntel";
 import { rememberHeraFocus, resolveHeraFocus } from "./hera/heraSessionFocus";
 import { recordHeraGrowth } from "./hera/growth";
+import { collectHeraIntelligence } from "./hera/tools";
 import { fetchSolanaTopMovers } from "../services/marketDataService";
 import { formatLocalPoolMoversAnswer, formatTopMoversAnswer, formatTopMoversAnswerFromResult } from "./titanMoversAnswer";
 import { softenTitanResponse } from "./titanGuardrails";
@@ -12,7 +13,7 @@ import {
 } from "./titanContextPack";
 import { loadTitanMemoryProfile, hasTitanMemoryConsent, rememberFavoriteSymbol } from "./titanMemory";
 import { resolveOracleTokenQuery } from "./oracleCryptoBrain";
-import { isInstantCryptoPath, tryInstantCryptoAnswer } from "./titanInstantCrypto";
+import { isInstantCryptoPath } from "./titanInstantCrypto";
 import {
   reactToFreeText,
   type ConversationTurn,
@@ -156,9 +157,6 @@ export async function respondToTitanMessage(
   if (!trimmed) return "What can I help with?";
   recordHeraGrowth("reply");
 
-  const instant = handlers.spokenReply ? null : tryInstantCryptoAnswer(trimmed, ctx);
-  if (instant) return instant;
-
   let plan: "FREE" | "PRO" = "FREE";
   try {
     plan = normalizeSynexusPlan(localStorage.getItem(PLAN_STORAGE_KEY));
@@ -178,7 +176,11 @@ export async function respondToTitanMessage(
       const mint = mintMatch[1]!;
       const res = await fetch(
         `https://api.dexscreener.com/tokens/v1/solana/${encodeURIComponent(mint)}`,
-        { signal: handlers.signal },
+        {
+          signal: handlers.signal
+            ? AbortSignal.any([handlers.signal, AbortSignal.timeout(8_000)])
+            : AbortSignal.timeout(8_000),
+        },
       );
       if (res.ok) {
         const json = (await res.json()) as
@@ -222,6 +224,12 @@ export async function respondToTitanMessage(
   const memory = hasTitanMemoryConsent() ? loadTitanMemoryProfile() : null;
   const historyTurns = turnsToHistory(turns);
   const basePayload = buildTitanChatPayload(trimmed, ctx, historyTurns, memory);
+  let intel: string | null = null;
+  try {
+    intel = await collectHeraIntelligence(trimmed, ctx.tokens);
+  } catch {
+    intel = null;
+  }
   const payload = {
     ...basePayload,
     fastMode: handlers.fastMode === true,
@@ -232,7 +240,9 @@ export async function respondToTitanMessage(
         : isTopMoversQuestion(trimmed)
           ? "market_movers"
           : basePayload.intentHint ?? intent,
-    tokenIntel: [basePayload.tokenIntel, mintIntel].filter(Boolean).join("\n") || basePayload.tokenIntel,
+    tokenIntel: intel
+      ? [intel, mintIntel].filter(Boolean).join("\n")
+      : [basePayload.tokenIntel, mintIntel].filter(Boolean).join("\n") || basePayload.tokenIntel,
   };
 
   const askLlm = (nextPayload: typeof payload) => streamTitanChatApi(nextPayload, handlers);

@@ -12,7 +12,7 @@ import {
 } from "../lib/deepScanDemo";
 import { guardTokenScan } from "../lib/securityBot";
 import { analyzeShouldIBuy, verdictBeginnerMeta, verdictTone } from "../lib/shouldIBuy";
-import { lookupTokenByQuery } from "../services/marketDataService";
+import { searchTradeTokens } from "../services/marketDataService";
 import { ShareScanButton } from "./ShareScanButton";
 import { ResearchTokenTutorialButton } from "./ResearchTokenTutorial";
 import { ScanHealthPanel } from "./ScanHealthPanel";
@@ -92,7 +92,16 @@ export function ShouldIBuyPanel({ poolTokens = [], initialScan = "" }: Props) {
     setScanGate(false);
     setResult(null);
     try {
-      const token = await lookupTokenByQuery(q, poolTokens);
+      const hits = await searchTradeTokens(q, poolTokens);
+      if (hits.length > 1 && !/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(q)) {
+        const choices = hits
+          .slice(0, 3)
+          .map((hit) => `${hit.symbol} ${hit.mintAddress?.slice(0, 4) ?? ""}…`)
+          .join(", ");
+        setError(`Several tokens use that name. Paste the mint. ${choices}`);
+        return;
+      }
+      const token = hits[0];
       if (!token) {
         setError("Token not found. Paste a Solana mint or try a symbol like BONK.");
         return;
