@@ -18,6 +18,7 @@ import { OnboardingTour } from "./OnboardingTour";
 import { SYNEXUS_VAULT_PATH, SYNEXUS_VAULT_PRODUCT_NAME } from "../config/walletComingSoon";
 import { isTradingEnabled } from "../config/trading";
 import { SecondFactorRedirect } from "../security/SecondFactorRedirect";
+import { useHeraWakeWordSetting } from "../hooks/useHeraWakeWordSetting";
 
 export function AppShell() {
   return (
@@ -33,6 +34,7 @@ function AppShellFrame() {
   const isHome = useLocation().pathname === "/";
   const heraOpen = useTitanChatOpen();
   const trading = isTradingEnabled();
+  const { enabled: listenEnabled } = useHeraWakeWordSetting();
 
   return (
     <div
@@ -172,8 +174,8 @@ function AppShellFrame() {
       <HeraWakeWordHost />
       {isHome && !isNativeAndroid() ? (
         <div className="home-bottom-dock">
-          <EnterSynexusButton />
           <BottomNav />
+          {listenEnabled ? <EnterSynexusButton /> : null}
         </div>
       ) : (
         <BottomNav />

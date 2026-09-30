@@ -29,6 +29,8 @@ const loaders: Record<string, () => Promise<RouteModule>> = {
   "/api/push/subscribe": () => import("./_routes/push/subscribe.js"),
   "/api/square/webhook": () => import("./_routes/square/webhook.js"),
   "/api/subscription/webhook": () => import("./_routes/subscription/webhook.js"),
+  "/api/webhooks/square": () => import("./_routes/webhooks/square.js"),
+  "/api/webhooks/square-sandbox": () => import("./_routes/webhooks/square-sandbox.js"),
   "/api/titan/chat": () => import("./_routes/titan/chat.js"),
   "/api/titan/event": () => import("./_routes/titan/event.js"),
   "/api/titan/warm": () => import("./_routes/titan/warm.js"),

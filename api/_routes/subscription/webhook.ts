@@ -9,8 +9,10 @@ export const SQUARE_WEBHOOK_ACTIVE_MESSAGE = "Square webhook endpoint is active"
 
 /** Production notification URL — must match Square Dashboard exactly. */
 export const SQUARE_WEBHOOK_PUBLIC_URL = "https://synexus.pro/api/webhook";
+const SQUARE_LIVE_ALIAS_URL = "https://synexus.pro/api/webhooks/square";
+const SQUARE_SANDBOX_URL = "https://synexus.pro/api/webhooks/square-sandbox";
 
-type WebhookEnv = Record<string, string | undefined>;
+export type WebhookEnv = Record<string, string | undefined>;
 
 type RawBodyRequest = NodeJS.ReadableStream & {
   body?: unknown;
@@ -106,11 +108,24 @@ function registerWebhookRoute(server: ViteDevServer, path: string, env: WebhookE
   });
 }
 
-/** Registers /api/webhook and /api/square/webhook for Vite dev. */
+/** Registers the live, legacy, and sandbox Square webhook routes for Vite dev. */
 export function configureSubscriptionWebhookApi(server: ViteDevServer, env: WebhookEnv) {
   for (const path of ["/api/webhook", "/api/square/webhook"]) {
     registerWebhookRoute(server, path, env);
   }
+  registerWebhookRoute(server, "/api/webhooks/square", {
+    ...env,
+    SQUARE_WEBHOOK_SIGNATURE_KEY:
+      env.SQUARE_LIVE_WEBHOOK_SIGNATURE_KEY || env.SQUARE_WEBHOOK_SIGNATURE_KEY,
+    SQUARE_WEBHOOK_NOTIFICATION_URL:
+      env.SQUARE_LIVE_WEBHOOK_NOTIFICATION_URL || SQUARE_LIVE_ALIAS_URL,
+  });
+  registerWebhookRoute(server, "/api/webhooks/square-sandbox", {
+    ...env,
+    SQUARE_WEBHOOK_SIGNATURE_KEY: env.SQUARE_SANDBOX_WEBHOOK_SIGNATURE_KEY,
+    SQUARE_WEBHOOK_NOTIFICATION_URL:
+      env.SQUARE_SANDBOX_WEBHOOK_NOTIFICATION_URL || SQUARE_SANDBOX_URL,
+  });
 }
 
 type ServerlessRequest = NodeJS.ReadableStream & {
@@ -126,7 +141,11 @@ type ServerlessResponse = {
   json(body: unknown): void;
 };
 
-export default async function handler(req: ServerlessRequest, res: ServerlessResponse) {
+export async function handleSubscriptionWebhook(
+  req: ServerlessRequest,
+  res: ServerlessResponse,
+  env: WebhookEnv = process.env,
+) {
   if (req.method === "GET" || req.method === "HEAD") {
     res.status(200);
     res.setHeader("Content-Type", "text/plain; charset=utf-8");
@@ -141,7 +160,7 @@ export default async function handler(req: ServerlessRequest, res: ServerlessRes
 
   let sent = false;
   try {
-    await handleWebhookPost(req, process.env, (statusCode, body) => {
+    await handleWebhookPost(req, env, (statusCode, body) => {
       if (sent) return;
       sent = true;
       if (typeof res.status === "function") {
@@ -167,6 +186,10 @@ export default async function handler(req: ServerlessRequest, res: ServerlessRes
       res.status(500).json({ error: "Webhook failed" });
     }
   }
+}
+
+export default function handler(req: ServerlessRequest, res: ServerlessResponse) {
+  return handleSubscriptionWebhook(req, res);
 }
 
 export const config = {
