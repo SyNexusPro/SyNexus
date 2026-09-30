@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SYNEXUS_PRO_TRIAL_DAYS, SYNEXUS_PRO_TRIAL_LABEL } from "../config/proTrial";
 import { DEFAULT_TITAN_BOT_NAME } from "../config/titanBot";
 import { SYNEXUS_PRO_PRICE_LABEL } from "../config/proPricing";
-import { hasStoredOwnerGrant } from "../lib/ownerAccess";
+import { hasStoredOwnerGrant, OWNER_ACCESS_CHANGED } from "../lib/ownerAccess";
 import { isProTrialActive } from "../lib/proDemo";
 import { getCurrentUser } from "../lib/supabaseData";
 import {
@@ -39,6 +39,15 @@ function isBannerDismissed(): boolean {
 export function ProTrialBanner() {
   const { linked } = useOperatorAuth();
   const [hidden, setHidden] = useState(() => isSynexusProPlan() || isBannerDismissed());
+
+  useEffect(() => {
+    const hideIfOwner = () => {
+      if (hasStoredOwnerGrant()) setHidden(true);
+    };
+    hideIfOwner();
+    window.addEventListener(OWNER_ACCESS_CHANGED, hideIfOwner);
+    return () => window.removeEventListener(OWNER_ACCESS_CHANGED, hideIfOwner);
+  }, []);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
 
@@ -76,7 +85,7 @@ export function ProTrialBanner() {
     : androidRequiresWebSubscription()
       ? ANDROID_WEB_SUBSCRIBE_HINT
       : !linked
-        ? `${SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial · card at checkout · then ${SYNEXUS_PRO_PRICE_LABEL}`
+        ? `${SYNEXUS_PRO_TRIAL_DAYS} days of Pro free when you sign up · no card · then ${SYNEXUS_PRO_PRICE_LABEL}`
         : `${SYNEXUS_PRO_TRIAL_LABEL} active or available · ${SYNEXUS_PRO_PRICE_LABEL} after trial · cancel anytime`;
 
   return (

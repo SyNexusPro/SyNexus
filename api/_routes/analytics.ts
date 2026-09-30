@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import type { ViteDevServer } from "./viteDevServer";
+import { useApiRoute, type ViteDevServer } from "./viteDevServer.js";
 import { verifyOwnerGrant } from "../../lib/server/ownerGrant.js";
 
 type AnalyticsPayload = {
@@ -162,7 +162,7 @@ async function buildAnalyticsSummary(days: number) {
 }
 
 async function handleAnalyticsRequest(payload: AnalyticsPayload) {
-  if (!verifyOwnerGrant(payload.grant, process.env)) {
+  if (!payload.grant || !verifyOwnerGrant(payload.grant, process.env)) {
     return { statusCode: 401, body: { error: "Owner command code required." } };
   }
 
@@ -187,7 +187,7 @@ function readRequestBody(req: NodeJS.ReadableStream): Promise<string> {
 }
 
 export function configureAnalyticsApi(server: ViteDevServer) {
-  server.middlewares.use("/api/analytics", async (req, res, next) => {
+  useApiRoute(server, "/api/analytics", async (req, res, next) => {
     if (req.method !== "POST") {
       next();
       return;

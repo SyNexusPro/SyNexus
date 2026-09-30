@@ -1,4 +1,4 @@
-import { isGooglePlayReviewEmail } from "../config/googlePlayReview";
+import { isAlwaysOnLoginEmail, isGooglePlayReviewEmail } from "../config/googlePlayReview";
 import { applyGooglePlayReviewAccess } from "./googlePlayReviewAccess";
 import { unlockOwnerAccess } from "./ownerAccess";
 import { isEmailVerified } from "./emailVerification";
@@ -24,39 +24,82 @@ export async function signInAlwaysOnAccount(
   password: string,
 ): Promise<AlwaysOnSignInResult> {
   const trimmed = email.trim();
-  const ownerAttempt = unlockOwnerAccess(trimmed, password);
-  let supabaseUser: User | null = null;
-  let supabaseSession: Session | null = null;
-  let supabaseError: string | null = null;
+  const ownerPromise = Promise.race([
+    unlockOwnerAccess(trimmed, password),
+    new Promise<{ ok: false; message: string }>((resolve) => {
+      setTimeout(() => resolve({ ok: false, message: "" }), 8_000);
+    }),
+  ]);
 
-  if (hasSupabaseEnv) {
+  const supabasePromise = (async () => {
+    let user: User | null = null;
+    let session: Session | null = null;
+    let error: string | null = null;
+    if (!hasSupabaseEnv) return { user, session, error };
+
     try {
       const result = await signInWithEmail(trimmed, password);
-      const user = result.user ?? result.session?.user ?? null;
-      if (user && !isEmailVerified(user) && !isGooglePlayReviewEmail(trimmed)) {
+      user = result.user ?? result.session?.user ?? null;
+      session = result.session ?? null;
+      if (user && !isEmailVerified(user) && !isAlwaysOnLoginEmail(trimmed)) {
         if (supabase) await signOut();
-        supabaseError = "Confirm your email before signing in.";
-      } else {
-        supabaseUser = user;
-        supabaseSession = result.session ?? null;
-        if (user) await applyGooglePlayReviewAccess(user.id, trimmed);
+        user = null;
+        session = null;
+        error = "Confirm your email before signing in.";
+      } else if (user) {
+        await applyGooglePlayReviewAccess(user.id, trimmed);
       }
     } catch (err) {
-      supabaseError = err instanceof Error ? err.message : "Sign-in failed.";
+      const message = err instanceof Error ? err.message : "Sign-in failed.";
+      const banned = /banned|disabled|user_banned/i.test(message);
+      if (!isAlwaysOnLoginEmail(trimmed) || !banned) error = message;
     }
+    return { user, session, error };
+  })();
+
+  const first = await Promise.race([
+    ownerPromise.then((value) => ({ source: "owner" as const, value })),
+    supabasePromise.then((value) => ({ source: "supabase" as const, value })),
+  ]);
+  if (first.source === "owner" && first.value.ok) {
+    return {
+      ok: true,
+      godMode: true,
+      playReviewer: isGooglePlayReviewEmail(trimmed),
+      user: null,
+      session: null,
+      message: first.value.message,
+    };
+  }
+  if (first.source === "supabase" && first.value.user) {
+    return {
+      ok: true,
+      godMode: false,
+      playReviewer: isGooglePlayReviewEmail(trimmed),
+      user: first.value.user,
+      session: first.value.session,
+      message: isGooglePlayReviewEmail(trimmed)
+        ? "Google Play reviewer signed in."
+        : "Signed in.",
+    };
   }
 
-  const owner = await ownerAttempt;
+  const owner = first.source === "owner" ? first.value : await ownerPromise;
   if (owner.ok) {
     return {
       ok: true,
       godMode: true,
       playReviewer: isGooglePlayReviewEmail(trimmed),
-      user: supabaseUser,
-      session: supabaseSession,
+      user: null,
+      session: null,
       message: owner.message,
     };
   }
+
+  const supabaseResult = first.source === "supabase" ? first.value : await supabasePromise;
+  const supabaseUser = supabaseResult.user;
+  const supabaseSession = supabaseResult.session;
+  const supabaseError = supabaseResult.error;
 
   if (supabaseUser) {
     return {

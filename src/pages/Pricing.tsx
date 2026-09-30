@@ -34,9 +34,9 @@ export function Pricing() {
           <p className="pulse-synexus-pro-promo__body">
             Sign up for a {SYNEXUS_PRO_TRIAL_DAYS}-day full Pro trial
             {androidRequiresWebSubscription()
-              ? " — on Android, billing completes at synexus.pro in your browser."
-              : " — add a card at checkout"}
-            . After the trial, billing continues at {SYNEXUS_PRO_PRICE_LABEL} unless you cancel. Payments
+              ? " — on Android, paid billing later completes at synexus.pro in your browser."
+              : " — no card required"}
+            . After the trial, subscribe at {SYNEXUS_PRO_PRICE_LABEL} to keep Pro. Payments
             are processed by our third-party subscription platform (shown at checkout).
           </p>
           {androidRequiresWebSubscription() ? (

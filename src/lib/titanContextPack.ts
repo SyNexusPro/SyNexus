@@ -1,5 +1,5 @@
 import type { Token } from "../data/tokens";
-import { synexusRiskBandLabel } from "../data/tokens";
+import { tokenRiskLabel } from "../data/tokens";
 import type { TitanMemoryProfile } from "./titanMemory";
 import type { OracleConversationContext } from "./oracleSupremeConversation";
 import {
@@ -131,7 +131,7 @@ export function buildTitanWatchlistBrief(symbols: string[], tokens: Token[]): st
     const hit = tokens.find((t) => t.symbol.toUpperCase() === sym) ?? searchOracleTokens(sym, tokens)[0];
     if (hit) {
       lines.push(
-        `${hit.symbol}: ${synexusRiskBandLabel(hit.guardianRisk)} ${formatPct(hit.change24hPct)} · liq ${formatUsd(hit.liquidityUsd)}`,
+        `${hit.symbol}: ${tokenRiskLabel(hit)} ${formatPct(hit.change24hPct)} · liq ${formatUsd(hit.liquidityUsd)}`,
       );
     } else {
       lines.push(`${sym}: not in current live pool — say if host wants a manual scan`);
@@ -152,7 +152,7 @@ export function buildTitanMarketBrief(tokens: Token[]): string {
   const sorted = [...tokens].sort((a, b) => Math.abs(b.change24hPct) - Math.abs(a.change24hPct));
   const movers = sorted.slice(0, 12).map(
     (t) =>
-      `${t.symbol}: ${synexusRiskBandLabel(t.guardianRisk)} ${formatPct(t.change24hPct)} liq${formatUsd(t.liquidityUsd)}${t.riskScore != null ? ` r${t.riskScore}` : ""}`,
+      `${t.symbol}: ${tokenRiskLabel(t)} ${formatPct(t.change24hPct)} liq${formatUsd(t.liquidityUsd)}${t.riskScore != null ? ` r${t.riskScore}` : ""}`,
   );
 
   const safest = [...tokens]

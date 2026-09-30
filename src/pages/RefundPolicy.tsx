@@ -32,10 +32,9 @@ export function RefundPolicy() {
         <h2>Free trial</h2>
         <p>
           Where offered, SyNexusPro includes a <strong>{SYNEXUS_PRO_TRIAL_DAYS}-day free trial</strong> after
-          you create and verify your account and add a payment method at checkout. You will not be charged the
-          subscription price during the trial if you cancel before the trial ends. If you do not cancel before
-          the trial ends, your payment method will be charged {SYNEXUS_PRO_PRICE_LABEL} and billing will
-          continue on a recurring monthly basis until you cancel.
+          you create and verify your account. No payment method is required to start the trial. You will not be
+          charged until you subscribe. If you subscribe after the trial, your payment method will be charged{" "}
+          {SYNEXUS_PRO_PRICE_LABEL} and billing will continue on a recurring monthly basis until you cancel.
         </p>
       </section>
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient";
 import { signOut, updatePassword } from "../../lib/supabaseData";
 import { validateSignupPassword } from "../../lib/authCredentials";
@@ -8,17 +8,19 @@ import {
   getAssurance,
   hasRecentStepUp,
   listVerifiedTotpFactors,
-  MFA_VERIFY_PATH,
+  MFA_SETUP_PATH,
   type ListedFactor,
   unenrollFactor,
   verifyTotpCode,
 } from "../../security/mfa";
 import { enrollDevicePasskey, passkeysAvailable } from "../../security/passkeys";
+import { isPhoneVerified, maskPhoneNumber } from "../../security/phoneVerification";
 import { listOwnSecurityEvents, recordSecurityEvent, type SecurityEventRow } from "../../security/securityEvents";
 
 export function SecuritySettings() {
   const navigate = useNavigate();
   const [aal, setAal] = useState("aal1");
+  const [verifiedPhone, setVerifiedPhone] = useState("");
   const [factors, setFactors] = useState<ListedFactor[]>([]);
   const [events, setEvents] = useState<SecurityEventRow[]>([]);
   const [password, setPassword] = useState("");
@@ -30,14 +32,16 @@ export function SecuritySettings() {
   const [message, setMessage] = useState<string | null>(null);
 
   async function refresh() {
-    const [assurance, listed, log] = await Promise.all([
+    const [assurance, listed, log, userResult] = await Promise.all([
       getAssurance(),
       listVerifiedTotpFactors(),
       listOwnSecurityEvents(),
+      supabase?.auth.getUser(),
     ]);
     setAal(assurance.currentLevel);
     setFactors(listed);
     setEvents(log);
+    setVerifiedPhone(isPhoneVerified(userResult?.data.user) ? userResult?.data.user?.phone ?? "" : "");
   }
 
   useEffect(() => {
@@ -46,7 +50,7 @@ export function SecuritySettings() {
 
   function requireStepUp(): boolean {
     if (hasRecentStepUp() && aal === "aal2") return true;
-    navigate(`${MFA_VERIFY_PATH}?stepup=1`);
+    navigate(MFA_SETUP_PATH, { state: { from: "/security" } });
     return false;
   }
 
@@ -90,7 +94,9 @@ export function SecuritySettings() {
     setBusy(true);
     setMessage(null);
     try {
-      const enrolled = await enrollTotpFactor("SyNexus Backup Authenticator");
+      const enrolled = await enrollTotpFactor(
+        factors.length ? "SyNexus Backup Authenticator" : "SyNexus Authenticator",
+      );
       setBackupFactorId(enrolled.factorId);
       setBackupQr(enrolled.qrCode);
       setBackupSecret(enrolled.secret);
@@ -111,7 +117,7 @@ export function SecuritySettings() {
       setBackupQr("");
       setBackupSecret("");
       setBackupCode("");
-      setMessage("Backup authenticator enabled.");
+      setMessage("Authenticator app enabled.");
       await refresh();
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "Backup verification failed.");
@@ -122,7 +128,7 @@ export function SecuritySettings() {
 
   async function removeFactor(id: string) {
     if (busy || !requireStepUp()) return;
-    if (!window.confirm("Remove this authenticator? You must keep at least one.")) return;
+    if (!window.confirm("Remove this authenticator app from your account?")) return;
     setBusy(true);
     try {
       await unenrollFactor(id);
@@ -156,32 +162,30 @@ export function SecuritySettings() {
 
         {message ? <p className="synexus-sec__note">{message}</p> : null}
 
-        <h2 className="synexus-sec__h2">Two-step verification</h2>
-        <p>{factors.length ? "✓ Authenticator enabled" : "Authenticator not enabled"}</p>
+        <h2 className="synexus-sec__h2">Verified phone</h2>
+        <p>{verifiedPhone ? `✓ ${maskPhoneNumber(verifiedPhone)}` : "Phone verification required"}</p>
+
+        <h2 className="synexus-sec__h2">Authenticator app (optional)</h2>
+        <p>{factors.length ? "✓ Extra sign-in protection enabled" : "Not enabled"}</p>
         <ul className="synexus-sec__list">
           {factors.map((factor) => (
             <li key={factor.id}>
               {factor.friendlyName}
-              {factors.length > 1 ? (
-                <button type="button" className="synexus-sec__text-btn" disabled={busy} onClick={() => void removeFactor(factor.id)}>
-                  Remove
-                </button>
-              ) : null}
+              <button type="button" className="synexus-sec__text-btn" disabled={busy} onClick={() => void removeFactor(factor.id)}>
+                Remove
+              </button>
             </li>
           ))}
         </ul>
         <div className="synexus-sec__row">
-          <Link className="synexus-sec__btn synexus-sec__btn--ghost" to="/security/setup">
-            Manage Authenticator
-          </Link>
           <button type="button" className="synexus-sec__btn synexus-sec__btn--ghost" disabled={busy} onClick={() => void startBackup()}>
-            Add Backup Authenticator
+            {factors.length ? "Add Backup Authenticator" : "Add Authenticator App"}
           </button>
         </div>
 
         {backupQr ? (
           <div className="synexus-sec__backup">
-            <p>Scan with a second authenticator app, then enter the code.</p>
+            <p>Scan with your authenticator app, then enter the code.</p>
             <img className="synexus-sec__qr" src={backupQr} alt="Backup authenticator QR code" />
             <p className="synexus-sec__secret">
               Manual secret: <code>{backupSecret}</code>
@@ -194,7 +198,7 @@ export function SecuritySettings() {
               onChange={(event) => setBackupCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
             />
             <button type="button" className="synexus-sec__btn" disabled={busy || backupCode.length !== 6} onClick={() => void confirmBackup()}>
-              Verify backup
+              Verify authenticator
             </button>
           </div>
         ) : null}
@@ -206,7 +210,7 @@ export function SecuritySettings() {
           </button>
         ) : (
           <p className="synexus-sec__muted">
-            Passkeys are optional and off unless enabled for this build. Authenticator MFA remains required.
+            Passkeys are optional and off unless enabled for this build.
           </p>
         )}
 

@@ -15,6 +15,7 @@ import { renderDailyVideo } from "./makeVideo.js";
 import { todayDirName } from "./videoBlueprint.js";
 import {
   buildDailyPack,
+  liveSolanaTapeLine,
   generateTelegramCaptions,
   generateTikTokCaptions,
   generateFacebookCaptions,
@@ -140,6 +141,12 @@ export async function runBlastSlot({ slot, force = false, quiet = false, launch 
     fbCap = fbCaptions[slot] || fbCaptions[0];
     igCap = igCaptions[slot] || igCaptions[0];
     xCap = xCaptions[slot] || pack.x;
+  }
+
+  const tape = await liveSolanaTapeLine();
+  if (tape) {
+    tgCap = `${tgCap}\n\n${tape}`;
+    if (xCap) xCap = `${xCap}\n\n${tape}`;
   }
 
   await exportAdCreatives({

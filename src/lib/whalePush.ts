@@ -68,16 +68,17 @@ export async function enableWhalePushNotifications(): Promise<"ok" | "unsupporte
   }
 }
 
-/** Best-effort Capacitor local/push hook — Web Push covers Android WebView when permitted. */
+/** Best-effort Capacitor FCM hook — skipped until google-services.json exists. */
 export async function enableNativeWhalePushIfAvailable(): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
   try {
     const mod = await import("@capacitor/push-notifications");
     const { PushNotifications } = mod;
+    if (!Capacitor.isPluginAvailable("PushNotifications")) return;
     const perm = await PushNotifications.requestPermissions();
     if (perm.receive !== "granted") return;
     await PushNotifications.register();
   } catch {
-    /* plugin optional until cap sync */
+    /* optional — missing Firebase must never take the activity down */
   }
 }

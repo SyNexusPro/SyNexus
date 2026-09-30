@@ -5,11 +5,14 @@ type ApiHandler = (
   res: ServerResponse,
 ) => unknown | Promise<unknown>;
 
-type RouteModule = { default: ApiHandler };
+// Routes declare narrower req/res types (e.g. Vercel's status/json helpers), so accept any handler shape here.
+type RouteModule = { default: (req: never, res: never) => unknown };
 
 const loaders: Record<string, () => Promise<RouteModule>> = {
   "/api/analytics": () => import("./_routes/analytics.js"),
   "/api/checkout": () => import("./_routes/checkout.js"),
+  "/api/community/access": () => import("./_routes/community/access.js"),
+  "/api/dashboard": () => import("./_routes/dashboard.js"),
   "/api/cron/titan-daily": () => import("./_routes/cron/titan-daily.js"),
   "/api/cron/titan-discovery": () => import("./_routes/cron/titan-discovery.js"),
   "/api/cron/titan-launch-watch": () => import("./_routes/cron/titan-launch-watch.js"),
@@ -74,5 +77,5 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     return;
   }
   const mod = await load();
-  await mod.default(req, res);
+  await (mod.default as ApiHandler)(req, res);
 }

@@ -80,7 +80,11 @@ export function TopMoversPanel() {
 
   const rows = tab === "gainers" ? (data?.gainers ?? []) : (data?.losers ?? []);
   const emptyLabel =
-    tab === "gainers" ? "No gainers in the last 5 minutes." : "No losers in the last 5 minutes.";
+    data?.source === "unavailable"
+      ? "Live movers are unavailable right now."
+      : tab === "gainers"
+        ? "No gainers in the last 5 minutes."
+        : "No losers in the last 5 minutes.";
 
   return (
     <section className="top-movers marketing-panel" aria-labelledby="top-movers-title">
@@ -92,7 +96,7 @@ export function TopMoversPanel() {
           <p className="top-movers__lede">Solana · last 5 minutes</p>
         </div>
         <span className={`top-movers__badge${data?.source === "live" ? " top-movers__badge--live" : ""}`}>
-          {loading ? "…" : data?.source === "live" ? "Live" : "Sample"}
+          {loading ? "…" : data?.source === "live" ? "Live" : data?.source === "unavailable" ? "Unavailable" : "Sample"}
         </span>
       </div>
 

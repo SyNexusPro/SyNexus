@@ -22,8 +22,7 @@ See [Sign your release](https://developer.android.com/studio/publish/app-signing
 
 ## Version numbers
 
-Every new Play upload needs a **strictly larger** `versionCode` (`android/app/build.gradle` → `defaultConfig.versionCode`).  
-Bump `versionName` (user-visible) when you ship meaningful releases (keep it aligned with `package.json` if you prefer).
+`npm run android:apk`, `android:bundle`, and `android:release` run `version:android` first. That increments Play `versionCode` and bumps the patch on `package.json` / `versionName` together (override with `APP_VERSION=x.y.z`). Do not reuse a `versionCode`.
 
 ## Remote WebView (production APIs)
 

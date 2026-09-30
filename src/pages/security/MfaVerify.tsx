@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { listVerifiedTotpFactors, MFA_SETUP_PATH, verifyTotpCode } from "../../security/mfa";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { listVerifiedTotpFactors, verifyTotpCode } from "../../security/mfa";
 import { recordSecurityEvent } from "../../security/securityEvents";
 
 export function MfaVerify() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const stepUp = params.get("stepup") === "1";
+  const enrollPhone = params.get("next") === "phone";
   const [factorId, setFactorId] = useState("");
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
@@ -17,7 +18,7 @@ export function MfaVerify() {
     void listVerifiedTotpFactors().then((factors) => {
       if (!alive) return;
       if (!factors[0]) {
-        navigate(MFA_SETUP_PATH, { replace: true });
+        navigate("/security", { replace: true });
         return;
       }
       setFactorId(factors[0].id);
@@ -34,7 +35,7 @@ export function MfaVerify() {
     try {
       await verifyTotpCode(factorId, code);
       void recordSecurityEvent({ eventType: "mfa_success", success: true });
-      navigate(stepUp ? "/security" : "/pulse", { replace: true });
+      navigate(enrollPhone ? "/security/setup" : stepUp ? "/security" : "/pulse", { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Verification failed.");
     } finally {
@@ -64,9 +65,6 @@ export function MfaVerify() {
         <button type="button" className="synexus-sec__btn" disabled={busy || code.length !== 6} onClick={() => void handleVerify()}>
           {busy ? "Verifying…" : "Verify"}
         </button>
-        <p className="synexus-sec__foot">
-          Need to enroll? <Link to={MFA_SETUP_PATH}>Set up authenticator</Link>
-        </p>
       </section>
     </div>
   );

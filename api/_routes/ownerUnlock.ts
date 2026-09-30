@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
-import type { ViteDevServer } from "./viteDevServer";
+import { signOwnerGrant, verifyOwnerGrant } from "../../lib/server/ownerGrant.js";
+import { useApiRoute, type ConnectHandler, type ViteDevServer } from "./viteDevServer.js";
 
 type OwnerEnv = {
   SYNEXUS_OWNER_EMAIL?: string;
@@ -31,10 +32,6 @@ function readRequestBody(req: NodeJS.ReadableStream): Promise<string> {
   });
 }
 
-function signingKey(env: OwnerEnv): string {
-  return env.SYNEXUS_OWNER_SIGNING_KEY?.trim() || env.SYNEXUS_OWNER_PASSWORD?.trim() || "";
-}
-
 function ownerConfigured(env: OwnerEnv): boolean {
   return Boolean(env.SYNEXUS_OWNER_EMAIL?.trim() && env.SYNEXUS_OWNER_PASSWORD?.trim());
 }
@@ -46,30 +43,13 @@ function secretEqual(a: string, b: string): boolean {
 }
 
 function issueGrant(email: string, env: OwnerEnv): { grant: string; expiresAt: number } | null {
-  const key = signingKey(env);
-  if (!key) return null;
   const expiresAt = Date.now() + GRANT_TTL_MS;
-  const sig = crypto.createHmac("sha256", key).update(`${email}:${expiresAt}`).digest("hex");
-  const grant = Buffer.from(JSON.stringify({ e: email, exp: expiresAt, sig })).toString("base64url");
-  return { grant, expiresAt };
+  const grant = signOwnerGrant(email, expiresAt, env);
+  return grant ? { grant, expiresAt } : null;
 }
 
 function verifyGrantToken(grant: string, env: OwnerEnv): boolean {
-  const key = signingKey(env);
-  if (!key) return false;
-  try {
-    const parsed = JSON.parse(Buffer.from(grant, "base64url").toString("utf8")) as {
-      e?: string;
-      exp?: number;
-      sig?: string;
-    };
-    if (!parsed.e || !parsed.exp || !parsed.sig) return false;
-    if (Date.now() > parsed.exp) return false;
-    const expected = crypto.createHmac("sha256", key).update(`${parsed.e}:${parsed.exp}`).digest("hex");
-    return secretEqual(parsed.sig, expected);
-  } catch {
-    return false;
-  }
+  return verifyOwnerGrant(grant, env) !== null;
 }
 
 async function handleOwnerUnlock(
@@ -101,7 +81,7 @@ async function handleOwnerUnlock(
   }
 
   if (!secretEqual(email, expectedEmail) || !secretEqual(password, expectedPassword)) {
-    return { statusCode: 401, body: { error: "Invalid command ID or key." } };
+      return { statusCode: 401, body: { error: "Wrong owner email or password." } };
   }
 
   const issued = issueGrant(email, env);
@@ -134,15 +114,15 @@ async function respondJson(
 }
 
 export function configureOwnerUnlockApi(server: ViteDevServer, env: OwnerEnv) {
-  const middleware = async (req: { method?: string }, res: { statusCode: number; setHeader: (k: string, v: string) => void; end: (b: string) => void }, next: () => void) => {
+  const middleware: ConnectHandler = async (req, res, next) => {
     if (req.method !== "POST") {
       next();
       return;
     }
-    await respondJson(req as NodeJS.ReadableStream, res, env);
+    await respondJson(req, res, env);
   };
-  server.middlewares.use("/api/owner-unlock", middleware);
-  server.middlewares.use("/api/ownerUnlock", middleware);
+  useApiRoute(server, "/api/owner-unlock", middleware);
+  useApiRoute(server, "/api/ownerUnlock", middleware);
 }
 
 type ServerlessRequest = NodeJS.ReadableStream & {
@@ -163,8 +143,11 @@ function sendUnlockResult(
   result: { statusCode: number; body: JsonBody },
 ) {
   if (typeof res.status === "function") {
-    res.status(result.statusCode).json(result.body);
-    return;
+    const reply = res.status(result.statusCode);
+    if (typeof reply.json === "function") {
+      reply.json(result.body);
+      return;
+    }
   }
   res.statusCode = result.statusCode;
   res.setHeader?.("Content-Type", "application/json");

@@ -3,7 +3,8 @@
  * Uses ELEVENLABS_API_KEY or OPENAI_API_KEY from env — never exposed to the client.
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { ViteDevServer } from "../viteDevServer";
+import { useApiRoute, type ViteDevServer } from "../viteDevServer.js";
+import { requireHeraUser } from "../../../lib/server/heraGuard.js";
 
 function readBody(req: IncomingMessage): Promise<{ text?: string }> {
   return new Promise((resolve, reject) => {
@@ -77,7 +78,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   if (req.method === "OPTIONS") {
     res.writeHead(204, {
       "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
     });
     return res.end();
   }
@@ -85,6 +86,9 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     res.writeHead(405, { "Content-Type": "application/json" });
     return res.end(JSON.stringify({ error: "Method not allowed" }));
   }
+
+  const authed = await requireHeraUser(req, res, process.env);
+  if (!authed) return;
 
   try {
     const body = await readBody(req);
@@ -127,12 +131,12 @@ export function configureHeraTtsApi(
       if (value && !process.env[key]) process.env[key] = value;
     }
   }
-  server.middlewares.use("/api/hera/tts", async (req, res, next) => {
-    const method = (req as IncomingMessage).method;
+  useApiRoute(server, "/api/hera/tts", async (req, res, next) => {
+    const method = req.method;
     if (method !== "POST" && method !== "OPTIONS") {
       next();
       return;
     }
-    await handler(req as IncomingMessage, res as ServerResponse);
+    await handler(req, res);
   });
 }

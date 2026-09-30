@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { HomeTape } from "../components/home/HomeTape";
 import { enableHeraWakeWordFromUi } from "../lib/hera/wakeWord";
 
 /**
@@ -12,6 +13,7 @@ const LINKS: { id: string; title: string; body: string; to?: string; titan?: boo
   { id: "security", title: "Cybersecurity", body: "Risk checks and alerts.", to: "/pulse" },
   { id: "news", title: "News", body: "Market headlines.", to: "/news" },
   { id: "hub", title: "Hub", body: "Tools and ecosystem.", to: "/hub" },
+  { id: "trade", title: "Trade", body: "Swap on Solana with Titan safety.", to: "/trade" },
 ];
 
 export function AndroidHomeStatic() {
@@ -31,6 +33,7 @@ export function AndroidHomeStatic() {
         <h1 className="android-home__headline">One AI. Unlimited Intelligence.</h1>
         <p className="android-home__lede">Markets. Business. Security. Automation.</p>
       </header>
+      <HomeTape />
 
       <nav className="android-home__grid" aria-label="Features">
         {LINKS.map((item) =>

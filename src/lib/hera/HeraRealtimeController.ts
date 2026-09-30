@@ -7,6 +7,7 @@ import { hostTimeZone } from "./formatLiveStamp";
 import { SYN_MINT, SYN_SYMBOL } from "../../config/synToken";
 import { authHeaders } from "../authSession";
 import { HERA_CONVERSATION_INSTRUCTIONS, HERA_VOICE_INSTRUCTIONS } from "./heraPrompt";
+import { getHeraVoicePreference } from "./heraVoicePreference";
 
 function heraLog(message: string, extra?: unknown): void {
   if (extra !== undefined) console.info(`[HERA] ${message}`, extra);
@@ -30,10 +31,14 @@ export type HeraRealtimeEvents = {
 };
 
 type TokenPayload = {
+  mode?: string;
   value?: string;
   client_secret?: { value?: string };
   model?: string;
+  voice?: string;
   error?: string;
+  session?: { id?: string };
+  transport?: { type?: string; sdp?: string };
 };
 
 type RealtimeEvent = {
@@ -43,6 +48,8 @@ type RealtimeEvent = {
   delta?: string;
   transcript?: string;
   text?: string;
+  content?: string;
+  session?: { id?: string };
   response?: {
     id?: string;
     output?: Array<{ content?: Array<{ transcript?: string; text?: string }> }>;
@@ -55,10 +62,6 @@ type StartOpts = {
   seedText?: string;
   contextNote?: string;
 };
-
-function extractToken(json: TokenPayload): string {
-  return json.value?.trim() || json.client_secret?.value?.trim() || "";
-}
 
 function isFatalSessionError(err: unknown): boolean {
   const message = err instanceof Error ? err.message : String(err);
@@ -114,6 +117,11 @@ export class HeraRealtimeController {
   private transcript = "";
   private speakerGain: GainNode | null = null;
   private remoteRoutedToCtx = false;
+  private protocol: "live" | "realtime" = "live";
+  private livePrimed = false;
+  private liveUserTimer = 0;
+  private liveOutputTimer = 0;
+  private pendingTyped: string[] = [];
 
   get conversationState(): HeraConversationState {
     return this.state;
@@ -213,14 +221,25 @@ export class HeraRealtimeController {
     this.cleanup("idle");
   }
 
+  /** Voice is fixed when the session starts, so a new voice needs a new session. */
+  restartSession(): Promise<boolean> {
+    if (!this.enabled) return Promise.resolve(false);
+    this.reconnectAttempts = 0;
+    this.cleanup("connecting");
+    this.enabled = true;
+    return this.openCall();
+  }
+
   interrupt(): void {
     if (this.state !== "speaking" && !this.outputLive) return;
     heraLog("assistant interrupted");
     this.outputLive = false;
-    this.muteRemote(true);
     this.finishResponse(true);
-    this.send({ type: "response.cancel" });
-    this.send({ type: "output_audio_buffer.clear" });
+    if (this.protocol === "realtime") {
+      this.muteRemote(true);
+      this.send({ type: "response.cancel" });
+      this.send({ type: "output_audio_buffer.clear" });
+    }
     this.setState("interrupted");
     this.setMouth(0);
     window.setTimeout(() => {
@@ -228,12 +247,34 @@ export class HeraRealtimeController {
     }, 120);
   }
 
-  sendText(text: string): void {
+  sendText(text: string): boolean {
     const trimmed = text.trim();
-    if (!trimmed) return;
-    heraLog("user speech ended", trimmed);
+    if (!trimmed) return false;
+    heraLog("user typed", trimmed);
     this.emit("onUserTurn", trimmed);
-    this.send({
+    this.transcript = trimmed;
+    this.emit("onTranscript", trimmed);
+    this.setState("thinking");
+    if (!this.canSend()) {
+      this.pendingTyped.push(trimmed);
+      return this.enabled;
+    }
+    return this.dispatchUserText(trimmed);
+  }
+
+  private dispatchUserText(trimmed: string): boolean {
+    if (this.protocol === "live") {
+      this.liveAppend(
+        "session.thinking.append",
+        `The operator typed this message (their current turn, verbatim): ${trimmed}`,
+      );
+      this.liveAppend(
+        "session.commentary.append",
+        "Answer that typed message now in one spoken reply. Do not read this cue or the word typed aloud.",
+      );
+      return true;
+    }
+    const created = this.send({
       type: "conversation.item.create",
       item: {
         type: "message",
@@ -241,7 +282,14 @@ export class HeraRealtimeController {
         content: [{ type: "input_text", text: trimmed }],
       },
     });
-    this.send({ type: "response.create" });
+    const asked = this.send({ type: "response.create" });
+    return created && asked;
+  }
+
+  private flushPendingTyped(): void {
+    if (!this.canSend() || !this.pendingTyped.length) return;
+    const queued = this.pendingTyped.splice(0);
+    for (const text of queued) this.dispatchUserText(text);
   }
 
   private async openCall(): Promise<boolean> {
@@ -251,17 +299,6 @@ export class HeraRealtimeController {
     heraLog("realtime connecting");
     await this.unlockAudio();
     try {
-      const headers = await authHeaders({ "Content-Type": "application/json" });
-      const tokenRes = await fetch("/api/hera/session", { method: "POST", headers }).catch(() => null);
-      const fallback = tokenRes?.ok
-        ? tokenRes
-        : await fetch("/api/hera/realtime-session", { method: "POST", headers });
-      const tokenJson = (await fallback.json()) as TokenPayload;
-      if (!fallback.ok) throw new Error(tokenJson.error || `session HTTP ${fallback.status}`);
-      const ephemeral = extractToken(tokenJson);
-      if (!ephemeral) throw new Error("no ephemeral client secret");
-      if (this.generation !== gen) return false;
-
       heraLog("microphone requested");
       const mic = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -322,12 +359,8 @@ export class HeraRealtimeController {
       const dc = pc.createDataChannel("oai-events");
       this.dc = dc;
       dc.addEventListener("open", () => {
-        heraLog("realtime connected");
-        this.connecting = false;
-        this.reconnectAttempts = 0;
-        this.emit("onError", "");
-        this.setState("listening");
-        void this.primeConversation();
+        heraLog("realtime data channel open");
+        if (this.protocol === "realtime") this.onTransportReady();
       });
       dc.addEventListener("close", () => heraError("data channel closed"));
       dc.addEventListener("error", (event) => heraError("data channel", event));
@@ -335,9 +368,17 @@ export class HeraRealtimeController {
 
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
-      const answerSdp = await this.exchangeSdp(ephemeral, offer.sdp ?? "", tokenJson.model);
+      await this.waitForIce(pc);
+      const localSdp = pc.localDescription?.sdp || offer.sdp || "";
+      if (!localSdp) throw new Error("Missing local SDP offer");
+      const session = await this.createServerSession(localSdp);
       if (this.generation !== gen) return false;
-      await pc.setRemoteDescription({ type: "answer", sdp: answerSdp });
+      this.protocol = session.mode;
+      await pc.setRemoteDescription({ type: "answer", sdp: session.sdp });
+      heraLog(
+        "voice session",
+        `${this.protocol} · ${session.model ?? "default model"} · voice ${session.voice ?? "default"}`,
+      );
       window.setTimeout(() => {
         if (this.generation === gen && this.state === "connecting") {
           heraError("data channel timeout");
@@ -375,43 +416,91 @@ export class HeraRealtimeController {
     }
   }
 
-  private async exchangeSdp(ephemeral: string, offerSdp: string, model?: string): Promise<string> {
-    const headers = {
-      Authorization: `Bearer ${ephemeral}`,
-      "Content-Type": "application/sdp",
-    };
-    const ga = await fetch("https://api.openai.com/v1/realtime/calls", {
-      method: "POST",
-      body: offerSdp,
-      headers,
+  /** Waits for ICE gathering so the server receives a complete offer. */
+  private async waitForIce(pc: RTCPeerConnection): Promise<void> {
+    if (pc.iceGatheringState === "complete") return;
+    await new Promise<void>((resolve) => {
+      const done = () => {
+        if (pc.iceGatheringState !== "complete") return;
+        pc.removeEventListener("icegatheringstatechange", done);
+        window.clearTimeout(timer);
+        resolve();
+      };
+      const timer = window.setTimeout(() => {
+        pc.removeEventListener("icegatheringstatechange", done);
+        resolve();
+      }, 3000);
+      pc.addEventListener("icegatheringstatechange", done);
+      done();
     });
-    if (ga.ok) return ga.text();
-    const gaText = await ga.text();
-    heraError("SDP /calls failed", `${ga.status} ${gaText.slice(0, 160)}`);
-    const modelQs = encodeURIComponent(model || "gpt-realtime-2.1");
-    const legacy = await fetch(`https://api.openai.com/v1/realtime?model=${modelQs}`, {
-      method: "POST",
-      body: offerSdp,
-      headers,
-    });
-    if (!legacy.ok) {
-      const body = await legacy.text();
-      throw new Error(`SDP exchange failed (${ga.status}/${legacy.status}) ${body.slice(0, 160)}`);
+  }
+
+  /**
+   * Server exchanges our offer for an answer. GPT-Live-1 answers with
+   * `mode: "live"`; the Realtime fallback answers with `mode: "realtime"`.
+   */
+  private async createServerSession(
+    offerSdp: string,
+  ): Promise<{ mode: "live" | "realtime"; sdp: string; model?: string; voice?: string }> {
+    const headers = await authHeaders({ "Content-Type": "application/json" });
+    const body = JSON.stringify({ sdp: offerSdp, voice: getHeraVoicePreference() ?? undefined });
+    let res = await fetch("/api/hera/session", { method: "POST", headers, body }).catch(() => null);
+    if (!res?.ok) {
+      res = await fetch("/api/hera/realtime-session", { method: "POST", headers, body });
     }
-    return legacy.text();
+    const json = (await res.json()) as TokenPayload;
+    if (!res.ok) {
+      if (json.error === "sign_in_required") throw new Error("Sign in to talk to Hera.");
+      if (json.error === "rate_limited") throw new Error("Hera voice is busy. Try again in a bit.");
+      throw new Error(json.error || `session HTTP ${res.status}`);
+    }
+    const answer = json.transport?.sdp?.trim() || "";
+    if (!answer) throw new Error("no SDP answer from voice session");
+    return {
+      mode: json.mode === "realtime" ? "realtime" : "live",
+      sdp: answer,
+      model: json.model,
+      voice: json.voice,
+    };
+  }
+
+  /** Transport is usable: Realtime on data-channel open, Live on `session.started`. */
+  private onTransportReady(): void {
+    this.connecting = false;
+    this.reconnectAttempts = 0;
+    this.emit("onError", "");
+    this.setState("listening");
+    heraLog("realtime connected");
+    void this.primeConversation();
+  }
+
+  /** GPT-Live context injection. `delegation_id: null` is session-wide. */
+  private liveAppend(
+    type: "session.instructions.append" | "session.thinking.append" | "session.commentary.append",
+    content: string,
+  ): void {
+    const text = content.trim();
+    if (!text) return;
+    this.send({ type, event_id: newId(), delegation_id: null, content: text.slice(0, 1800) });
   }
 
   private async primeConversation(): Promise<void> {
-    this.send({
-      type: "session.update",
-      session: {
-        type: "realtime",
-        instructions: HERA_CONVERSATION_INSTRUCTIONS,
-        audio: {
-          output: { instructions: HERA_VOICE_INSTRUCTIONS },
+    if (this.livePrimed && this.protocol === "live") return;
+    this.livePrimed = true;
+    if (this.protocol === "live") {
+      this.liveAppend("session.instructions.append", HERA_VOICE_INSTRUCTIONS);
+    } else {
+      this.send({
+        type: "session.update",
+        session: {
+          type: "realtime",
+          instructions: HERA_CONVERSATION_INSTRUCTIONS,
+          audio: {
+            output: { instructions: HERA_VOICE_INSTRUCTIONS },
+          },
         },
-      },
-    });
+      });
+    }
     let context = this.pendingContext;
     try {
       const live = await fetchHeraLiveToken({ mint: SYN_MINT, symbol: SYN_SYMBOL, tz: hostTimeZone() });
@@ -436,33 +525,47 @@ export class HeraRealtimeController {
     } catch (err) {
       heraError("launch watch skipped", err);
     }
-    if (context) {
-      this.send({
-        type: "conversation.item.create",
-        item: {
-          type: "message",
-          role: "user",
-          content: [{ type: "input_text", text: `Session context (do not read aloud unless asked): ${context}` }],
-        },
-      });
-    }
-    for (const turn of this.pendingHistory.filter((item) => item.text.trim()).slice(-10)) {
-      this.send({
-        type: "conversation.item.create",
-        item: {
-          type: "message",
-          role: turn.role === "oracle" ? "assistant" : "user",
-          content: [
-            turn.role === "oracle" ? { type: "text", text: turn.text } : { type: "input_text", text: turn.text },
-          ],
-        },
-      });
+    const history = this.pendingHistory.filter((item) => item.text.trim()).slice(-10);
+    if (this.protocol === "live") {
+      if (context) {
+        this.liveAppend("session.thinking.append", `Session context (do not read aloud unless asked): ${context}`);
+      }
+      if (history.length) {
+        const recap = history
+          .map((turn) => `${turn.role === "oracle" ? "Hera" : "Operator"}: ${turn.text}`)
+          .join(" | ");
+        this.liveAppend("session.thinking.append", `Earlier in this conversation: ${recap}`);
+      }
+    } else {
+      if (context) {
+        this.send({
+          type: "conversation.item.create",
+          item: {
+            type: "message",
+            role: "user",
+            content: [{ type: "input_text", text: `Session context (do not read aloud unless asked): ${context}` }],
+          },
+        });
+      }
+      for (const turn of history) {
+        this.send({
+          type: "conversation.item.create",
+          item: {
+            type: "message",
+            role: turn.role === "oracle" ? "assistant" : "user",
+            content: [
+              turn.role === "oracle" ? { type: "text", text: turn.text } : { type: "input_text", text: turn.text },
+            ],
+          },
+        });
+      }
     }
     const seed = this.pendingSeed;
     this.pendingSeed = "";
     if (seed.length >= 6) {
       this.sendText(seed);
     }
+    this.flushPendingTyped();
   }
 
   private onServerEvent(raw: unknown): void {
@@ -480,6 +583,41 @@ export class HeraRealtimeController {
       const message = typeof data.error === "string" ? data.error : data.error?.message || "Realtime error";
       heraError(message, data);
       this.emit("onError", message);
+      return;
+    }
+
+    // ── GPT-Live-1 lifecycle and transcripts ──
+    if (type === "session.started") {
+      heraLog("live session started", data.session?.id);
+      this.onTransportReady();
+      return;
+    }
+
+    if (type === "session.closed") {
+      heraLog("live session closed");
+      this.outputLive = false;
+      this.setMouth(0);
+      this.commitResponse(false);
+      if (this.enabled) this.scheduleReconnect();
+      return;
+    }
+
+    if (type === "session.input_transcript.delta") {
+      const fragment = data.delta || data.text || data.content || "";
+      if (!fragment) return;
+      this.userPartial = `${this.userPartial}${this.userPartial ? " " : ""}${fragment}`.trim();
+      this.transcript = this.userPartial;
+      this.emit("onTranscript", this.transcript);
+      this.noteLiveUserSpeech();
+      return;
+    }
+
+    if (type === "session.output_transcript.delta") {
+      const fragment = data.delta || data.text || data.content || "";
+      if (!fragment) return;
+      if (!this.activeResponse) this.activeResponse = { id: newId(), text: "", startedAt: Date.now() };
+      this.activeResponse.text = `${this.activeResponse.text}${this.activeResponse.text ? " " : ""}${fragment}`.trim();
+      this.noteLiveOutput();
       return;
     }
 
@@ -583,6 +721,45 @@ export class HeraRealtimeController {
     }
   }
 
+  /**
+   * GPT-Live is full duplex: it has no speech start/stop events, so user and
+   * assistant activity are inferred from transcript fragments going quiet.
+   */
+  private noteLiveUserSpeech(): void {
+    if (!this.userSpeaking) {
+      this.userSpeaking = true;
+      this.emit("onUserSpeaking", true);
+    }
+    window.clearTimeout(this.liveUserTimer);
+    this.liveUserTimer = window.setTimeout(() => {
+      this.userSpeaking = false;
+      this.emit("onUserSpeaking", false);
+      const finalText = this.userPartial.trim();
+      this.userPartial = "";
+      if (finalText) this.emit("onUserTurn", finalText);
+    }, 900);
+  }
+
+  private noteLiveOutput(): void {
+    this.outputLive = true;
+    this.muteRemote(false);
+    this.setState("speaking");
+    window.clearTimeout(this.liveOutputTimer);
+    this.liveOutputTimer = window.setTimeout(() => {
+      this.outputLive = false;
+      this.setMouth(0);
+      this.commitResponse(false);
+      if (this.state === "speaking") this.setState("listening");
+    }, 800);
+  }
+
+  private clearLiveTimers(): void {
+    window.clearTimeout(this.liveUserTimer);
+    window.clearTimeout(this.liveOutputTimer);
+    this.liveUserTimer = 0;
+    this.liveOutputTimer = 0;
+  }
+
   private finishResponse(interrupted: boolean): void {
     this.commitResponse(interrupted);
   }
@@ -627,8 +804,9 @@ export class HeraRealtimeController {
     const tick = () => {
       if (!this.analyser || !this.analyserData) return;
       const rms = this.outputLive ? rmsFromTimeDomain(this.analyser, this.analyserData) : 0;
-      const current = Math.max(0, Math.min(1, rms * 7.5));
-      this.setMouth(this.mouthOpen * 0.65 + current * 0.35);
+      const current = Math.max(0, Math.min(1, rms * 6.2));
+      const gated = current < 0.045 ? 0 : current;
+      this.setMouth(this.mouthOpen * 0.84 + gated * 0.16);
       this.levelRaf = requestAnimationFrame(tick);
     };
     this.levelRaf = requestAnimationFrame(tick);
@@ -674,6 +852,8 @@ export class HeraRealtimeController {
     this.connecting = false;
     this.outputLive = false;
     this.userSpeaking = false;
+    this.livePrimed = false;
+    this.clearLiveTimers();
     this.stopLevelPump();
     try {
       this.dc?.close();
@@ -752,9 +932,14 @@ export class HeraRealtimeController {
     void gen;
   }
 
-  private send(payload: unknown): void {
-    if (!this.dc || this.dc.readyState !== "open") return;
+  private canSend(): boolean {
+    return Boolean(this.dc && this.dc.readyState === "open");
+  }
+
+  private send(payload: unknown): boolean {
+    if (!this.canSend() || !this.dc) return false;
     this.dc.send(JSON.stringify(payload));
+    return true;
   }
 
   private emit<K extends keyof HeraRealtimeEvents>(key: K, ...args: Parameters<NonNullable<HeraRealtimeEvents[K]>>): void {

@@ -9,6 +9,27 @@ export function describeAuthError(err: unknown): string {
   if (lower.includes("email not confirmed")) {
     return "Confirm your email before signing in.";
   }
+  if (lower.includes("invalid email") || lower.includes("email address is invalid")) {
+    return "Enter a valid email address.";
+  }
+  if (lower.includes("signup") && (lower.includes("disabled") || lower.includes("not allowed"))) {
+    return "Account creation is temporarily unavailable. Please try again later.";
+  }
+  if (lower.includes("password") && (lower.includes("weak") || lower.includes("least"))) {
+    return msg;
+  }
+  if (lower.includes("failed to fetch") || lower.includes("network")) {
+    return "Could not reach the sign-up service. Check your connection and try again.";
+  }
+  if (lower.includes("banned") || lower.includes("user is disabled") || lower.includes("user_banned")) {
+    return "This account is disabled in Supabase. Re-enable it under Authentication → Users, or run npm run owner:enable.";
+  }
+  if (lower.includes("timed out") || lower.includes("timeout") || lower.includes("google sign-in")) {
+    return msg;
+  }
+  if (lower.includes("redirect") || lower.includes("not allowed")) {
+    return "Google could not return to SyNexus. Try again from the site you started on.";
+  }
   if (lower.includes("too many requests") || lower.includes("rate")) {
     return "Too many attempts. Wait a minute and try again.";
   }
@@ -17,6 +38,14 @@ export function describeAuthError(err: unknown): string {
   }
   if (lower.includes("user already registered")) {
     return "An account with this email already exists. Try signing in instead.";
+  }
+  if (
+    lower.includes("owner") ||
+    lower.includes("god mode") ||
+    lower.includes("command id") ||
+    lower.includes("command code")
+  ) {
+    return msg;
   }
   if (
     lower.includes("does not exist") ||
@@ -28,6 +57,9 @@ export function describeAuthError(err: unknown): string {
   ) {
     return AUTH_USER_FRIENDLY_ERROR;
   }
+  // Surface whatever Supabase actually said — a blank generic message reads as a frozen screen.
+  const trimmed = msg.trim();
+  if (trimmed && trimmed !== "[object Object]" && !lower.startsWith("undefined")) return trimmed;
   return AUTH_USER_FRIENDLY_ERROR;
 }
 
@@ -35,6 +67,9 @@ function describeOAuthRedirectError(error: string | null, description: string | 
   const combined = `${error ?? ""} ${description ?? ""}`.toLowerCase();
   if (combined.includes("access_denied") || combined.includes("cancelled") || combined.includes("canceled")) {
     return "Google sign-in was cancelled.";
+  }
+  if (combined.includes("redirect") || combined.includes("not allowed") || combined.includes("validation_failed")) {
+    return "Google could not return to SyNexus. Try again from the site you started on.";
   }
   if (description?.trim()) {
     return description.replace(/\+/g, " ").trim();

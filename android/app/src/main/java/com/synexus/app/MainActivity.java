@@ -21,22 +21,26 @@ public class MainActivity extends BridgeActivity {
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
-    Log.d(TAG, "onCreate: Starting app");
-
     registerPlugin(HeraWakeWordPlugin.class);
 
-    // Enable Edge-to-Edge BEFORE super.onCreate to properly handle system bars
-    EdgeToEdge.enable(this);
-    
-    // Install Splash Screen
-    SplashScreen.installSplashScreen(this);
-    
+    try {
+      SplashScreen.installSplashScreen(this);
+    } catch (Throwable t) {
+      Log.e(TAG, "installSplashScreen", t);
+    }
+
     super.onCreate(savedInstanceState);
-    
-    // Schedule WebView tuning after the bridge has initialized
-    findViewById(android.R.id.content).post(this::tuneWebView);
-    
-    Log.d(TAG, "onCreate: Finished initialization");
+
+    try {
+      EdgeToEdge.enable(this);
+    } catch (Throwable t) {
+      Log.e(TAG, "EdgeToEdge", t);
+    }
+
+    View content = findViewById(android.R.id.content);
+    if (content != null) {
+      content.post(this::tuneWebView);
+    }
   }
 
   @Override
@@ -45,44 +49,42 @@ public class MainActivity extends BridgeActivity {
   }
 
   private void tuneWebView() {
-    Bridge bridge = getBridge();
-    if (bridge == null) {
-      Log.w(TAG, "tuneWebView: Bridge is null");
-      return;
+    try {
+      Bridge bridge = getBridge();
+      if (bridge == null) {
+        Log.w(TAG, "tuneWebView: Bridge is null");
+        return;
+      }
+
+      WebView webView = bridge.getWebView();
+      if (webView == null) {
+        Log.w(TAG, "tuneWebView: WebView is null");
+        return;
+      }
+
+      if (0 != (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE)) {
+        WebView.setWebContentsDebuggingEnabled(true);
+      }
+
+      webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+
+      WebSettings settings = webView.getSettings();
+      settings.setCacheMode(WebSettings.LOAD_DEFAULT);
+      settings.setDomStorageEnabled(true);
+      settings.setJavaScriptEnabled(true);
+      settings.setMediaPlaybackRequiresUserGesture(false);
+      settings.setDatabaseEnabled(true);
+      settings.setLoadsImagesAutomatically(true);
+      settings.setBlockNetworkImage(false);
+      settings.setOffscreenPreRaster(true);
+      settings.setUseWideViewPort(true);
+      settings.setLoadWithOverviewMode(true);
+
+      if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
+        WebSettingsCompat.setAlgorithmicDarkeningAllowed(settings, true);
+      }
+    } catch (Throwable t) {
+      Log.e(TAG, "tuneWebView", t);
     }
-    
-    WebView webView = bridge.getWebView();
-    if (webView == null) {
-      Log.w(TAG, "tuneWebView: WebView is null");
-      return;
-    }
-
-    Log.d(TAG, "tuneWebView: Configuring WebView");
-
-    if (0 != (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE)) {
-      WebView.setWebContentsDebuggingEnabled(true);
-    }
-
-    webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
-
-    WebSettings settings = webView.getSettings();
-    settings.setCacheMode(WebSettings.LOAD_DEFAULT);
-    settings.setDomStorageEnabled(true);
-    settings.setJavaScriptEnabled(true);
-    settings.setMediaPlaybackRequiresUserGesture(false);
-    settings.setDatabaseEnabled(true);
-    settings.setLoadsImagesAutomatically(true);
-    settings.setBlockNetworkImage(false);
-    
-    // Performance and display optimizations
-    settings.setOffscreenPreRaster(true);
-    settings.setUseWideViewPort(true);
-    settings.setLoadWithOverviewMode(true);
-
-    if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
-      WebSettingsCompat.setAlgorithmicDarkeningAllowed(settings, true);
-    }
-    
-    Log.d(TAG, "tuneWebView: WebView configuration complete");
   }
 }

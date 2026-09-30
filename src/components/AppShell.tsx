@@ -12,10 +12,10 @@ import { ProDemoBanner } from "./ProDemoBanner";
 import { BeginnerModeCoach } from "./BeginnerModeCoach";
 import { WhaleAlertToaster } from "./WhaleAlertToaster";
 import { TitanLiveAlerts } from "./TitanLiveAlerts";
-import { LanguagePicker } from "./LanguagePicker";
 import { OnboardingTour } from "./OnboardingTour";
 import { SYNEXUS_VAULT_PATH, SYNEXUS_VAULT_PRODUCT_NAME } from "../config/walletComingSoon";
 import { isTradingEnabled } from "../config/trading";
+import { SecondFactorRedirect } from "../security/SecondFactorRedirect";
 
 export function AppShell() {
   return (
@@ -36,6 +36,7 @@ function AppShellFrame() {
     <div
       className={`app-shell${isSimple ? " app-shell--easy" : " app-shell--advanced"}${isHome ? " app-shell--home" : ""}${heraOpen ? " app-shell--hera" : ""}`}
     >
+      <SecondFactorRedirect />
       <div className="app-shell__dashboard">
         {!isHome ? <ProDemoBanner /> : null}
         <WhaleAlertToaster />
@@ -164,9 +165,6 @@ function AppShellFrame() {
             </Link>
           </footer>
         )}
-        <div className="lang-picker-dock" aria-label="Language">
-          <LanguagePicker compact />
-        </div>
       </div>
       <TitanSheet />
       <HeraWakeWordHost />

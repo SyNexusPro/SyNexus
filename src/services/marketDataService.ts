@@ -1,5 +1,5 @@
 import type { DeepPartial, GuardianEngineConfig } from "../data/guardianEngine";
-import { buildSampleTokens, buildTokenFromPartial, type Token } from "../data/tokens";
+import { buildSampleTokens, type Token } from "../data/tokens";
 import { SYN_MINT } from "../config/synToken";
 import { guardApiFetch, guardTokenScan } from "../lib/securityBot";
 import { isNativeAndroid } from "../lib/bootExperience";
@@ -7,6 +7,9 @@ import { nativeFeedCacheTtlMs } from "../lib/nativePerformance";
 import { dedupeInFlight, readMoversCache, writeMoversCache } from "../lib/moversCache";
 import type { MoverTimeframe } from "../lib/moverTimeframes";
 import { loadGuardianConfigOverride } from "./guardianConfigService";
+import { noteProviderHealth } from "../lib/synexus/eventBus";
+import { isSolanaMint, resolveTokens } from "../lib/token/resolveTokens";
+import { universalToToken } from "../lib/token/universalToken";
 
 type TokenPatch = {
   priceUsd?: number;
@@ -19,6 +22,7 @@ type TokenPatch = {
 };
 
 type DexPair = {
+  chainId?: string;
   baseToken?: { symbol?: string; name?: string; address?: string };
   info?: { imageUrl?: string };
   priceUsd?: string;
@@ -79,19 +83,45 @@ const MOVER_HISTORY_CONFIG: Record<"7d" | "30d" | "365d", { seconds: number; typ
   "365d": { seconds: 365 * 86400, type: "1W" },
 };
 
-type FeedSource = "live" | "mock";
+type FeedSource = "live" | "mock" | "unavailable";
+
+const PROVIDER_TIMEOUT_MS = 8_000;
+
+async function fetchProvider(provider: string, url: string, init?: RequestInit): Promise<Response> {
+  try {
+    const response = await fetch(url, {
+      ...init,
+      signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
+    });
+    noteProviderHealth(provider, response.ok, response.ok ? undefined : `HTTP ${response.status}`);
+    return response;
+  } catch (error) {
+    noteProviderHealth(provider, false, error instanceof Error ? error.message : "request failed");
+    throw error;
+  }
+}
+
+function emptyMovers(timeframe: MoverTimeframe): SolanaMoversResult {
+  return { timeframe, gainers: [], losers: [], source: "unavailable", updatedAt: Date.now() };
+}
 
 export type PriceHistoryRange = "1H" | "24H" | "1MO";
 
 export type PriceHistoryPoint = {
   timestamp: number;
+  /** Close price. */
   priceUsd: number;
+  open?: number;
+  high?: number;
+  low?: number;
 };
 
 export type PriceHistoryResult = {
   range: PriceHistoryRange;
   points: PriceHistoryPoint[];
   source: FeedSource;
+  /** Who produced the candles, when the series is live. */
+  provider?: string;
   intervalLabel: string;
   windowLabel: string;
   updatedAt: number;
@@ -99,28 +129,42 @@ export type PriceHistoryResult = {
 
 const HISTORY_CONFIG: Record<
   PriceHistoryRange,
-  { seconds: number; type: string; intervalLabel: string; windowLabel: string; fallbackPoints: number }
+  {
+    seconds: number;
+    type: string;
+    intervalLabel: string;
+    windowLabel: string;
+    geckoTimeframe: "minute" | "hour" | "day";
+    geckoAggregate: number;
+    geckoLimit: number;
+  }
 > = {
   "1H": {
     seconds: 60 * 60,
     type: "1m",
     intervalLabel: "1-minute",
     windowLabel: "last hour",
-    fallbackPoints: 60,
+    geckoTimeframe: "minute",
+    geckoAggregate: 1,
+    geckoLimit: 60,
   },
   "24H": {
     seconds: 24 * 60 * 60,
     type: "5m",
     intervalLabel: "5-minute",
     windowLabel: "last 24 hours",
-    fallbackPoints: 96,
+    geckoTimeframe: "minute",
+    geckoAggregate: 5,
+    geckoLimit: 288,
   },
   "1MO": {
     seconds: 30 * 24 * 60 * 60,
     type: "1H",
     intervalLabel: "1-hour",
     windowLabel: "last 30 days",
-    fallbackPoints: 90,
+    geckoTimeframe: "hour",
+    geckoAggregate: 1,
+    geckoLimit: 720,
   },
 };
 
@@ -167,42 +211,38 @@ function readHistoryTimestamp(item: Record<string, unknown>): number | undefined
   return raw > 10_000_000_000 ? raw : raw * 1000;
 }
 
-function generateFallbackHistory(token: Token, range: PriceHistoryRange): PriceHistoryPoint[] {
-  const config = HISTORY_CONFIG[range];
-  const now = Date.now();
-  const start = now - config.seconds * 1000;
-  const count = config.fallbackPoints;
-  const currentPrice = token.priceUsd;
-  const totalChangePct = token.change24hPct / 100;
-  const startPrice = currentPrice / (1 + totalChangePct || 1);
-
-  return Array.from({ length: count }, (_, index) => {
-    const progress = count === 1 ? 1 : index / (count - 1);
-    const wave = Math.sin(progress * Math.PI * 4 + token.symbol.length) * 0.012;
-    const pulse = Math.cos(progress * Math.PI * 7 + token.name.length) * 0.006;
-    const priceUsd = startPrice + (currentPrice - startPrice) * progress;
-
-    return {
-      timestamp: Math.round(start + (now - start) * progress),
-      priceUsd: Math.max(0, priceUsd * (1 + wave + pulse)),
-    };
-  });
-}
-
 async function fetchDexPairByAddress(address: string): Promise<DexPair | null> {
-  const response = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${address}`);
+  let response: Response;
+  try {
+    response = await fetchProvider(
+      "dexscreener",
+      `https://api.dexscreener.com/tokens/v1/solana/${encodeURIComponent(address)}`,
+    );
+  } catch {
+    return null;
+  }
   if (!response.ok) return null;
-  const data = (await response.json()) as { pairs?: DexPair[] };
-  return (data.pairs ?? [])[0] ?? null;
+  const data = (await response.json()) as DexPair[] | { pairs?: DexPair[] };
+  const pairs = Array.isArray(data) ? data : (data.pairs ?? []);
+  return [...pairs].sort((a, b) => (b.liquidity?.usd ?? 0) - (a.liquidity?.usd ?? 0))[0] ?? null;
 }
 
 async function fetchDexPairBySearch(symbol: string, name: string): Promise<DexPair | null> {
-  const response = await fetch(
-    `https://api.dexscreener.com/latest/dex/search/?q=${encodeURIComponent(`${symbol} ${name}`)}`,
-  );
+  const sameQuery = symbol.trim().toUpperCase() === name.trim().toUpperCase();
+  const query = sameQuery ? symbol.trim() : `${symbol} ${name}`;
+  let response: Response;
+  try {
+    response = await fetchProvider(
+      "dexscreener",
+      `https://api.dexscreener.com/latest/dex/search/?q=${encodeURIComponent(query)}`,
+    );
+  } catch {
+    return null;
+  }
   if (!response.ok) return null;
   const data = (await response.json()) as { pairs?: DexPair[] };
   const best = (data.pairs ?? [])
+    .filter((pair) => (pair.chainId ?? "").toLowerCase() === "solana")
     .filter((pair) => pair.baseToken?.symbol?.toUpperCase() === symbol.toUpperCase())
     .sort((a, b) => (b.liquidity?.usd ?? 0) - (a.liquidity?.usd ?? 0))[0];
   return best ?? null;
@@ -230,23 +270,7 @@ async function fetchDexScreenerPatches(baseTokens: Token[]): Promise<{
     }
     return { patches, source: "live", liveCount };
   } catch {
-    // Mock fallback path
-    return {
-      source: "mock",
-      liveCount: 0,
-      patches: {
-        SYN: {
-          priceUsd: 0.00432,
-          change24hPct: 5.92,
-          volume24hUsd: 482364,
-          liquidityUsd: 1285730,
-          marketCapUsd: 43198122,
-          mintAddress: SYN_MINT,
-        },
-        BONK: { priceUsd: 0.00003412, change24hPct: -6.42, volume24hUsd: 61000000 },
-        PEPE: { priceUsd: 0.00001078, change24hPct: 8.33, volume24hUsd: 138000000 },
-      },
-    };
+    return { source: "unavailable", liveCount: 0, patches: {} };
   }
 }
 
@@ -260,7 +284,8 @@ async function fetchBirdeyePatches(): Promise<Record<string, TokenPatch>> {
   }
 
   try {
-    const response = await fetch(
+    const response = await fetchProvider(
+      "birdeye",
       `https://public-api.birdeye.so/defi/token_overview?address=${SYN_MINT}`,
       { headers: { "X-API-KEY": apiKey } },
     );
@@ -291,7 +316,7 @@ async function fetchSolanaRpcPatch(): Promise<TokenPatch> {
   }
 
   try {
-    const response = await fetch(endpoint, {
+    const response = await fetchProvider("solana-rpc", endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -322,26 +347,122 @@ function applyPatches(tokens: Token[], patches: Record<string, TokenPatch>): Tok
   });
 }
 
+type GeckoPoolRow = {
+  attributes?: { address?: string; reserve_in_usd?: string };
+  relationships?: { base_token?: { data?: { id?: string } } };
+};
+
+function uniqueAscending(points: PriceHistoryPoint[]): PriceHistoryPoint[] {
+  const sorted = [...points].sort((a, b) => a.timestamp - b.timestamp);
+  const unique: PriceHistoryPoint[] = [];
+  for (const point of sorted) {
+    const prev = unique[unique.length - 1];
+    if (prev && Math.floor(prev.timestamp / 1000) === Math.floor(point.timestamp / 1000)) {
+      unique[unique.length - 1] = point;
+      continue;
+    }
+    unique.push(point);
+  }
+  return unique;
+}
+
+async function fetchGeckoPoolAddress(mint: string): Promise<string | null> {
+  const response = await fetchProvider(
+    "geckoterminal",
+    `https://api.geckoterminal.com/api/v2/networks/solana/tokens/${encodeURIComponent(mint)}/pools?page=1`,
+  );
+  if (!response.ok) return null;
+  const data = (await response.json()) as { data?: GeckoPoolRow[] };
+  const want = `solana_${mint}`;
+  let best: { address: string; reserve: number } | null = null;
+  for (const row of data.data ?? []) {
+    if (row.relationships?.base_token?.data?.id !== want) continue;
+    const address = row.attributes?.address?.trim();
+    if (!address) continue;
+    const reserve = Number(row.attributes?.reserve_in_usd) || 0;
+    if (!best || reserve > best.reserve) best = { address, reserve };
+  }
+  return best?.address ?? null;
+}
+
+async function fetchGeckoCandles(mint: string, range: PriceHistoryRange): Promise<PriceHistoryPoint[]> {
+  const pool = await fetchGeckoPoolAddress(mint);
+  if (!pool) return [];
+  const config = HISTORY_CONFIG[range];
+  const response = await fetchProvider(
+    "geckoterminal",
+    `https://api.geckoterminal.com/api/v2/networks/solana/pools/${encodeURIComponent(pool)}/ohlcv/${config.geckoTimeframe}?aggregate=${config.geckoAggregate}&limit=${config.geckoLimit}&currency=usd`,
+  );
+  if (!response.ok) return [];
+  const data = (await response.json()) as { data?: { attributes?: { ohlcv_list?: unknown[] } } };
+  const rows = data.data?.attributes?.ohlcv_list ?? [];
+  const points: PriceHistoryPoint[] = [];
+  for (const row of rows) {
+    if (!Array.isArray(row) || row.length < 5) continue;
+    const ts = Number(row[0]);
+    const open = Number(row[1]);
+    const high = Number(row[2]);
+    const low = Number(row[3]);
+    const close = Number(row[4]);
+    if (![ts, open, high, low, close].every((value) => Number.isFinite(value)) || close <= 0) continue;
+    points.push({
+      timestamp: ts > 10_000_000_000 ? ts : ts * 1000,
+      priceUsd: close,
+      open,
+      high,
+      low,
+    });
+  }
+  return uniqueAscending(points);
+}
+
 export async function fetchTokenPriceHistory(
-  token: Token,
+  token: { mintAddress?: string },
   range: PriceHistoryRange,
 ): Promise<PriceHistoryResult> {
   const config = HISTORY_CONFIG[range];
   const now = Date.now();
-  const from = Math.floor((now - config.seconds * 1000) / 1000);
-  const to = Math.floor(now / 1000);
-  const apiKey = import.meta.env.VITE_BIRDEYE_API_KEY;
+  const mint = token.mintAddress?.trim();
+  const empty = {
+    range,
+    points: [] as PriceHistoryPoint[],
+    source: "unavailable" as const,
+    intervalLabel: config.intervalLabel,
+    windowLabel: config.windowLabel,
+    updatedAt: now,
+  };
+  if (!mint) return empty;
 
-  if (apiKey && token.mintAddress) {
+  try {
+    const points = await fetchGeckoCandles(mint, range);
+    if (points.length >= 2) {
+      return {
+        range,
+        points,
+        source: "live",
+        provider: "GeckoTerminal",
+        intervalLabel: config.intervalLabel,
+        windowLabel: config.windowLabel,
+        updatedAt: now,
+      };
+    }
+  } catch {
+    /* Birdeye can still supply a close series. */
+  }
+
+  const apiKey = import.meta.env.VITE_BIRDEYE_API_KEY;
+  if (apiKey) {
     try {
+      const from = Math.floor((now - config.seconds * 1000) / 1000);
+      const to = Math.floor(now / 1000);
       const params = new URLSearchParams({
-        address: token.mintAddress,
+        address: mint,
         address_type: "token",
         type: config.type,
         time_from: String(from),
         time_to: String(to),
       });
-      const response = await fetch(`https://public-api.birdeye.so/defi/history_price?${params}`, {
+      const response = await fetchProvider("birdeye", `https://public-api.birdeye.so/defi/history_price?${params}`, {
         headers: {
           "X-API-KEY": apiKey,
           "x-chain": "solana",
@@ -351,38 +472,32 @@ export async function fetchTokenPriceHistory(
       const data = (await response.json()) as {
         data?: { items?: Record<string, unknown>[] };
       };
-      const points = (data.data?.items ?? [])
-        .map((item) => {
-          const timestamp = readHistoryTimestamp(item);
-          const priceUsd = readHistoryPrice(item);
-          return timestamp && priceUsd ? { timestamp, priceUsd } : null;
-        })
-        .filter((point): point is PriceHistoryPoint => Boolean(point))
-        .sort((a, b) => a.timestamp - b.timestamp);
-
+      const points = uniqueAscending(
+        (data.data?.items ?? [])
+          .map((item) => {
+            const timestamp = readHistoryTimestamp(item);
+            const priceUsd = readHistoryPrice(item);
+            return timestamp && priceUsd ? { timestamp, priceUsd } : null;
+          })
+          .filter((point): point is PriceHistoryPoint => Boolean(point)),
+      );
       if (points.length >= 2) {
         return {
           range,
           points,
           source: "live",
+          provider: "Birdeye",
           intervalLabel: config.intervalLabel,
           windowLabel: config.windowLabel,
           updatedAt: now,
         };
       }
     } catch {
-      // Fall through to generated history so the chart stays usable.
+      /* Leave the chart empty rather than drawing a fake series. */
     }
   }
 
-  return {
-    range,
-    points: generateFallbackHistory(token, range),
-    source: "mock",
-    intervalLabel: config.intervalLabel,
-    windowLabel: config.windowLabel,
-    updatedAt: now,
-  };
+  return empty;
 }
 
 const MVP_FEED_CACHE_KEY = "mvp:feed";
@@ -433,24 +548,9 @@ export async function fetchMvpTokenFeed() {
   });
 }
 
-function tokenFromDexPair(pair: DexPair, idHint: string): Token {
-  const patch = patchFromDexPair(pair);
-  const symbol = pair.baseToken?.symbol ?? "???";
-  const name = pair.baseToken?.name ?? symbol;
-  const mint = patch.mintAddress ?? idHint;
-
-  return buildTokenFromPartial({
-    id: mint.length > 20 ? mint : `${symbol.toLowerCase()}-dex`,
-    symbol,
-    name,
-    priceUsd: patch.priceUsd ?? 0,
-    change24hPct: patch.change24hPct ?? 0,
-    volume24hUsd: patch.volume24hUsd,
-    liquidityUsd: patch.liquidityUsd,
-    marketCapUsd: patch.marketCapUsd,
-    mintAddress: patch.mintAddress,
-    logoUrl: patch.logoUrl,
-  });
+async function resolvedSolanaTokens(query: string, pool?: Token[]): Promise<Token[]> {
+  const hits = await resolveTokens(query, pool ?? []);
+  return hits.filter((hit) => hit.chain === "solana" && hit.mint).map(universalToToken);
 }
 
 export async function lookupTokenByQuery(query: string, pool?: Token[]): Promise<Token | null> {
@@ -463,35 +563,30 @@ export async function lookupTokenByQuery(query: string, pool?: Token[]): Promise
   const apiGuard = guardApiFetch("dex-lookup");
   if (!apiGuard.allowed) return null;
 
-  const upper = q.toUpperCase();
-  if (pool?.length) {
-    const inPool = pool.find(
-      (t) =>
-        t.id === q ||
-        t.symbol.toUpperCase() === upper ||
-        t.mintAddress?.toLowerCase() === q.toLowerCase(),
-    );
-    if (inPool) return inPool;
-  }
+  const hits = await resolvedSolanaTokens(q, pool);
+  if (!hits.length) return null;
+  if (isSolanaMint(q)) return hits.find((token) => token.mintAddress === q) ?? null;
 
-  const looksLikeMint = q.length >= 32 && /^[1-9A-HJ-NP-Za-km-z]+$/.test(q);
-  if (looksLikeMint) {
-    const pair = await fetchDexPairByAddress(q);
-    if (pair) return tokenFromDexPair(pair, q);
-  }
+  const exact = hits.filter((token) => token.symbol.toUpperCase() === q.toUpperCase());
+  const list = exact.length ? exact : hits;
+  return list.length === 1 ? (list[0] ?? null) : null;
+}
 
-  const pair = await fetchDexPairBySearch(upper, q);
-  if (pair) {
-    const mint = pair.baseToken?.address ?? q;
-    return tokenFromDexPair(pair, mint);
-  }
+/** Lightweight token search for Trade — Dex + existing feed, no new APIs. */
+export async function searchTradeTokens(query: string, pool?: Token[]): Promise<Token[]> {
+  const q = query.trim();
+  if (q.length < 2) return [];
+  const scanGuard = guardTokenScan(q);
+  if (!scanGuard.allowed) return [];
 
-  if (!pool) {
-    const feed = await fetchMvpTokenFeed();
-    return lookupTokenByQuery(q, feed.all);
-  }
+  const apiGuard = guardApiFetch("dex-lookup");
+  if (!apiGuard.allowed) return [];
 
-  return null;
+  try {
+    return (await resolvedSolanaTokens(q, pool)).slice(0, 8);
+  } catch {
+    return [];
+  }
 }
 
 export async function fetchTokenDetailById(tokenId: string) {
@@ -574,39 +669,13 @@ function toMover5m(mover: TokenMover): TokenMover5m {
   return { ...mover, change5mPct: mover.changePct };
 }
 
-function mockSolanaMovers(timeframe: MoverTimeframe): SolanaMoversResult {
-  const now = Date.now();
-  const scale =
-    timeframe === "5m" ? 1 :
-    timeframe === "24h" ? 2.4 :
-    timeframe === "7d" ? 8 :
-    timeframe === "30d" ? 18 :
-    42;
-
-  const gainers: TokenMover[] = [
-    { id: "bonk-m", symbol: "BONK", name: "Bonk", mintAddress: "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263", priceUsd: 0.000034, changePct: 4.82 * scale },
-    { id: "wif-m", symbol: "WIF", name: "dogwifhat", mintAddress: "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm", priceUsd: 2.41, changePct: 3.15 * scale },
-    { id: "popcat-m", symbol: "POPCAT", name: "Popcat", mintAddress: "7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr", priceUsd: 1.12, changePct: 2.44 * scale },
-    { id: "mew-m", symbol: "MEW", name: "cat in a dogs world", mintAddress: "MEW1gQWJ3nEXg2qgERiKu7FAFj79PHvVUB6kiqq9p6p", priceUsd: 0.0089, changePct: 1.98 * scale },
-    { id: "syn-m", symbol: "SYN", name: "SyNexus", mintAddress: SYN_MINT, priceUsd: 0.00432, changePct: 1.21 * scale },
-  ];
-  const losers: TokenMover[] = [
-    { id: "pepe-m", symbol: "PEPE", name: "Pepe", mintAddress: "pepe-mint", priceUsd: 0.0000107, changePct: -3.44 * scale },
-    { id: "myro-m", symbol: "MYRO", name: "Myro", mintAddress: "myro-mint", priceUsd: 0.21, changePct: -2.87 * scale },
-    { id: "slerf-m", symbol: "SLERF", name: "Slerf", mintAddress: "slerf-mint", priceUsd: 0.38, changePct: -2.11 * scale },
-    { id: "bome-m", symbol: "BOME", name: "BOOK OF MEME", mintAddress: "bome-mint", priceUsd: 0.012, changePct: -1.76 * scale },
-    { id: "jup-m", symbol: "JUP", name: "Jupiter", mintAddress: "jup-mint", priceUsd: 1.02, changePct: -0.92 * scale },
-  ];
-  return { timeframe, gainers, losers, source: "mock", updatedAt: now };
-}
-
 async function fetchDexBoostAddresses(): Promise<string[]> {
   const [topRes, latestRes] = await Promise.all([
-    fetch("https://api.dexscreener.com/token-boosts/top/v1"),
-    fetch("https://api.dexscreener.com/token-boosts/latest/v1"),
+    fetchProvider("dexscreener", "https://api.dexscreener.com/token-boosts/top/v1").catch(() => null),
+    fetchProvider("dexscreener", "https://api.dexscreener.com/token-boosts/latest/v1").catch(() => null),
   ]);
-  const top = topRes.ok ? ((await topRes.json()) as DexBoostEntry[]) : [];
-  const latest = latestRes.ok ? ((await latestRes.json()) as DexBoostEntry[]) : [];
+  const top = topRes?.ok ? ((await topRes.json()) as DexBoostEntry[]) : [];
+  const latest = latestRes?.ok ? ((await latestRes.json()) as DexBoostEntry[]) : [];
   const merged = [...(Array.isArray(top) ? top : []), ...(Array.isArray(latest) ? latest : [])];
   const addresses: string[] = [];
   const seen = new Set<string>();
@@ -623,9 +692,15 @@ async function fetchDexBoostAddresses(): Promise<string[]> {
 
 async function fetchDexPairsBatch(addresses: string[]): Promise<DexPair[]> {
   if (!addresses.length) return [];
-  const response = await fetch(
-    `https://api.dexscreener.com/tokens/v1/solana/${addresses.join(",")}`,
-  );
+  let response: Response;
+  try {
+    response = await fetchProvider(
+      "dexscreener",
+      `https://api.dexscreener.com/tokens/v1/solana/${addresses.join(",")}`,
+    );
+  } catch {
+    return [];
+  }
   if (!response.ok) return [];
   const data = (await response.json()) as DexPair[] | { pairs?: DexPair[] };
   if (Array.isArray(data)) return data;
@@ -676,7 +751,7 @@ async function fetchPeriodChangePct(mintAddress: string, seconds: number, type: 
   });
 
   try {
-    const response = await fetch(`https://public-api.birdeye.so/defi/history_price?${params}`, {
+    const response = await fetchProvider("birdeye", `https://public-api.birdeye.so/defi/history_price?${params}`, {
       headers: {
         "X-API-KEY": apiKey,
         "x-chain": "solana",
@@ -723,9 +798,7 @@ export async function fetchSolanaTopMovers(timeframe: MoverTimeframe): Promise<S
 
   return dedupeInFlight(cacheKey, async () => {
     const apiGuard = guardApiFetch(`dex-movers-${timeframe}`);
-    if (!apiGuard.allowed) {
-      return writeMoversCache(cacheKey, mockSolanaMovers(timeframe), nativeFeedCacheTtlMs(MOVER_CACHE_TTL_MS[timeframe]));
-    }
+    if (!apiGuard.allowed) return emptyMovers(timeframe);
 
     try {
       const { pairs } = await fetchDexMoverPool();
@@ -754,18 +827,18 @@ export async function fetchSolanaTopMovers(timeframe: MoverTimeframe): Promise<S
         MOVER_CACHE_TTL_MS[timeframe],
       );
     } catch {
-      return writeMoversCache(cacheKey, mockSolanaMovers(timeframe), nativeFeedCacheTtlMs(MOVER_CACHE_TTL_MS[timeframe]));
+      return emptyMovers(timeframe);
     }
   });
 }
 
 function buildBoardFromCaches(): SolanaMoversBoard {
   return {
-    "5m": readMoversCache("movers:5m") ?? mockSolanaMovers("5m"),
-    "24h": readMoversCache("movers:24h") ?? mockSolanaMovers("24h"),
-    "7d": readMoversCache("movers:7d") ?? mockSolanaMovers("7d"),
-    "30d": readMoversCache("movers:30d") ?? mockSolanaMovers("30d"),
-    "365d": readMoversCache("movers:365d") ?? mockSolanaMovers("365d"),
+    "5m": readMoversCache("movers:5m") ?? emptyMovers("5m"),
+    "24h": readMoversCache("movers:24h") ?? emptyMovers("24h"),
+    "7d": readMoversCache("movers:7d") ?? emptyMovers("7d"),
+    "30d": readMoversCache("movers:30d") ?? emptyMovers("30d"),
+    "365d": readMoversCache("movers:365d") ?? emptyMovers("365d"),
   };
 }
 
@@ -794,9 +867,9 @@ export async function fetchSolanaMoversBoard(): Promise<SolanaMoversBoard> {
     const board: SolanaMoversBoard = {
       "5m": fiveM,
       "24h": day,
-      "7d": readMoversCache("movers:7d") ?? mockSolanaMovers("7d"),
-      "30d": readMoversCache("movers:30d") ?? mockSolanaMovers("30d"),
-      "365d": readMoversCache("movers:365d") ?? mockSolanaMovers("365d"),
+      "7d": readMoversCache("movers:7d") ?? emptyMovers("7d"),
+      "30d": readMoversCache("movers:30d") ?? emptyMovers("30d"),
+      "365d": readMoversCache("movers:365d") ?? emptyMovers("365d"),
     };
 
     writeMoversCache("movers:board", board, 120_000);

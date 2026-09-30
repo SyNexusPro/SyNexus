@@ -95,7 +95,7 @@ export function GodModeLogin({ redirectTo = "/pulse", compact = false }: Props) 
             autoComplete="username"
             value={commandId}
             disabled={busy}
-            placeholder="thesynexuspro@gmail.com"
+            placeholder="Owner email"
             onChange={(event) => setCommandId(event.target.value)}
           />
         </label>

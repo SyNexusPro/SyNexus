@@ -1,8 +1,11 @@
 import type { Session, User } from "@supabase/supabase-js";
-import { authRedirectUrl, supabase } from "./supabaseClient";
+import { isAlwaysOnLoginEmail } from "../config/googlePlayReview";
+import { assertGoogleProviderEnabled } from "./googleSignIn";
+import { emailAuthRedirectUrl, googleAuthRedirectUrl, supabase } from "./supabaseClient";
 import { validateSignupPassword } from "./authCredentials";
 import { guardAuthAttempt } from "./securityBot";
 import { SIGNUP_CONFIRM_REDIRECT } from "./signupWelcome";
+import { emitSynexusEvent } from "./synexus/eventBus";
 
 export { validateSignupPassword };
 
@@ -30,6 +33,22 @@ function flattenErrorDiagnostics(err: unknown): string {
  * Missing tables/functions (often `… does not exist`, PGRST schema cache) sometimes bubble up via auth
  * triggers or hooks; map to a concrete fix instead of a raw Postgres string.
  */
+function withAuthTimeout<T>(promise: PromiseLike<T>, label: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`${label} timed out. Check your connection and try again.`)), 12_000);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      },
+    );
+  });
+}
+
 function throwIfStructuralDbFailure(err: unknown): never {
   const blob = flattenErrorDiagnostics(err).toLowerCase();
   const plainAuth =
@@ -82,7 +101,8 @@ export async function signUpWithEmail(
   password: string,
   normalizedUsername?: string,
 ) {
-  const authGuard = guardAuthAttempt("sign_up", email, password);
+  const normalizedEmail = email.trim().toLowerCase();
+  const authGuard = guardAuthAttempt("sign_up", normalizedEmail, password);
   if (!authGuard.allowed) {
     throw new Error(authGuard.message ?? "Sign-up blocked by SyNexus security.");
   }
@@ -91,14 +111,14 @@ export async function signUpWithEmail(
     throw new Error(passwordCheck.message ?? "Choose a stronger password.");
   }
   if (!supabase) throw new Error("Supabase env vars are missing.");
-  const { data, error } = await supabase.auth.signUp({
-    email,
+  const { data, error } = await withAuthTimeout(supabase.auth.signUp({
+    email: normalizedEmail,
     password,
     options: {
-      emailRedirectTo: authRedirectUrl(SIGNUP_CONFIRM_REDIRECT),
+      emailRedirectTo: emailAuthRedirectUrl(SIGNUP_CONFIRM_REDIRECT),
       ...(normalizedUsername ? { data: { username: normalizedUsername } } : {}),
     },
-  });
+  }), "Sign-up");
   if (error) throwIfStructuralDbFailure(error);
   return data;
 }
@@ -109,24 +129,32 @@ export async function resendSignupVerificationEmail(email: string) {
     throw new Error(authGuard.message ?? "Verification resend blocked by SyNexus security.");
   }
   if (!supabase) throw new Error("Supabase env vars are missing.");
-  const { data, error } = await supabase.auth.resend({
-    type: "signup",
-    email: email.trim(),
-    options: {
-      emailRedirectTo: authRedirectUrl(SIGNUP_CONFIRM_REDIRECT),
-    },
-  });
+  const { data, error } = await withAuthTimeout(
+    supabase.auth.resend({
+      type: "signup",
+      email: email.trim().toLowerCase(),
+      options: {
+        emailRedirectTo: emailAuthRedirectUrl(SIGNUP_CONFIRM_REDIRECT),
+      },
+    }),
+    "Verification email",
+  );
   if (error) throwIfStructuralDbFailure(error);
   return data;
 }
 
 export async function signInWithEmail(email: string, password: string) {
-  const authGuard = guardAuthAttempt("sign_in", email, password);
+  const authGuard = isAlwaysOnLoginEmail(email)
+    ? { allowed: true as const }
+    : guardAuthAttempt("sign_in", email, password);
   if (!authGuard.allowed) {
     throw new Error(authGuard.message ?? "Sign-in blocked by SyNexus security.");
   }
   if (!supabase) throw new Error("Supabase env vars are missing.");
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await withAuthTimeout(
+    supabase.auth.signInWithPassword({ email, password }),
+    "Sign-in",
+  );
   if (error) throwIfStructuralDbFailure(error);
   let session: Session | null = data.session;
   let user: User | null = data.user;
@@ -147,7 +175,7 @@ export async function signInWithMagicLink(email: string) {
   const { data, error } = await supabase.auth.signInWithOtp({
     email: email.trim(),
     options: {
-      emailRedirectTo: authRedirectUrl("/pulse"),
+      emailRedirectTo: emailAuthRedirectUrl("/pulse"),
       shouldCreateUser: false,
     },
   });
@@ -157,10 +185,12 @@ export async function signInWithMagicLink(email: string) {
 
 export async function signInWithOAuth(provider: "google") {
   if (!supabase) throw new Error("Supabase env vars are missing.");
+  await assertGoogleProviderEnabled();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: authRedirectUrl("/pulse"),
+      redirectTo: googleAuthRedirectUrl(),
+      skipBrowserRedirect: true,
       queryParams: {
         access_type: "offline",
         prompt: "select_account",
@@ -168,18 +198,50 @@ export async function signInWithOAuth(provider: "google") {
     },
   });
   if (error) throwIfStructuralDbFailure(error);
+  if (!data?.url) throw new Error("Google sign-in did not start. Try again.");
+
+  const { Capacitor } = await import("@capacitor/core");
+  if (Capacitor.isNativePlatform()) {
+    // Google blocks OAuth inside the Android WebView. Chrome Custom Tabs is allowed,
+    // and the app link below brings the login code back into this WebView.
+    const { Browser } = await import("@capacitor/browser");
+    await Browser.open({ url: data.url });
+    return data;
+  }
+
+  window.location.assign(data.url);
   return data;
 }
 
+/**
+ * Emails a recovery code. No `redirectTo` is passed on purpose — the operator finishes
+ * the reset inside SyNexus by typing the code, so the mail never links out to another host.
+ */
 export async function requestPasswordReset(email: string) {
   const authGuard = guardAuthAttempt("sign_in", email);
   if (!authGuard.allowed) {
     throw new Error(authGuard.message ?? "Reset blocked by SyNexus security.");
   }
   if (!supabase) throw new Error("Supabase env vars are missing.");
-  const { data, error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-    redirectTo: authRedirectUrl("/pulse?auth=recovery"),
-  });
+  const { data, error } = await withAuthTimeout(
+    supabase.auth.resetPasswordForEmail(email.trim().toLowerCase()),
+    "Recovery code",
+  );
+  if (error) throwIfStructuralDbFailure(error);
+  return data;
+}
+
+/** Exchanges the emailed recovery code for the short-lived session that allows a password change. */
+export async function verifyPasswordRecoveryCode(email: string, recoveryCode: string) {
+  if (!supabase) throw new Error("Supabase env vars are missing.");
+  const { data, error } = await withAuthTimeout(
+    supabase.auth.verifyOtp({
+      email: email.trim().toLowerCase(),
+      token: recoveryCode.trim(),
+      type: "recovery",
+    }),
+    "Recovery code check",
+  );
   if (error) throwIfStructuralDbFailure(error);
   return data;
 }
@@ -190,7 +252,10 @@ export async function updatePassword(newPassword: string) {
     throw new Error(passwordCheck.message ?? "Choose a stronger password.");
   }
   if (!supabase) throw new Error("Supabase env vars are missing.");
-  const { data, error } = await supabase.auth.updateUser({ password: newPassword });
+  const { data, error } = await withAuthTimeout(
+    supabase.auth.updateUser({ password: newPassword }),
+    "Password update",
+  );
   if (error) throwIfStructuralDbFailure(error);
   return data;
 }
@@ -297,11 +362,14 @@ export async function upsertSignupProfile(
 
 export async function upsertProfile(userId: string, displayName: string, username: string) {
   if (!supabase) throw new Error("Supabase env vars are missing.");
-  const { error } = await supabase.from("profiles").upsert({
-    id: userId,
-    display_name: displayName,
-    username,
-  });
+  const { error } = await withAuthTimeout(
+    supabase.from("profiles").upsert({
+      id: userId,
+      display_name: displayName,
+      username,
+    }),
+    "Profile setup",
+  );
   if (error) throw error;
 }
 
@@ -415,6 +483,13 @@ export async function submitTokenReport(
     details: details ?? null,
   });
   if (error) throw error;
+  emitSynexusEvent({
+    name: "CONTENT_REPORTED",
+    at: Date.now(),
+    mint: tokenAddress ?? null,
+    source: "token_reports",
+    detail: `${tokenSymbol}: ${reason}`,
+  });
 }
 
 export async function fetchGuardianAlerts() {

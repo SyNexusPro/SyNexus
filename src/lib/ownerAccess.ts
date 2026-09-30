@@ -59,6 +59,7 @@ async function postOwnerUnlock(body: Record<string, unknown>) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
+        signal: AbortSignal.timeout(8_000),
       });
       const data = (await response.json().catch(() => ({}))) as {
         ok?: boolean;
@@ -91,11 +92,11 @@ export async function unlockOwnerAccess(
     return { ok: false, message: data.error ?? "God mode is not configured on this server." };
   }
   if (!response.ok || !data.ok || !data.grant || !data.expiresAt) {
-    return { ok: false, message: data.error ?? "Invalid god mode ID or key." };
+    return { ok: false, message: data.error ?? "Wrong owner email or password." };
   }
   writeStoredGrant({ grant: data.grant, expiresAt: data.expiresAt });
   applyOwnerProAccess();
-  return { ok: true, message: "God mode active — full SyNexus access unlocked." };
+  return { ok: true, message: "Owner access unlocked. Full Pro on this device — no subscription." };
 }
 
 /** Re-validate stored grant on app load (keeps Pro after refresh). */
@@ -110,6 +111,11 @@ export async function refreshOwnerAccess(): Promise<boolean> {
   try {
     const { response, data } = await postOwnerUnlock({ grant: stored.grant });
     if (!response?.ok || !data.ok) {
+      const status = response?.status ?? 503;
+      if (status === 404 || status >= 500) {
+        applyOwnerProAccess();
+        return true;
+      }
       clearOwnerAccess();
       return false;
     }

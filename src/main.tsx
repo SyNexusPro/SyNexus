@@ -6,8 +6,11 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { SynexusBootSequence } from "./components/SynexusBootSequence";
 import { initSecurityBot } from "./lib/securityBot";
 import { refreshOwnerAccess } from "./lib/ownerAccess";
+import { restoreAlwaysOnPlayReviewSession } from "./lib/googlePlayReviewAccess";
+import { installGoogleAuthReturn } from "./lib/googleAuthReturn";
 import { clearExpiredProDemo, restoreActiveProTrialGrant } from "./lib/proDemo";
 import { markNativePerformanceMode } from "./lib/nativePerformance";
+import { realtime } from "./lib/realtime/RealtimeManager";
 import { migrateLegacyStorageKeys } from "./lib/legacyStorageMigrate";
 import "./i18n";
 import "./index.css";
@@ -17,15 +20,21 @@ initSecurityBot();
 clearExpiredProDemo();
 restoreActiveProTrialGrant();
 void refreshOwnerAccess();
+void restoreAlwaysOnPlayReviewSession();
+installGoogleAuthReturn();
 markNativePerformanceMode();
+realtime.start();
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <ErrorBoundary>
-      <SynexusBootSequence>
-        <App />
-        <Analytics />
-      </SynexusBootSequence>
-    </ErrorBoundary>
-  </StrictMode>,
-);
+const root = document.getElementById("root");
+if (root) {
+  createRoot(root).render(
+    <StrictMode>
+      <ErrorBoundary>
+        <SynexusBootSequence>
+          <App />
+          <Analytics />
+        </SynexusBootSequence>
+      </ErrorBoundary>
+    </StrictMode>,
+  );
+}

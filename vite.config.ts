@@ -20,6 +20,9 @@ import { configureHeraVoiceStreamApi } from "./api/_routes/hera/voice-stream";
 import { configureHeraRealtimeSessionApi } from "./api/_routes/hera/realtime-session";
 import { configureHeraLiveTokenApi } from "./api/_routes/hera/live-token";
 import { configureHeraLaunchWatchApi } from "./api/_routes/hera/launch-watch";
+import { configureDashboardApi } from "./api/_routes/dashboard";
+import { configureRealtimeBridge } from "./api/_routes/realtime/bridge";
+import { configureCommunityAccessApi } from "./api/_routes/community/access";
 
 /** Client bundle reads only VITE_* from import.meta.env; Vercel often sets SUPABASE_* without the prefix. */
 function resolveSupabaseForClientBuild(mode: string) {
@@ -80,6 +83,7 @@ export default defineConfig(({ mode }) => {
         name: "synexus-api",
         configureServer(server) {
           configureCheckoutApi(server, env);
+          configureCommunityAccessApi(server, env);
           configureSubscriptionWebhookApi(server, env);
           configureOwnerUnlockApi(server, env);
           configureAnalyticsApi(server);
@@ -99,6 +103,8 @@ export default defineConfig(({ mode }) => {
           configureHeraRealtimeSessionApi(server, env);
           configureHeraLiveTokenApi(server);
           configureHeraLaunchWatchApi(server);
+          configureDashboardApi(server);
+          configureRealtimeBridge(server, env);
         },
       },
     ],

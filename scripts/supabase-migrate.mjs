@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * Apply Supabase SQL migrations from supabase/*.sql
+ * Apply legacy Supabase SQL plus tracked supabase/migrations/*.sql files.
  * Requires SUPABASE_DB_URL in .env (Database → Connection string → URI, Session pooler).
  *   npm run supabase:migrate
  */
 
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import postgres from "postgres";
@@ -19,6 +19,7 @@ const MIGRATION_FILES = [
   "supabase/whale_alerts.sql",
   "supabase/titan_intelligence.sql",
 ];
+const VERSIONED_MIGRATIONS_DIR = join(root, "supabase", "migrations");
 
 function readEnvFile(path) {
   if (!existsSync(path)) return {};
@@ -81,6 +82,44 @@ try {
     const body = readFileSync(filePath, "utf8");
     process.stdout.write(`  → ${relativePath} ... `);
     await sql.unsafe(body);
+    console.log("ok");
+    applied += 1;
+  }
+
+  await sql.unsafe(`
+    create schema if not exists synexus_private;
+    create table if not exists synexus_private.schema_migrations (
+      name text primary key,
+      applied_at timestamptz not null default now()
+    )
+  `);
+
+  const versionedFiles = existsSync(VERSIONED_MIGRATIONS_DIR)
+    ? readdirSync(VERSIONED_MIGRATIONS_DIR)
+        .filter((name) => /^\d+_[a-z0-9_]+\.sql$/i.test(name))
+        .sort()
+    : [];
+
+  for (const name of versionedFiles) {
+    const relativePath = `supabase/migrations/${name}`;
+    const existing = await sql.unsafe(
+      "select 1 from synexus_private.schema_migrations where name = $1 limit 1",
+      [name],
+    );
+    if (existing.length) {
+      console.log(`  · skip ${relativePath} (already applied)`);
+      continue;
+    }
+
+    const body = readFileSync(join(VERSIONED_MIGRATIONS_DIR, name), "utf8");
+    process.stdout.write(`  → ${relativePath} ... `);
+    await sql.begin(async (transaction) => {
+      await transaction.unsafe(body);
+      await transaction.unsafe(
+        "insert into synexus_private.schema_migrations (name) values ($1)",
+        [name],
+      );
+    });
     console.log("ok");
     applied += 1;
   }

@@ -3,20 +3,27 @@ import {
   connectSolanaWallet,
   detectSolanaProviders,
   fetchWalletSnapshot,
-  hasInjectedSolanaWallet,
+  forgetSolanaWallet,
+  subscribeSolanaWallets,
   tryReconnectSolanaWallet,
   type SolanaWalletKind,
   type SolanaWalletProvider,
   type WalletSnapshot,
 } from "../lib/solanaWallet";
 
+export type SolanaWalletOption = { kind: SolanaWalletKind; icon?: string };
+
+function scanWallets(): SolanaWalletOption[] {
+  if (typeof window === "undefined") return [];
+  return detectSolanaProviders().map(({ kind, icon }) => ({ kind, icon }));
+}
+
+function sameOptions(a: SolanaWalletOption[], b: SolanaWalletOption[]): boolean {
+  return a.length === b.length && a.every((w, i) => w.kind === b[i].kind && w.icon === b[i].icon);
+}
+
 export function useSolanaWallet() {
-  const [available, setAvailable] = useState(() =>
-    typeof window === "undefined" ? false : hasInjectedSolanaWallet(),
-  );
-  const [kinds, setKinds] = useState<SolanaWalletKind[]>(() =>
-    typeof window === "undefined" ? [] : detectSolanaProviders().map((p) => p.kind),
-  );
+  const [wallets, setWallets] = useState<SolanaWalletOption[]>(scanWallets);
   const [address, setAddress] = useState<string | null>(null);
   const [kind, setKind] = useState<SolanaWalletKind | null>(null);
   const [provider, setProvider] = useState<SolanaWalletProvider | null>(null);
@@ -58,6 +65,7 @@ export function useSolanaWallet() {
     } catch {
       /* ignore */
     }
+    forgetSolanaWallet();
     setAddress(null);
     setKind(null);
     setProvider(null);
@@ -66,12 +74,16 @@ export function useSolanaWallet() {
 
   useEffect(() => {
     const scan = () => {
-      setAvailable(hasInjectedSolanaWallet());
-      setKinds(detectSolanaProviders().map((p) => p.kind));
+      const next = scanWallets();
+      setWallets((prev) => (sameOptions(prev, next) ? prev : next));
     };
+    const unsubscribe = subscribeSolanaWallets(scan);
     scan();
     const timer = window.setInterval(scan, 2500);
-    return () => window.clearInterval(timer);
+    return () => {
+      unsubscribe();
+      window.clearInterval(timer);
+    };
   }, []);
 
   useEffect(() => {
@@ -95,8 +107,9 @@ export function useSolanaWallet() {
   }, []);
 
   return {
-    available,
-    kinds,
+    available: wallets.length > 0,
+    wallets,
+    kinds: wallets.map((w) => w.kind),
     address,
     kind,
     provider,

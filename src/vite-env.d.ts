@@ -5,6 +5,8 @@ interface ImportMetaEnv {
   readonly VITE_SUPABASE_ANON_KEY: string;
   readonly VITE_BIRDEYE_API_KEY?: string;
   readonly VITE_SOLANA_RPC_URL?: string;
+  /** Reown / WalletConnect Cloud project ID (public, domain-allowlisted). Enables the WalletConnect QR option. */
+  readonly VITE_WALLETCONNECT_PROJECT_ID?: string;
   /** In-app Trade/Swap. Must be the string "true" to include the /trade route. Default off. */
   readonly VITE_TRADING_ENABLED?: string;
   /** Second flag required to show Trade on native Android (Play Store stays intelligence-only). */
@@ -17,7 +19,7 @@ interface ImportMetaEnv {
   readonly VITE_GA_MEASUREMENT_ID?: string;
   /** AdSense home display unit slot ID (numeric string from AdSense dashboard). */
   readonly VITE_ADSENSE_HOME_SLOT?: string;
-  /** Optional WebAuthn passkeys. TOTP MFA stays required. Must be the string "true". */
+  /** Optional WebAuthn passkeys. Supabase phone MFA is the required AAL2 method. */
   readonly VITE_SYNEXUS_PASSKEYS?: string;
 }
 

@@ -111,7 +111,7 @@ export function Terms() {
         <p>
           Paid plans (including SyNexusPro at the price shown at checkout, currently {SYNEXUS_PRO_PRICE_LABEL}{" "}
           where applicable) include a <strong>{SYNEXUS_PRO_TRIAL_DAYS}-day free trial</strong> of full Pro access
-          after you create and verify your account and add a payment method to start your free trial. After the
+          after you create and verify your account — no payment method is required to start the trial. After the
           trial, billing on a recurring basis begins only when you subscribe through checkout. Payment is
           processed by third-party subscription and payment processors (shown at checkout). By subscribing, you
           authorize us and our processors to charge your payment method on a recurring basis until you cancel

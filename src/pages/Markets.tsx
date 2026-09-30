@@ -2,12 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { TopMoversPanel } from "../components/TopMoversPanel";
 import { TokenCard } from "../components/TokenCard";
-import TitanMarketChart from "../components/TitanMarketChart";
-import {
-  TITAN_DEMO_BUY_SIGNALS,
-  TITAN_DEMO_CANDLES,
-  TITAN_DEMO_SELL_SIGNALS,
-} from "../data/titanChartDemo";
+import TitanMarketChart, { type TitanChartCandle } from "../components/TitanMarketChart";
+import { fetchTokenPriceHistory } from "../services/marketDataService";
 import { useAppIsActive } from "../hooks/useAppIsActive";
 import { useOracleMarketFeed } from "../lib/useOracleMarketFeed";
 import {
@@ -21,6 +17,29 @@ import {
 
 type Tab = "crypto" | "stocks" | "forex" | "intel";
 
+const SOL_MINT = "So11111111111111111111111111111111111111112";
+
+function historyCandles(
+  points: Array<{ timestamp: number; priceUsd: number; open?: number; high?: number; low?: number }>,
+): TitanChartCandle[] {
+  const candles: TitanChartCandle[] = [];
+  let prevClose: number | null = null;
+  for (const point of points) {
+    const close = point.priceUsd;
+    if (!Number.isFinite(close) || close <= 0) continue;
+    const open = point.open ?? prevClose ?? close;
+    candles.push({
+      time: Math.floor(point.timestamp / 1000) as TitanChartCandle["time"],
+      open,
+      high: point.high ?? Math.max(open, close),
+      low: point.low ?? Math.min(open, close),
+      close,
+    });
+    prevClose = close;
+  }
+  return candles;
+}
+
 export function Markets() {
   const [tab, setTab] = useState<Tab>("crypto");
   const appActive = useAppIsActive();
@@ -33,6 +52,32 @@ export function Markets() {
   const [forex, setForex] = useState<MarketQuote[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loadingBoard, setLoadingBoard] = useState(false);
+  const [solCandles, setSolCandles] = useState<TitanChartCandle[]>([]);
+  const [solChartNote, setSolChartNote] = useState("Loading SOL candles…");
+
+  useEffect(() => {
+    if (!appActive || (tab !== "crypto" && tab !== "intel")) return;
+    let cancelled = false;
+    void fetchTokenPriceHistory({ mintAddress: SOL_MINT }, "24H")
+      .then((history) => {
+        if (cancelled) return;
+        const candles = historyCandles(history.points);
+        setSolCandles(candles);
+        setSolChartNote(
+          candles.length >= 2
+            ? `${history.provider ?? "Live"} · ${history.intervalLabel} candles · ${history.windowLabel}`
+            : "SOL chart history is unavailable right now.",
+        );
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setSolCandles([]);
+        setSolChartNote("SOL chart history is unavailable right now.");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [appActive, tab]);
 
   useEffect(() => {
     if (!appActive) return;
@@ -161,12 +206,8 @@ export function Markets() {
         <section className="markets-page__intel marketing-panel">
           <h2>Market intelligence</h2>
           <div className="markets-page__titan-chart">
-            <TitanMarketChart
-              symbol="SOL/USD"
-              candles={TITAN_DEMO_CANDLES}
-              buySignals={TITAN_DEMO_BUY_SIGNALS}
-              sellSignals={TITAN_DEMO_SELL_SIGNALS}
-            />
+            <p className="markets-page__status">{solChartNote}</p>
+            {solCandles.length >= 2 ? <TitanMarketChart symbol="SOL/USD" candles={solCandles} /> : null}
           </div>
           <ul className="markets-page__intel-list">
             <li>
@@ -187,6 +228,11 @@ export function Markets() {
 
       {tab === "crypto" ? (
         <>
+          <section className="markets-page__intel marketing-panel">
+            <h2>SOL / USD</h2>
+            <p className="markets-page__status">{solChartNote}</p>
+            {solCandles.length >= 2 ? <TitanMarketChart symbol="SOL/USD" candles={solCandles} /> : null}
+          </section>
           <TopMoversPanel />
           <section className="token-section">
             <div className="token-section__head">

@@ -7,21 +7,27 @@ import {
   type GuardianStatus,
 } from "./guardianEngine";
 import { SYN_MINT } from "../config/synToken";
+import { emitSynexusEvent } from "../lib/synexus/eventBus";
+import { formatRiskBand, rateRiskBand, type RiskBand } from "../lib/token/riskBand";
 
 export type GuardianRisk = GuardianStatus;
 
-/** User-facing SyNexus risk band (internal values remain SAFE | WARNING | DANGER). */
+/** User-facing label when only the older SAFE | WARNING | DANGER status is known. */
 export function synexusRiskBandLabel(risk: GuardianRisk): string {
   switch (risk) {
     case "SAFE":
-      return "Safe";
+      return "Low risk";
     case "WARNING":
-      return "Warning";
+      return "Elevated risk";
     case "DANGER":
-      return "Danger";
+      return "High risk";
     default:
       return String(risk);
   }
+}
+
+export function tokenRiskLabel(token: { guardianRisk: GuardianRisk; riskBand?: RiskBand }): string {
+  return token.riskBand ? formatRiskBand(token.riskBand) : synexusRiskBandLabel(token.guardianRisk);
 }
 
 export type Token = {
@@ -56,52 +62,64 @@ export type Token = {
   missingSocialsOrWebsite?: boolean;
   brokenWebsiteOrDeadSocials?: boolean;
   riskyMintOrFreezeAuthorityActive?: boolean;
+  riskBand?: RiskBand;
 };
 
-type TokenSeed = Omit<Token, "guardianRisk" | "guardianMessage" | "riskScore" | "riskReasons">;
+type TokenSeed = Omit<Token, "guardianRisk" | "guardianMessage" | "riskScore" | "riskReasons" | "riskBand">;
+
+const lastRiskBand = new Map<string, RiskBand>();
+
+function attachRisk(input: TokenSeed, configOverride?: DeepPartial<GuardianEngineConfig>): Token {
+  const seed: TokenSeed = { ...input };
+  const liq = seed.liquidityUsd;
+  const vol = seed.volume24hUsd;
+  if (liq != null && vol != null && liq < 30_000 && vol > 80_000) seed.highVolumeLowLiquidity = true;
+  if (liq != null && Math.abs(seed.change24hPct) > 35 && liq < 60_000) seed.sharpPumpThenDump = true;
+
+  const config = mergeGuardianConfig(configOverride);
+  const guardian = evaluateGuardianRisk(toGuardianInput(seed), config);
+  const rating = rateRiskBand({
+    liquidityUsd: seed.liquidityUsd ?? null,
+    volume24hUsd: seed.volume24hUsd ?? null,
+    topWalletPct: seed.topWalletPct ?? null,
+    tokenAgeHours: seed.tokenAgeHours ?? null,
+    riskyMintOrFreezeAuthorityActive: seed.riskyMintOrFreezeAuthorityActive ?? null,
+    riskScore: guardian.riskScore,
+    riskReasons: guardian.reasons,
+  });
+  const insufficient = rating.band === "INSUFFICIENT_DATA";
+  const key = seed.mintAddress || seed.id;
+  const previous = lastRiskBand.get(key);
+  if (previous && previous !== rating.band) {
+    emitSynexusEvent({
+      name: "RISK_CHANGED",
+      at: Date.now(),
+      mint: seed.mintAddress ?? null,
+      source: "guardian",
+      detail: `${seed.symbol} moved from ${previous} to ${rating.band}.`,
+    });
+  }
+  lastRiskBand.set(key, rating.band);
+
+  return {
+    ...seed,
+    guardianRisk: insufficient ? "WARNING" : guardian.status,
+    guardianMessage: insufficient
+      ? "Not enough measured signals to rate this token."
+      : guardian.guardianMessage,
+    riskScore: guardian.riskScore,
+    riskReasons: guardian.reasons,
+    riskBand: rating.band,
+    confidence: insufficient ? Math.min(guardian.confidence, 40) : guardian.confidence,
+  };
+}
 
 export function buildTokenFromPartial(
   partial: Partial<TokenSeed> &
     Pick<TokenSeed, "id" | "symbol" | "name" | "priceUsd" | "change24hPct">,
   configOverride?: DeepPartial<GuardianEngineConfig>,
 ): Token {
-  const seed: TokenSeed = {
-    topWalletPct: 18,
-    top5WalletsPct: 40,
-    top10WalletsPct: 58,
-    tokenAgeHours: 48,
-    priceMove1hPct: partial.change24hPct * 0.12,
-    sharpPumpThenDump: false,
-    highVolumeLowLiquidity: false,
-    suspiciousVolumeWithFewHolders: false,
-    similarToMajorTokenName: false,
-    similarTickerToKnownToken: false,
-    fakeBrandingImpersonation: false,
-    reports24h: 0,
-    repeatedScamCategoryReports: false,
-    missingSocialsOrWebsite: false,
-    brokenWebsiteOrDeadSocials: false,
-    riskyMintOrFreezeAuthorityActive: false,
-    ...partial,
-  };
-
-  const liq = seed.liquidityUsd ?? 0;
-  const vol = seed.volume24hUsd ?? 0;
-  if (liq < 30_000 && vol > 80_000) seed.highVolumeLowLiquidity = true;
-  if (Math.abs(seed.change24hPct) > 35 && liq < 60_000) seed.sharpPumpThenDump = true;
-  if (liq < 15_000) seed.missingSocialsOrWebsite = true;
-
-  const config = mergeGuardianConfig(configOverride);
-  const guardian = evaluateGuardianRisk(toGuardianInput(seed), config);
-
-  return {
-    ...seed,
-    guardianRisk: guardian.status,
-    guardianMessage: guardian.guardianMessage,
-    riskScore: guardian.riskScore,
-    riskReasons: guardian.reasons,
-    confidence: guardian.confidence,
-  };
+  return attachRisk({ ...partial }, configOverride);
 }
 
 const tokenSeeds: TokenSeed[] = [
@@ -267,12 +285,12 @@ const tokenSeeds: TokenSeed[] = [
 function toGuardianInput(token: TokenSeed): GuardianEngineInput {
   return {
     tokenName: token.name,
-    liquidityUsd: token.liquidityUsd ?? 0,
-    topWalletPct: token.topWalletPct ?? 0,
-    top5WalletsPct: token.top5WalletsPct ?? 0,
-    top10WalletsPct: token.top10WalletsPct ?? 0,
-    tokenAgeHours: token.tokenAgeHours ?? 0,
-    priceMove1hPct: token.priceMove1hPct ?? 0,
+    liquidityUsd: token.liquidityUsd ?? null,
+    topWalletPct: token.topWalletPct ?? null,
+    top5WalletsPct: token.top5WalletsPct ?? null,
+    top10WalletsPct: token.top10WalletsPct ?? null,
+    tokenAgeHours: token.tokenAgeHours ?? null,
+    priceMove1hPct: token.priceMove1hPct ?? null,
     priceMove24hPct: token.change24hPct,
     sharpPumpThenDump: token.sharpPumpThenDump ?? false,
     highVolumeLowLiquidity: token.highVolumeLowLiquidity ?? false,
@@ -280,30 +298,18 @@ function toGuardianInput(token: TokenSeed): GuardianEngineInput {
     similarToMajorTokenName: token.similarToMajorTokenName ?? false,
     similarTickerToKnownToken: token.similarTickerToKnownToken ?? false,
     fakeBrandingImpersonation: token.fakeBrandingImpersonation ?? false,
-    reports24h: token.reports24h ?? 0,
+    reports24h: token.reports24h ?? null,
     repeatedScamCategoryReports: token.repeatedScamCategoryReports ?? false,
     missingSocialsOrWebsite: token.missingSocialsOrWebsite ?? false,
     brokenWebsiteOrDeadSocials: token.brokenWebsiteOrDeadSocials ?? false,
-    riskyMintOrFreezeAuthorityActive: token.riskyMintOrFreezeAuthorityActive ?? false,
+    riskyMintOrFreezeAuthorityActive: token.riskyMintOrFreezeAuthorityActive ?? null,
   };
 }
 
 export function buildSampleTokens(
   configOverride?: DeepPartial<GuardianEngineConfig>,
 ): Token[] {
-  const config = mergeGuardianConfig(configOverride);
-  return tokenSeeds.map((token) => {
-    const guardian = evaluateGuardianRisk(toGuardianInput(token), config);
-
-    return {
-      ...token,
-      guardianRisk: guardian.status,
-      guardianMessage: guardian.guardianMessage,
-      riskScore: guardian.riskScore,
-      riskReasons: guardian.reasons,
-      confidence: guardian.confidence,
-    };
-  });
+  return tokenSeeds.map((token) => attachRisk(token, configOverride));
 }
 
 export const sampleTokens: Token[] = buildSampleTokens();

@@ -31,6 +31,11 @@ class HeraLiveVoiceService {
     heraRealtimeController.disconnect();
   }
 
+  /** Applies a new voice by reconnecting; no-op when Hera is not live. */
+  restartSession(): Promise<boolean> {
+    return heraRealtimeController.restartSession();
+  }
+
   startListening(): void {
     heraRealtimeController.startListening();
   }
@@ -47,8 +52,8 @@ class HeraLiveVoiceService {
     heraRealtimeController.setMuted(muted);
   }
 
-  sendText(text: string): void {
-    heraRealtimeController.sendText(text);
+  sendText(text: string): boolean {
+    return heraRealtimeController.sendText(text);
   }
 
   subscribe(listener: HeraRealtimeEvents): () => void {

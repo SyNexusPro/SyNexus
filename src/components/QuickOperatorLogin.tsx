@@ -1,10 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { passwordStrengthLabel, validateSignupPassword } from "../lib/authCredentials";
 import { loadRememberedEmail, saveRememberedEmail } from "../lib/authRemember";
 import { hasSupabaseEnv, supabase } from "../lib/supabaseClient";
 import { signInAlwaysOnAccount } from "../lib/alwaysOnSignIn";
+import { clearOwnerAccess } from "../lib/ownerAccess";
 import {
+  normalizeSignupUsername,
   signOut,
   signUpWithEmail,
   upsertSignupProfile,
@@ -19,12 +22,17 @@ import {
   signupConfirmInboxMessage,
 } from "../lib/signupWelcome";
 import { describeAuthError } from "../lib/authErrors";
+import { beginInteractiveAuthFlow, endInteractiveAuthFlow } from "../lib/authFlowGuard";
+import { withTimeout } from "../lib/withTimeout";
+import { PasswordRecoveryPanel } from "./PasswordRecoveryPanel";
 import { attachPendingInvite, syncInviteRewardForUser } from "../lib/inviteEarn";
 import { syncProTrialForUser } from "../lib/proDemo";
 import { queueHeraSignupDemo } from "../lib/heraSignupDemo";
+import { LanguagePicker } from "./LanguagePicker";
 import { PasswordRevealToggle } from "./PasswordRevealToggle";
 import { GoogleAuthOption } from "./GoogleSignInButton";
-import { continueMfaAfterAuth } from "../security/mfa";
+import { continueMfaAfterAuth, mfaPathForNewSignup } from "../security/mfa";
+import { readGoogleAuthError } from "../lib/googleAuthReturn";
 import { recordSecurityEvent } from "../security/securityEvents";
 
 const DEMO_SESSION_KEY = "synexus_demo_session";
@@ -33,6 +41,9 @@ export type QuickOperatorAuthResult = {
   mode: "signin" | "signup";
   userId?: string;
   email?: string;
+  playReviewer?: boolean;
+  godMode?: boolean;
+  secondFactorPath?: string | null;
 };
 
 type Props = {
@@ -54,7 +65,8 @@ export function QuickOperatorLogin({
   initialMode = "signin",
   showTabs = true,
 }: Props) {
-  const { linked } = useOperatorAuth();
+  const { t } = useTranslation();
+  const { linked, secondFactorPath } = useOperatorAuth();
   const navigate = useNavigate();
   const [mode, setMode] = useState<"signin" | "signup">(initialMode);
   const [email, setEmail] = useState(() => loadRememberedEmail() ?? "");
@@ -62,6 +74,11 @@ export function QuickOperatorLogin({
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [recovering, setRecovering] = useState(false);
+  const submittingRef = useRef(false);
+  /** Keeps the form mounted while a submit runs, so auth events cannot swap it mid-flight. */
+  const [formLocked, setFormLocked] = useState(false);
+  const keepFormRef = useRef(false);
   const [message, setMessage] = useState<{ tone: "info" | "success" | "error"; text: string } | null>(
     null,
   );
@@ -78,7 +95,48 @@ export function QuickOperatorLogin({
     setMessage(null);
   }, [initialMode]);
 
+  useEffect(() => {
+    const stored = readGoogleAuthError();
+    if (stored) setMessage({ tone: "error", text: describeAuthError(new Error(stored)) });
+    const onOauthError = (event: Event) => {
+      const detail = (event as CustomEvent<string>).detail;
+      if (detail) setMessage({ tone: "error", text: describeAuthError(new Error(detail)) });
+    };
+    window.addEventListener("synexus-oauth-error", onOauthError);
+    return () => window.removeEventListener("synexus-oauth-error", onOauthError);
+  }, []);
+
+  function switchMode(next: "signin" | "signup") {
+    if (busy) return;
+    keepFormRef.current = false;
+    setFormLocked(false);
+    setMessage(null);
+    setMode(next);
+  }
+
+  function openPasswordRecovery() {
+    if (busy) return;
+    if (!hasSupabaseEnv) {
+      setMessage({ tone: "error", text: "Password recovery requires Supabase sign-in." });
+      return;
+    }
+    setPassword("");
+    setMessage(null);
+    setRecovering(true);
+  }
+
+  function closePasswordRecovery(recoveredEmail?: string) {
+    if (recoveredEmail) {
+      setEmail(recoveredEmail);
+      saveRememberedEmail(recoveredEmail);
+    }
+    setRecovering(false);
+    setMode("signin");
+    setMessage(null);
+  }
+
   async function handleSubmit() {
+    if (submittingRef.current) return;
     const trimmedEmail = email.trim();
     if (!trimmedEmail || !password) {
       setMessage({ tone: "error", text: "Enter email and password." });
@@ -88,9 +146,24 @@ export function QuickOperatorLogin({
       setMessage({ tone: "error", text: "Pick a username for your profile." });
       return;
     }
+    const normalizedUsername = mode === "signup" ? normalizeSignupUsername(username) : "";
+    if (mode === "signup" && normalizedUsername.length < 3) {
+      setMessage({
+        tone: "error",
+        text: "Username must contain at least 3 letters, numbers, or underscores.",
+      });
+      return;
+    }
 
+    submittingRef.current = true;
+    keepFormRef.current = false;
+    setFormLocked(true);
+    beginInteractiveAuthFlow();
     setBusy(true);
-    setMessage({ tone: "info", text: mode === "signup" ? "Creating account…" : "Signing in…" });
+    setMessage({
+      tone: "info",
+      text: mode === "signup" ? "Creating account…" : "Signing in…",
+    });
 
     try {
       if (!hasSupabaseEnv) {
@@ -106,24 +179,28 @@ export function QuickOperatorLogin({
           setMessage({ tone: "error", text: check.message ?? "Choose a stronger password." });
           return;
         }
-        const normalizedUsername = username.trim().replace(/^@/, "").toLowerCase();
-        const result = await signUpWithEmail(trimmedEmail, password, normalizedUsername);
+        const result = await withTimeout(
+          signUpWithEmail(trimmedEmail, password, normalizedUsername),
+        );
         saveRememberedEmail(trimmedEmail);
         const user = result.session?.user ?? result.user;
-        if (user) {
-          try {
-            await upsertSignupProfile(user.id, trimmedEmail, normalizedUsername);
-          } catch {
-            /* profile may exist */
-          }
+        if (user && result.session) {
+          void upsertSignupProfile(user.id, trimmedEmail, normalizedUsername).catch(() => {
+            /* signup succeeded; profile can be completed after authentication */
+          });
         }
         setPassword("");
-        markAwaitingSignupWelcome();
 
         const verified = Boolean(user && result.session && isEmailVerified(user));
         if (!verified) {
+          keepFormRef.current = true;
+          markAwaitingSignupWelcome();
           if (result.session && hasSupabaseEnv && supabase) {
-            await signOut();
+            window.setTimeout(() => {
+              void signOut().catch(() => {
+                /* session may already be cleared */
+              });
+            }, 0);
           }
           savePendingVerificationEmail(trimmedEmail);
           setMessage({
@@ -136,13 +213,19 @@ export function QuickOperatorLogin({
         finishLinkedSession(user!.id);
         queueHeraSignupDemo();
         setMessage({ tone: "success", text: SIGNUP_WELCOME_ACTIVE });
-        const mfaPath = await continueMfaAfterAuth();
-        onSuccess?.({ mode: "signup", userId: user!.id, email: trimmedEmail });
-        if (mfaPath) navigate(mfaPath, { replace: true });
+        const mfaPath = mfaPathForNewSignup(user);
+        const successResult: QuickOperatorAuthResult = {
+          mode: "signup",
+          userId: user!.id,
+          email: trimmedEmail,
+          secondFactorPath: mfaPath,
+        };
+        if (onSuccess) onSuccess(successResult);
+        else if (mfaPath) navigate(mfaPath, { replace: true });
         return;
       }
 
-      const alwaysOn = await signInAlwaysOnAccount(trimmedEmail, password);
+      const alwaysOn = await withTimeout(signInAlwaysOnAccount(trimmedEmail, password));
       if (!alwaysOn.ok) {
         throw new Error(alwaysOn.message);
       }
@@ -162,22 +245,59 @@ export function QuickOperatorLogin({
             : "Signed in.",
       });
       void recordSecurityEvent({ eventType: "login_success", success: true });
-      const mfaPath = alwaysOn.godMode || alwaysOn.playReviewer ? null : await continueMfaAfterAuth();
-      onSuccess?.({
+      const mfaPath =
+        alwaysOn.godMode || alwaysOn.playReviewer ? null : await continueMfaAfterAuth(signedInUser);
+      const successResult: QuickOperatorAuthResult = {
         mode: "signin",
         userId: signedInUser?.id,
         email: trimmedEmail,
-      });
-      if (mfaPath) navigate(mfaPath, { replace: true });
+        playReviewer: alwaysOn.playReviewer,
+        godMode: alwaysOn.godMode,
+        secondFactorPath: mfaPath,
+      };
+      if (onSuccess) onSuccess(successResult);
+      else if (mfaPath) navigate(mfaPath, { replace: true });
     } catch (err) {
+      console.error(mode === "signup" ? "SIGNUP ERROR:" : "SIGNIN ERROR:", err);
       void recordSecurityEvent({ eventType: "login_failure", success: false });
       setMessage({ tone: "error", text: describeAuthError(err) });
     } finally {
+      submittingRef.current = false;
+      endInteractiveAuthFlow();
+      setFormLocked(keepFormRef.current);
       setBusy(false);
     }
   }
 
-  if (linked) {
+  if (recovering) {
+    return (
+      <PasswordRecoveryPanel
+        initialEmail={email}
+        onFinished={(recoveredEmail) => closePasswordRecovery(recoveredEmail)}
+        onCancel={() => closePasswordRecovery()}
+      />
+    );
+  }
+
+  if (!formLocked && secondFactorPath) {
+    return (
+      <div className="quick-login quick-login--linked">
+        <p className="quick-login__linked">Finish the second sign-in check to open your account.</p>
+        <button
+          type="button"
+          className="quick-login__submit"
+          onClick={() => {
+            onSuccess?.();
+            navigate(secondFactorPath);
+          }}
+        >
+          Continue verification
+        </button>
+      </div>
+    );
+  }
+
+  if (!formLocked && linked) {
     return (
       <div className="quick-login quick-login--linked">
         <p className="quick-login__linked">You&apos;re signed in.</p>
@@ -193,6 +313,7 @@ export function QuickOperatorLogin({
               setBusy(true);
               try {
                 localStorage.removeItem(DEMO_SESSION_KEY);
+                clearOwnerAccess();
                 if (hasSupabaseEnv && supabase) {
                   await signOut();
                 }
@@ -220,7 +341,7 @@ export function QuickOperatorLogin({
             role="tab"
             aria-selected={mode === "signin"}
             className={`quick-login__tab${mode === "signin" ? " quick-login__tab--active" : ""}`}
-            onClick={() => setMode("signin")}
+            onClick={() => switchMode("signin")}
           >
             Sign in
           </button>
@@ -229,14 +350,16 @@ export function QuickOperatorLogin({
             role="tab"
             aria-selected={mode === "signup"}
             className={`quick-login__tab${mode === "signup" ? " quick-login__tab--active" : ""}`}
-            onClick={() => setMode("signup")}
+            onClick={() => switchMode("signup")}
           >
             Create account
           </button>
         </div>
       ) : (
         <p className="quick-login__mode-label">
-          {mode === "signup" ? `Create your ${SYNEXUS_BRAND_NAME} account` : `Sign in to ${SYNEXUS_BRAND_NAME}`}
+          {mode === "signup"
+            ? `Create your ${SYNEXUS_BRAND_NAME} account`
+            : `Sign in to ${SYNEXUS_BRAND_NAME}`}
         </p>
       )}
 
@@ -246,7 +369,13 @@ export function QuickOperatorLogin({
         </p>
       ) : null}
 
-      <div className="quick-login__fields">
+      <form
+        className="quick-login__fields"
+        onSubmit={(event) => {
+          event.preventDefault();
+          void handleSubmit();
+        }}
+      >
         <label className="quick-login__field">
           <span>Email</span>
           <input
@@ -289,17 +418,31 @@ export function QuickOperatorLogin({
             />
           </div>
           {passwordHint ? <span className="quick-login__hint">{passwordHint}</span> : null}
+          {mode === "signin" && hasSupabaseEnv ? (
+            <button
+              type="button"
+              className="quick-login__forgot"
+              disabled={busy}
+              onClick={openPasswordRecovery}
+            >
+              Forgot password?
+            </button>
+          ) : null}
         </label>
-      </div>
-
-      <button type="button" className="quick-login__submit" disabled={busy} onClick={() => void handleSubmit()}>
+        {mode === "signup" ? (
+          <label className="quick-login__field">
+            <span>{t("footer.language")}</span>
+            <LanguagePicker embedded />
+          </label>
+        ) : null}
+      <button type="submit" className="quick-login__submit" disabled={busy}>
         {busy ? "Working…" : mode === "signup" ? "Create account" : "Sign in"}
       </button>
+      </form>
       <GoogleAuthOption disabled={busy} onError={(text) => setMessage({ tone: "error", text })} />
       {mode === "signup" ? (
         <p className="quick-login__hint">
-          After you confirm email, you must verify identity and add a valid debit or credit card. One person, one
-          account.
+          Confirm your email first. After sign-in, you&apos;ll verify a phone number to protect your account.
         </p>
       ) : null}
     </section>

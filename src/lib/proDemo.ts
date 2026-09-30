@@ -1,4 +1,4 @@
-import { SYNEXUS_PRO_TRIAL_MS } from "../config/proTrial";
+import { isSignupTrialGrantSource, SYNEXUS_PRO_TRIAL_GRANT_SOURCE, SYNEXUS_PRO_TRIAL_MS } from "../config/proTrial";
 import { notifySynexusPlanChanged } from "../hooks/useSynexusPlan";
 import { hasStoredOwnerGrant } from "./ownerAccess";
 import { PLAN_STORAGE_KEY } from "./tradingFees";
@@ -108,7 +108,7 @@ function writeTrialUntil(until: number, userId: string) {
     localStorage.setItem(PRO_TRIAL_STARTED_KEY, "1");
     localStorage.setItem(PRO_TRIAL_USER_ID_KEY, userId);
     localStorage.removeItem(PRO_DEMO_UNTIL_KEY);
-    recordTrustedPlanGrant("PRO", "trial_7d");
+    recordTrustedPlanGrant("PRO", SYNEXUS_PRO_TRIAL_GRANT_SOURCE);
     localStorage.setItem(PLAN_STORAGE_KEY, "PRO");
   } catch {
     /* ignore */
@@ -130,7 +130,7 @@ export function clearExpiredProDemo(now = Date.now()): boolean {
   }
 
   const grantSource = readPlanGrantSource();
-  const trialGrant = grantSource === "trial_7d" || grantSource === "demo_session";
+  const trialGrant = isSignupTrialGrantSource(grantSource);
 
   try {
     if (trialGrant && localStorage.getItem(PLAN_STORAGE_KEY) === "PRO") {
@@ -149,7 +149,7 @@ export function clearExpiredProTrial(now = Date.now()): boolean {
   return clearExpiredProDemo(now);
 }
 
-/** Start the one-time 7-day Pro trial for a signed-in operator. */
+/** Start the one-time 30-day Pro trial for a signed-in operator. No card. */
 export function startProDemo(userId: string, now = Date.now()): number {
   if (!userId || userId.startsWith("demo-")) return now;
   clearExpiredProDemo(now);
@@ -172,7 +172,7 @@ export function restoreProTrialGrant(userId: string, now = Date.now()): boolean 
   const trialUserId = localStorage.getItem(PRO_TRIAL_USER_ID_KEY);
   if (!trialUserId || trialUserId !== userId || !isProTrialActive(now)) return false;
 
-  recordTrustedPlanGrant("PRO", "trial_7d");
+  recordTrustedPlanGrant("PRO", SYNEXUS_PRO_TRIAL_GRANT_SOURCE);
   try {
     if (localStorage.getItem(PLAN_STORAGE_KEY) !== "PRO") {
       localStorage.setItem(PLAN_STORAGE_KEY, "PRO");
@@ -193,8 +193,8 @@ export function restoreActiveProTrialGrant(now = Date.now()): boolean {
 }
 
 /**
- * Start the 7-day Pro trial after a verified sign-up / sign-in.
- * One trial per user; paid Square checkout overrides trial access.
+ * Start the 30-day free Pro trial after a verified sign-up / sign-in.
+ * No card. One trial per user; paid Square checkout overrides trial access.
  */
 export function ensureProTrialAfterSignup(userId: string, now = Date.now()): boolean {
   if (!userId || userId.startsWith("demo-")) return false;
@@ -233,7 +233,7 @@ export function endProDemo() {
     localStorage.removeItem(PRO_DEMO_UNTIL_KEY);
     const grantSource = readPlanGrantSource();
     if (
-      (grantSource === "trial_7d" || grantSource === "demo_session") &&
+      isSignupTrialGrantSource(grantSource) &&
       localStorage.getItem(PLAN_STORAGE_KEY) === "PRO"
     ) {
       localStorage.setItem(PLAN_STORAGE_KEY, "FREE");

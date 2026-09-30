@@ -8,10 +8,10 @@ export const SYNEXUS_PRO_PRICE_SHORT = `$${SYNEXUS_PRO_PRICE_USD.toFixed(2)}/mo`
 
 export const SYNEXUS_PRO_SUBSCRIBE_LABEL = `Subscribe — ${SYNEXUS_PRO_PRICE_LABEL}`;
 
-/** Marketing / in-app offer line (7-day trial — card on file at signup). */
-export const SYNEXUS_PRO_OFFER_TAGLINE = `7-day Pro trial · card on file · ${SYNEXUS_PRO_PRICE_SHORT} after · cancel anytime`;
+/** Marketing / in-app offer line (30-day free Pro on sign-up — no card). */
+export const SYNEXUS_PRO_OFFER_TAGLINE = `30 days of Pro free when you sign up · no card · ${SYNEXUS_PRO_PRICE_SHORT} after · cancel anytime`;
 
-export const SYNEXUS_PRO_OFFER_SHORT = `7-day free trial · card on file · ${SYNEXUS_PRO_PRICE_SHORT} after`;
+export const SYNEXUS_PRO_OFFER_SHORT = `30 days Pro free on sign-up · no card · ${SYNEXUS_PRO_PRICE_SHORT} after`;
 
 export const SYNEXUS_PRO_FEATURES = [
   "Unlimited SyNexus access",

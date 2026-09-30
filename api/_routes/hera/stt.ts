@@ -3,7 +3,8 @@
  * Keys stay server-side.
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { ViteDevServer } from "../viteDevServer";
+import { useApiRoute, type ViteDevServer } from "../viteDevServer.js";
+import { requireHeraUser } from "../../../lib/server/heraGuard.js";
 
 const STT_PROMPT =
   "Transcribe the speaker exactly. Include Hera, Titan, SyNexus, Solana, Bitcoin, Ethereum, and everyday English. Do not rewrite or summarize.";
@@ -75,7 +76,7 @@ export async function handleHeraStt(req: IncomingMessage, res: ServerResponse): 
   if (req.method === "OPTIONS") {
     res.statusCode = 204;
     res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
     res.end();
     return;
   }
@@ -83,6 +84,9 @@ export async function handleHeraStt(req: IncomingMessage, res: ServerResponse): 
     sendJson(res, 405, { error: "Method not allowed" });
     return;
   }
+
+  const authed = await requireHeraUser(req, res, sttEnv);
+  if (!authed) return;
 
   const apiKey = sttEnv.OPENAI_API_KEY?.trim() || process.env.OPENAI_API_KEY?.trim();
   if (!apiKey) {
@@ -131,13 +135,13 @@ export function configureHeraSttApi(
   env?: Record<string, string | undefined>,
 ): void {
   if (env) sttEnv = { ...process.env, ...env };
-  server.middlewares.use("/api/hera/stt", async (req, res, next) => {
-    const method = (req as IncomingMessage).method;
+  useApiRoute(server, "/api/hera/stt", async (req, res, next) => {
+    const method = req.method;
     if (method !== "POST" && method !== "OPTIONS") {
       next();
       return;
     }
-    await handleHeraStt(req as IncomingMessage, res as ServerResponse);
+    await handleHeraStt(req, res);
   });
 }
 

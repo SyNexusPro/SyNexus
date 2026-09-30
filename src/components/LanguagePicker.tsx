@@ -13,9 +13,11 @@ import { UI_PACK_CODES } from "../i18n/catalogs";
 
 type Props = {
   compact?: boolean;
+  /** In-form dropdown (signup). Default is a compact trigger for that layout. */
+  embedded?: boolean;
 };
 
-export function LanguagePicker({ compact = false }: Props) {
+export function LanguagePicker({ compact = false, embedded = false }: Props) {
   const { t, i18n } = useTranslation();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -60,7 +62,7 @@ export function LanguagePicker({ compact = false }: Props) {
   }
 
   return (
-    <div className={`lang-picker${compact ? " lang-picker--compact" : ""}`}>
+    <div className={`lang-picker${compact ? " lang-picker--compact" : ""}${embedded ? " lang-picker--form" : ""}`}>
       <button
         type="button"
         className="lang-picker__trigger"

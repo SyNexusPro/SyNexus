@@ -11,6 +11,7 @@ import {
   type TitanChartLinePoint,
 } from "../components/TitanMarketChart";
 import { submitSynexusReport } from "../lib/reportSubmission";
+import { withTimeout } from "../lib/withTimeout";
 import { recordTokenView } from "../lib/walletHealth";
 import { trackSiteEvent } from "../lib/siteAnalytics";
 import { dexScreenerTokenUrl, jupiterBuyWithSolUrl, jupiterSellForSolUrl } from "../lib/solanaTradeLinks";
@@ -44,7 +45,7 @@ const CHART_RANGE_META: Record<PriceHistoryRange, { button: string; refreshMs: n
 
 const chartRanges: PriceHistoryRange[] = ["1H", "24H", "1MO"];
 
-/** Build OHLC candles from close-only history for TitanMarketChart. */
+/** Real OHLC when the provider sent it. Close-only series still draws a candle from the previous close. */
 function historyToChartSeries(points: PriceHistoryPoint[]): {
   candles: TitanChartCandle[];
   lineData: TitanChartLinePoint[];
@@ -57,9 +58,9 @@ function historyToChartSeries(points: PriceHistoryPoint[]): {
     const time = Math.floor(point.timestamp / 1000) as UTCTimestamp;
     const close = point.priceUsd;
     if (!Number.isFinite(close) || close <= 0) continue;
-    const open = prevClose ?? close;
-    const high = Math.max(open, close);
-    const low = Math.min(open, close);
+    const open = point.open ?? prevClose ?? close;
+    const high = point.high ?? Math.max(open, close);
+    const low = point.low ?? Math.min(open, close);
     candles.push({ time, open, high, low, close });
     lineData.push({ time, value: close });
     prevClose = close;
@@ -85,12 +86,20 @@ export function TokenDetail() {
 
   useEffect(() => {
     if (!tokenId) {
+      setToken(null);
       setLoadState("error");
       return;
     }
+
+    let cancelled = false;
+    setToken(null);
+    setPriceHistory(null);
     setLoadState("loading");
-    fetchTokenDetailById(tokenId)
-      .then((detail) => {
+
+    void (async () => {
+      try {
+        const detail = await withTimeout(fetchTokenDetailById(decodeURIComponent(tokenId)));
+        if (cancelled) return;
         setToken(detail);
         setLoadState("ready");
         if (detail) {
@@ -99,11 +108,16 @@ export function TokenDetail() {
             meta: { symbol: detail.symbol },
           });
         }
-      })
-      .catch(() => {
+      } catch {
+        if (cancelled) return;
         setToken(null);
         setLoadState("error");
-      });
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [tokenId]);
 
   useEffect(() => {
@@ -114,7 +128,7 @@ export function TokenDetail() {
       if (!token) return;
       setChartState("loading");
       try {
-        const history = await fetchTokenPriceHistory(token, chartRange);
+        const history = await withTimeout(fetchTokenPriceHistory(token, chartRange), 20_000);
         if (cancelled) return;
         setPriceHistory(history);
         setChartState("ready");
@@ -238,8 +252,8 @@ export function TokenDetail() {
             <h2>Live price graph</h2>
             <p>
               {priceHistory?.source === "live"
-                ? `${priceHistory.intervalLabel} candles · ${priceHistory.windowLabel}`
-                : "Preview line until live history is available"}
+                ? `${priceHistory.provider ? `${priceHistory.provider} · ` : ""}${priceHistory.intervalLabel} candles · ${priceHistory.windowLabel}`
+                : "Live chart history is unavailable"}
             </p>
           </div>
           <span>{secondsSinceUpdate}s ago</span>
@@ -261,6 +275,8 @@ export function TokenDetail() {
             <p className="detail-chart__empty">Could not load chart history.</p>
           ) : chartState === "loading" && !priceHistory ? (
             <p className="detail-chart__empty">Loading Titan market chart...</p>
+          ) : priceHistory && priceHistory.points.length < 2 ? (
+            <p className="detail-chart__empty">Live chart history is unavailable.</p>
           ) : (
             <TitanMarketChart
               symbol={`${token.symbol}/USD`}

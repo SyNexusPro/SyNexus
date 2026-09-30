@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import type { Token } from "../data/tokens";
-import { synexusRiskBandLabel } from "../data/tokens";
+import { tokenRiskLabel } from "../data/tokens";
 import {
   buildTradeScorecard,
   rugTone,
@@ -145,7 +145,7 @@ export function ScanHealthPanel({ token, compact = false }: Props) {
         <div className="scan-health__stat">
           <span className="scan-health__stat-label">Sentinel</span>
           <strong className={`scan-health__sentinel scan-health__sentinel--${token.guardianRisk.toLowerCase()}`}>
-            {synexusRiskBandLabel(token.guardianRisk)}
+            {tokenRiskLabel(token)}
           </strong>
         </div>
       </div>

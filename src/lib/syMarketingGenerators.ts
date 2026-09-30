@@ -27,7 +27,7 @@ const HOOKS = [
 ];
 
 const SUPPORT = [
-  "Sign up → 7-day Pro trial with card on file. Then $9.99/mo if you keep it.",
+  "Sign up → 30 days of Pro free. No card. Then $9.99/mo if you keep it.",
   "Free scan on every token. Pro unlocks Titan briefings + full Sentinel grid.",
   "Your wallet signs every trade — SyNexus just shows you the risk first.",
   "Trade journal tracks entries, exits, and P/L so you see your habits.",
@@ -66,7 +66,7 @@ export function generateTikTokScript(now: number): string {
     `[0–3s] Show paste box + instant verdict card (Avoid / Watch / OK).`,
     `[3–7s] Flash scorecard: risk · whales · momentum · liquidity · rug warning.`,
     `[7–11s] One line: "Not financial advice — you still sign in your wallet."`,
-    `[11–15s] CTA on screen: 7-day free Pro trial · ${origin} · ${TRIAL_OFFER_SHORT}`,
+    `[11–15s] CTA on screen: 30 days Pro free · ${origin} · ${TRIAL_OFFER_SHORT}`,
     "",
     `Tags: ${TAGS}`,
   ].join("\n");

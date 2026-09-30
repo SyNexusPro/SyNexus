@@ -1,5 +1,5 @@
 import type { Token } from "../data/tokens";
-import { synexusRiskBandLabel } from "../data/tokens";
+import { tokenRiskLabel } from "../data/tokens";
 import { resolveInternalCommanderPersona } from "./titanBotName";
 import { answerAegisSecurityPrivacyQuestion } from "../config/sentinelAegis";
 import { answerHelixQuestion } from "../config/sentinelHelix";
@@ -68,8 +68,8 @@ export function resolveOracleTokenQuery(text: string, pool: Token[]): Token | nu
   const dollar = cleaned.match(/\$([A-Za-z]{2,12})\b/);
   if (dollar?.[1]) {
     const sym = dollar[1].toUpperCase();
-    const hit = pool.find((t) => t.symbol.toUpperCase() === sym);
-    if (hit) return hit;
+    const symbolHits = pool.filter((t) => t.symbol.toUpperCase() === sym);
+    if (symbolHits.length === 1) return symbolHits[0] ?? null;
   }
 
   if (/\b(synexus|syn[- ]coin|syn[- ]token|syn)\b/i.test(cleaned)) {
@@ -80,6 +80,8 @@ export function resolveOracleTokenQuery(text: string, pool: Token[]): Token | nu
   const byLen = [...pool].sort((a, b) => b.symbol.length - a.symbol.length);
   for (const token of byLen) {
     const sym = token.symbol.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const sameSymbol = pool.filter((item) => item.symbol.toUpperCase() === token.symbol.toUpperCase());
+    if (sameSymbol.length > 1) continue;
     if (token.symbol.length <= 2) {
       if (new RegExp(`\\$${sym}\\b|^${sym}$`, "i").test(cleaned)) return token;
       continue;
@@ -88,17 +90,16 @@ export function resolveOracleTokenQuery(text: string, pool: Token[]): Token | nu
   }
 
   const hits = searchOracleTokens(cleaned, pool);
+  if (hits.length !== 1) return null;
   const first = cleaned.split(/\s+/)[0] ?? "";
   if (hits[0] && !COMMON_WORD.test(first) && !COMMON_WORD.test(hits[0].symbol)) return hits[0];
-  return (
-    hits.find((h) => !COMMON_WORD.test(h.symbol) && cleaned.toLowerCase().includes(h.symbol.toLowerCase())) ?? null
-  );
+  return null;
 }
 
 export function buildTokenIntelBrief(token: Token): string {
   const discovery = evaluateTokenDiscovery(token);
   const lines = [
-    `${token.symbol} (${token.name}) · ${synexusRiskBandLabel(token.guardianRisk)} band`,
+    `${token.symbol} (${token.name}) · ${tokenRiskLabel(token)} band`,
     `Price ${formatUsd(token.priceUsd)} · 24h ${formatPct(token.change24hPct)}${token.priceMove1hPct != null ? ` · 1h ${formatPct(token.priceMove1hPct)}` : ""}`,
     `Liquidity ${formatUsd(token.liquidityUsd)} · Volume 24h ${formatUsd(token.volume24hUsd)}${token.marketCapUsd != null ? ` · MCap ${formatUsd(token.marketCapUsd)}` : ""}`,
     `Titan discovery ${discovery.discoveryScore}/100 · risk ${discovery.riskScore}/100 · momentum ${discovery.momentumScore}/100 · confidence ${discovery.confidence}${discovery.highRiskReportable ? " · HIGH RISK (reportable)" : ""}`,
@@ -194,7 +195,7 @@ export function buildOracleSentinelDirective(
       return {
         lane,
         targetSymbol: sym,
-        order: `Lock security scan on ${sym} — liquidity ${formatUsd(token.liquidityUsd)}, ${synexusRiskBandLabel(token.guardianRisk)} flags, privacy-safe read only.`,
+        order: `Lock security scan on ${sym} — liquidity ${formatUsd(token.liquidityUsd)}, ${tokenRiskLabel(token)} flags, privacy-safe read only.`,
       };
     case "pulse":
       return {
@@ -255,7 +256,7 @@ export function buildSentinelReportToOracle(
       report =
         token.guardianRisk === "SAFE"
           ? `Aegis → commander: ${sym} passed contract/liquidity lane — no rug signals in ${baseLatency}ms.`
-          : `Aegis → commander: ${sym} ${synexusRiskBandLabel(token.guardianRisk)} — ${token.riskReasons?.[0] ?? "risk elevated"}.`;
+          : `Aegis → commander: ${sym} ${tokenRiskLabel(token)} — ${token.riskReasons?.[0] ?? "risk elevated"}.`;
       break;
     case "pulse":
       report =
@@ -270,7 +271,7 @@ export function buildSentinelReportToOracle(
           : `Leviathan → commander: ${sym} wallets dispersed — no whale squeeze detected.`;
       break;
     case "cipher":
-      report = `Cipher → commander: ${sym} pattern fused — score ${token.riskScore ?? "?"} with ${synexusRiskBandLabel(token.guardianRisk)} alignment.`;
+      report = `Cipher → commander: ${sym} pattern fused — score ${token.riskScore ?? "?"} with ${tokenRiskLabel(token)} alignment.`;
       break;
     case "helix":
       report = `Helix → commander: ${sym} ticker/name looks like signing bait — do not connect a wallet or paste a seed.`;
@@ -353,7 +354,7 @@ export function oracleRespondToMessage(text: string, ctx: OracleMessageContext):
     if (!tokens.length) return `Feed still loading, ${name} — pairs incoming.`;
     const summary = tokens
       .slice(0, 8)
-      .map((t) => `${t.symbol} (${synexusRiskBandLabel(t.guardianRisk)})`)
+      .map((t) => `${t.symbol} (${tokenRiskLabel(t)})`)
       .join(" · ");
     return `Tracking ${tokens.length} pairs: ${summary}${tokens.length > 8 ? " · …" : ""}. Ask me anything about any of them.`;
   }

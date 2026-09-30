@@ -175,7 +175,7 @@ export function OracleAdminControlCenter({
                     Unlock {titanBotName} briefings with SyNexusPro — {SYNEXUS_PRO_PRICE_LABEL}.{" "}
                     {androidRequiresWebSubscription()
                       ? ANDROID_WEB_SUBSCRIBE_HINT
-                      : `Your ${SYNEXUS_PRO_TRIAL_DAYS}-day trial starts when you add a card at checkout.`}
+                      : `Your ${SYNEXUS_PRO_TRIAL_DAYS}-day trial starts when you sign up — no card.`}
                   </p>
                   <ProDemoButton
                     className="oracle-admin__demo pulse-demo-button"

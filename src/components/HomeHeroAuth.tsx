@@ -4,12 +4,9 @@ import { useBiometricLogin } from "../hooks/useBiometricLogin";
 import { useOperatorAuth } from "../hooks/useOperatorAuth";
 import { useTitanBotName } from "../hooks/useTitanBotName";
 import { attemptBiometricQuickSignIn } from "../lib/quickOperatorSignIn";
-import { syncProTrialForUser } from "../lib/proDemo";
 import { QuickOperatorLogin, type QuickOperatorAuthResult } from "./QuickOperatorLogin";
 import { SynexusSubscribeButton } from "./SynexusSubscribeButton";
 import { InviteEarnButton } from "./InviteEarnButton";
-import { attachPendingInvite, syncInviteRewardForUser } from "../lib/inviteEarn";
-import { continueMfaAfterAuth } from "../security/mfa";
 
 type AuthPanel = null | "signup" | "signin";
 
@@ -25,7 +22,7 @@ function scrollAuthPanelIntoView() {
 
 export function HomeHeroAuth({ isSimple = false }: Props) {
   const navigate = useNavigate();
-  const { linked } = useOperatorAuth();
+  const { linked, ownerUnlocked } = useOperatorAuth();
   const biometric = useBiometricLogin();
   const { name: titanName } = useTitanBotName();
   const [panel, setPanel] = useState<AuthPanel>(null);
@@ -76,27 +73,27 @@ export function HomeHeroAuth({ isSimple = false }: Props) {
 
   async function handleAuthSuccess(result?: QuickOperatorAuthResult) {
     closePanel();
-    if (result?.userId) {
-      syncProTrialForUser(result.userId);
-      void attachPendingInvite();
-      void syncInviteRewardForUser();
+    if (result?.playReviewer || result?.godMode) {
+      navigate(result?.mode === "signup" ? "/" : "/pulse");
+      return;
     }
-    const mfaPath = await continueMfaAfterAuth();
-    if (mfaPath) {
-      navigate(mfaPath, { replace: true });
+    if (result?.secondFactorPath) {
+      navigate(result.secondFactorPath, { replace: true });
       return;
     }
     navigate(result?.mode === "signup" ? "/" : "/pulse");
   }
 
-  if (linked) {
+  // While a panel is open the form owns the screen — a session appearing mid-flow
+  // (password recovery verifies a code before the password is saved) must not unmount it.
+  if (linked && !panel) {
     return (
       <div className="landing-hero__actions landing-hero__actions--linked">
         <Link to="/pulse" className="landing-hero__actions--secondary">
           Open Pulse
         </Link>
         <InviteEarnButton className="landing-hero__actions--secondary" />
-        {!isSimple ? (
+        {!isSimple && !ownerUnlocked ? (
           <SynexusSubscribeButton className="landing-hero__actions--pro" label="SyNexusPro" />
         ) : null}
       </div>

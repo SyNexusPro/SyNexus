@@ -15,6 +15,15 @@ const config: CapacitorConfig = {
     backgroundColor: "#071007",
     allowMixedContent: false,
   },
+  // FCM is not wired (no google-services.json). Including the Capacitor
+  // push plugin makes PushNotifications.register() crash the process.
+  includePlugins: [
+    "@aparajita/capacitor-biometric-auth",
+    "@capacitor/app",
+    "@capacitor/browser",
+    "@capacitor/preferences",
+    "capacitor-secure-storage-plugin",
+  ],
   server: {
     androidScheme: "https",
     ...(useRemoteServer

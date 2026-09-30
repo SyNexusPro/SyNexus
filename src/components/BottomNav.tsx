@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useTitanShell } from "../context/TitanShellContext";
 import { useOpenTitanGate } from "../hooks/useOpenTitanGate";
@@ -15,7 +15,8 @@ export function BottomNav() {
   const { t } = useTranslation();
   const { closeSheet } = useTitanShell();
   const openLoginGate = useOpenTitanGate();
-  const { linked } = useOperatorAuth();
+  const { linked, secondFactorPath } = useOperatorAuth();
+  const navigate = useNavigate();
   const loginOpen = useTitanLoginOpen();
   const loginActive = loginOpen;
   const trading = isTradingEnabled();
@@ -27,13 +28,20 @@ export function BottomNav() {
         type="button"
         className={`bottom-nav__link${loginActive ? " is-active" : ""}`}
         data-tour="nav-login"
-        onClick={openLoginGate}
+        onClick={() => {
+          if (secondFactorPath) {
+            closeSheet();
+            navigate(secondFactorPath);
+            return;
+          }
+          openLoginGate();
+        }}
         aria-current={loginActive ? "page" : undefined}
       >
         <span className="bottom-nav__icon bottom-nav__icon--login" aria-hidden>
           {linked ? "◉" : "⎔"}
         </span>
-        {linked ? t("nav.account") : t("nav.login")}
+        {secondFactorPath ? "Verify" : linked ? t("nav.account") : t("nav.login")}
       </button>
       <NavLink to="/" end className={linkClass} onClick={closeSheet} data-tour="nav-scan">
         <span className="bottom-nav__icon" aria-hidden>

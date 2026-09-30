@@ -1,14 +1,24 @@
 import { createClient, type SupabaseClient, type User } from "@supabase/supabase-js";
 import type { IncomingMessage } from "node:http";
+import { ownerEmailFromRequest } from "../ownerGrant.js";
 
 export type TitanAuthPlan = {
   userId: string | null;
   email: string | null;
   plan: "FREE" | "PRO";
   authenticated: boolean;
+  owner?: boolean;
 };
 
 type Env = Record<string, string | undefined>;
+
+/** Keep in sync with src/config/googlePlayReview.ts */
+const GOOGLE_PLAY_REVIEW_EMAIL = "google-review@synexus.pro";
+
+function isGooglePlayReviewEmail(email: string | null | undefined): boolean {
+  if (!email) return false;
+  return email.trim().toLowerCase() === GOOGLE_PLAY_REVIEW_EMAIL;
+}
 
 function adminClient(env: Env): SupabaseClient | null {
   const url = env.VITE_SUPABASE_URL || env.SUPABASE_URL;
@@ -43,6 +53,21 @@ export async function resolveTitanAuthPlan(
   req: IncomingMessage,
   env: Env,
 ): Promise<TitanAuthPlan> {
+  const ownerEmail = ownerEmailFromRequest(req, env);
+  if (ownerEmail) {
+    const base = await resolveSupabasePlan(req, env);
+    return {
+      userId: base.userId,
+      email: base.email ?? ownerEmail,
+      plan: "PRO",
+      authenticated: true,
+      owner: true,
+    };
+  }
+  return resolveSupabasePlan(req, env);
+}
+
+async function resolveSupabasePlan(req: IncomingMessage, env: Env): Promise<TitanAuthPlan> {
   const token = bearerFromRequest(req);
   if (!token) {
     return { userId: null, email: null, plan: "FREE", authenticated: false };
@@ -62,6 +87,15 @@ export async function resolveTitanAuthPlan(
     user = data.user;
   } catch {
     return { userId: null, email: null, plan: "FREE", authenticated: false };
+  }
+
+  if (isGooglePlayReviewEmail(user.email)) {
+    return {
+      userId: user.id,
+      email: user.email ?? null,
+      plan: "PRO",
+      authenticated: true,
+    };
   }
 
   const admin = adminClient(env);

@@ -1,5 +1,5 @@
 import type { Token } from "../data/tokens";
-import { synexusRiskBandLabel } from "../data/tokens";
+import { tokenRiskLabel } from "../data/tokens";
 import { tokenLooksLikeSigningTrap } from "./helixWatch";
 
 export type SentinelAlertItem = {
@@ -46,7 +46,7 @@ export function buildSentinelAlertsFromTokens(tokens: Token[]): SentinelAlertIte
       title: alertTitle(token),
       message:
         token.riskReasons?.[0] ??
-        `${synexusRiskBandLabel(token.guardianRisk)} · ${token.guardianMessage}`,
+        `${tokenRiskLabel(token)} · ${token.guardianMessage}`,
       tokenId: token.id,
       timestamp: now - i * 60_000,
     }));
