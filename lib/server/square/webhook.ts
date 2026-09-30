@@ -27,25 +27,47 @@ type WebhookEnv = SquareEnv & {
 const ACTIVE_SUBSCRIPTION_STATUSES = new Set(["ACTIVE", "PENDING"]);
 const CANCELED_SUBSCRIPTION_STATUSES = new Set(["CANCELED", "DEACTIVATED"]);
 
-function verifySquareSignature(
+/** Square Dashboard notification URL. HMAC input is this exact string plus the raw body. */
+export const SQUARE_PRODUCTION_WEBHOOK_URL = "https://synexus.pro/api/webhook";
+
+/**
+ * Signature URL Square uses in production.
+ * A www host or trailing slash would fail validation even when the key is correct.
+ * Other URLs (sandbox tunnels) are kept exactly as configured.
+ */
+export function squareNotificationUrl(env: { SQUARE_WEBHOOK_NOTIFICATION_URL?: string }): string {
+  const configured = env.SQUARE_WEBHOOK_NOTIFICATION_URL?.trim() ?? "";
+  if (!configured) return SQUARE_PRODUCTION_WEBHOOK_URL;
+  const stripped = configured.replace(/\/+$/, "");
+  if (
+    stripped === SQUARE_PRODUCTION_WEBHOOK_URL ||
+    stripped === "https://www.synexus.pro/api/webhook"
+  ) {
+    return SQUARE_PRODUCTION_WEBHOOK_URL;
+  }
+  return configured;
+}
+
+/**
+ * Square HMAC-SHA256 over `notificationUrl + rawBody`, compared in constant time.
+ * Matches the official sample: key `asdf1234`, URL `https://example.com/webhook`,
+ * body `{"hello":"world"}` → `2kRE5qRU2tR+tBGlDwMEw2avJ7QM4ikPYD/PJ3bd9Og=`.
+ */
+export function verifySquareWebhookSignature(
   rawBody: Buffer,
   signature: string | undefined,
   signatureKey: string,
   notificationUrl: string,
 ): boolean {
-  if (!signature || !signatureKey || !notificationUrl) return false;
+  const actual = signature?.trim() ?? "";
+  if (!actual || !signatureKey || !notificationUrl || rawBody.length === 0) return false;
 
   const payload = notificationUrl + rawBody.toString("utf8");
   const expected = createHmac("sha256", signatureKey).update(payload).digest("base64");
-
-  try {
-    const sigBuf = Buffer.from(signature, "base64");
-    const expBuf = Buffer.from(expected, "base64");
-    if (sigBuf.length !== expBuf.length) return false;
-    return timingSafeEqual(sigBuf, expBuf);
-  } catch {
-    return false;
-  }
+  const actualBuf = Buffer.from(actual);
+  const expectedBuf = Buffer.from(expected);
+  if (actualBuf.length !== expectedBuf.length) return false;
+  return timingSafeEqual(actualBuf, expectedBuf);
 }
 
 function extractUserIdFromNote(note: unknown): string | null {
@@ -147,25 +169,38 @@ async function logSquareInvoicePayment(
   return { logged: true, amountUsd: result.entry?.amountUsd };
 }
 
-export async function processSquareWebhookEvent(
+export type SquareWebhookDecision =
+  | { ok: true; event: SquareWebhookEvent }
+  | { ok: false; statusCode: 400 | 403 | 503; error: string };
+
+function webhookEventType(event: SquareWebhookEvent): string {
+  return typeof event.type === "string" ? event.type : "";
+}
+
+function webhookEventId(event: SquareWebhookEvent): string {
+  return typeof event.event_id === "string" ? event.event_id.trim() : "";
+}
+
+export function evaluateSquareWebhook(
   rawBody: Buffer,
   signature: string | undefined,
   env: WebhookEnv,
-): Promise<void> {
-  const { webhookSignatureKey, webhookNotificationUrl } = readSquareConfig(env);
+): SquareWebhookDecision {
+  const { webhookSignatureKey } = readSquareConfig(env);
+  const notificationUrl = squareNotificationUrl(env);
   const supabaseUrl = env.SUPABASE_URL || env.VITE_SUPABASE_URL;
   const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!webhookSignatureKey || !webhookNotificationUrl || !supabaseUrl || !serviceRoleKey) {
-    console.warn(
-      "[webhook] Missing env — set SQUARE_WEBHOOK_SIGNATURE_KEY, SQUARE_WEBHOOK_NOTIFICATION_URL, VITE_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY.",
+  if (!webhookSignatureKey || !supabaseUrl || !serviceRoleKey) {
+    console.error(
+      "[webhook] Missing env — set SQUARE_WEBHOOK_SIGNATURE_KEY, SUPABASE_URL (or VITE_SUPABASE_URL), and SUPABASE_SERVICE_ROLE_KEY.",
     );
-    return;
+    return { ok: false, statusCode: 503, error: "Webhook is not configured" };
   }
 
-  if (!verifySquareSignature(rawBody, signature, webhookSignatureKey, webhookNotificationUrl)) {
+  if (!verifySquareWebhookSignature(rawBody, signature, webhookSignatureKey, notificationUrl)) {
     console.warn("[webhook] Invalid Square webhook signature");
-    return;
+    return { ok: false, statusCode: 403, error: "Invalid signature" };
   }
 
   let event: SquareWebhookEvent;
@@ -173,58 +208,136 @@ export async function processSquareWebhookEvent(
     event = JSON.parse(rawBody.toString("utf8")) as SquareWebhookEvent;
   } catch {
     console.warn("[webhook] Invalid JSON payload");
-    return;
+    return { ok: false, statusCode: 400, error: "Invalid JSON" };
+  }
+  if (!event || typeof event !== "object" || Array.isArray(event)) {
+    console.warn("[webhook] Invalid JSON payload");
+    return { ok: false, statusCode: 400, error: "Invalid JSON" };
   }
 
-  const eventType = event.type ?? "";
-  const object = event.data?.object;
-  const userId = extractUserIdFromObject(object);
-  const subscriptionStatus = getSubscriptionStatus(object);
+  console.log(`[webhook] event_type=${webhookEventType(event)} event_id=${webhookEventId(event)}`);
+  return { ok: true, event };
+}
+
+export function squareWebhookInsertClaim(
+  error: { code?: string; message?: string } | null | undefined,
+): "claimed" | "duplicate" | "unavailable" {
+  if (!error) return "claimed";
+  const code = error.code ?? "";
+  const message = error.message ?? "";
+  if (code === "23505" || /duplicate key|unique constraint/i.test(message)) {
+    return "duplicate";
+  }
+  return "unavailable";
+}
+
+async function claimSquareEvent(
+  supabase: SupabaseClient,
+  eventId: string,
+  eventType: string,
+): Promise<"claimed" | "duplicate" | "unavailable"> {
+  const { error } = await supabase.from("square_webhook_events").insert({
+    event_id: eventId,
+    event_type: eventType,
+  });
+  const claim = squareWebhookInsertClaim(error);
+  if (claim === "unavailable") {
+    console.error(`[webhook] idempotency store unavailable code=${error?.code ?? ""}`);
+  }
+  return claim;
+}
+
+export async function processAcceptedSquareEvent(
+  event: SquareWebhookEvent,
+  env: WebhookEnv,
+): Promise<void> {
+  const eventType = webhookEventType(event);
+  const eventId = webhookEventId(event);
+  const supabaseUrl = env.SUPABASE_URL || env.VITE_SUPABASE_URL;
+  const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !serviceRoleKey) {
+    console.error("[webhook] Missing Supabase service credentials");
+    return;
+  }
+  if (!eventId) {
+    console.warn(`[webhook] missing event_id event_type=${eventType}`);
+    return;
+  }
 
   const supabase = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  if (
-    userId &&
-    (eventType === "subscription.created" ||
-      eventType === "subscription.updated" ||
-      eventType === "subscription.canceled")
-  ) {
-    if (subscriptionStatus && ACTIVE_SUBSCRIPTION_STATUSES.has(subscriptionStatus)) {
-      await upsertPaidPlan(supabase, userId, "PRO");
-    } else if (subscriptionStatus && CANCELED_SUBSCRIPTION_STATUSES.has(subscriptionStatus)) {
-      await upsertPaidPlan(supabase, userId, "FREE");
-    }
+  const claim = await claimSquareEvent(supabase, eventId, eventType);
+  if (claim === "duplicate") {
+    console.log(`[webhook] duplicate event_type=${eventType} event_id=${eventId}`);
+    return;
   }
 
-  if (eventType === "invoice.payment_made") {
-    try {
-      await logSquareInvoicePayment(event, object);
-    } catch (treasuryError) {
-      console.error("[treasury]", treasuryError);
-    }
-  }
+  try {
+    const object = event.data?.object;
+    const userId = extractUserIdFromObject(object);
+    const subscriptionStatus = getSubscriptionStatus(object);
 
-  if (
-    eventType === "payment.created" ||
-    eventType === "payment.updated" ||
-    eventType === "payment.completed"
-  ) {
-    try {
-      await applyCardPaymentObject(object, env);
-    } catch (inviteError) {
-      console.error("[invite-card]", inviteError);
+    if (
+      userId &&
+      (eventType === "subscription.created" ||
+        eventType === "subscription.updated" ||
+        eventType === "subscription.canceled")
+    ) {
+      if (subscriptionStatus && ACTIVE_SUBSCRIPTION_STATUSES.has(subscriptionStatus)) {
+        await upsertPaidPlan(supabase, userId, "PRO");
+      } else if (subscriptionStatus && CANCELED_SUBSCRIPTION_STATUSES.has(subscriptionStatus)) {
+        await upsertPaidPlan(supabase, userId, "FREE");
+      }
     }
+
+    if (eventType === "invoice.payment_made") {
+      try {
+        await logSquareInvoicePayment(event, object);
+      } catch (treasuryError) {
+        console.error("[treasury]", treasuryError);
+      }
+    }
+
+    if (
+      eventType === "payment.created" ||
+      eventType === "payment.updated" ||
+      eventType === "payment.completed"
+    ) {
+      try {
+        await applyCardPaymentObject(object, env);
+      } catch (inviteError) {
+        console.error("[invite-card]", inviteError);
+      }
+    }
+  } catch (error) {
+    if (claim === "claimed") {
+      await supabase.from("square_webhook_events").delete().eq("event_id", eventId);
+    }
+    throw error;
   }
 }
 
-/** @deprecated Use processSquareWebhookEvent — HTTP layer always returns 200. */
+export async function processSquareWebhookEvent(
+  rawBody: Buffer,
+  signature: string | undefined,
+  env: WebhookEnv,
+): Promise<void> {
+  const decision = evaluateSquareWebhook(rawBody, signature, env);
+  if (!decision.ok) return;
+  await processAcceptedSquareEvent(decision.event, env);
+}
+
 export async function handleSquareWebhookRequest(
   rawBody: Buffer,
   signature: string | undefined,
   env: WebhookEnv,
 ): Promise<{ statusCode: number; body: Record<string, unknown> }> {
-  await processSquareWebhookEvent(rawBody, signature, env);
+  const decision = evaluateSquareWebhook(rawBody, signature, env);
+  if (!decision.ok) {
+    return { statusCode: decision.statusCode, body: { error: decision.error } };
+  }
+  await processAcceptedSquareEvent(decision.event, env);
   return { statusCode: 200, body: { received: true } };
 }

@@ -547,3 +547,12 @@ create policy "profiles_update_own"
   on public.profiles for update
   using (auth.uid() = id and public.jwt_aal() = 'aal2')
   with check (auth.uid() = id and public.jwt_aal() = 'aal2');
+
+-- Square webhook idempotency (service role only).
+create table if not exists public.square_webhook_events (
+  event_id text primary key,
+  event_type text not null default '',
+  created_at timestamptz not null default now()
+);
+
+alter table public.square_webhook_events enable row level security;

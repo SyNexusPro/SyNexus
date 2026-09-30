@@ -1,5 +1,8 @@
 import { useApiRoute, type ViteDevServer } from "../viteDevServer.js";
-import { processSquareWebhookEvent } from "../../../lib/server/square/webhook.js";
+import {
+  evaluateSquareWebhook,
+  processAcceptedSquareEvent,
+} from "../../../lib/server/square/webhook.js";
 
 /** Browser GET test message — also used as plain-text health check. */
 export const SQUARE_WEBHOOK_ACTIVE_MESSAGE = "Square webhook endpoint is active";
@@ -9,12 +12,36 @@ export const SQUARE_WEBHOOK_PUBLIC_URL = "https://synexus.pro/api/webhook";
 
 type WebhookEnv = Record<string, string | undefined>;
 
-function readRawBody(req: NodeJS.ReadableStream): Promise<Buffer> {
+type RawBodyRequest = NodeJS.ReadableStream & {
+  body?: unknown;
+  readableEnded?: boolean;
+  complete?: boolean;
+};
+
+/** Square signs the exact bytes. Never re-serialize a parsed JSON object. */
+function readRawBody(req: RawBodyRequest): Promise<Buffer> {
+  if (Buffer.isBuffer(req.body)) return Promise.resolve(req.body);
+  if (req.body instanceof Uint8Array) return Promise.resolve(Buffer.from(req.body));
+  if (typeof req.body === "string") return Promise.resolve(Buffer.from(req.body, "utf8"));
+  if (req.body && typeof req.body === "object") {
+    console.error("[webhook] Parsed JSON body cannot be used for Square signature validation");
+  }
+  // `complete` only means the HTTP parser finished. The raw bytes are still in the stream.
+
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
+    const timer = setTimeout(() => {
+      reject(new Error("Timed out reading webhook body"));
+    }, 8000);
     req.on("data", (chunk) => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)));
-    req.on("end", () => resolve(Buffer.concat(chunks)));
-    req.on("error", reject);
+    req.on("end", () => {
+      clearTimeout(timer);
+      resolve(Buffer.concat(chunks));
+    });
+    req.on("error", (error) => {
+      clearTimeout(timer);
+      reject(error);
+    });
   });
 }
 
@@ -28,10 +55,32 @@ function sendActiveMessage(res: { statusCode?: number; setHeader(name: string, v
   res.end(SQUARE_WEBHOOK_ACTIVE_MESSAGE);
 }
 
-function acknowledgePost(res: { statusCode?: number; setHeader(name: string, value: string): void; end(body?: string): void }) {
-  res.statusCode = 200;
+function acknowledgePost(
+  res: { statusCode?: number; headersSent?: boolean; setHeader(name: string, value: string): void; end(body?: string): void },
+  statusCode: number,
+  body: Record<string, unknown>,
+) {
+  if (res.headersSent) return;
+  res.statusCode = statusCode;
   res.setHeader("Content-Type", "application/json");
-  res.end(JSON.stringify({ received: true }));
+  res.end(JSON.stringify(body));
+}
+
+async function handleWebhookPost(
+  req: RawBodyRequest & { headers: Record<string, string | string[] | undefined> },
+  env: WebhookEnv,
+  respond: (statusCode: number, body: Record<string, unknown>) => void,
+) {
+  const rawBody = await readRawBody(req);
+  const signature = getHeaderValue(req.headers["x-square-hmacsha256-signature"]);
+  const decision = evaluateSquareWebhook(rawBody, signature, env);
+  if (!decision.ok) {
+    respond(decision.statusCode, { error: decision.error });
+    return;
+  }
+
+  respond(200, { received: true });
+  await processAcceptedSquareEvent(decision.event, env);
 }
 
 function registerWebhookRoute(server: ViteDevServer, path: string, env: WebhookEnv) {
@@ -47,16 +96,13 @@ function registerWebhookRoute(server: ViteDevServer, path: string, env: WebhookE
     }
 
     try {
-      const rawBody = await readRawBody(req);
-      const signature = getHeaderValue(req.headers["x-square-hmacsha256-signature"]);
-      void processSquareWebhookEvent(rawBody, signature, env).catch((error) => {
-        console.error("[webhook]", error);
+      await handleWebhookPost(req, env, (statusCode, body) => {
+        acknowledgePost(res, statusCode, body);
       });
     } catch (error) {
       console.error("[webhook]", error);
+      if (!res.headersSent) acknowledgePost(res, 500, { error: "Webhook failed" });
     }
-
-    acknowledgePost(res);
   });
 }
 
@@ -93,23 +139,34 @@ export default async function handler(req: ServerlessRequest, res: ServerlessRes
     return;
   }
 
+  let sent = false;
   try {
-    const rawBody =
-      typeof req.body === "string"
-        ? Buffer.from(req.body, "utf8")
-        : Buffer.isBuffer(req.body)
-          ? req.body
-          : await readRawBody(req);
-
-    const signature = getHeaderValue(req.headers["x-square-hmacsha256-signature"]);
-    void processSquareWebhookEvent(rawBody, signature, process.env).catch((error) => {
-      console.error("[webhook]", error);
+    await handleWebhookPost(req, process.env, (statusCode, body) => {
+      if (sent) return;
+      sent = true;
+      if (typeof res.status === "function") {
+        const reply = res.status(statusCode);
+        if (reply && typeof reply.json === "function") {
+          reply.json(body);
+          return;
+        }
+      }
+      const nodeRes = res as ServerlessResponse & {
+        statusCode?: number;
+        headersSent?: boolean;
+      };
+      if (nodeRes.headersSent) return;
+      nodeRes.statusCode = statusCode;
+      nodeRes.setHeader("Content-Type", "application/json");
+      nodeRes.end(JSON.stringify(body));
     });
   } catch (error) {
     console.error("[webhook]", error);
+    if (!sent) {
+      sent = true;
+      res.status(500).json({ error: "Webhook failed" });
+    }
   }
-
-  res.status(200).json({ received: true });
 }
 
 export const config = {

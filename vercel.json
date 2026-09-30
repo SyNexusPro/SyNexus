@@ -10,6 +10,14 @@
       "schedule": "0 13 * * *"
     }
   ],
+  "redirects": [
+    {
+      "source": "/:path((?!api/webhook/?$).*)",
+      "has": [{ "type": "host", "value": "synexus.pro" }],
+      "destination": "https://www.synexus.pro/:path",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/:path*",
