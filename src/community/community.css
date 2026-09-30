@@ -1,8 +1,40 @@
+@import "./styles/tokens.css";
+
+/* Community is a wide surface. This override applies only while that page is mounted. */
+html:has(.community) .app-shell {
+  max-width: min(1120px, 100%);
+  background:
+    radial-gradient(ellipse at 82% 8%, rgba(57, 217, 22, 0.14), transparent 36%),
+    radial-gradient(ellipse at 8% 88%, rgba(137, 255, 47, 0.08), transparent 34%),
+    var(--synexus-bg, #020403);
+}
+
+html:has(.community),
+html:has(.community) body,
+html:has(.community) #root {
+  background: #020403;
+}
+
 .community {
+  position: relative;
   display: grid;
   gap: 14px;
   min-height: 72dvh;
   padding: 8px 0 24px;
+  color: var(--synexus-text);
+}
+
+.community::before {
+  content: "";
+  position: absolute;
+  inset: -12px -8px auto;
+  height: 280px;
+  background-image:
+    linear-gradient(rgba(157, 255, 47, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(157, 255, 47, 0.07) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(ellipse at 50% 0%, #000 15%, transparent 72%);
+  pointer-events: none;
 }
 
 .community__header,
@@ -327,9 +359,140 @@
 
 /* ---------- App shell ---------- */
 
+.cx-stage {
+  position: relative;
+  border: 1px solid var(--synexus-border);
+  border-radius: 22px;
+  padding: 12px;
+  background:
+    linear-gradient(180deg, rgba(157, 255, 47, 0.07), transparent 22%),
+    rgba(3, 8, 5, 0.94);
+  box-shadow:
+    0 0 0 1px rgba(157, 255, 47, 0.1),
+    0 0 42px rgba(57, 217, 22, 0.14),
+    inset 0 0 48px rgba(0, 0, 0, 0.4);
+}
+
 .cx-shell {
   display: grid;
   gap: 12px;
+}
+
+.cx-search {
+  display: grid;
+  gap: 6px;
+}
+
+.cx-search__label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.cx-search__row {
+  display: flex;
+  gap: 8px;
+}
+
+.cx-search input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--synexus-border);
+  border-radius: 999px;
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.45);
+  color: var(--synexus-text);
+  font: inherit;
+  font-size: 0.92rem;
+  box-shadow: inset 0 0 18px rgba(157, 255, 47, 0.05);
+}
+
+.cx-search input:focus {
+  outline: 2px solid var(--synexus-green);
+  outline-offset: 2px;
+}
+
+.cx-search button {
+  flex: 0 0 auto;
+  border: 1px solid var(--synexus-border);
+  border-radius: 999px;
+  padding: 0 14px;
+  background: rgba(157, 255, 47, 0.12);
+  color: var(--synexus-green);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.cx-search__soon {
+  margin: 0;
+  color: var(--synexus-warning);
+  font-size: 0.78rem;
+}
+
+.cx-promo {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  border: 2px solid var(--synexus-green);
+  border-radius: 16px;
+  padding: 14px 22px;
+  background: linear-gradient(180deg, rgba(157, 255, 47, 0.2), rgba(8, 24, 6, 0.92));
+  box-shadow: 0 0 28px rgba(157, 255, 47, 0.28);
+  color: var(--synexus-text);
+  text-align: center;
+  text-decoration: none;
+}
+
+.cx-promo__badge {
+  color: var(--synexus-green);
+  font-size: 1.15rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+}
+
+.cx-promo__copy {
+  color: var(--synexus-muted);
+  font-size: 0.82rem;
+}
+
+.cx-promo__cta {
+  font-size: 0.78rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cx-activity {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cx-activity li {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cx-activity strong {
+  font-size: 0.82rem;
+}
+
+.cx-activity p {
+  margin: 0;
+  overflow: hidden;
+  color: var(--synexus-muted);
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .cx-nav {
@@ -370,10 +533,17 @@
 }
 
 .cx-nav button.is-active {
-  border-color: var(--border-strong);
-  background: rgba(137, 255, 47, 0.16);
-  color: var(--accent);
-  box-shadow: inset 3px 0 0 var(--accent);
+  border-color: var(--synexus-border);
+  background: rgba(157, 255, 47, 0.14);
+  color: var(--synexus-green);
+  box-shadow:
+    inset 3px 0 0 var(--synexus-green),
+    0 0 16px rgba(157, 255, 47, 0.22);
+}
+
+.cx-nav button:hover {
+  color: var(--synexus-text);
+  border-color: var(--synexus-border);
 }
 
 .cx-main {
@@ -833,8 +1003,16 @@
     font-style: normal;
   }
 
-  .cx-nav__x {
-    color: var(--accent);
+  .cx-nav__mark {
+    display: grid;
+    width: 22px;
+    height: 22px;
+    place-items: center;
+    border-radius: 6px;
+    background: var(--synexus-green);
+    color: #041004;
+    font-size: 0.82rem;
+    font-weight: 950;
   }
 
   .cx-nav button {
@@ -852,13 +1030,7 @@
 
 @media (max-width: 959px) {
   .cx-rail {
-    order: -1;
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .cx-rail .cx-shield,
-  .cx-rail .cx-panel:nth-child(2) {
-    display: none;
   }
 }
 

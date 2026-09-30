@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { CommunityHero } from "./CommunityHero";
+import { CommunitySearch } from "./components/CommunitySearch";
 import {
   acceptGuidelines,
   createPost,
@@ -90,7 +91,7 @@ function LiveMarkets({ quotes, error }: { quotes: LiveQuote[]; error: string | n
           ))}
         </ul>
       ) : (
-        <p className="cx-muted">{error ?? "Loading prices…"}</p>
+        <p className="cx-muted">{error ? "Market data unavailable" : "Loading prices…"}</p>
       )}
     </section>
   );
@@ -314,7 +315,7 @@ export function CommunityApp({ owner }: { owner: boolean }) {
           <textarea
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder="Share an idea, a chart take, or news… use #tags"
+            placeholder="What's happening in Synexus?"
             maxLength={2000}
             rows={3}
             aria-label="Write a post"
@@ -459,10 +460,11 @@ export function CommunityApp({ owner }: { owner: boolean }) {
     <main className="community cx">
       <CommunityHero compact />
 
+      <div className="cx-stage">
       <div className="cx-shell">
         <nav className="cx-nav" aria-label="Community">
           <div className="cx-nav__brand">
-            <span className="cx-nav__x" aria-hidden>✕</span> SyNexus <em>Pro</em>
+            <span className="cx-nav__mark" aria-hidden>X</span> SyNexus <em>Pro</em>
             {owner ? <span className="cx-badge">Owner</span> : null}
           </div>
           {NAV.map((item) => (
@@ -480,7 +482,8 @@ export function CommunityApp({ owner }: { owner: boolean }) {
         </nav>
 
         <div className="cx-main">
-          <h2 className="cx-main__title">{title}</h2>
+          <CommunitySearch />
+          {section === "home" && !roomFilter ? null : <h2 className="cx-main__title">{title}</h2>}
           {main}
         </div>
 
@@ -489,20 +492,39 @@ export function CommunityApp({ owner }: { owner: boolean }) {
           <section className="cx-panel">
             <h2 className="cx-panel__title">Global Community</h2>
             <p className="cx-members">
-              <strong>{memberCount != null ? `${formatCount(memberCount)}+` : "—"}</strong>
-              <span>Verified members</span>
+              <strong>{memberCount != null ? formatCount(memberCount) : "—"}</strong>
+              <span>{memberCount != null ? "Members" : "Member count unavailable"}</span>
             </p>
           </section>
+          {filter && !feedLoading && !feedError && posts.length ? (
+            <section className="cx-panel">
+              <h2 className="cx-panel__title">Recent conversations</h2>
+              <ul className="cx-activity">
+                {posts.slice(0, 3).map((post) => (
+                  <li key={post.id}>
+                    <strong>{post.authorName}</strong>
+                    <p>{post.body}</p>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : filter && !feedLoading && !feedError ? (
+            <section className="cx-panel">
+              <h2 className="cx-panel__title">Recent conversations</h2>
+              <p className="cx-muted">No conversations yet.</p>
+            </section>
+          ) : null}
           <section className="cx-panel cx-shield">
             <span className="cx-shield__icon" aria-hidden>
-              <Icon><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3zm-3 9l2 2 4-4" /></Icon>
+              <Icon><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z" /></Icon>
             </span>
             <div>
-              <strong>Protected by Sentinel</strong>
-              <p className="cx-muted">Smart anti-scam security. Wallet-secret requests are blocked.</p>
+              <strong>Protected by Synexus Sentinel</strong>
+              <p className="cx-muted">Status: UNKNOWN. Link and wallet scanning is not running yet.</p>
             </div>
           </section>
         </aside>
+      </div>
       </div>
     </main>
   );

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { CommunityApp } from "./CommunityApp";
 import { CommunityHero } from "./CommunityHero";
+import { MembershipPromo } from "./components/MembershipPromo";
 import {
   fetchCommunityAccess,
   type CommunityAccess,
@@ -68,9 +69,7 @@ export function CommunityPage() {
         <CommunityHero>
           <p className="cx-hero__gate">{message}</p>
           {reason === "membership_required" ? (
-            <Link className="cx-cta" to="/pricing">
-              <span aria-hidden>♛</span> 30 Days Free <span aria-hidden>›</span>
-            </Link>
+            <MembershipPromo />
           ) : reason === "authentication_required" ? (
             <Link className="cx-cta" to="/pulse">
               Sign in to enter <span aria-hidden>›</span>
