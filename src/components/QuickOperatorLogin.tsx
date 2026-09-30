@@ -114,6 +114,13 @@ export function QuickOperatorLogin({
     setMode(next);
   }
 
+  function finishSuccessfulAuth(result: QuickOperatorAuthResult) {
+    onSuccess?.(result);
+    const destination =
+      result.secondFactorPath ?? (result.mode === "signin" ? "/pulse" : null);
+    if (destination) navigate(destination, { replace: true });
+  }
+
   function openPasswordRecovery() {
     if (busy) return;
     if (!hasSupabaseEnv) {
@@ -137,7 +144,7 @@ export function QuickOperatorLogin({
 
   async function handleSubmit() {
     if (submittingRef.current) return;
-    const trimmedEmail = email.trim();
+    const trimmedEmail = email.trim().toLowerCase();
     if (!trimmedEmail || !password) {
       setMessage({ tone: "error", text: "Enter email and password." });
       return;
@@ -220,8 +227,7 @@ export function QuickOperatorLogin({
           email: trimmedEmail,
           secondFactorPath: mfaPath,
         };
-        if (onSuccess) onSuccess(successResult);
-        else if (mfaPath) navigate(mfaPath, { replace: true });
+        finishSuccessfulAuth(successResult);
         return;
       }
 
@@ -255,8 +261,7 @@ export function QuickOperatorLogin({
         godMode: alwaysOn.godMode,
         secondFactorPath: mfaPath,
       };
-      if (onSuccess) onSuccess(successResult);
-      else if (mfaPath) navigate(mfaPath, { replace: true });
+      finishSuccessfulAuth(successResult);
     } catch (err) {
       console.error(mode === "signup" ? "SIGNUP ERROR:" : "SIGNIN ERROR:", err);
       void recordSecurityEvent({ eventType: "login_failure", success: false });

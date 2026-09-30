@@ -58,7 +58,6 @@ import { WalletPerformanceDashboard } from "../components/WalletPerformanceDashb
 import { OracleAdminControlCenter } from "../components/OracleAdminControlCenter";
 import { UIModeToggle } from "../components/UIModeToggle";
 import { HeraListenSettings } from "../components/HeraListenSettings";
-import { EnterSynexusButton } from "../community/EnterSynexusButton";
 import { notifySynexusPlanChanged, SYNEXUS_PLAN_CHANGED } from "../hooks/useSynexusPlan";
 import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
 import { useBiometricLogin } from "../hooks/useBiometricLogin";
@@ -758,10 +757,12 @@ export function Pulse() {
 
   async function handleSignIn() {
     if (authBusy) return;
-    if (!email || !password) {
+    const signInEmail = email.trim().toLowerCase();
+    if (!signInEmail || !password) {
       setAuthMessage({ tone: "error", text: "Enter an email and password before signing in." });
       return;
     }
+    beginInteractiveAuthFlow();
     try {
       setAuthBusy(true);
       setAuthMessage({ tone: "info", text: "Connecting to SyNexus..." });
@@ -776,7 +777,7 @@ export function Pulse() {
         return;
       }
       pendingAuthMethod.current = "password";
-      const alwaysOn = await withTimeout(signInAlwaysOnAccount(email, password));
+      const alwaysOn = await withTimeout(signInAlwaysOnAccount(signInEmail, password));
       if (!alwaysOn.ok) {
         pendingAuthMethod.current = null;
         setAuthMessage({ tone: "error", text: alwaysOn.message });
@@ -808,8 +809,8 @@ export function Pulse() {
       }
       clearEmailVerificationPending();
       setUserId(signedIn.id);
-      setUserEmail(signedIn.email ?? email);
-      saveRememberedEmail(signedIn.email ?? email);
+      setUserEmail(signedIn.email ?? signInEmail);
+      saveRememberedEmail(signedIn.email ?? signInEmail);
       setPassword("");
       if (alwaysOn.godMode) setOwnerUnlocked(true);
       const message = alwaysOn.godMode
@@ -820,7 +821,7 @@ export function Pulse() {
             ? `Synchronized as ${signedIn.email}.`
             : "Synchronized with The SyNexus.";
       void loadData(signedIn);
-      await completeAuthWithBiometricOffer(alwaysOn.session, signedIn.email ?? email, message);
+      await completeAuthWithBiometricOffer(alwaysOn.session, signedIn.email ?? signInEmail, message);
       void recordSecurityEvent({ eventType: "login_success", success: true });
       const mfaPath =
         alwaysOn.godMode || alwaysOn.playReviewer ? null : await continueMfaAfterAuth(signedIn);
@@ -830,6 +831,7 @@ export function Pulse() {
       const message = describeAuthError(err);
       setAuthMessage({ tone: "error", text: message });
     } finally {
+      endInteractiveAuthFlow();
       setAuthBusy(false);
     }
   }
@@ -1164,8 +1166,6 @@ export function Pulse() {
             : `Sentinel grid, alerts, and operator tools — sign in via Login in the nav.`}
         </p>
       </section>
-
-      <EnterSynexusButton />
 
       <HeraListenSettings />
 

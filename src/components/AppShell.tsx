@@ -5,6 +5,8 @@ import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
 import { useTitanChatOpen } from "../hooks/useTitanChatOpen";
 import { RouteErrorBoundary } from "./RouteErrorBoundary";
 import { BottomNav } from "./BottomNav";
+import { EnterSynexusButton } from "../community/EnterSynexusButton";
+import { isNativeAndroid } from "../lib/bootExperience";
 import { UIModeToggle } from "./UIModeToggle";
 import { TitanSheet } from "./TitanSheet";
 import { HeraWakeWordHost } from "./HeraWakeWordHost";
@@ -168,7 +170,14 @@ function AppShellFrame() {
       </div>
       <TitanSheet />
       <HeraWakeWordHost />
-      <BottomNav />
+      {isHome && !isNativeAndroid() ? (
+        <div className="home-bottom-dock">
+          <EnterSynexusButton />
+          <BottomNav />
+        </div>
+      ) : (
+        <BottomNav />
+      )}
       <OnboardingTour />
     </div>
   );

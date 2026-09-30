@@ -20,8 +20,10 @@ export function lazyWithRetry<T extends ComponentType<unknown>>(
       if (!refreshed) {
         sessionStorage.setItem("synexus_chunk_retry", "1");
         window.location.reload();
-        await new Promise<void>(() => {
-          /* reload in flight */
+        await new Promise<void>((_, reject) => {
+          window.setTimeout(() => {
+            reject(new Error(`Loading chunk ${label} timed out after reload.`));
+          }, 8_000);
         });
       }
       console.error(`SyNexus failed to load ${label} chunk`, error);

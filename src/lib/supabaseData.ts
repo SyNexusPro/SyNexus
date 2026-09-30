@@ -152,7 +152,7 @@ export async function signInWithEmail(email: string, password: string) {
   }
   if (!supabase) throw new Error("Supabase env vars are missing.");
   const { data, error } = await withAuthTimeout(
-    supabase.auth.signInWithPassword({ email, password }),
+    supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password }),
     "Sign-in",
   );
   if (error) throwIfStructuralDbFailure(error);

@@ -8,7 +8,7 @@ import { isNativeAndroid } from "./lib/bootExperience";
 import { lazyWithRetry } from "./lib/lazyWithRetry";
 import { AuthGuard } from "./security/AuthGuard";
 import { MfaGuard } from "./security/MfaGuard";
-import { COMMUNITY_PATH, isCommunityEnabled } from "./config/community";
+import { COMMUNITY_PATH } from "./config/community";
 
 /** Android: static home only — never load Matrix / ShouldIBuy / market feed chunk. */
 const HomeFeed = lazyWithRetry(
@@ -110,16 +110,14 @@ export default function App() {
             <Route index element={<HomeFeed />} />
             <Route path="ref/:handle" element={<AffiliateReferralRedirect />} />
             <Route path="hub" element={<EcosystemHub />} />
-            {isCommunityEnabled() ? (
-              <Route
-                path={COMMUNITY_PATH.slice(1)}
-                element={
-                  <AuthGuard>
-                    <CommunityPage />
-                  </AuthGuard>
-                }
-              />
-            ) : null}
+            <Route
+              path={COMMUNITY_PATH.slice(1)}
+              element={
+                <AuthGuard>
+                  <CommunityPage />
+                </AuthGuard>
+              }
+            />
             <Route path="about" element={<About />} />
             <Route path="trust" element={<Trust />} />
             <Route path="contact" element={<Contact />} />
