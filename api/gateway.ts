@@ -16,6 +16,7 @@ const loaders: Record<string, () => Promise<RouteModule>> = {
   "/api/cron/titan-daily": () => import("./_routes/cron/titan-daily.js"),
   "/api/cron/titan-discovery": () => import("./_routes/cron/titan-discovery.js"),
   "/api/cron/titan-launch-watch": () => import("./_routes/cron/titan-launch-watch.js"),
+  "/api/hera/intel": () => import("./_routes/hera/intel.js"),
   "/api/hera/launch-watch": () => import("./_routes/hera/launch-watch.js"),
   "/api/hera/live-token": () => import("./_routes/hera/live-token.js"),
   "/api/hera/realtime-session": () => import("./_routes/hera/realtime-session.js"),
