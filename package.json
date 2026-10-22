@@ -66,6 +66,7 @@
     "play:provision-reviewer": "node scripts/provision-play-reviewer.mjs",
     "vapid:generate": "node scripts/generate-vapid.mjs",
     "test:hera-intel": "tsx --test --test-concurrency=1 lib/server/hera/intel.test.ts",
+    "test:hera-ingest": "tsx --test --test-concurrency=1 lib/server/hera/ingest.test.ts",
     "test:hera-voice": "tsx --test --test-concurrency=1 tests/hera-voice/endpointing.test.ts"
   },
   "dependencies": {
