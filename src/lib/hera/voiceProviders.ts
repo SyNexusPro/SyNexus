@@ -5,6 +5,14 @@
 
 import type { AudioPlaybackData } from "./types";
 import { monitorStreamLevel, type AudioLevelMonitor } from "./audioAnalysis";
+import {
+  HERA_MAX_RECORDING_MS,
+  HERA_NO_SPEECH_MS,
+  calibrateNoise,
+  endpointDelayMs,
+  recorderSilenceMs,
+} from "./endpointing";
+import { getHeraPatience } from "./heraPatiencePreference";
 import { heraVoice } from "./HeraVoice";
 import { getHeraWakePermission, requestMicrophoneAccess } from "./wakeWord";
 import {
@@ -49,6 +57,8 @@ type SpeechRecognitionLike = {
   onerror: ((event: { error?: string }) => void) | null;
   onend: (() => void) | null;
   onnomatch: (() => void) | null;
+  /** Fires the moment the engine hears speech, before any words arrive. */
+  onspeechstart?: (() => void) | null;
   start: () => void;
   stop: () => void;
   abort: () => void;
@@ -220,8 +230,9 @@ function isRealTranscript(text: string): boolean {
   return /[\p{L}\p{N}]/u.test(trimmed);
 }
 
-const UTTERANCE_PAUSE_MS = 1400;
 const RESTART_DELAY_MS = 220;
+/** Longest we wait for the browser to hand back the last words after the user taps to send. */
+const STOP_FLUSH_MS = 1800;
 
 /** Web Speech API STT — continuous listen; only settles on a real transcript. */
 export class BrowserSpeechToTextProvider implements SpeechToTextProvider {
@@ -240,6 +251,11 @@ export class BrowserSpeechToTextProvider implements SpeechToTextProvider {
   private fatal = false;
   private engineGen = 0;
   private booting = false;
+  /** Callers of stopListening() waiting for the browser to flush the user's last words. */
+  private stopWaiters: Array<(text: string) => void> = [];
+  private stopFlushTimer = 0;
+  /** The user tapped "send": finish with what was said instead of restarting the engine. */
+  private userStopped = false;
 
   isSupported(): boolean {
     return Boolean(getSpeechRecognitionCtor());
@@ -306,13 +322,19 @@ export class BrowserSpeechToTextProvider implements SpeechToTextProvider {
       }
       if (finalChunk) this.finalText = `${this.finalText} ${finalChunk}`.trim();
       this.interimText = interim.trim();
-      const display = (this.finalText || this.interimText).trim();
+      const display = this.spoken();
       if (display) {
         heraListenLog("transcript received", display);
         this.partialHandler?.(display);
       }
       if (isRealTranscript(display)) this.armUtteranceCommit(Ctor);
       else this.clearUtteranceTimer();
+    };
+
+    // The user started talking again before any new words arrived: never send over them.
+    recognition.onspeechstart = () => {
+      if (gen !== this.engineGen || !this.wanted || this.committing) return;
+      this.clearUtteranceTimer();
     };
 
     recognition.onerror = (event) => {
@@ -361,12 +383,15 @@ export class BrowserSpeechToTextProvider implements SpeechToTextProvider {
     this.booting = false;
   }
 
+  /** Everything heard so far: finalized chunks plus the words still being processed. */
   private spoken(): string {
-    return (this.finalText || this.interimText).replace(/\s+/g, " ").trim();
+    return `${this.finalText} ${this.interimText}`.replace(/\s+/g, " ").trim();
   }
 
   private armUtteranceCommit(Ctor: SpeechRecognitionCtor): void {
     this.clearUtteranceTimer();
+    // Wait longer when the sentence sounds unfinished ("…and", "…so", "…um") than when it sounds complete.
+    const waitMs = endpointDelayMs(this.spoken(), getHeraPatience());
     this.utteranceTimer = window.setTimeout(() => {
       if (!this.wanted || heraVoice.isSpeaking()) return;
       const text = this.spoken();
@@ -380,12 +405,16 @@ export class BrowserSpeechToTextProvider implements SpeechToTextProvider {
       } catch {
         this.finishCommit();
       }
-    }, UTTERANCE_PAUSE_MS);
+    }, waitMs);
   }
 
   private finishCommit(): void {
     const text = this.spoken();
     this.committing = false;
+    if (this.userStopped) {
+      this.settle(undefined, isRealTranscript(text) ? text : "");
+      return;
+    }
     if (isRealTranscript(text) && !heraVoice.isSpeaking()) {
       heraListenLog("transcript received", text);
       this.settle(undefined, text);
@@ -413,9 +442,13 @@ export class BrowserSpeechToTextProvider implements SpeechToTextProvider {
   private clearSession(resolveEmpty: boolean): void {
     this.wanted = false;
     this.committing = false;
+    this.userStopped = false;
     this.clearUtteranceTimer();
     window.clearTimeout(this.restartTimer);
+    window.clearTimeout(this.stopFlushTimer);
     this.restartTimer = 0;
+    this.stopFlushTimer = 0;
+    this.flushStopWaiters("");
     try {
       this.recognition?.abort();
     } catch {
@@ -431,30 +464,70 @@ export class BrowserSpeechToTextProvider implements SpeechToTextProvider {
   }
 
   private settle(err?: Error, text?: string): void {
+    const finalText = err ? "" : (text ?? this.spoken());
     this.wanted = false;
     this.committing = false;
+    this.userStopped = false;
     this.clearUtteranceTimer();
     window.clearTimeout(this.restartTimer);
+    window.clearTimeout(this.stopFlushTimer);
     this.restartTimer = 0;
+    this.stopFlushTimer = 0;
     this.recognition = null;
     const resolve = this.endResolver;
     const reject = this.endRejecter;
     this.endResolver = null;
     this.endRejecter = null;
+    this.flushStopWaiters(finalText);
     if (err) reject?.(err);
-    else resolve?.(text ?? this.spoken());
+    else resolve?.(finalText);
   }
 
+  private flushStopWaiters(text: string): void {
+    const waiters = this.stopWaiters;
+    this.stopWaiters = [];
+    for (const waiter of waiters) waiter(text);
+  }
+
+  /**
+   * "Tap to send": resolves with the user's complete words, including anything the browser
+   * was still processing when the button was pressed (the engine flushes on stop()).
+   */
   async stopListening(): Promise<string> {
-    const text = this.spoken();
+    if (!this.wanted && !this.recognition) return this.spoken();
+    this.userStopped = true;
     this.committing = true;
     this.clearUtteranceTimer();
+    window.clearTimeout(this.restartTimer);
+    this.restartTimer = 0;
+
+    const flushed = new Promise<string>((resolve) => {
+      this.stopWaiters.push(resolve);
+    });
+    window.clearTimeout(this.stopFlushTimer);
+    this.stopFlushTimer = window.setTimeout(() => {
+      const text = this.spoken();
+      try {
+        this.recognition?.abort();
+      } catch {
+        /* ignore */
+      }
+      this.settle(undefined, isRealTranscript(text) ? text : "");
+    }, STOP_FLUSH_MS);
+
+    if (!this.recognition) {
+      // Tapped during the brief engine restart: nothing is running to flush.
+      const text = this.spoken();
+      this.settle(undefined, isRealTranscript(text) ? text : "");
+      return flushed;
+    }
     try {
-      this.recognition?.stop();
+      this.recognition.stop();
     } catch {
+      const text = this.spoken();
       this.settle(undefined, isRealTranscript(text) ? text : "");
     }
-    return text;
+    return flushed;
   }
 
   abort(): void {
@@ -556,7 +629,7 @@ export class MediaRecorderSpeechToTextProvider implements SpeechToTextProvider {
     const mime = pickRecorderMime();
     this.mimeType = mime || "audio/webm";
     const recorder = mime
-      ? new MediaRecorder(stream, { mimeType: mime, audioBitsPerSecond: 128_000 })
+      ? new MediaRecorder(stream, { mimeType: mime, audioBitsPerSecond: 48_000 })
       : new MediaRecorder(stream);
     this.recorder = recorder;
     recorder.ondataavailable = (event) => {
@@ -581,9 +654,10 @@ export class MediaRecorderSpeechToTextProvider implements SpeechToTextProvider {
       }
       this.startedAt = Date.now();
       this.startVoiceEndDetector(stream);
+      // A long thought is fine; this only guards against a mic left open (2 min at 48 kbps stays well under the upload limit).
       this.autoStopTimer = window.setTimeout(() => {
         void this.stopListening();
-      }, 20_000);
+      }, HERA_MAX_RECORDING_MS);
     });
   }
 
@@ -591,25 +665,54 @@ export class MediaRecorderSpeechToTextProvider implements SpeechToTextProvider {
     this.stopVoiceEndDetector();
     const monitor = monitorStreamLevel(stream);
     this.vadMonitor = monitor;
+    const patience = getHeraPatience();
+    const CALIBRATE_MS = 400;
+    const calibration: number[] = [];
+    let thresholds = calibrateNoise([]);
+    let calibratedAt = 0;
     let heardSpeech = false;
-    let speechMs = 0;
+    let speechMs = 0; // total time the user has been speaking
+    let burstMs = 0; // current continuous burst, to ignore clicks and bumps
     let silenceMs = 0;
+    let waitedMs = 0;
     let last = performance.now();
     const tick = (now: number) => {
       const dt = Math.min(80, now - last);
       last = now;
+      waitedMs += dt;
       const level = monitor.getLevel();
-      if (level >= 0.11) {
-        speechMs += dt;
+
+      // Learn the room's noise floor first, so a fan or a quiet voice does not break the thresholds.
+      if (calibratedAt < CALIBRATE_MS) {
+        calibratedAt += dt;
+        calibration.push(level);
+        if (calibratedAt >= CALIBRATE_MS) thresholds = calibrateNoise(calibration);
+        this.vadRaf = requestAnimationFrame(tick);
+        return;
+      }
+
+      if (level >= thresholds.speechLevel) {
+        burstMs += dt;
         silenceMs = 0;
-        if (speechMs >= 160) heardSpeech = true;
-      } else if (level < 0.07) {
+        if (burstMs >= 120) {
+          heardSpeech = true;
+          speechMs += dt;
+        }
+      } else if (level < thresholds.silenceLevel) {
+        burstMs = 0;
         silenceMs += dt;
       } else {
-        silenceMs = Math.max(0, silenceMs - dt * 0.4);
+        // In between: soft speech or a trailing syllable. Do not count it as silence.
+        silenceMs = Math.max(0, silenceMs - dt * 0.6);
       }
-      if (heardSpeech && silenceMs >= 1100) {
+
+      if (heardSpeech && silenceMs >= recorderSilenceMs(patience, speechMs)) {
         void this.stopListening();
+        return;
+      }
+      if (!heardSpeech && waitedMs >= HERA_NO_SPEECH_MS) {
+        // Nobody spoke: close the mic quietly instead of leaving it open.
+        this.abort();
         return;
       }
       this.vadRaf = requestAnimationFrame(tick);

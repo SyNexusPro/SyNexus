@@ -66,7 +66,20 @@ function liveInstructions(): string {
   return `${HERA_CONVERSATION_INSTRUCTIONS}\n\nSpoken voice: ${HERA_VOICE_INSTRUCTIONS}`;
 }
 
-function realtimeSessionConfig(model = realtimeModelName(), requestedVoice?: string) {
+type VadEagerness = "low" | "medium" | "high" | "auto";
+
+/**
+ * How eagerly the model decides the user has finished. "low" waits through thinking pauses
+ * (up to several seconds) instead of replying over the user. Only the explicit "quick"
+ * preference opts into the faster "medium". HERA_VAD_EAGERNESS overrides everything.
+ */
+function vadEagerness(requestedPatience?: string): VadEagerness {
+  const forced = process.env.HERA_VAD_EAGERNESS?.trim().toLowerCase();
+  if (forced === "low" || forced === "medium" || forced === "high" || forced === "auto") return forced;
+  return requestedPatience?.trim().toLowerCase() === "quick" ? "medium" : "low";
+}
+
+function realtimeSessionConfig(model = realtimeModelName(), requestedVoice?: string, requestedPatience?: string) {
   const voice = voiceName(requestedVoice);
   return {
     type: "realtime" as const,
@@ -79,7 +92,7 @@ function realtimeSessionConfig(model = realtimeModelName(), requestedVoice?: str
         transcription: { model: "gpt-4o-mini-transcribe" },
         turn_detection: {
           type: "semantic_vad",
-          eagerness: "medium",
+          eagerness: vadEagerness(requestedPatience),
           create_response: true,
           interrupt_response: true,
         },
@@ -176,11 +189,12 @@ async function createRealtimeCall(
   key: string,
   sdp: string,
   requestedVoice?: string,
+  requestedPatience?: string,
 ): Promise<{ sdp: string; model: string } | null> {
   for (const model of realtimeModelCandidates()) {
     const fd = new FormData();
     fd.set("sdp", sdp);
-    fd.set("session", JSON.stringify(realtimeSessionConfig(model, requestedVoice)));
+    fd.set("session", JSON.stringify(realtimeSessionConfig(model, requestedVoice, requestedPatience)));
     const upstream = await fetch("https://api.openai.com/v1/realtime/calls", {
       method: "POST",
       headers: {
@@ -252,7 +266,7 @@ async function mintLegacySecret(key: string): Promise<{ secret: string; raw: Rec
       input_audio_transcription: { model: "gpt-4o-mini-transcribe" },
       turn_detection: {
         type: "semantic_vad",
-        eagerness: "medium",
+        eagerness: vadEagerness(),
         create_response: true,
         interrupt_response: true,
       },
@@ -299,6 +313,7 @@ export async function handleHeraRealtimeSession(req: IncomingMessage, res: Serve
     }
     const sdp = typeof body.sdp === "string" ? body.sdp.trim() : "";
     const requestedVoice = typeof body.voice === "string" ? body.voice : undefined;
+    const requestedPatience = typeof body.patience === "string" ? body.patience.slice(0, 16) : undefined;
 
     if (sdp) {
       const live = await createLiveSession(key, sdp, requestedVoice);
@@ -312,7 +327,7 @@ export async function handleHeraRealtimeSession(req: IncomingMessage, res: Serve
         });
         return;
       }
-      const realtime = await createRealtimeCall(key, sdp, requestedVoice);
+      const realtime = await createRealtimeCall(key, sdp, requestedVoice, requestedPatience);
       if (realtime) {
         sendJson(res, 200, {
           mode: "realtime",

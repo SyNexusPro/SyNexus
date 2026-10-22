@@ -8,6 +8,8 @@ import { SYN_MINT, SYN_SYMBOL } from "../../config/synToken";
 import { authHeaders } from "../authSession";
 import { HERA_CONVERSATION_INSTRUCTIONS, HERA_VOICE_INSTRUCTIONS } from "./heraPrompt";
 import { getHeraVoicePreference } from "./heraVoicePreference";
+import { liveTurnQuietMs } from "./endpointing";
+import { getHeraPatience } from "./heraPatiencePreference";
 
 function heraLog(message: string, extra?: unknown): void {
   if (extra !== undefined) console.info(`[HERA] ${message}`, extra);
@@ -443,7 +445,11 @@ export class HeraRealtimeController {
     offerSdp: string,
   ): Promise<{ mode: "live" | "realtime"; sdp: string; model?: string; voice?: string }> {
     const headers = await authHeaders({ "Content-Type": "application/json" });
-    const body = JSON.stringify({ sdp: offerSdp, voice: getHeraVoicePreference() ?? undefined });
+    const body = JSON.stringify({
+      sdp: offerSdp,
+      voice: getHeraVoicePreference() ?? undefined,
+      patience: getHeraPatience(),
+    });
     let res = await fetch("/api/hera/session", { method: "POST", headers, body }).catch(() => null);
     if (!res?.ok) {
       res = await fetch("/api/hera/realtime-session", { method: "POST", headers, body });
@@ -737,7 +743,7 @@ export class HeraRealtimeController {
       const finalText = this.userPartial.trim();
       this.userPartial = "";
       if (finalText) this.emit("onUserTurn", finalText);
-    }, 900);
+    }, liveTurnQuietMs(getHeraPatience()));
   }
 
   private noteLiveOutput(): void {

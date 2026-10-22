@@ -57,8 +57,14 @@ export function HeraVoiceControls({
         ) : null}
       </span>
       <span className="hera-voice-controls__meta">
-        <span className="hera-voice-controls__status">{listening ? "Listening… tap to send" : "Tap to speak"}</span>
-        {partial ? <span className="hera-voice-controls__partial">{partial}</span> : null}
+        <span className="hera-voice-controls__status">
+          {listening ? (partial ? "Listening… tap when you’re done" : "Listening… take your time") : "Tap to speak"}
+        </span>
+        {partial ? (
+          <span className="hera-voice-controls__partial" aria-live="polite">
+            {partial}
+          </span>
+        ) : null}
         {error ? <span className="hera-voice-controls__error">{error}</span> : null}
       </span>
     </button>
