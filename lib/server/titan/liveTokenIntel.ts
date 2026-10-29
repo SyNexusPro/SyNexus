@@ -63,14 +63,16 @@ export function needsLiveTokenFetch(
   message: string,
   opts: { intentHint?: string | null; focusMint?: string | null } = {},
 ): boolean {
-  if (opts.focusMint) return true;
   if (opts.intentHint === "token_lookup" || opts.intentHint === "trade_decision") return true;
   if (mentionsSyn(message)) return true;
   if (extractSolanaMint(message)) return true;
   if (/\$[A-Za-z]{2,12}\b/.test(message)) return true;
   if (/\bwhat'?s going on with\b/i.test(message)) return true;
-  if (/\b(price|liquidity|volume|mcap|holders?|market cap) (of|for|on)\b/i.test(message)) return true;
+  if (/\b(price|liquidity|volume|mcap|holders?|market cap|risk|safe|scam|rug|chart|entry) (of|for|on)\b/i.test(message)) return true;
   if (isTokenMetricFollowUp(message)) return true;
+  if (opts.focusMint && /\b(it|its|this|that|same|still|buy|sell|hold|exit|safe|risk|why)\b/i.test(message)) {
+    return true;
+  }
   return false;
 }
 

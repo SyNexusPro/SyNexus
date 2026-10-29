@@ -86,7 +86,7 @@ function realtimeSessionConfig(model = realtimeModelName(), requestedVoice?: str
     model,
     instructions: HERA_CONVERSATION_INSTRUCTIONS,
     output_modalities: ["audio"] as const,
-    temperature: 0.85,
+    temperature: 0.68,
     audio: {
       input: {
         transcription: { model: "gpt-4o-mini-transcribe" },
@@ -262,7 +262,7 @@ async function mintLegacySecret(key: string): Promise<{ secret: string; raw: Rec
       modalities: ["audio", "text"],
       instructions: HERA_CONVERSATION_INSTRUCTIONS,
       voice,
-      temperature: 0.85,
+      temperature: 0.68,
       input_audio_transcription: { model: "gpt-4o-mini-transcribe" },
       turn_detection: {
         type: "semantic_vad",

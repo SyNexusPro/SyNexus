@@ -61,7 +61,9 @@ const TRAILING_WORDS = new Set([
   "by", "into", "also", "plus", "actually", "basically", "maybe", "well", "um", "uh", "umm", "uhh", "er",
   "hmm", "hm", "is", "are", "was", "were", "am", "be", "i", "i'm", "i'd", "i'll", "i've", "my", "your",
   "what", "whats", "what's", "how", "why", "where", "should", "could", "would", "can", "do", "does", "did",
-  "will", "its", "it's", "this", "these", "those", "some", "any", "not", "no", "kind", "sort",
+  "will", "its", "it's", "this", "these", "those", "some", "any", "not", "no", "kind", "sort", "versus",
+  "vs", "between", "whether", "buying", "selling", "checking", "looking", "thinking", "talking", "comparing",
+  "let's", "lets", "wait", "hold", "either", "both",
 ]);
 
 function wordsOf(text: string): string[] {
@@ -134,3 +136,34 @@ export function calibrateNoise(samples: readonly number[]): NoiseCalibration {
   const silenceLevel = Math.min(speechLevel - 0.012, Math.max(0.03, floor * 1.45 + 0.018));
   return { speechLevel, silenceLevel };
 }
+
+/**
+ * Extracts the first complete spoken sentence or clause without splitting inside
+ * decimal numbers ("$1.24", "up 3.5%") or common abbreviations.
+ */
+export function firstSpokenSentence(text: string): string | null {
+  const trimmed = text.replace(/\s+/g, " ").trim();
+  if (trimmed.length < 10) return null;
+
+  // Match sentence-ending punctuation that is NOT between two digits (e.g. 1.24).
+  const sentenceRe = /(?<!\d)[.!?…]+(?!\d)(?=\s|$)/g;
+  for (const match of trimmed.matchAll(sentenceRe)) {
+    const end = (match.index ?? 0) + match[0].length;
+    if (end >= 12 && end <= 220) {
+      return trimmed.slice(0, end).trim();
+    }
+  }
+
+  // Fallback to a natural comma/dash clause once enough words have streamed.
+  if (trimmed.length >= 48) {
+    const clause = trimmed.match(/^[\s\S]{18,150}?[,;—–](?=\s)/);
+    if (clause) return clause[0].trim();
+  }
+  if (trimmed.length >= 90) {
+    const slice = trimmed.slice(0, 110);
+    const cut = slice.lastIndexOf(" ");
+    return (cut > 24 ? slice.slice(0, cut) : slice).trim();
+  }
+  return null;
+}
+

@@ -1,11 +1,14 @@
 /**
  * Energy-based barge-in while Hera is speaking.
- * Uses echo-cancelled mic RMS — not SpeechRecognition — so her TTS is not transcribed.
+ * Uses echo-cancelled mic energy calibrated against the room's floor so the user can
+ * interrupt naturally without speaker bleed or background hum false-triggering.
  */
+import { calibrateNoise } from "./endpointing";
 
-const STARTUP_MS = 480;
-const HOLD_MS = 140;
-const THRESHOLD = 0.4;
+const STARTUP_MS = 420;
+const HOLD_MS = 150;
+const MIN_BARGE_THRESHOLD = 0.22;
+const MAX_BARGE_THRESHOLD = 0.42;
 
 export type HeraBargeInHandle = {
   stop: () => void;
@@ -30,21 +33,32 @@ export async function startHeraBargeIn(onBargeIn: () => void): Promise<HeraBarge
   let stopped = false;
   let aboveSince = 0;
   const startedAt = performance.now();
+  const floorSamples: number[] = [];
+  let threshold = 0.3;
+  let calibrated = false;
   let fired = false;
 
   const tick = (now: number) => {
     if (stopped) return;
     analyser.getByteFrequencyData(data as Uint8Array<ArrayBuffer>);
+    // Focus on fundamental human voice bins (~150Hz–2.8kHz) instead of DC rumble.
     let sum = 0;
-    const n = Math.min(data.length, 40);
-    for (let i = 0; i < n; i += 1) sum += data[i] ?? 0;
-    const level = sum / (n * 255);
+    const startBin = 2;
+    const endBin = Math.min(data.length, 36);
+    for (let i = startBin; i < endBin; i += 1) sum += data[i] ?? 0;
+    const level = sum / (Math.max(1, endBin - startBin) * 255);
 
     if (now - startedAt < STARTUP_MS) {
+      floorSamples.push(level);
       raf = requestAnimationFrame(tick);
       return;
     }
-    if (level >= THRESHOLD) {
+    if (!calibrated) {
+      calibrated = true;
+      const { speechLevel } = calibrateNoise(floorSamples);
+      threshold = Math.min(MAX_BARGE_THRESHOLD, Math.max(MIN_BARGE_THRESHOLD, speechLevel * 2.2 + 0.1));
+    }
+    if (level >= threshold) {
       if (!aboveSince) aboveSince = now;
       if (!fired && now - aboveSince >= HOLD_MS) {
         fired = true;

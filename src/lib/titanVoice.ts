@@ -122,16 +122,40 @@ export function setTitanVoiceEnabled(enabled: boolean): void {
   }
 }
 
-/** Strip markdown-ish noise before TTS. */
+/** Strip markdown-ish noise and convert crypto/number shorthand into natural spoken English. */
 export function textForTitanSpeech(text: string): string {
-  return text
+  const cleaned = text
+    .replace(/```[\s\S]*?```/g, " ")
     .replace(/\*\*/g, "")
-    .replace(/[#*_`]/g, "")
+    .replace(/[#*_`~]/g, "")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/https?:\/\/\S+/g, "")
+    // Shorten 32–44 char Solana mint addresses so TTS never reads 44 random characters aloud.
+    .replace(/\b([1-9A-HJ-NP-Za-km-z]{4})[1-9A-HJ-NP-Za-km-z]{24,36}([1-9A-HJ-NP-Za-km-z]{4})\b/g, "mint $1 ending $2")
+    // Shorten 0x EVM addresses similarly.
+    .replace(/\b(0x[a-fA-F0-9]{4})[a-fA-F0-9]{32}([a-fA-F0-9]{4})\b/g, "address $1 ending $2")
+    // Speak "$1.25M" / "$420K" / "$2.1B" naturally.
+    .replace(/\$(\d+(?:\.\d+)?)\s*B\b/gi, "$1 billion dollars")
+    .replace(/\$(\d+(?:\.\d+)?)\s*M\b/gi, "$1 million dollars")
+    .replace(/\$(\d+(?:\.\d+)?)\s*K\b/gi, "$1 thousand dollars")
+    // Strip leading "$" on tickers ("$SOL" -> "SOL") so TTS doesn't say "dollar SOL".
+    .replace(/\$([A-Za-z]{2,12})\b/g, "$1")
+    // Timeframe shorthand ("24h" -> "24 hour", "5m" -> "5 minute").
+    .replace(/\b24h\b/gi, "24 hour")
+    .replace(/\b1h\b/gi, "1 hour")
+    .replace(/\b5m\b/gi, "5 minute")
+    .replace(/\bmcap\b/gi, "market cap")
+    .replace(/\bliq\b/gi, "liquidity")
+    .replace(/[·•]/g, ", ")
+    .replace(/[—–]/g, ", ")
     .replace(/\n{2,}/g, ". ")
     .replace(/\n/g, " ")
     .replace(/\s{2,}/g, " ")
-    .trim()
-    .slice(0, 1200);
+    .trim();
+  if (cleaned.length <= 1600) return cleaned;
+  const cut = cleaned.slice(0, 1600);
+  const sentence = cut.lastIndexOf(". ");
+  return (sentence > 400 ? cut.slice(0, sentence + 1) : cut).trim();
 }
 
 export function stopTitanSpeech(): void {

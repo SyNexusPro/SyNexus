@@ -4,12 +4,15 @@ import {
   HERA_DEFAULT_PATIENCE,
   calibrateNoise,
   endpointDelayMs,
+  firstSpokenSentence,
   liveTurnQuietMs,
   normalizeHeraPatience,
   recorderSilenceMs,
   soundsFinished,
   soundsUnfinished,
 } from "../../src/lib/hera/endpointing";
+import { textForTitanSpeech } from "../../src/lib/titanVoice";
+import { needsLiveTokenFetch } from "../../lib/server/titan/liveTokenIntel";
 
 describe("soundsUnfinished", () => {
   it("treats dangling connectors and fillers as unfinished", () => {
@@ -134,3 +137,46 @@ describe("calibrateNoise", () => {
     assert.ok(junk.silenceLevel < junk.speechLevel);
   });
 });
+
+describe("firstSpokenSentence", () => {
+  it("does not split inside decimal prices or percentages", () => {
+    const partial = "SOL is trading at $184.52 right now, up 12.4% on the day. Volume looks steady.";
+    assert.equal(
+      firstSpokenSentence(partial),
+      "SOL is trading at $184.52 right now, up 12.4% on the day.",
+    );
+  });
+
+  it("returns null when the text is still a short fragment", () => {
+    assert.equal(firstSpokenSentence("SOL is $1.24"), null);
+  });
+});
+
+describe("textForTitanSpeech", () => {
+  it("shortens raw Solana mints and expands dollar/timeframe shorthand for speech", () => {
+    const spoken = textForTitanSpeech(
+      "$SOL (So11111111111111111111111111111111111111112) has $1.4M liq and $320K 24h volume.",
+    );
+    assert.match(spoken, /mint So11 ending 1112/);
+    assert.match(spoken, /1\.4 million dollars/);
+    assert.match(spoken, /320 thousand dollars/);
+    assert.match(spoken, /24 hour/);
+    assert.match(spoken, /liquidity/);
+    assert.equal(spoken.includes("$SOL"), false);
+  });
+});
+
+describe("needsLiveTokenFetch", () => {
+  it("does not hijack unrelated general questions when focusMint is set", () => {
+    const focusMint = "So11111111111111111111111111111111111111112";
+    assert.equal(
+      needsLiveTokenFetch("write a python function to reverse a list", { intentHint: "general", focusMint }),
+      false,
+    );
+    assert.equal(
+      needsLiveTokenFetch("is it safe to buy right now?", { intentHint: "general", focusMint }),
+      true,
+    );
+  });
+});
+

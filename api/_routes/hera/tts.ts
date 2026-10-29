@@ -37,9 +37,9 @@ async function elevenLabsTts(text: string): Promise<{ buffer: ArrayBuffer; conte
       text: text.slice(0, 2500),
       model_id: process.env.ELEVENLABS_MODEL_ID?.trim() || "eleven_turbo_v2_5",
       voice_settings: {
-        stability: 0.74,
-        similarity_boost: 0.78,
-        style: 0.08,
+        stability: 0.62,
+        similarity_boost: 0.82,
+        style: 0.18,
         use_speaker_boost: true,
       },
     }),
@@ -49,9 +49,9 @@ async function elevenLabsTts(text: string): Promise<{ buffer: ArrayBuffer; conte
 }
 
 const HERA_TTS_INSTRUCTIONS =
-  "Speak as Hera: a warm, smooth feminine alto on a close mic. Calm and intelligent. " +
-  "Conversational American English, unhurried, natural contractions. Never metallic or clipped. " +
-  "Do not imitate any copyrighted character, game AI, or voice actor.";
+  "Speak as Hera: a warm, clear feminine alto on a close mic. Calm and intelligent. " +
+  "Conversational American English, unhurried, easy to follow. Finish every sentence. Natural contractions. " +
+  "Never metallic, mumbled, or clipped. Do not imitate any copyrighted character, game AI, or voice actor.";
 
 async function openAiTts(text: string): Promise<{ buffer: ArrayBuffer; contentType: string } | null> {
   const key = process.env.OPENAI_API_KEY?.trim();

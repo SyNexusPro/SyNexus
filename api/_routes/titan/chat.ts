@@ -147,10 +147,26 @@ function resolveChatEndpoint(
   return { primary: groq, fallback: null };
 }
 
-/** Natural assistant temperature — close to ChatGPT / Gemini, not a random briefing bot. */
-function resolveTemperature(plan: "FREE" | "PRO", fastMode = false): number {
-  if (fastMode) return 0.7;
-  return plan === "PRO" ? 0.8 : 0.75;
+/** Grounded temperature: analytical/market turns stay sharp; open conversation stays warm. */
+function resolveTemperature(
+  plan: "FREE" | "PRO",
+  fastMode = false,
+  intentHint?: TitanPromptInput["intentHint"],
+): number {
+  if (
+    intentHint === "trade_decision" ||
+    intentHint === "token_lookup" ||
+    intentHint === "comparison" ||
+    intentHint === "market_movers" ||
+    intentHint === "launch_watch"
+  ) {
+    return 0.35;
+  }
+  if (intentHint === "strategy" || intentHint === "explain") {
+    return 0.45;
+  }
+  if (fastMode) return 0.55;
+  return plan === "PRO" ? 0.65 : 0.6;
 }
 
 function recentAssistantSnippets(
@@ -377,6 +393,7 @@ async function* streamChatCompletions(
   messages: { role: "system" | "user" | "assistant"; content: string }[],
   plan: "FREE" | "PRO",
   fastMode: boolean,
+  intentHint?: TitanPromptInput["intentHint"],
 ): AsyncGenerator<string, void, unknown> {
   if (!endpoint.apiKey) throw new Error("llm_unavailable");
 
@@ -391,7 +408,7 @@ async function* streamChatCompletions(
       messages,
       stream: true,
       max_tokens: endpoint.maxTokens,
-      temperature: resolveTemperature(plan, fastMode),
+      temperature: resolveTemperature(plan, fastMode, intentHint),
       presence_penalty: 0.1,
       frequency_penalty: 0.15,
     }),
@@ -449,10 +466,10 @@ async function* streamOpenAiChat(
   ];
 
   try {
-    yield* streamChatCompletions(primary, messages, body.plan, fastMode);
+    yield* streamChatCompletions(primary, messages, body.plan, fastMode, body.intentHint);
   } catch (err) {
     if (!fallback?.apiKey) throw err;
-    yield* streamChatCompletions(fallback, messages, body.plan, fastMode);
+    yield* streamChatCompletions(fallback, messages, body.plan, fastMode, body.intentHint);
   }
 }
 

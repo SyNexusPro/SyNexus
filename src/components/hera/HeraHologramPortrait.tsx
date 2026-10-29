@@ -4,8 +4,8 @@ import { detectHeraLowPerf, prefersReducedMotion } from "../../lib/hera/hologram
 import { heraFaceController } from "../../lib/hera/HeraFaceController";
 import { heraVoice } from "../../lib/hera/HeraVoice";
 
-/** Clean holographic portrait matching the SyNexus Hera design reference. */
-export const HERA_FACE_SRC = "/hera/hera-face.png?v=green-s1";
+/** New holographic Hera (head-and-shoulders, not the old green android bust). */
+export const HERA_FACE_SRC = "/hera/hera-face.jpg?v=holo-v2";
 
 function envelope(prev: number, raw: number): number {
   const gated = raw < 0.04 ? 0 : Math.min(1, raw);
@@ -107,18 +107,18 @@ export function HeraHologramPortrait({
 
         applyFeat(
           lashLRef.current,
-          `translateY(${(blinkL * 2.4).toFixed(2)}px)`,
-          "38% 29.2%",
+          `translateY(${(blinkL * 2.8).toFixed(2)}px)`,
+          "38% 42.8%",
         );
         applyFeat(
           lashRRef.current,
-          `translateY(${(blinkR * 2.4).toFixed(2)}px)`,
-          "62% 29.2%",
+          `translateY(${(blinkR * 2.8).toFixed(2)}px)`,
+          "62% 42.8%",
         );
         applyFeat(
           lipLRef.current,
-          `translateY(${(jaw * 3.1).toFixed(2)}px)`,
-          "50% 40.8%",
+          `translateY(${(jaw * 4.2).toFixed(2)}px)`,
+          "50% 60.8%",
         );
 
         const opening = openingRef.current;

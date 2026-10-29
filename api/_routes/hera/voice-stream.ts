@@ -32,9 +32,9 @@ function writeNdjson(res: ServerResponse, row: unknown): void {
 }
 
 const HERA_VOICE_SETTINGS = {
-  stability: 0.74,
-  similarity_boost: 0.78,
-  style: 0.08,
+  stability: 0.62,
+  similarity_boost: 0.82,
+  style: 0.18,
   use_speaker_boost: true,
 };
 

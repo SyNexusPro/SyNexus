@@ -38,22 +38,13 @@ import { hostTimeZone } from "../lib/hera/formatLiveStamp";
 import { SYN_MINT, SYN_SYMBOL } from "../config/synToken";
 import { HeraHologramStage } from "./hera/HeraHologramStage";
 import { isWakeOnlyUtterance, stripWakePrefix } from "../lib/hera/wakeWord";
+import { firstSpokenSentence } from "../lib/hera/endpointing";
 import { useTranslation } from "react-i18next";
 import { useHeraVersion } from "../hooks/useHeraVersion";
 import { buildHeraSignupDemoLine, markHeraSignupDemoComplete } from "../lib/heraSignupDemo";
 
 function firstVoiceChunk(text: string): string | null {
-  const trimmed = text.replace(/\s+/g, " ").trim();
-  const sentence = trimmed.match(/^[\s\S]{8,180}?[.!?…](?:\s|$)/);
-  if (sentence) return sentence[0].trim();
-  const clause = trimmed.match(/^[\s\S]{12,140}?,(?:\s|$)/);
-  if (clause && trimmed.length >= 28) return clause[0].trim();
-  if (trimmed.length >= 36) {
-    const slice = trimmed.slice(0, 80);
-    const cut = slice.lastIndexOf(" ");
-    return (cut > 16 ? slice.slice(0, cut) : slice).trim();
-  }
-  return null;
+  return firstSpokenSentence(text);
 }
 
 type OracleSupremeChatProps = {
@@ -202,6 +193,11 @@ export function OracleSupremeChat({
       stopTitanSpeech();
       setThinking(false);
       setSpeaking(false);
+      if (voiceMode) {
+        window.setTimeout(() => {
+          void voiceIn.startListening();
+        }, 120);
+      }
     },
   });
 

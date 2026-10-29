@@ -54,7 +54,7 @@ export function classifyTitanIntent(text: string): TitanIntent {
   ) {
     return "launch_watch";
   }
-  if (/should i (buy|sell|ape|exit|hold)|worth (buying|it)|good entry|take profit|cut loss/.test(lower)) {
+  if (/should i (buy|sell|ape|exit|hold)|worth (buying|it)|good entry|take profit|cut loss|\bis\s+\$?[a-z0-9]{2,12}\s+(a buy|worth it|safe to buy)\b/.test(lower)) {
     return "trade_decision";
   }
   if (/compare|versus|\bvs\b|better between|which one/.test(lower)) return "comparison";
@@ -65,7 +65,10 @@ export function classifyTitanIntent(text: string): TitanIntent {
     return "market_movers";
   }
   if (isTokenFollowUp(text)) return "token_lookup";
-  if (/^(scan|find|look up|lookup)\b/i.test(text) || /\$[a-z]{2,12}\b/i.test(text)) return "token_lookup";
+  if (/^(scan|find|look up|lookup|check|analyze|analyse)\b/i.test(text) || /\$[a-z]{2,12}\b/i.test(text)) return "token_lookup";
+  if (/\b(?:is|how(?:'s| is))\s+\$?[a-z0-9]{2,12}\s+(?:safe|legit|a scam|a rug|looking|doing)\b/.test(lower)) {
+    return "token_lookup";
+  }
   if (/\b(synexus|syn)\b/i.test(lower) && /\b(price|liq|liquidity|volume|holders?|going on|how.?s|status|cap)\b/i.test(lower)) {
     return "token_lookup";
   }

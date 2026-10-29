@@ -3,7 +3,7 @@ import { detectHeraLowPerf, prefersReducedMotion } from "../../lib/hera/hologram
 import { HeraHologramPortrait } from "./HeraHologramPortrait";
 
 /**
- * Live Hera face — the approved portrait PNG only. Do not swap in a mesh,
+ * Live Hera face — the approved holographic portrait only. Do not swap in a mesh,
  * canvas redraw, or GLB.
  */
 export function HeraHologram(props: HeraAvatarRendererProps) {

@@ -109,12 +109,16 @@ function extractQuery(text: string): string {
   const mint = text.match(/\b([1-9A-HJ-NP-Za-km-z]{32,44})\b/);
   if (mint?.[1]) return mint[1];
   const bare = text.trim().match(/^\$?([A-Za-z]{2,12})$/);
-  const stop = /^(hi|hey|hello|thanks|thank|help|yes|no|ok|okay|why|what|how|when|status|please|stop|wait|you|hera)$/i;
+  const stop = /^(hi|hey|hello|thanks|thank|help|yes|no|ok|okay|why|what|how|when|where|who|status|please|stop|wait|you|hera|titan|safe|scam|risk|coin|token|price|market|today|now)$/i;
   if (bare?.[1] && !stop.test(bare[1])) return bare[1];
   const dollar = text.match(/\$([A-Za-z]{2,12})\b/);
   if (dollar?.[1]) return dollar[1];
-  const named = text.match(/\b(?:token|coin)\s+([A-Za-z0-9]{2,12})\b/i);
-  if (named?.[1] && !/^(is|isn|not|the|this|that|loading|it)$/i.test(named[1])) return named[1];
+  const named = text.match(/\b(?:token|coin|scan|check|analyze|analyse|lookup|look up|about|into)\s+\$?([A-Za-z0-9]{2,12})\b/i);
+  if (named?.[1] && !/^(is|isn|not|the|this|that|loading|it|me|us|for|on|in|now|today|safe|risk)$/i.test(named[1]) && !stop.test(named[1])) {
+    return named[1];
+  }
+  const safetyAsk = text.match(/\b(?:is|how(?:'s| is))\s+\$?([A-Za-z0-9]{2,12})\s+(?:safe|legit|a scam|a rug|looking|doing|performing)\b/i);
+  if (safetyAsk?.[1] && !stop.test(safetyAsk[1])) return safetyAsk[1];
   return "";
 }
 

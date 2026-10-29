@@ -13886,24 +13886,24 @@ body:has(.oracle-chat--presence) .titan-sheet-backdrop {
 }
 
 .hera-hologram__feat--lash-l {
-  clip-path: ellipse(4.8% 0.3% at 38% 29.2%);
+  clip-path: ellipse(5.2% 0.35% at 38% 42.8%);
   z-index: 6;
 }
 
 .hera-hologram__feat--lash-r {
-  clip-path: ellipse(4.8% 0.3% at 62% 29.2%);
+  clip-path: ellipse(5.2% 0.35% at 62% 42.8%);
   z-index: 6;
 }
 
 .hera-hologram__feat--lip-l {
-  clip-path: ellipse(6.6% 2.1% at 50% 40.9%);
+  clip-path: ellipse(7.2% 2.4% at 50% 60.8%);
   z-index: 7;
 }
 
 .hera-hologram__opening {
   position: absolute;
   left: 50%;
-  top: 40.4%;
+  top: 60.4%;
   z-index: 8;
   width: 8.6%;
   height: 3.6%;

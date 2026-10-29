@@ -3,8 +3,8 @@
 export const TITAN_VOICE_ENABLED_KEY = "synexus_titan_voice_enabled";
 
 /** Slightly slower and closer to natural pitch so she sounds smooth, not metallic. */
-export const TITAN_VOICE_RATE = 0.92;
-export const TITAN_VOICE_PITCH = 1.04;
+export const TITAN_VOICE_RATE = 0.86;
+export const TITAN_VOICE_PITCH = 1.02;
 export const TITAN_VOICE_VOLUME = 1;
 
 /** Prefer warm US neural female voices (case-insensitive). */
