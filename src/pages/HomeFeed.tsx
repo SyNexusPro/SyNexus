@@ -16,7 +16,6 @@ import { useOracleMarketFeed } from "../lib/useOracleMarketFeed";
 import { isNativeAndroid } from "../lib/bootExperience";
 import { sampleTokens, type Token } from "../data/tokens";
 import { searchTradeTokens } from "../services/marketDataService";
-import { HomeTape } from "../components/home/HomeTape";
 import { EnterSynexusButton } from "../community/EnterSynexusButton";
 import { useHeraWakeWordSetting } from "../hooks/useHeraWakeWordSetting";
 
@@ -258,8 +257,6 @@ export function HomeFeed() {
             Markets. Business. Security. Automation. All Connected.
           </p>
         </div>
-
-        <HomeTape />
 
         <div className="home-feature-grid" role="list">
           {featureCards.map((card) => {

@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { HomeTape } from "../components/home/HomeTape";
 import { enableHeraWakeWordFromUi } from "../lib/hera/wakeWord";
 
 /**
@@ -33,7 +32,6 @@ export function AndroidHomeStatic() {
         <h1 className="android-home__headline">One AI. Unlimited Intelligence.</h1>
         <p className="android-home__lede">Markets. Business. Security. Automation.</p>
       </header>
-      <HomeTape />
 
       <nav className="android-home__grid" aria-label="Features">
         {LINKS.map((item) =>

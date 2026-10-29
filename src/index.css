@@ -3167,7 +3167,7 @@ html:has(.app-shell--home) #root {
   padding: 10px 16px calc(10px + var(--safe-bottom));
   isolation: isolate;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
   gap: 8px;
   background: linear-gradient(180deg, #0c0e0c 0%, #070807 100%);
   border-top: 1px solid rgba(137, 255, 47, 0.28);
