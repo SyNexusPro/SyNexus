@@ -6,12 +6,10 @@ import { useOpenTitanGate } from "../hooks/useOpenTitanGate";
 import {
   applyInviteRewardLocally,
   attachPendingInvite,
-  confirmCardVerification,
   fetchInviteStatus,
   inviteShareUrl,
   peekInviteCode,
   saveInviteCode,
-  startCardVerification,
   submitInviteIdentity,
   type InviteStatus,
 } from "../lib/inviteEarn";
@@ -38,7 +36,6 @@ export function InviteEarn() {
   const openLogin = useOpenTitanGate();
   const { linked, ready } = useOperatorAuth();
   const onboard = params.get("onboard") === "1";
-  const cardReturn = params.get("card") === "success";
 
   const [status, setStatus] = useState<InviteStatus | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -72,19 +69,11 @@ export function InviteEarn() {
     void (async () => {
       await attachPendingInvite();
       const next = await refresh();
-      if (cardReturn) {
-        setBusy(true);
-        const confirm = await confirmCardVerification();
-        setMessage(confirm.message);
-        await refresh();
-        setBusy(false);
-        navigate("/invite", { replace: true });
-      }
       if (onboard && next?.onboardComplete) {
         navigate("/pulse?welcome=1", { replace: true });
       }
     })();
-  }, [ready, linked, cardReturn, onboard, navigate]);
+  }, [ready, linked, onboard, navigate]);
 
   const shareUrl = useMemo(() => {
     if (status?.referralCode) return inviteShareUrl(status.referralCode);
@@ -118,18 +107,6 @@ export function InviteEarn() {
     setBusy(false);
   }
 
-  async function handleCard() {
-    setBusy(true);
-    setMessage(null);
-    const result = await startCardVerification();
-    if (!result.ok) {
-      setMessage(result.error);
-      setBusy(false);
-      return;
-    }
-    window.location.href = result.url;
-  }
-
   if (!ready) {
     return (
       <div className="page invite-page">
@@ -145,8 +122,8 @@ export function InviteEarn() {
         <h1 className="invite-page__title">Invite 3 people. Unlock 30 days of Pro Titan.</h1>
         <p className="invite-page__lede">
           {landingCode
-            ? `Invite ${landingCode} is saved on this device. Create your account with a valid debit or credit card and identity check — one person, one account.`
-            : "Sign up with a valid debit or credit card. We verify identity so fake accounts do not count."}
+            ? `Invite ${landingCode} is saved on this device. Create your account and complete the identity check — one person, one account.`
+            : "Sign up and verify your identity so fake accounts do not count."}
         </p>
         <button type="button" className="invite-page__cta" onClick={() => openLogin()}>
           Sign up to continue
@@ -273,7 +250,7 @@ export function InviteEarn() {
           </label>
           <label className="invite-page__check">
             <input type="checkbox" checked={attestation} onChange={(e) => setAttestation(e.target.checked)} />
-            <span>I confirm I am this person, and the card I add is mine. One account per person.</span>
+            <span>I confirm I am this person. One account per person.</span>
           </label>
           <button type="button" className="invite-page__cta" disabled={busy} onClick={() => void handleIdentity()}>
             {busy ? "Checking…" : "Verify identity"}
@@ -292,34 +269,7 @@ export function InviteEarn() {
           <p>Card on file is verified. This account can count toward an invite.</p>
         ) : (
           <>
-            <p>
-              Every signup needs a valid debit or credit card. Square charges a $1 verification so we know the card
-              is real. The same card cannot be reused on another account.
-            </p>
-            <button
-              type="button"
-              className="invite-page__cta"
-              disabled={busy || !status?.identityVerified}
-              onClick={() => void handleCard()}
-            >
-              {busy ? "Opening Square…" : "Add a valid card"}
-            </button>
-            {cardReturn ? (
-              <button
-                type="button"
-                className="invite-page__cta invite-page__cta--secondary"
-                disabled={busy}
-                onClick={() => void confirmCardVerification().then((r) => {
-                  setMessage(r.message);
-                  return refresh();
-                })}
-              >
-                Confirm card
-              </button>
-            ) : null}
-            {!status?.identityVerified ? (
-              <p className="invite-page__footnote">Verify identity first — then add the card in your name.</p>
-            ) : null}
+            <p>Card verification is turned off. An invite does not require a card charge.</p>
           </>
         )}
       </section>

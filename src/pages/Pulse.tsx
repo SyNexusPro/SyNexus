@@ -91,7 +91,7 @@ import {
   getProDemoRemainingMs,
   syncProTrialForUser,
 } from "../lib/proDemo";
-import { redirectToProCheckout, startProCheckout } from "../lib/squareCheckout";
+import { redirectToProCheckout, startProCheckout } from "../lib/proCheckout";
 import {
   androidRequiresWebSubscription,
   resolveSubscribeLabel,
@@ -594,7 +594,7 @@ export function Pulse() {
     updatePaidPlan(userId, "PRO")
       .then(() => {
         setPlan("PRO");
-        recordTrustedPlanGrant("PRO", "square_checkout");
+        recordTrustedPlanGrant("PRO", "subscription_checkout");
         localStorage.setItem(PLAN_STORAGE_KEY, "PRO");
         notifySynexusPlanChanged();
         setAuthMessage({

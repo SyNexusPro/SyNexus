@@ -184,7 +184,7 @@ async function maybeGrantReward(admin: SupabaseClient, referrerId: string): Prom
   const profile = await loadProfile(admin, referrerId);
   if (!profile) return;
   if (profile.invite_reward_claimed) return;
-  if (profile.identity_status !== "verified" || !profile.card_verified) return;
+  if (profile.identity_status !== "verified") return;
 
   const { qualifiedCount } = await counts(admin, referrerId);
   if (qualifiedCount < INVITE_REQUIRED_COUNT) return;
@@ -218,7 +218,7 @@ async function maybeGrantReward(admin: SupabaseClient, referrerId: string): Prom
 export async function qualifyIfReady(admin: SupabaseClient, refereeId: string): Promise<void> {
   const profile = await loadProfile(admin, refereeId);
   if (!profile) return;
-  if (profile.identity_status !== "verified" || !profile.card_verified) return;
+  if (profile.identity_status !== "verified") return;
   if (!profile.referred_by) return;
 
   await admin
@@ -245,7 +245,7 @@ function toStatus(profile: ProfileRow, qualifiedCount: number, pendingCount: num
     identityVerified,
     cardVerified,
     referredBy: Boolean(profile.referred_by),
-    onboardComplete: identityVerified && cardVerified,
+    onboardComplete: identityVerified,
   };
 }
 
@@ -374,7 +374,7 @@ export async function submitIdentity(
   }
 
   await qualifyIfReady(admin, user.id);
-  return { ok: true, message: "Identity verified. Add a valid debit or credit card next." };
+  return { ok: true, message: "Identity verified." };
 }
 
 export async function markCardVerified(

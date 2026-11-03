@@ -7,7 +7,7 @@ export const SYNEXUS_PRO_TRIAL_LABEL = `${SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial`
 
 export const SYNEXUS_PRO_TRIAL_GRANT_SOURCE = "trial_30d";
 
-/** Stored grant ids that mean signup/device trial (not paid Square). */
+/** Stored grant ids that mean signup/device trial (not a paid subscription). */
 export function isSignupTrialGrantSource(source: string | null | undefined): boolean {
   return source === "trial_30d" || source === "trial_7d" || source === "demo_session";
 }

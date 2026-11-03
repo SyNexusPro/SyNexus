@@ -44,7 +44,6 @@
     "setup:optional": "node scripts/setup-optional-services.mjs",
     "supabase:health": "node scripts/supabase-health.mjs",
     "supabase:migrate": "node scripts/supabase-migrate.mjs",
-    "square:test-checkout": "node scripts/square-test-checkout.mjs",
     "hype:queue": "npm run hype:queue --prefix marketing-ai",
     "blog:generate": "npm run blog:generate --prefix marketing-ai",
     "blog:seed": "node scripts/seed-blog-content.mjs",

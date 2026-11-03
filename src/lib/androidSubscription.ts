@@ -3,7 +3,7 @@ import { Capacitor } from "@capacitor/core";
 import { PUBLIC_SITE_URL } from "../config/site";
 import { getExternalPricingUrl, SYNEXUS_PRICING_PATH } from "../config/proPricing";
 
-/** Google Play: digital subscriptions must not use Square checkout inside the Android app shell. */
+/** Google Play: digital subscriptions must use the web subscription flow, not an in-app card form. */
 export function androidRequiresWebSubscription(): boolean {
   return Capacitor.isNativePlatform() && Capacitor.getPlatform() === "android";
 }

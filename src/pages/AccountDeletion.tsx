@@ -203,7 +203,7 @@ export function AccountDeletion() {
         <h2>What may be retained</h2>
         <ul>
           <li>
-            Billing / tax records held by payment processors (for example Square) for legal and accounting
+            Billing / tax records held by payment processors for legal and accounting
             retention
           </li>
           <li>Aggregated analytics that cannot reasonably identify you</li>

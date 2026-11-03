@@ -112,7 +112,7 @@ Full notes: [GOOGLE_PLAY.md](./GOOGLE_PLAY.md#app-access-google-play-reviewers).
 
 | Type | Collected | Shared | Purpose |
 |------|-----------|--------|---------|
-| Purchase history | Yes | Yes (Square) | Subscription status — not full card numbers |
+| Purchase history | Yes | Yes | Subscription status — not full card numbers |
 
 **App activity**
 
@@ -139,7 +139,7 @@ Precise location · Photos/videos · Contacts · SMS · Full payment card number
 
 ### Third-party processors
 
-Supabase (auth) · Square (web billing) · Google Analytics & AdSense · Vercel (hosting) · Market-data APIs
+Supabase (auth) · Google Analytics & AdSense · Vercel (hosting) · Market-data APIs
 
 ### Handling
 
@@ -209,7 +209,7 @@ After uploading `app-release.aab` to **Internal testing**:
 2. Cold start — home feed loads (requires network)
 3. Pulse → Operator link — sign in works
 4. Titan chat returns a response
-5. Subscribe → opens Chrome → synexus.pro (not in-app Square on Android)
+5. Subscribe → opens Chrome → synexus.pro (not an in-app card form on Android)
 6. Token scan / detail page loads
 
 ---

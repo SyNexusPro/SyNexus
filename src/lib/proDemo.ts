@@ -194,7 +194,7 @@ export function restoreActiveProTrialGrant(now = Date.now()): boolean {
 
 /**
  * Start the 30-day free Pro trial after a verified sign-up / sign-in.
- * No card. One trial per user; paid Square checkout overrides trial access.
+ * No card. One trial per user; a paid subscription overrides trial access.
  */
 export function ensureProTrialAfterSignup(userId: string, now = Date.now()): boolean {
   if (!userId || userId.startsWith("demo-")) return false;

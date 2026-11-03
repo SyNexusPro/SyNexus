@@ -10,7 +10,7 @@ import {
   androidRequiresWebSubscription,
   resolveSubscribeLabel,
 } from "../lib/androidSubscription";
-import { redirectToProCheckout, startProCheckout } from "../lib/squareCheckout";
+import { redirectToProCheckout, startProCheckout } from "../lib/proCheckout";
 import { useOperatorAuth } from "../hooks/useOperatorAuth";
 import { ProDemoButton } from "./ProDemoButton";
 

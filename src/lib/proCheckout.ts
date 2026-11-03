@@ -38,7 +38,7 @@ export async function startProCheckout(
       error:
         data.error ||
         (response.status === 503
-          ? "Checkout is not configured on the server yet. Try again shortly."
+          ? "Checkout is not available right now."
           : "Checkout could not be opened. Please try again."),
     };
   }

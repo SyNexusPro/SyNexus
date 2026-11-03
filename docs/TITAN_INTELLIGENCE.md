@@ -11,7 +11,7 @@ This adds:
 - `titan_events`, `titan_notifications`
 - RLS + Realtime publication for live in-app alerts
 
-Paid users should have **`subscription_status = 'active'`** (synced automatically when Square sets `paid_plan = PRO`).
+Paid users should have **`subscription_status = 'active'`** (synced when a paid plan sets `paid_plan = PRO`).
 
 ## 2. APIs
 

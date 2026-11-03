@@ -6,8 +6,6 @@ import {
   submitIdentity,
   userFromBearer,
 } from "../../lib/server/invite/service.js";
-import { confirmRecentCardPayment, createCardVerifyCheckout } from "../../lib/server/square/cardVerify.js";
-
 type InviteEnv = Record<string, string | undefined>;
 
 function readRequestBody(req: IncomingMessage): Promise<string> {
@@ -101,14 +99,8 @@ async function handleInvite(req: IncomingMessage, res: ServerResponse, env: Invi
       sendJson(res, result.ok ? 200 : 400, result);
       return;
     }
-    if (action === "card-link") {
-      const checkout = await createCardVerifyCheckout(user.id, user.email, req.headers, env);
-      sendJson(res, checkout.statusCode, checkout.body);
-      return;
-    }
-    if (action === "card-confirm") {
-      const result = await confirmRecentCardPayment(user.id, env);
-      sendJson(res, result.ok ? 200 : 400, result);
+    if (action === "card-link" || action === "card-confirm") {
+      sendJson(res, 503, { error: "Card verification is not available." });
       return;
     }
     sendJson(res, 400, { error: "Unknown action" });

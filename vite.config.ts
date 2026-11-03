@@ -4,7 +4,6 @@ import { configureCheckoutApi } from "./api/_routes/checkout";
 import { configureOwnerUnlockApi } from "./api/_routes/ownerUnlock";
 import { configureAnalyticsApi } from "./api/_routes/analytics";
 import { configureTitanChatApi } from "./api/_routes/titan/chat";
-import { configureSubscriptionWebhookApi } from "./api/_routes/subscription/webhook";
 import { configureWhaleWebhookApi } from "./api/_routes/whale/webhook";
 import { configureWhalePollApi } from "./api/_routes/whale/poll";
 import { configureWhaleEventsApi } from "./api/_routes/whale/events";
@@ -87,7 +86,6 @@ export default defineConfig(({ mode }) => {
         configureServer(server) {
           configureCheckoutApi(server, env);
           configureCommunityAccessApi(server, env);
-          configureSubscriptionWebhookApi(server, env);
           configureOwnerUnlockApi(server, env);
           configureAnalyticsApi(server);
           configureTitanChatApi(server, env);

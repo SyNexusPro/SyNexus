@@ -1,4 +1,4 @@
-/** SyNexusPro subscription price (USD). Keep in sync with Square catalog. */
+/** SyNexusPro subscription price (USD). */
 export { SYNEXUS_BRAND_NAME, SYNEXUS_PRO_PRODUCT_NAME, SYNEXUS_PRO_SKU } from "./brand";
 export const SYNEXUS_PRO_PRICE_USD = 9.99;
 

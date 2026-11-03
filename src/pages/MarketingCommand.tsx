@@ -22,7 +22,6 @@ const CHECK_ITEMS: readonly CheckDef[] = [
   { id: "reply5", label: "Reply thoughtfully to 5 crypto posts (value, not spam)" },
   { id: "share", label: "Share live SyNexus app link responsibly" },
   { id: "trial-promo", label: "Promote 30-day free Pro on sign-up · $9.99/mo after (X, TikTok, Telegram)" },
-  { id: "square", label: "Check Square subscriptions (dashboard audit)" },
 ] as const;
 
 const CONTENT_CALENDAR = [
@@ -173,17 +172,6 @@ export function MarketingCommand() {
             </li>
           ))}
         </ul>
-        <p className="marketing-cmd-stripe-hint">
-          Square audit:{" "}
-          <a
-            href="https://squareup.com/dashboard/subscriptions"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="marketing-cmd-inline-link"
-          >
-            squareup.com/dashboard/subscriptions ↗
-          </a>
-        </p>
         {origin ? (
           <p className="marketing-cmd-linkbox">
             <span className="marketing-cmd-linkbox__label">Live SyNexus app (this tab origin)</span>

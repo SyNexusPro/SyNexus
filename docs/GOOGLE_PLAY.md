@@ -93,15 +93,15 @@ npm run play:provision-reviewer
 - **Content rating questionnaire** complete.
 - **Target audience** & declarations (ads, COVID‑19 apps, news, etc.) as applicable.
 - **Privacy policy URL** — required if you collect or process user data (e.g. auth, subscriptions).
-- **Data safety** section — disclose data collected (e.g. account, diagnostics, Square billing metadata).
+- **Data safety** section — disclose data collected (e.g. account, diagnostics, billing metadata).
 - **Ads** — declare **Yes** if AdSense runs on the home feed (`VITE_ADSENSE_HOME_SLOT`).
-- **Subscriptions** — On **Android**, Subscribe opens **synexus.pro in the system browser** (no Square checkout inside the app shell). Web and iOS still use Square. Confirm Play Console declarations match ([Google Play Payments](https://support.google.com/googleplay/android-developer/answer/9858738)).
+- **Subscriptions** — On **Android**, Subscribe opens **synexus.pro in the system browser** (no card checkout inside the app shell). Confirm Play Console declarations match ([Google Play Payments](https://support.google.com/googleplay/android-developer/answer/9858738)).
 - **App access** — paste the reviewer credentials from the section above.
 
 ## QA before release
 
 - Install release build on a device (internal testing track).
-- Cold start after `cap sync`; exercise auth, Square checkout, Titan chat, offline errors (app needs network for prod WebView).
+- Cold start after `cap sync`; exercise auth, subscribe, Titan chat, offline errors (app needs network for prod WebView).
 - Confirm **no cleartext** requirements for prod APIs you call (HTTPS only).
 
 **Store listing copy, Data safety answers, and screenshot captions:** [GOOGLE_PLAY_STORE_LISTING.md](./GOOGLE_PLAY_STORE_LISTING.md)

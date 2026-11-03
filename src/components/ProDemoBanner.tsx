@@ -9,7 +9,7 @@ import {
   androidRequiresWebSubscription,
   resolveSubscribeLabel,
 } from "../lib/androidSubscription";
-import { redirectToProCheckout, startProCheckout } from "../lib/squareCheckout";
+import { redirectToProCheckout, startProCheckout } from "../lib/proCheckout";
 import { useProDemo } from "../hooks/useProDemo";
 
 export function ProDemoBanner() {

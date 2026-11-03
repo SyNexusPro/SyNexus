@@ -1,5 +1,5 @@
 /**
- * Smoke test: local /api/checkout returns a Square payment link.
+ * Smoke test: local /api/checkout no longer starts a card checkout.
  * Run: node scripts/smoke-checkout-api.mjs
  */
 const BASE = process.env.SMOKE_BASE_URL ?? "http://localhost:5173";
@@ -11,10 +11,10 @@ async function main() {
     body: JSON.stringify({ plan: "PRO", userId: "smoke-checkout-user" }),
   });
   const body = await res.json();
-  if (res.status !== 200 || !body.url || !String(body.url).includes("square.link")) {
+  if (res.status !== 503) {
     throw new Error(`Checkout API failed (${res.status}): ${JSON.stringify(body)}`);
   }
-  console.log("OK — Checkout API returned Square link.");
+  console.log("OK — checkout is unavailable.");
 }
 
 main().catch((err) => {
