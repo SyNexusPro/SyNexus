@@ -6,7 +6,6 @@ import { useOperatorAuth } from "../hooks/useOperatorAuth";
 import { useTitanLoginOpen } from "../hooks/useTitanChatOpen";
 import { isTradingEnabled } from "../config/trading";
 import { HeraWakeWordControl } from "./HeraWakeWordControl";
-import { useHeraWakeWordSetting } from "../hooks/useHeraWakeWordSetting";
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   `bottom-nav__link${isActive ? " is-active" : ""}`;
@@ -20,7 +19,6 @@ export function BottomNav() {
   const loginOpen = useTitanLoginOpen();
   const loginActive = loginOpen;
   const trading = isTradingEnabled();
-  const { docked: listenDocked } = useHeraWakeWordSetting();
 
   return (
     <nav className={`bottom-nav${trading ? " bottom-nav--trade" : ""}`} aria-label={t("nav.primary")}>
@@ -63,7 +61,7 @@ export function BottomNav() {
           {t("nav.trade")}
         </NavLink>
       ) : null}
-      {listenDocked ? null : <HeraWakeWordControl />}
+      <HeraWakeWordControl />
     </nav>
   );
 }

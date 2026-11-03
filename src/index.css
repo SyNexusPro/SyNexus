@@ -3164,11 +3164,10 @@ html:has(.app-shell--home) #root {
   bottom: 0;
   width: min(var(--max-width), 100%);
   z-index: 9600;
-  padding: 10px 16px calc(10px + var(--safe-bottom));
+  padding: 10px 12px calc(10px + var(--safe-bottom));
   isolation: isolate;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
-  gap: 8px;
+  display: flex;
+  gap: 6px;
   background: linear-gradient(180deg, #0c0e0c 0%, #070807 100%);
   border-top: 1px solid rgba(137, 255, 47, 0.28);
   box-shadow:
@@ -3196,10 +3195,12 @@ html:has(.app-shell--home) #root {
 
 .bottom-nav__link {
   display: flex;
+  flex: 1 1 0;
+  min-width: 0;
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  padding: 10px 6px;
+  padding: 10px 4px;
   border-radius: var(--radius-md);
   font-size: 0.68rem;
   font-weight: 600;
