@@ -14,6 +14,7 @@ import {
   authorizeHeraIngestBearer,
   verifyHeraIngestSignature,
 } from "../../../lib/server/hera/ingestAuth.js";
+import { lessonTextFromSnapshot, rememberText } from "../../../lib/server/hera/memory.js";
 import {
   HERA_INGEST_MAX_BODY_BYTES,
   parseAlexusReport,
@@ -206,6 +207,10 @@ export async function handleHeraIngest(
       executesTrades: false,
       walletSigning: false,
     });
+    const lesson = lessonTextFromSnapshot(parsed.report.snapshot);
+    if (lesson) {
+      void rememberText(env, { kind: "lesson", source: "alexus.ingest", content: lesson });
+    }
   } catch {
     sendJson(res, 503, errorBody("storage_unavailable"));
   }

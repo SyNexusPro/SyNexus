@@ -100,6 +100,18 @@ const quietDeps = {
   async loadSecurity(): Promise<SecurityReading> {
     return security();
   },
+  async compareRoute() {
+    return {
+      advisoryOnly: true as const,
+      executesTrades: false as const,
+      walletSigning: false as const,
+      sizeSol: 0.1,
+      jupiterRoundTripLossPct: null,
+      gmgnFeeSchedulePct: 2,
+      networkFeePct: null,
+      note: "Jupiter quote was not requested in this test.",
+    };
+  },
 };
 
 beforeEach(() => {

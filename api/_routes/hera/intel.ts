@@ -9,6 +9,7 @@ import { buildHeraIntelReport } from "../../../lib/server/hera/intelReport.js";
 import { noteHeraIntelFailure, noteHeraIntelSuccess } from "../../../lib/server/hera/intelRateLimit.js";
 import { loadMarketReading, loadSecurityReading, type MarketReading, type SecurityReading } from "../../../lib/server/hera/intelSources.js";
 import { authorizeHeraIntel, type HeraIntelEnv } from "../../../lib/server/hera/partnerAuth.js";
+import { compareSolanaRoute, unavailableRoute, type RouteComparison } from "../../../lib/server/hera/routeCompare.js";
 import { parseSolanaMint } from "../../../lib/server/hera/solanaMint.js";
 
 const MAX_BODY_BYTES = 4096;
@@ -17,6 +18,7 @@ const ALLOWED_FIELDS = new Set(["mint", "symbol", "chain"]);
 export type HeraIntelDeps = {
   loadMarket: (mint: string) => Promise<MarketReading>;
   loadSecurity: (mint: string, env: HeraIntelEnv) => Promise<SecurityReading>;
+  compareRoute?: (mint: string) => Promise<RouteComparison>;
 };
 
 const defaultDeps: HeraIntelDeps = {
@@ -194,7 +196,10 @@ export async function handleHeraIntel(
       market,
       security,
     });
-    sendJson(res, 200, report);
+    const routeComparison = await (deps.compareRoute ?? compareSolanaRoute)(request.mint).catch(() =>
+      unavailableRoute("Jupiter quote was not retrieved."),
+    );
+    sendJson(res, 200, { ...report, routeComparison });
   } catch {
     sendJson(res, 502, errorBody("intel_unavailable"));
   }

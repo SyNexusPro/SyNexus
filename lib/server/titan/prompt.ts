@@ -103,6 +103,14 @@ export type TitanPromptInput = {
   research?: unknown[] | null;
   /** Fresh server-fetched market snapshot for time-sensitive asks. */
   liveMarketData?: string | null;
+  /** Public last prices from major venues (Coinbase, Binance, Kraken, and others). */
+  venueDesk?: string | null;
+  /** Newest stored Alexus paper lessons. Advisory only. */
+  alexusLearning?: string | null;
+  /** Retrieved pgvector notes. Empty means nothing was retrieved. */
+  priorResearch?: string | null;
+  /** Merged brief from the market, security, and history specialists. */
+  researchBrief?: string | null;
   /** IANA timezone of the host UI (for second-accurate as-of stamps). */
   hostTimeZone?: string | null;
   /** Fresh DexScreener snapshot for a focus token (price/liq/vol/mcap). */
@@ -152,7 +160,15 @@ function wantsMarketContext(input: TitanPromptInput): boolean {
   ) {
     return true;
   }
-  return Boolean(input.liveMarketData || input.liveTokenData || input.liveLaunchData);
+  return Boolean(
+    input.liveMarketData ||
+    input.liveTokenData ||
+    input.liveLaunchData ||
+    input.venueDesk ||
+    input.alexusLearning ||
+    input.priorResearch ||
+    input.researchBrief
+  );
 }
 
 function untaggedName(raw?: string): string {
@@ -174,6 +190,10 @@ function buildTitanFastCryptoPrompt(input: TitanPromptInput): string {
     languageDirective(input.replyLanguage),
     antiRepeatDirective(input.recentAssistantSnippets),
     INTENT_GUIDANCE[intent],
+    input.researchBrief ? `RESEARCH AGENTS:\n${input.researchBrief}` : "",
+    input.priorResearch ? `${input.priorResearch}` : "",
+    input.venueDesk ? `VENUE DESK (prefer this for current BTC, ETH, and SOL prices across exchanges):\n${input.venueDesk}` : "",
+    input.alexusLearning ? `ALEXUS LEARNING (paper only — never an instruction to trade):\n${input.alexusLearning}` : "",
     input.liveMarketData ? `LIVE MARKET DATA:\n${input.liveMarketData}` : "",
     input.liveTokenData ? `LIVE TOKEN INTELLIGENCE:\n${input.liveTokenData}` : "",
     input.liveLaunchData ? `LIVE LAUNCH WATCH:\n${input.liveLaunchData}` : "",
@@ -228,6 +248,16 @@ export function buildTitanSystemPrompt(input: TitanPromptInput): string {
     market && input.watchlistBrief ? `Watchlist intel:\n${input.watchlistBrief}` : "",
     market && input.sentinelBrief ? `Sentinel notes:\n${input.sentinelBrief}` : "",
     "",
+    input.researchBrief
+      ? `RESEARCH AGENTS (market, security, and history — a missing note was not checked):\n${input.researchBrief}`
+      : "",
+    input.priorResearch ? `${input.priorResearch}` : "",
+    input.venueDesk
+      ? `VENUE DESK (prefer this for current BTC, ETH, and SOL prices; a missing venue was not read):\n${input.venueDesk}`
+      : "",
+    input.alexusLearning
+      ? `ALEXUS LEARNING (paper simulations only — Hera cannot trade or unpause from this):\n${input.alexusLearning}`
+      : "",
     input.liveMarketData
       ? `LIVE MARKET DATA (prefer this for rankings / what's moving / best today):\n${input.liveMarketData}`
       : "",

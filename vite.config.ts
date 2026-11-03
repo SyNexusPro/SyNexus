@@ -20,6 +20,7 @@ import { configureHeraVoiceStreamApi } from "./api/_routes/hera/voice-stream";
 import { configureHeraRealtimeSessionApi } from "./api/_routes/hera/realtime-session";
 import { configureHeraIngestApi } from "./api/_routes/hera/ingest";
 import { configureHeraIntelApi } from "./api/_routes/hera/intel";
+import { configureHeraMcpApi } from "./api/_routes/hera/mcp";
 import { configureHeraLiveTokenApi } from "./api/_routes/hera/live-token";
 import { configureHeraLaunchWatchApi } from "./api/_routes/hera/launch-watch";
 import { configureDashboardApi } from "./api/_routes/dashboard";
@@ -105,6 +106,7 @@ export default defineConfig(({ mode }) => {
           configureHeraRealtimeSessionApi(server, env);
           configureHeraIntelApi(server, env);
           configureHeraIngestApi(server, env);
+          configureHeraMcpApi(server, env);
           configureHeraLiveTokenApi(server);
           configureHeraLaunchWatchApi(server);
           configureDashboardApi(server);

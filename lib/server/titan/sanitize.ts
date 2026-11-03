@@ -12,6 +12,10 @@ const BLOCK = [
   /\byou are now\b.*\b(dan|jailbreak|unrestricted)\b/i,
   /\bsystem\s*prompt\b.*\b(reveal|show|print)\b/i,
   /\boverride\s+(your|the)\s+(rules|guardrails|safety)\b/i,
+  /\b(remove|delete|disable|lift|clear)\s+(the\s+)?(pause|kill)(\.switch)?\b/i,
+  /\b(unpause|resume trading|arm live trading)\b/i,
+  /\b(sign|broadcast)\s+(this\s+|the\s+)?(transaction|tx)\b/i,
+  /\b(reveal|print|show|dump)\s+(the\s+)?(api[_ -]?key|secret key|service role)\b/i,
 ];
 
 export function guardTitanServerMessage(message: string): { ok: true } | { ok: false; reason: string } {

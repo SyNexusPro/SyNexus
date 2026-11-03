@@ -16,6 +16,11 @@ import {
   scanLaunchWatch,
 } from "../../../lib/server/titan/launchWatchScan.js";
 import { GROQ_DEFAULT_STRONG, remapGroqModel } from "../../../lib/server/titan/groqModels.js";
+import { loadAlexusLearningBrief } from "../../../lib/server/hera/alexusLearning.js";
+import { traceHera, type TokenUsage } from "../../../lib/server/hera/aiTrace.js";
+import { formatMemoryHits, recallMemory, rememberText } from "../../../lib/server/hera/memory.js";
+import { coordinateResearch } from "../../../lib/server/hera/researchAgents.js";
+import { fetchVenueDeskBrief, needsVenueDesk } from "../../../lib/server/hera/venueDesk.js";
 
 export type TitanChatRequestBody = TitanPromptInput & {
   message: string;
@@ -394,6 +399,7 @@ async function* streamChatCompletions(
   plan: "FREE" | "PRO",
   fastMode: boolean,
   intentHint?: TitanPromptInput["intentHint"],
+  onUsage?: (usage: TokenUsage) => void,
 ): AsyncGenerator<string, void, unknown> {
   if (!endpoint.apiKey) throw new Error("llm_unavailable");
 
@@ -407,6 +413,7 @@ async function* streamChatCompletions(
       model: endpoint.model,
       messages,
       stream: true,
+      stream_options: { include_usage: true },
       max_tokens: endpoint.maxTokens,
       temperature: resolveTemperature(plan, fastMode, intentHint),
       presence_penalty: 0.1,
@@ -440,7 +447,14 @@ async function* streamChatCompletions(
       try {
         const parsed = JSON.parse(payload) as {
           choices?: { delta?: { content?: string } }[];
+          usage?: { prompt_tokens?: number; completion_tokens?: number };
         };
+        if (parsed.usage && onUsage) {
+          onUsage({
+            inputTokens: parsed.usage.prompt_tokens,
+            outputTokens: parsed.usage.completion_tokens,
+          });
+        }
         const delta = parsed.choices?.[0]?.delta?.content;
         if (delta) yield delta;
       } catch {
@@ -453,6 +467,7 @@ async function* streamChatCompletions(
 async function* streamOpenAiChat(
   body: TitanChatRequestBody,
   env: TitanEnv,
+  onUsage?: (usage: TokenUsage, model: string) => void,
 ): AsyncGenerator<string, void, unknown> {
   const fastMode = body.fastMode === true;
   const { primary, fallback } = resolveChatEndpoint(env, body);
@@ -466,10 +481,10 @@ async function* streamOpenAiChat(
   ];
 
   try {
-    yield* streamChatCompletions(primary, messages, body.plan, fastMode, body.intentHint);
+    yield* streamChatCompletions(primary, messages, body.plan, fastMode, body.intentHint, (usage) => onUsage?.(usage, primary.model));
   } catch (err) {
     if (!fallback?.apiKey) throw err;
-    yield* streamChatCompletions(fallback, messages, body.plan, fastMode, body.intentHint);
+    yield* streamChatCompletions(fallback, messages, body.plan, fastMode, body.intentHint, (usage) => onUsage?.(usage, fallback.model));
   }
 }
 
@@ -546,6 +561,20 @@ export async function handleTitanChatStream(
     }
   }
 
+  if (needsVenueDesk(parsed.message, parsed.intentHint) || needsLiveMarketFetch(parsed.message, parsed.intentHint)) {
+    const [desk, learning] = await Promise.all([
+      fetchVenueDeskBrief().catch(
+        () => "VENUE DESK unavailable. Tell the user live venue prices could not be retrieved — do not invent prices.",
+      ),
+      loadAlexusLearningBrief(env).catch(
+        () => "ALEXUS LEARNING unavailable. Do not invent Alexus results, win rates, or prices.",
+      ),
+    ]);
+    parsed.venueDesk = desk;
+    parsed.alexusLearning = learning;
+    parsed.fastMode = false;
+  }
+
   if (needsLaunchWatchFetch(parsed.message, parsed.intentHint)) {
     try {
       const leads = await scanLaunchWatch(env);
@@ -555,6 +584,26 @@ export async function handleTitanChatStream(
     } catch {
       parsed.liveLaunchData =
         "LIVE LAUNCH WATCH unavailable. Say public launch feeds could not be retrieved — do not invent coins, mints, or social posts.";
+    }
+  }
+
+  if (parsed.liveTokenData || parsed.venueDesk || parsed.alexusLearning) {
+    try {
+      parsed.priorResearch = formatMemoryHits(await recallMemory(env, parsed.message));
+    } catch {
+      parsed.priorResearch = formatMemoryHits("unavailable");
+    }
+    try {
+      parsed.researchBrief = await coordinateResearch({
+        question: parsed.message,
+        market: parsed.liveTokenData || parsed.venueDesk || "",
+        security: parsed.liveTokenData
+          ? "Use only security fields written in the live token note. Anything not listed was not checked."
+          : "",
+        history: [parsed.priorResearch, parsed.alexusLearning].filter(Boolean).join("\n"),
+      });
+    } catch {
+      parsed.researchBrief = "RESEARCH COORDINATOR unavailable. Do not invent a specialist finding.";
     }
   }
 
@@ -604,12 +653,18 @@ export async function handleTitanChatStream(
   res.setHeader("Connection", "keep-alive");
   res.setHeader("X-Titan-Plan", parsed.plan);
 
+  let full = "";
+  let failure = "";
+  let usage: TokenUsage = {};
+  let tracedModel = "";
   try {
     if (liveTokenMeta) {
       res.write(`data: ${JSON.stringify({ live: liveTokenMeta })}\n\n`);
     }
-    let full = "";
-    for await (const delta of streamOpenAiChat(parsed, env)) {
+    for await (const delta of streamOpenAiChat(parsed, env, (next, model) => {
+      usage = next;
+      tracedModel = model;
+    })) {
       full += delta;
       res.write(`data: ${JSON.stringify({ delta })}\n\n`);
     }
@@ -619,15 +674,39 @@ export async function handleTitanChatStream(
     res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
     res.end();
   } catch (error) {
-    const message = error instanceof Error ? error.message : "llm_failed";
+    failure = error instanceof Error ? error.message : "llm_failed";
     if (!res.headersSent) {
       res.statusCode = 502;
       res.setHeader("Content-Type", "application/json");
-      res.end(JSON.stringify({ error: message }));
-      return;
+      res.end(JSON.stringify({ error: failure }));
+    } else {
+      res.write(`data: ${JSON.stringify({ error: failure })}\n\n`);
+      res.end();
     }
-    res.write(`data: ${JSON.stringify({ error: message })}\n\n`);
-    res.end();
+  } finally {
+    void traceHera(env, {
+      name: "hera.chat",
+      model: tracedModel || undefined,
+      decision: parsed.intentHint ?? "general",
+      why: [
+        parsed.liveTokenData ? "live token attached" : "no live token",
+        parsed.venueDesk ? "venue desk attached" : "no venue desk",
+        parsed.priorResearch ? "memory attached" : "no memory",
+        parsed.researchBrief ? "research agents attached" : "no research agents",
+        failure ? `failed: ${failure}` : "answered",
+      ].join("; "),
+      input: parsed.message,
+      output: full.slice(0, 1500),
+      usage,
+      error: failure || undefined,
+    });
+    if (!failure && parsed.liveTokenData && full.trim()) {
+      void rememberText(env, {
+        kind: "research",
+        source: "hera.chat",
+        content: `${parsed.message}\n${full.slice(0, 800)}`,
+      });
+    }
   }
 }
 
