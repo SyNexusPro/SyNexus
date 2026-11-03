@@ -35,7 +35,7 @@ export function defaultRunners(env: Record<string, string | undefined>): Approve
   return {
     venueDesk: () => fetchVenueDeskBrief(),
     alexusLearning: () => loadAlexusLearningBrief(env),
-    routeCompare: (mint) => compareSolanaRoute(mint),
+    routeCompare: (mint) => compareSolanaRoute(mint, env),
     memorySearch: async (query) => formatMemoryHits(await recallMemory(env, query)),
   };
 }

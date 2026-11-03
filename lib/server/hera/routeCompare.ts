@@ -3,9 +3,12 @@
  * Quote only. This never calls a swap, signing, or order endpoint.
  */
 const SOL_MINT = "So11111111111111111111111111111111111111112";
-const QUOTE_URL = "https://lite-api.jup.ag/swap/v1/quote";
+const LITE_QUOTE_URL = "https://lite-api.jup.ag/swap/v1/quote";
+const KEYED_QUOTE_URL = "https://api.jup.ag/swap/v1/quote";
 const COMPARE_SOL = 0.1;
 const GMGN_FEE_EACH_SIDE_PCT = 1;
+
+type QuoteEnv = { JUPITER_API_KEY?: string };
 
 export type RouteComparison = {
   advisoryOnly: true;
@@ -53,7 +56,13 @@ export function compareQuotedRoute(solIn: bigint, solOut: bigint | null): RouteC
   };
 }
 
-function quoteUrl(inputMint: string, outputMint: string, amount: string): string {
+function quoteHeaders(env: QuoteEnv): Record<string, string> | undefined {
+  const key = env.JUPITER_API_KEY?.trim();
+  if (!key) return undefined;
+  return { "x-api-key": key };
+}
+
+function quoteUrl(env: QuoteEnv, inputMint: string, outputMint: string, amount: string): string {
   const params = new URLSearchParams({
     inputMint,
     outputMint,
@@ -61,11 +70,16 @@ function quoteUrl(inputMint: string, outputMint: string, amount: string): string
     slippageBps: "50",
     restrictIntermediateTokens: "true",
   });
-  return `${QUOTE_URL}?${params.toString()}`;
+  const base = env.JUPITER_API_KEY?.trim() ? KEYED_QUOTE_URL : LITE_QUOTE_URL;
+  return `${base}?${params.toString()}`;
 }
 
-async function readQuote(fetchImpl: FetchImpl, url: string): Promise<bigint | null> {
-  const response = await fetchImpl(url, { signal: AbortSignal.timeout(8_000) });
+async function readQuote(
+  fetchImpl: FetchImpl,
+  url: string,
+  headers?: Record<string, string>,
+): Promise<bigint | null> {
+  const response = await fetchImpl(url, { headers, signal: AbortSignal.timeout(8_000) });
   if (!response.ok) return null;
   const body = await response.json() as QuoteBody;
   if (!body.outAmount || !/^\d+$/.test(body.outAmount)) return null;
@@ -76,12 +90,17 @@ async function readQuote(fetchImpl: FetchImpl, url: string): Promise<bigint | nu
   }
 }
 
-export async function compareSolanaRoute(mint: string, fetchImpl: FetchImpl = fetch): Promise<RouteComparison> {
+export async function compareSolanaRoute(
+  mint: string,
+  env: QuoteEnv = {},
+  fetchImpl: FetchImpl = fetch,
+): Promise<RouteComparison> {
   const solIn = BigInt(Math.round(COMPARE_SOL * 1_000_000_000));
+  const headers = quoteHeaders(env);
   try {
-    const bought = await readQuote(fetchImpl, quoteUrl(SOL_MINT, mint, solIn.toString()));
+    const bought = await readQuote(fetchImpl, quoteUrl(env, SOL_MINT, mint, solIn.toString()), headers);
     if (bought === null) return unavailableRoute("Jupiter buy quote was not retrieved.");
-    const sold = await readQuote(fetchImpl, quoteUrl(mint, SOL_MINT, bought.toString()));
+    const sold = await readQuote(fetchImpl, quoteUrl(env, mint, SOL_MINT, bought.toString()), headers);
     return compareQuotedRoute(solIn, sold);
   } catch {
     return unavailableRoute("Jupiter quote was not retrieved.");

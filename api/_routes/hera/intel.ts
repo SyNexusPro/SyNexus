@@ -196,7 +196,7 @@ export async function handleHeraIntel(
       market,
       security,
     });
-    const routeComparison = await (deps.compareRoute ?? compareSolanaRoute)(request.mint).catch(() =>
+    const routeComparison = await (deps.compareRoute ?? ((mint) => compareSolanaRoute(mint, env)))(request.mint).catch(() =>
       unavailableRoute("Jupiter quote was not retrieved."),
     );
     sendJson(res, 200, { ...report, routeComparison });

@@ -6,7 +6,7 @@ import { buildHeraTrace, estimateCostUsd, sendHeraTrace } from "./aiTrace.js";
 import { dispatchMcp } from "./mcpServer.js";
 import { formatMemoryHits, lessonTextFromSnapshot } from "./memory.js";
 import { coordinateResearch } from "./researchAgents.js";
-import { compareQuotedRoute, unavailableRoute } from "./routeCompare.js";
+import { compareQuotedRoute, compareSolanaRoute, unavailableRoute } from "./routeCompare.js";
 import { guardTitanServerMessage } from "../titan/sanitize.js";
 
 test("known model usage is priced and an unknown model is left unpriced", () => {
@@ -47,7 +47,27 @@ test("a Jupiter round trip is measured from the two quotes and a missing leg sta
 
 test("route comparison source has no swap execution", () => {
   const src = fs.readFileSync(new URL("./routeCompare.ts", import.meta.url), "utf8");
-  assert.doesNotMatch(src, /\/swap\/v1\/swap\b|swap-instructions|sendTransaction|signTransaction/);
+  assert.doesNotMatch(src, /\/swap\/v1\/swap\b|\/swap\/v2\/execute\b|swap-instructions|sendTransaction|signTransaction/);
+});
+
+test("a Jupiter API key is sent as a header and never appears in the quote URL", async () => {
+  const seen: { url: string; header?: string }[] = [];
+  const compared = await compareSolanaRoute(
+    "So11111111111111111111111111111111111111112",
+    { JUPITER_API_KEY: "jup-test-key" },
+    async (url, init) => {
+      const headers = init?.headers as Record<string, string> | undefined;
+      seen.push({ url: String(url), header: headers?.["x-api-key"] });
+      return new Response(JSON.stringify({ outAmount: "100000000" }), { status: 200 });
+    },
+  );
+  assert.equal(compared.executesTrades, false);
+  assert.equal(seen.length, 2);
+  for (const call of seen) {
+    assert.match(call.url, /^https:\/\/api\.jup\.ag\/swap\/v1\/quote\?/);
+    assert.equal(call.url.includes("jup-test-key"), false);
+    assert.equal(call.header, "jup-test-key");
+  }
 });
 
 test("malicious instructions are blocked and ordinary questions are allowed", () => {
