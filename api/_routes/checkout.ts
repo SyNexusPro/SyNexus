@@ -18,6 +18,20 @@ type ServerlessResponse = {
   end(body?: string): void;
 };
 
+function sendJson(res: ServerlessResponse, status: number, body: unknown) {
+  const nodeRes = res as ServerlessResponse & {
+    statusCode?: number;
+    end?: (payload?: string) => void;
+  };
+  if (typeof res.status === "function") {
+    res.status(status).json(body);
+    return;
+  }
+  nodeRes.statusCode = status;
+  res.setHeader("Content-Type", "application/json");
+  nodeRes.end?.(JSON.stringify(body));
+}
+
 function readRequestBody(req: NodeJS.ReadableStream): Promise<string> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
@@ -54,7 +68,7 @@ export function configureCheckoutApi(server: ViteDevServer, env: Record<string, 
 
 export default async function handler(req: ServerlessRequest, res: ServerlessResponse) {
   if (req.method !== "POST") {
-    res.status(405).json({ error: "Method not allowed" });
+    sendJson(res, 405, { error: "Method not allowed" });
     return;
   }
 
@@ -68,10 +82,10 @@ export default async function handler(req: ServerlessRequest, res: ServerlessRes
       req.headers,
       process.env,
     );
-    res.status(result.statusCode).json(result.body);
+    sendJson(res, result.statusCode, result.body);
   } catch (error) {
     console.error("[checkout]", error);
-    res.status(500).json({
+    sendJson(res, 500, {
       error: "Checkout is temporarily unavailable. Please try again shortly.",
     });
   }
