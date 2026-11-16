@@ -16,7 +16,7 @@ import {
 import { enrollDevicePasskey, passkeysAvailable } from "../../security/passkeys";
 import { isPhoneVerified, maskPhoneNumber } from "../../security/phoneVerification";
 import { listOwnSecurityEvents, recordSecurityEvent, type SecurityEventRow } from "../../security/securityEvents";
-import { requestWelcomeReplay } from "../../lib/welcomeWalkthrough";
+import { requestWelcomeReplay } from "../../lib/onboardingTour";
 
 export function SecuritySettings() {
   const navigate = useNavigate();

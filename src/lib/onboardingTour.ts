@@ -38,6 +38,34 @@ export function wantsForcedOnboardingTour(): boolean {
   return new URLSearchParams(window.location.search).get("tour") === "1";
 }
 
+const REPLAY_KEY = "synexus_onboarding_replay";
+export const ONBOARDING_REPLAY_EVENT = "synexus-onboarding-replay";
+
+export function requestWelcomeReplay(): void {
+  try {
+    sessionStorage.setItem(REPLAY_KEY, "1");
+  } catch {
+    /* ignore */
+  }
+  if (typeof window !== "undefined") window.dispatchEvent(new Event(ONBOARDING_REPLAY_EVENT));
+}
+
+export function hasWelcomeReplay(): boolean {
+  try {
+    return sessionStorage.getItem(REPLAY_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function clearWelcomeReplay(): void {
+  try {
+    sessionStorage.removeItem(REPLAY_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
 const LEGAL_PREFIXES = [
   "/terms",
   "/privacy",

@@ -7,7 +7,7 @@ import { useTitanBotName } from "../hooks/useTitanBotName";
 import { PasswordRevealToggle } from "./PasswordRevealToggle";
 import { GoogleAuthOption } from "./GoogleSignInButton";
 import { LanguagePicker } from "./LanguagePicker";
-import { requestWelcomeReplay } from "../lib/welcomeWalkthrough";
+import { requestWelcomeReplay } from "../lib/onboardingTour";
 
 type AuthTone = "info" | "success" | "error";
 type SignInMethod = "magic" | "password";

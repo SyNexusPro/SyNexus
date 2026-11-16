@@ -3,10 +3,6 @@ import { fetchGuardianAlerts, fetchProfile, fetchWatchlistTokens, getCurrentUser
 import { hasSupabaseEnv } from "../lib/supabaseClient";
 import { useTitanShell } from "../context/TitanShellContext";
 import { consumeHeraWakeLaunch, type HeraWakeLaunch } from "../lib/hera/wakeWord";
-import {
-  consumeHeraSignupDemoPending,
-  HERA_SIGNUP_DEMO_EVENT,
-} from "../lib/heraSignupDemo";
 import { useTitanBotName } from "../hooks/useTitanBotName";
 import { DEFAULT_TITAN_BOT_NAME } from "../config/titanBot";
 import { resolveTitanBotName } from "../lib/titanBotName";
@@ -36,7 +32,7 @@ function normalizePlan(raw: string | null | undefined): "FREE" | "PRO" {
 }
 
 export function TitanSheet() {
-  const { sheetOpen, sheetMode, openChat, closeSheet } = useTitanShell();
+  const { sheetOpen, sheetMode, closeSheet } = useTitanShell();
   const { name: titanBotName } = useTitanBotName();
   const commanderLabel = titanBotName || resolveTitanBotName() || DEFAULT_TITAN_BOT_NAME;
   const [bootReady, setBootReady] = useState(isSynexusBootComplete());

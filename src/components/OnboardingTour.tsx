@@ -4,8 +4,11 @@ import { getOnboardingSteps } from "../config/onboardingTour";
 import { useTitanChatOpen, useTitanLoginOpen } from "../hooks/useTitanChatOpen";
 import { isNativeAndroid } from "../lib/bootExperience";
 import {
+  clearWelcomeReplay,
+  hasWelcomeReplay,
   isOnboardingTourRoute,
   markOnboardingTourComplete,
+  ONBOARDING_REPLAY_EVENT,
   wantsForcedOnboardingTour,
 } from "../lib/onboardingTour";
 import { isSynexusBootComplete, subscribeSynexusBootComplete } from "../lib/synexusBootComplete";
@@ -53,6 +56,7 @@ export function OnboardingTour() {
   const paused = heraOpen || loginOpen;
 
   const startedRef = useRef(false);
+  const [replayNonce, setReplayNonce] = useState(0);
 
   useEffect(() => {
     if (bootDone) return;
@@ -60,19 +64,30 @@ export function OnboardingTour() {
   }, [bootDone]);
 
   useEffect(() => {
+    const onReplay = () => {
+      startedRef.current = false;
+      setReplayNonce((value) => value + 1);
+    };
+    window.addEventListener(ONBOARDING_REPLAY_EVENT, onReplay);
+    return () => window.removeEventListener(ONBOARDING_REPLAY_EVENT, onReplay);
+  }, []);
+
+  useEffect(() => {
     if (!bootDone || startedRef.current) return;
     if (!isOnboardingTourRoute(location.pathname)) return;
     // Spotlight ring is opt-in only. The sign-up demo is Hera-guided.
-    if (!wantsForcedOnboardingTour()) return;
+    const replay = wantsForcedOnboardingTour() || hasWelcomeReplay();
+    if (!replay) return;
     const timer = window.setTimeout(() => {
       if (startedRef.current) return;
       startedRef.current = true;
+      clearWelcomeReplay();
       setListenVisible(Boolean(document.querySelector('[data-tour="nav-listen"]')));
       setActive(true);
       setStepIndex(0);
     }, 450);
     return () => window.clearTimeout(timer);
-  }, [bootDone, location.pathname]);
+  }, [bootDone, location.pathname, replayNonce]);
 
   const finish = useCallback(() => {
     markOnboardingTourComplete();
