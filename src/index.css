@@ -13479,6 +13479,19 @@ body:has(.oracle-chat--presence) .titan-sheet-backdrop {
   cursor: pointer;
 }
 
+.hera-screen__activate {
+  align-self: center;
+  margin: 0 0 8px;
+  min-height: 48px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(8, 18, 28, 0.82);
+  color: #f5ffe9;
+  font: inherit;
+  cursor: pointer;
+}
+
 .hera-screen__stage {
   position: relative;
   flex: 1 1 auto;

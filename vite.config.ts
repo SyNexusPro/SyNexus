@@ -2,6 +2,11 @@ import react from "@vitejs/plugin-react";
 import { defineConfig, loadEnv } from "vite";
 import { configureCheckoutApi } from "./api/_routes/checkout";
 import { configureOwnerUnlockApi } from "./api/_routes/ownerUnlock";
+import { configureOwnerBriefApi } from "./api/_routes/owner/brief";
+import { configureOwnerHeraApi } from "./api/_routes/owner/hera";
+import { configureOwnerOlympusApi } from "./api/_routes/owner/olympus";
+import { configureOwnerDeveloperApi } from "./api/_routes/owner/developer";
+import { configureHeraDeveloperCron } from "./api/_routes/cron/hera-developer";
 import { configureAnalyticsApi } from "./api/_routes/analytics";
 import { configureTitanChatApi } from "./api/_routes/titan/chat";
 import { configureWhaleWebhookApi } from "./api/_routes/whale/webhook";
@@ -22,9 +27,13 @@ import { configureHeraIntelApi } from "./api/_routes/hera/intel";
 import { configureHeraMcpApi } from "./api/_routes/hera/mcp";
 import { configureHeraLiveTokenApi } from "./api/_routes/hera/live-token";
 import { configureHeraLaunchWatchApi } from "./api/_routes/hera/launch-watch";
+import { configureHeraMindApi } from "./api/_routes/hera/mind";
 import { configureDashboardApi } from "./api/_routes/dashboard";
 import { configureRealtimeBridge } from "./api/_routes/realtime/bridge";
 import { configureCommunityAccessApi } from "./api/_routes/community/access";
+import { configureMembershipApi } from "./api/_routes/membership/index";
+import { configureRevenueCatWebhook } from "./api/_routes/revenuecat/webhook";
+import { configureTradeApi } from "./api/_routes/trade/quote";
 
 /** Client bundle reads only VITE_* from import.meta.env; Vercel often sets SUPABASE_* without the prefix. */
 function resolveSupabaseForClientBuild(mode: string) {
@@ -86,7 +95,15 @@ export default defineConfig(({ mode }) => {
         configureServer(server) {
           configureCheckoutApi(server, env);
           configureCommunityAccessApi(server, env);
+          configureMembershipApi(server, env);
+          configureRevenueCatWebhook(server, env);
+          configureTradeApi(server, env);
           configureOwnerUnlockApi(server, env);
+          configureOwnerBriefApi(server, env);
+          configureOwnerHeraApi(server, env);
+          configureOwnerOlympusApi(server, env);
+          configureOwnerDeveloperApi(server, env);
+          configureHeraDeveloperCron(server, env);
           configureAnalyticsApi(server);
           configureTitanChatApi(server, env);
           configureWhaleWebhookApi(server, env);
@@ -107,6 +124,7 @@ export default defineConfig(({ mode }) => {
           configureHeraMcpApi(server, env);
           configureHeraLiveTokenApi(server);
           configureHeraLaunchWatchApi(server);
+          configureHeraMindApi(server, env);
           configureDashboardApi(server);
           configureRealtimeBridge(server, env);
         },

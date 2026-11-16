@@ -122,13 +122,22 @@ export type TitanPromptInput = {
   focusSymbol?: string | null;
   /** Recent assistant snippets to avoid repeating. */
   recentAssistantSnippets?: string[] | null;
+  /** Verified owner figures. Never supplied by the client. */
+  ownerBrief?: string | null;
+  /** One Hera: this person's private memory plus approved shared lessons. Server-built. */
+  heraMind?: string | null;
 };
+
+function ownerBriefBlock(brief?: string | null): string {
+  if (!brief?.trim()) return "";
+  return `OWNER BRIEFING (private verified figures — repeat Data unavailable, do not estimate):\n${brief.trim()}`;
+}
 
 function spokenDirective(spoken?: boolean): string {
   if (!spoken) return "";
   return (
-    "This reply will be spoken aloud, like ChatGPT Voice or Gemini Live. " +
-    "Talk in complete, natural sentences. Give a real answer — not a telegram. " +
+    "This reply will be spoken aloud in Hera's own voice. " +
+    "Use smooth, connected sentences. Leave a breath between thoughts and finish the last word. " +
     "Greetings can be short. Explanations, rankings, and how-tos can run longer. " +
     "No markdown, no bullet symbols, no code fences. " +
     "Don't end with a branded closer. Only mention a data timestamp if you cited live numbers from context."
@@ -184,8 +193,9 @@ function buildTitanFastCryptoPrompt(input: TitanPromptInput): string {
   const market = wantsMarketContext(input);
 
   return [
-    `You are ${name}. You're talking with ${operator} — answer like ChatGPT or Gemini would: helpful, complete, natural.`,
+    `You are ${name}. You're talking with ${operator}. Answer in a helpful, complete, natural way.`,
     HERA_CONVERSATION_CHARTER,
+    input.heraMind?.trim() ? input.heraMind.trim() : "",
     spokenDirective(input.spokenReply),
     languageDirective(input.replyLanguage),
     antiRepeatDirective(input.recentAssistantSnippets),
@@ -197,6 +207,7 @@ function buildTitanFastCryptoPrompt(input: TitanPromptInput): string {
     input.liveMarketData ? `LIVE MARKET DATA:\n${input.liveMarketData}` : "",
     input.liveTokenData ? `LIVE TOKEN INTELLIGENCE:\n${input.liveTokenData}` : "",
     input.liveLaunchData ? `LIVE LAUNCH WATCH:\n${input.liveLaunchData}` : "",
+    ownerBriefBlock(input.ownerBrief),
     market && input.tokenIntel
       ? `Client pool (may be delayed — prefer LIVE TOKEN INTELLIGENCE if present):\n${input.tokenIntel}`
       : "",
@@ -231,10 +242,11 @@ export function buildTitanSystemPrompt(input: TitanPromptInput): string {
   const market = wantsMarketContext(input);
 
   return [
-    `You are ${name}. You're talking with ${operator}. Answer like ChatGPT, Gemini, or Grok would — helpful, complete, natural.`,
+    `You are ${name}. You're talking with ${operator}. Answer like a capable assistant would — helpful, complete, natural.`,
     "",
     HERA_CONVERSATION_CHARTER,
     "",
+    input.heraMind?.trim() ? input.heraMind.trim() : "",
     spokenDirective(input.spokenReply),
     market ? TITAN_DISCOVERY_CHARTER : "",
     market ? COMMANDER_SENTINEL_CHAIN : "",
@@ -267,6 +279,7 @@ export function buildTitanSystemPrompt(input: TitanPromptInput): string {
     input.liveLaunchData
       ? `LIVE LAUNCH WATCH (newest public launches and social posts about launching):\n${input.liveLaunchData}`
       : "",
+    ownerBriefBlock(input.ownerBrief),
     market ? `Live market brief:\n${input.marketBrief}` : "",
     market && input.moversBrief ? `\nRanked movers:\n${input.moversBrief}` : "",
     market && input.tokenIntel

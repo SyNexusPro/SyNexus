@@ -1,4 +1,5 @@
 import type { IncomingMessage } from "node:http";
+import { resolveMembership } from "../membership/resolve.js";
 import {
   resolveTitanAuthPlan,
   supabaseAdminFromEnv,
@@ -32,10 +33,11 @@ export async function resolveCommunityAccess(
   env: Env,
 ): Promise<CommunityAccess> {
   const auth = await resolveTitanAuthPlan(req, env);
+  const membership = await resolveMembership(req, env);
   const base = {
-    userId: auth.userId,
-    plan: auth.plan,
-    owner: auth.owner === true,
+    userId: membership.userId ?? auth.userId,
+    plan: membership.social ? ("PRO" as const) : ("FREE" as const),
+    owner: membership.owner,
   };
 
   if (!serverFlagEnabled(env)) {
@@ -46,7 +48,7 @@ export async function resolveCommunityAccess(
       reason: "feature_disabled",
     };
   }
-  if (!auth.authenticated) {
+  if (!membership.authenticated) {
     return {
       ...base,
       enabled: true,
@@ -54,7 +56,7 @@ export async function resolveCommunityAccess(
       reason: "authentication_required",
     };
   }
-  if (auth.plan !== "PRO" && !auth.owner) {
+  if (!membership.social) {
     return {
       ...base,
       enabled: true,

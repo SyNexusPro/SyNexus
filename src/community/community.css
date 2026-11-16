@@ -29,11 +29,6 @@ html:has(.community) #root {
   position: absolute;
   inset: -12px -8px auto;
   height: 280px;
-  background-image:
-    linear-gradient(rgba(157, 255, 47, 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(157, 255, 47, 0.07) 1px, transparent 1px);
-  background-size: 32px 32px;
-  mask-image: radial-gradient(ellipse at 50% 0%, #000 15%, transparent 72%);
   pointer-events: none;
 }
 
@@ -212,11 +207,6 @@ html:has(.community) #root {
   content: "";
   position: absolute;
   inset: 0;
-  background-image:
-    linear-gradient(rgba(137, 255, 47, 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(137, 255, 47, 0.06) 1px, transparent 1px);
-  background-size: 28px 28px;
-  mask-image: radial-gradient(ellipse at 50% 30%, #000 20%, transparent 75%);
   pointer-events: none;
 }
 

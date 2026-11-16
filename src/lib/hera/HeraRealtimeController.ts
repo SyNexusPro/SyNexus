@@ -431,7 +431,7 @@ export class HeraRealtimeController {
       const timer = window.setTimeout(() => {
         pc.removeEventListener("icegatheringstatechange", done);
         resolve();
-      }, 3000);
+      }, 1500);
       pc.addEventListener("icegatheringstatechange", done);
       done();
     });

@@ -125,6 +125,9 @@ function start(): void {
     if (isBackgroundAuthRefresh(event)) return;
     const user = session?.user ?? null;
     refresh(async () => user);
+    void import("./revenuecatNative")
+      .then((mod) => mod.syncRevenueCatUser(user?.id ?? null))
+      .catch(() => undefined);
   });
 }
 

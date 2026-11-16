@@ -1,0 +1,31 @@
+{
+  "name": "SyNexus",
+  "short_name": "SyNexus",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#071007",
+  "icons": [
+    {
+      "src": "/synexus-symbol.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Hera",
+      "short_name": "Hera",
+      "description": "Titan AI",
+      "url": "/owner/hera",
+      "icons": [
+        {
+          "src": "/hera/hera-face.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}

@@ -99,6 +99,16 @@ export function useHeraRealtime(options: Options) {
     setMutedState(true);
   }, []);
 
+  const retry = useCallback(() => {
+    setUnavailable(false);
+    setError(null);
+    void heraLiveVoice.connect({
+      history: historyRef.current,
+      seedText: seedRef.current?.trim() ?? "",
+      contextNote: contextRef.current,
+    });
+  }, []);
+
   const connected =
     !unavailable &&
     (state === "listening" || state === "thinking" || state === "speaking" || state === "interrupted");
@@ -121,6 +131,7 @@ export function useHeraRealtime(options: Options) {
     error: unavailable ? null : error,
     sendText,
     interrupt,
+    retry,
     armListening,
     setMuted,
     startListening: armListening,

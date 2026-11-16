@@ -19,7 +19,7 @@ function accessMessage(access: CommunityAccess): string {
     case "authentication_required":
       return "Sign in with your SyNexus member account to continue.";
     case "membership_required":
-      return "SyNexus Community is included with SyNexus Pro. Start free and join the conversation.";
+      return "The social network is included with Pantheon. Next Level does not include it.";
     case "account_restricted":
       return "Community access is temporarily restricted. Review your moderation notices or appeal.";
     case "database_not_ready":

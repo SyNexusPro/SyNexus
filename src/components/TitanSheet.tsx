@@ -49,7 +49,6 @@ export function TitanSheet() {
   );
   const titanChatActive = sheetOpen && sheetMode === "chat";
   const [wakeLaunch, setWakeLaunch] = useState<HeraWakeLaunch | null>(null);
-  const [signupDemo, setSignupDemo] = useState(false);
 
   const { tokens, feedSource } = useOracleMarketFeed({
     enabled: titanChatActive,
@@ -73,23 +72,8 @@ export function TitanSheet() {
       return;
     }
     setWakeLaunch(null);
-    if (wasChatOpen.current) {
-      wasChatOpen.current = false;
-      setSignupDemo(false);
-    }
+    if (wasChatOpen.current) wasChatOpen.current = false;
   }, [sheetOpen, sheetMode]);
-
-  useEffect(() => {
-    const tryStart = () => {
-      if (!bootReady) return;
-      if (!consumeHeraSignupDemoPending()) return;
-      setSignupDemo(true);
-      openChat();
-    };
-    window.addEventListener(HERA_SIGNUP_DEMO_EVENT, tryStart);
-    tryStart();
-    return () => window.removeEventListener(HERA_SIGNUP_DEMO_EVENT, tryStart);
-  }, [bootReady, openChat]);
 
   useEffect(() => subscribeSynexusBootComplete(() => setBootReady(true)), []);
 
@@ -183,7 +167,7 @@ export function TitanSheet() {
           autoListen={autoListen}
           seedUtterance={fromWake && seed.length >= 6 ? seed : null}
           wakePulse={fromWake}
-          guidedDemo={signupDemo && !fromWake}
+          guidedDemo={false}
         />
       ) : null}
 

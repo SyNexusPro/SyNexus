@@ -26,7 +26,7 @@ import {
 import { WALLETCONNECT_WALLET_NAME } from "../lib/walletConnectSolana";
 import { loadSwapHistory, recordSwapHistory, type SwapHistoryRecord } from "../lib/swapHistory";
 import { assessSwapToken, priceImpactGate, type SwapSafetyReport } from "../lib/swapSafety";
-import { calculateTradeFeeUsd, formatFeeUsd, formatTradingFeeRate, getTradingFeeBps } from "../lib/tradingFees";
+import { calculateTradeFeeUsd, formatFeeUsd, getTradingFeeBps } from "../lib/tradingFees";
 import { fetchMvpTokenFeed, lookupTokenByQuery, searchTradeTokens } from "../services/marketDataService";
 import type { Token } from "../data/tokens";
 
@@ -710,13 +710,14 @@ function TradeScreen() {
             <li>Price impact {Math.abs(quote.priceImpactPct).toFixed(2)}%</li>
             <li>Network cost ~{formatAmt(estimateNetworkCostSol(swapBuild), 6)} SOL</li>
             <li>
-              SyNexus fee {formatTradingFeeRate(plan)}
+              SyNexus fee {quote.platformFeeBps === 0 ? "none" : `${(quote.platformFeeBps / 100).toFixed(2)}%`}
               {quote.platformFeeApplied
                 ? ` · ~${formatFeeUsd(synexusFeeUsd)}`
                 : feeAccount
                   ? ""
                   : " · fee wallet not configured this session"}
             </li>
+            <li>Solana network fees and fees charged by other venues are separate. SyNexus does not keep those.</li>
           </ul>
           <p className="trade-page__hint">
             Your {wallet.kind ?? "wallet"} will ask you to approve. SyNexus cannot sign this for you.

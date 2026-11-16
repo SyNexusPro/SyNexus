@@ -1,16 +1,16 @@
 import { PublicKey } from "@solana/web3.js";
 import { SYN_MINT } from "../config/synToken";
+import { authHeaders } from "./authSession";
 import { JUPITER_SOL_MINT } from "./solanaTradeLinks";
 import { getSolanaConnection } from "./solanaWallet";
 
 const LITE_QUOTE = "https://lite-api.jup.ag/swap/v1/quote";
-const LITE_SWAP = "https://lite-api.jup.ag/swap/v1/swap";
 const V6_QUOTE = "https://quote-api.jup.ag/v6/quote";
-const V6_SWAP = "https://quote-api.jup.ag/v6/swap";
 
 export const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 
 const decimalsCache = new Map<string, number>();
+const quoteTokens = new WeakMap<JupiterQuoteResponse, string>();
 
 export type JupiterQuoteResponse = {
   inputMint: string;
@@ -84,6 +84,10 @@ async function fetchQuoteFrom(url: string, params: URLSearchParams): Promise<Jup
   return data;
 }
 
+void fetchQuoteFrom;
+void LITE_QUOTE;
+void V6_QUOTE;
+
 export async function fetchJupiterQuote(opts: {
   inputMint: string;
   outputMint: string;
@@ -93,25 +97,32 @@ export async function fetchJupiterQuote(opts: {
 }): Promise<SwapQuoteView> {
   if (opts.amountAtomic <= 0n) throw new Error("Enter an amount to swap.");
   if (opts.inputMint === opts.outputMint) throw new Error("Choose two different tokens.");
+  void opts.platformFeeBps;
 
-  const params = new URLSearchParams({
-    inputMint: opts.inputMint,
-    outputMint: opts.outputMint,
-    amount: opts.amountAtomic.toString(),
-    slippageBps: String(opts.slippageBps),
-    restrictIntermediateTokens: "true",
+  const response = await fetch("/api/trade/quote", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+    body: JSON.stringify({
+      inputMint: opts.inputMint,
+      outputMint: opts.outputMint,
+      amount: opts.amountAtomic.toString(),
+      slippageBps: opts.slippageBps,
+    }),
   });
-  const feeAccount = jupiterFeeAccount();
-  const feeBps = opts.platformFeeBps ?? 0;
-  const applyFee = Boolean(feeAccount && feeBps > 0);
-  if (applyFee) params.set("platformFeeBps", String(feeBps));
-
-  let quote: JupiterQuoteResponse;
-  try {
-    quote = await fetchQuoteFrom(LITE_QUOTE, params);
-  } catch {
-    quote = await fetchQuoteFrom(V6_QUOTE, params);
+  const data = (await response.json().catch(() => null)) as {
+    quote?: JupiterQuoteResponse;
+    quoteToken?: string;
+    platformFeeBps?: number;
+    platformFeeApplied?: boolean;
+    error?: string;
+  } | null;
+  if (!response.ok || !data?.quote?.outAmount || !data.quoteToken) {
+    throw new Error(data?.error || "SyNexus could not price this swap.");
   }
+  const quote = data.quote;
+  quoteTokens.set(quote, data.quoteToken);
+  const feeBps = data.platformFeeBps ?? 0;
+  const applyFee = Boolean(data.platformFeeApplied);
 
   const [inDecimals, outDecimals] = await Promise.all([
     getMintDecimals(opts.inputMint),
@@ -139,40 +150,18 @@ export async function buildJupiterSwapTransaction(opts: {
   quote: JupiterQuoteResponse;
   userPublicKey: string;
 }): Promise<JupiterSwapBuild> {
-  const feeAccount = jupiterFeeAccount();
-  const body: Record<string, unknown> = {
-    quoteResponse: opts.quote,
-    userPublicKey: opts.userPublicKey,
-    wrapAndUnwrapSol: true,
-    dynamicComputeUnitLimit: true,
-    dynamicSlippage: true,
-    prioritizationFeeLamports: {
-      priorityLevelWithMaxLamports: {
-        maxLamports: 1_000_000,
-        priorityLevel: "high",
-      },
-    },
-  };
-  if (feeAccount) body.feeAccount = feeAccount;
-
-  async function post(url: string): Promise<JupiterSwapBuild> {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const data = (await response.json()) as JupiterSwapBuild & { error?: string; message?: string };
-    if (!response.ok || !data.swapTransaction) {
-      throw new Error(data.error || data.message || `Jupiter swap build failed (${response.status})`);
-    }
-    return data;
+  const quoteToken = quoteTokens.get(opts.quote);
+  if (!quoteToken) throw new Error("Request a new quote before swapping.");
+  const response = await fetch("/api/trade/swap", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+    body: JSON.stringify({ quote: opts.quote, quoteToken, userPublicKey: opts.userPublicKey }),
+  });
+  const data = (await response.json().catch(() => null)) as JupiterSwapBuild & { error?: string };
+  if (!response.ok || !data?.swapTransaction) {
+    throw new Error(data?.error || "SyNexus could not build this swap.");
   }
-
-  try {
-    return await post(LITE_SWAP);
-  } catch {
-    return await post(V6_SWAP);
-  }
+  return data;
 }
 
 export function estimateNetworkCostSol(build: JupiterSwapBuild | null): number {

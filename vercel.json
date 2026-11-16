@@ -8,6 +8,10 @@
     {
       "path": "/api/cron/titan-daily",
       "schedule": "0 13 * * *"
+    },
+    {
+      "path": "/api/cron/hera-developer",
+      "schedule": "0 14 * * *"
     }
   ],
   "redirects": [

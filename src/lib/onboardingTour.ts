@@ -1,4 +1,21 @@
-import { ONBOARDING_TOUR_KEY } from "../config/onboardingTour";
+import { ONBOARDING_TOUR_KEY, ONBOARDING_TOUR_VOICE_KEY } from "../config/onboardingTour";
+
+export function readOnboardingTourVoice(): boolean | null {
+  try {
+    const v = localStorage.getItem(ONBOARDING_TOUR_VOICE_KEY);
+    return v === "1" ? true : v === "0" ? false : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveOnboardingTourVoice(on: boolean): void {
+  try {
+    localStorage.setItem(ONBOARDING_TOUR_VOICE_KEY, on ? "1" : "0");
+  } catch {
+    /* ignore */
+  }
+}
 
 export function hasCompletedOnboardingTour(): boolean {
   try {

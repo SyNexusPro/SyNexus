@@ -10,6 +10,7 @@ type Props = {
   seedUtterance?: string | null;
   wakePulse?: boolean;
   guidedDemo?: boolean;
+  voiceActivation?: boolean;
 };
 
 class HeraScreenBoundary extends Component<
@@ -54,6 +55,7 @@ export function HeraScreen({
   seedUtterance = null,
   wakePulse = false,
   guidedDemo = false,
+  voiceActivation = false,
 }: Props) {
   useEffect(() => {
     const root = document.documentElement;
@@ -78,6 +80,7 @@ export function HeraScreen({
         seedUtterance={seedUtterance}
         wakePulse={wakePulse}
         guidedDemo={guidedDemo}
+        voiceActivation={voiceActivation}
       />
     </HeraScreenBoundary>,
     document.body,

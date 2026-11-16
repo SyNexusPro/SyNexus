@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { useApiRoute, type ViteDevServer } from "../viteDevServer.js";
 import { buildTitanSystemPrompt, resolveDefaultCommanderPersona, type TitanPromptInput } from "../../../lib/server/titan/prompt.js";
+import { collectOwnerBrief } from "../../../lib/server/owner/briefCollect.js";
 import { resolveTitanAuthPlan } from "../../../lib/server/titan/authPlan.js";
 import { guardTitanServerMessage } from "../../../lib/server/titan/sanitize.js";
 import { titanCacheGet, titanCacheSet } from "../../../lib/server/titan/responseCache.js";
@@ -17,6 +18,8 @@ import {
 } from "../../../lib/server/titan/launchWatchScan.js";
 import { GROQ_DEFAULT_STRONG, remapGroqModel } from "../../../lib/server/titan/groqModels.js";
 import { loadAlexusLearningBrief } from "../../../lib/server/hera/alexusLearning.js";
+import { readHeraMind, savePersonalNote } from "../../../lib/server/hera/mindStore.js";
+import { personalNoteFromUtterance } from "../../../lib/server/hera/unifiedMind.js";
 import { traceHera, type TokenUsage } from "../../../lib/server/hera/aiTrace.js";
 import { formatMemoryHits, recallMemory, rememberText } from "../../../lib/server/hera/memory.js";
 import { coordinateResearch } from "../../../lib/server/hera/researchAgents.js";
@@ -524,6 +527,22 @@ export async function handleTitanChatStream(
 
   const auth = await resolveTitanAuthPlan(req, env);
   parsed.plan = auth.plan;
+  parsed.heraMind = null;
+  if (auth.userId) {
+    const mind = await readHeraMind(env, auth.userId, false);
+    parsed.heraMind = mind.context;
+    const note = personalNoteFromUtterance(parsed.message);
+    if (note && mind.personalMemory) void savePersonalNote(env, auth.userId, note).catch(() => undefined);
+  }
+  parsed.ownerBrief = null;
+  if (auth.owner) {
+    try {
+      parsed.ownerBrief = (await collectOwnerBrief(env)).prompt;
+    } catch {
+      parsed.ownerBrief =
+        "OWNER BRIEFING FACTS. Data unavailable. Do not estimate trading activity, revenue, fees, profit, or member counts.";
+    }
+  }
 
   // Time-sensitive crypto asks → fetch fresh market data server-side before answering.
   if (needsLiveMarketFetch(parsed.message, parsed.intentHint)) {

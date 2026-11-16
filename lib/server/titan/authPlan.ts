@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient, type User } from "@supabase/supabase-js";
 import type { IncomingMessage } from "node:http";
-import { ownerEmailFromRequest } from "../ownerGrant.js";
+import { configuredOwnerEmail, emailsMatch } from "../ownerSession.js";
 
 export type TitanAuthPlan = {
   userId: string | null;
@@ -53,18 +53,12 @@ export async function resolveTitanAuthPlan(
   req: IncomingMessage,
   env: Env,
 ): Promise<TitanAuthPlan> {
-  const ownerEmail = ownerEmailFromRequest(req, env);
-  if (ownerEmail) {
-    const base = await resolveSupabasePlan(req, env);
-    return {
-      userId: base.userId,
-      email: base.email ?? ownerEmail,
-      plan: "PRO",
-      authenticated: true,
-      owner: true,
-    };
+  const base = await resolveSupabasePlan(req, env);
+  const ownerEmail = configuredOwnerEmail(env);
+  if (base.authenticated && emailsMatch(base.email, ownerEmail)) {
+    return { ...base, plan: "PRO", owner: true };
   }
-  return resolveSupabasePlan(req, env);
+  return base;
 }
 
 async function resolveSupabasePlan(req: IncomingMessage, env: Env): Promise<TitanAuthPlan> {

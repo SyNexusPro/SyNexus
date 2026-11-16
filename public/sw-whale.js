@@ -9,25 +9,28 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title || "Whale buy", {
       body: data.body || "Large buy detected",
+      icon: data.icon || undefined,
       data: { url: data.url || "/" },
       renotify: true,
-      tag: "synexus-whale",
+      tag: data.tag || "synexus-whale",
     }),
   );
 });
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const url = (event.notification.data && event.notification.data.url) || "/";
+  const target = new URL((event.notification.data && event.notification.data.url) || "/", self.location.origin).href;
   event.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
       for (const client of list) {
-        if ("focus" in client) {
-          client.navigate?.(url);
-          return client.focus();
+        if (client.url.startsWith(target) && "focus" in client) return client.focus();
+      }
+      for (const client of list) {
+        if ("focus" in client && client.navigate) {
+          return client.navigate(target).then((next) => (next || client).focus());
         }
       }
-      if (clients.openWindow) return clients.openWindow(url);
+      if (clients.openWindow) return clients.openWindow(target);
     }),
   );
 });

@@ -62,6 +62,12 @@ export function GodModeLogin({ redirectTo = "/pulse", compact = false }: Props) 
           <Link to="/analytics" className="god-mode-login__cta god-mode-login__cta--secondary">
             Analytics
           </Link>
+          <Link to="/hera-developer" className="god-mode-login__cta god-mode-login__cta--secondary">
+            Hera Developer
+          </Link>
+          <Link to="/owner/olympus" className="god-mode-login__cta god-mode-login__cta--secondary">
+            Olympus
+          </Link>
         </div>
       </section>
     );

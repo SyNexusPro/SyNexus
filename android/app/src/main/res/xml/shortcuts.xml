@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="hera"
+        android:enabled="true"
+        android:icon="@drawable/ic_hera"
+        android:shortcutShortLabel="@string/hera_shortcut_label"
+        android:shortcutLongLabel="@string/hera_shortcut_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.synexus.app"
+            android:targetClass="com.synexus.app.MainActivity"
+            android:data="https://www.synexus.pro/owner/hera" />
+    </shortcut>
+</shortcuts>

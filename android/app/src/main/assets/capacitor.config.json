@@ -11,9 +11,13 @@
 		"@capacitor/app",
 		"@capacitor/browser",
 		"@capacitor/preferences",
-		"capacitor-secure-storage-plugin"
+		"capacitor-secure-storage-plugin",
+		"@revenuecat/purchases-capacitor",
+		"@revenuecat/purchases-capacitor-ui"
 	],
 	"server": {
-		"androidScheme": "https"
+		"androidScheme": "https",
+		"url": "https://www.synexus.pro",
+		"cleartext": false
 	}
 }

@@ -6,6 +6,7 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import { useApiRoute, type ConnectHandler, type ViteDevServer } from "../viteDevServer.js";
 
 import { HERA_CONVERSATION_INSTRUCTIONS, HERA_VOICE_INSTRUCTIONS } from "../../../src/lib/hera/heraPrompt.js";
+import { readHeraMind } from "../../../lib/server/hera/mindStore.js";
 import { requireHeraUser } from "../../../lib/server/heraGuard.js";
 
 type Incoming = IncomingMessage & { body?: unknown };
@@ -62,8 +63,9 @@ function voiceName(requested?: string): string {
   return ALLOWED_VOICES.has(raw) ? raw : "marin";
 }
 
-function liveInstructions(): string {
-  return `${HERA_CONVERSATION_INSTRUCTIONS}\n\nSpoken voice: ${HERA_VOICE_INSTRUCTIONS}`;
+function liveInstructions(mind?: string): string {
+  const base = `${HERA_CONVERSATION_INSTRUCTIONS}\n\nSpoken voice: ${HERA_VOICE_INSTRUCTIONS}`;
+  return mind?.trim() ? `${base}\n\n${mind.trim()}` : base;
 }
 
 type VadEagerness = "low" | "medium" | "high" | "auto";
@@ -76,15 +78,15 @@ type VadEagerness = "low" | "medium" | "high" | "auto";
 function vadEagerness(requestedPatience?: string): VadEagerness {
   const forced = process.env.HERA_VAD_EAGERNESS?.trim().toLowerCase();
   if (forced === "low" || forced === "medium" || forced === "high" || forced === "auto") return forced;
-  return requestedPatience?.trim().toLowerCase() === "quick" ? "medium" : "low";
+  return requestedPatience?.trim().toLowerCase() === "quick" ? "medium" : "auto";
 }
 
-function realtimeSessionConfig(model = realtimeModelName(), requestedVoice?: string, requestedPatience?: string) {
+function realtimeSessionConfig(model = realtimeModelName(), requestedVoice?: string, requestedPatience?: string, mind?: string) {
   const voice = voiceName(requestedVoice);
   return {
     type: "realtime" as const,
     model,
-    instructions: HERA_CONVERSATION_INSTRUCTIONS,
+    instructions: liveInstructions(mind),
     output_modalities: ["audio"] as const,
     temperature: 0.68,
     audio: {
@@ -152,6 +154,7 @@ async function createLiveSession(
   key: string,
   sdp: string,
   requestedVoice?: string,
+  mind?: string,
 ): Promise<{ sdp: string; sessionId: string; model: string; voice: string } | null> {
   const voice = voiceName(requestedVoice);
   for (const model of liveModelCandidates()) {
@@ -165,7 +168,7 @@ async function createLiveSession(
       body: JSON.stringify({
         session: {
           model,
-          instructions: liveInstructions(),
+          instructions: liveInstructions(mind),
           audio: { output: { voice } },
         },
         transport: { type: "webrtc", sdp },
@@ -190,11 +193,12 @@ async function createRealtimeCall(
   sdp: string,
   requestedVoice?: string,
   requestedPatience?: string,
+  mind?: string,
 ): Promise<{ sdp: string; model: string } | null> {
   for (const model of realtimeModelCandidates()) {
     const fd = new FormData();
     fd.set("sdp", sdp);
-    fd.set("session", JSON.stringify(realtimeSessionConfig(model, requestedVoice, requestedPatience)));
+    fd.set("session", JSON.stringify(realtimeSessionConfig(model, requestedVoice, requestedPatience, mind)));
     const upstream = await fetch("https://api.openai.com/v1/realtime/calls", {
       method: "POST",
       headers: {
@@ -223,7 +227,7 @@ async function createRealtimeCall(
   return null;
 }
 
-async function mintGaSecret(key: string): Promise<{ secret: string; raw: Record<string, unknown> } | null> {
+async function mintGaSecret(key: string, mind?: string): Promise<{ secret: string; raw: Record<string, unknown> } | null> {
   const models = realtimeModelCandidates();
   for (const model of models) {
     const upstream = await fetch("https://api.openai.com/v1/realtime/client_secrets", {
@@ -233,7 +237,7 @@ async function mintGaSecret(key: string): Promise<{ secret: string; raw: Record<
         "Content-Type": "application/json",
         "OpenAI-Safety-Identifier": "synexus-hera-web",
       },
-      body: JSON.stringify({ session: realtimeSessionConfig(model) }),
+      body: JSON.stringify({ session: realtimeSessionConfig(model, undefined, undefined, mind) }),
     });
     const json = (await upstream.json()) as Record<string, unknown>;
     if (!upstream.ok) {
@@ -246,7 +250,7 @@ async function mintGaSecret(key: string): Promise<{ secret: string; raw: Record<
   return null;
 }
 
-async function mintLegacySecret(key: string): Promise<{ secret: string; raw: Record<string, unknown> } | null> {
+async function mintLegacySecret(key: string, mind?: string): Promise<{ secret: string; raw: Record<string, unknown> } | null> {
   const model = process.env.OPENAI_REALTIME_MODEL?.trim() || "gpt-4o-realtime-preview";
   const voice = voiceName();
   const upstream = await fetch("https://api.openai.com/v1/realtime/sessions", {
@@ -260,7 +264,7 @@ async function mintLegacySecret(key: string): Promise<{ secret: string; raw: Rec
     body: JSON.stringify({
       model,
       modalities: ["audio", "text"],
-      instructions: HERA_CONVERSATION_INSTRUCTIONS,
+      instructions: liveInstructions(mind),
       voice,
       temperature: 0.68,
       input_audio_transcription: { model: "gpt-4o-mini-transcribe" },
@@ -314,9 +318,10 @@ export async function handleHeraRealtimeSession(req: IncomingMessage, res: Serve
     const sdp = typeof body.sdp === "string" ? body.sdp.trim() : "";
     const requestedVoice = typeof body.voice === "string" ? body.voice : undefined;
     const requestedPatience = typeof body.patience === "string" ? body.patience.slice(0, 16) : undefined;
+    const mind = auth.userId ? (await readHeraMind(sessionEnv, auth.userId, false)).context : "";
 
     if (sdp) {
-      const live = await createLiveSession(key, sdp, requestedVoice);
+      const live = await createLiveSession(key, sdp, requestedVoice, mind);
       if (live) {
         sendJson(res, 200, {
           mode: "live",
@@ -327,7 +332,7 @@ export async function handleHeraRealtimeSession(req: IncomingMessage, res: Serve
         });
         return;
       }
-      const realtime = await createRealtimeCall(key, sdp, requestedVoice, requestedPatience);
+      const realtime = await createRealtimeCall(key, sdp, requestedVoice, requestedPatience, mind);
       if (realtime) {
         sendJson(res, 200, {
           mode: "realtime",
@@ -341,7 +346,7 @@ export async function handleHeraRealtimeSession(req: IncomingMessage, res: Serve
       return;
     }
 
-    const minted = (await mintGaSecret(key)) ?? (await mintLegacySecret(key));
+    const minted = (await mintGaSecret(key, mind)) ?? (await mintLegacySecret(key, mind));
     if (!minted) {
       sendJson(res, 502, { error: "Realtime session unavailable" });
       return;

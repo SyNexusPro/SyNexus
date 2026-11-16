@@ -15,8 +15,6 @@ const USD_PER_MILLION: Record<string, { input: number; output: number }> = {
   "gpt-4o-mini": { input: 0.15, output: 0.6 },
   "gpt-4o": { input: 2.5, output: 10 },
   "text-embedding-3-small": { input: 0.02, output: 0 },
-  "claude-3-5-haiku-latest": { input: 0.8, output: 4 },
-  "claude-haiku-5-5": { input: 1, output: 5 },
 };
 
 export type HeraTrace = {
@@ -90,7 +88,11 @@ export async function sendHeraTrace(
   const publicKey = env.LANGFUSE_PUBLIC_KEY?.trim();
   const secretKey = env.LANGFUSE_SECRET_KEY?.trim();
   if (!publicKey || !secretKey) return "skipped";
-  const host = (env.LANGFUSE_HOST?.trim() || "https://cloud.langfuse.com").replace(/\/$/, "");
+  const host = (
+    env.LANGFUSE_HOST?.trim() ||
+    env.LANGFUSE_BASE_URL?.trim() ||
+    "https://cloud.langfuse.com"
+  ).replace(/\/$/, "");
   const id = crypto.randomUUID();
   const batch = [
     {

@@ -1,5 +1,7 @@
 import { recordTrustedPlanGrant } from "./securityBot";
 import { notifySynexusPlanChanged } from "../hooks/useSynexusPlan";
+import { signInWithEmail } from "./supabaseData";
+import { supabase } from "./supabaseClient";
 import { PLAN_STORAGE_KEY } from "./tradingFees";
 
 export const OWNER_GRANT_KEY = "synexus_owner_grant";
@@ -51,13 +53,26 @@ export function hasStoredOwnerGrant(): boolean {
 
 const UNLOCK_PATHS = ["/api/owner-unlock", "/api/ownerUnlock"];
 
-async function postOwnerUnlock(body: Record<string, unknown>) {
+async function currentAccessToken(): Promise<string | null> {
+  if (!supabase) return null;
+  try {
+    const { data } = await supabase.auth.getSession();
+    return data.session?.access_token ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function postOwnerUnlock(body: Record<string, unknown>, authorization?: string | null) {
   let lastError = "Could not reach owner unlock service.";
   for (const path of UNLOCK_PATHS) {
     try {
       const response = await fetch(path, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(authorization ? { Authorization: authorization } : {}),
+        },
         body: JSON.stringify(body),
         signal: AbortSignal.timeout(8_000),
       });
@@ -79,20 +94,35 @@ async function postOwnerUnlock(body: Record<string, unknown>) {
   return { response: null, data: { error: lastError } as { ok?: boolean; grant?: string; expiresAt?: number; error?: string } };
 }
 
-/** Sign in with owner command ID + key (validated server-side). */
+/** Sign the owner in with Supabase, then ask the server to confirm that account. */
 export async function unlockOwnerAccess(
   email: string,
   password: string,
 ): Promise<{ ok: boolean; message: string }> {
-  const { response, data } = await postOwnerUnlock({ email: email.trim(), password });
+  let token: string | null = null;
+  try {
+    const signedIn = await signInWithEmail(email, password);
+    token = signedIn.session?.access_token ?? null;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Sign-in failed.";
+    return { ok: false, message };
+  }
+  if (!token) {
+    return {
+      ok: false,
+      message: "Supabase did not return a session. Confirm the owner user in the Supabase dashboard.",
+    };
+  }
+
+  const { response, data } = await postOwnerUnlock({}, `Bearer ${token}`);
   if (!response) {
     return { ok: false, message: data.error ?? "Could not reach owner unlock service." };
   }
   if (response.status === 503) {
-    return { ok: false, message: data.error ?? "God mode is not configured on this server." };
+    return { ok: false, message: data.error ?? "Owner access is not configured on this server." };
   }
   if (!response.ok || !data.ok || !data.grant || !data.expiresAt) {
-    return { ok: false, message: data.error ?? "Wrong owner email or password." };
+    return { ok: false, message: data.error ?? "This account is not the SyNexus owner." };
   }
   writeStoredGrant({ grant: data.grant, expiresAt: data.expiresAt });
   applyOwnerProAccess();
@@ -108,24 +138,23 @@ export async function refreshOwnerAccess(): Promise<boolean> {
     return false;
   }
 
+  const token = await currentAccessToken();
+  if (!token) {
+    clearOwnerAccess();
+    return false;
+  }
+
   try {
-    const { response, data } = await postOwnerUnlock({ grant: stored.grant });
-    if (!response?.ok || !data.ok) {
-      const status = response?.status ?? 503;
-      if (status === 404 || status >= 500) {
-        applyOwnerProAccess();
-        return true;
-      }
+    const { response, data } = await postOwnerUnlock({ grant: stored.grant }, `Bearer ${token}`);
+    if (!response?.ok || !data.ok || !data.grant || !data.expiresAt) {
       clearOwnerAccess();
       return false;
     }
+    writeStoredGrant({ grant: data.grant, expiresAt: data.expiresAt });
     applyOwnerProAccess();
     return true;
   } catch {
-    if (stored.expiresAt > Date.now()) {
-      applyOwnerProAccess();
-      return true;
-    }
+    clearOwnerAccess();
     return false;
   }
 }

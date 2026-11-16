@@ -1,80 +1,142 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ProDemoButton } from "../components/ProDemoButton";
-import { SynexusSubscribeButton } from "../components/SynexusSubscribeButton";
-import { ANDROID_WEB_SUBSCRIBE_HINT, androidRequiresWebSubscription } from "../lib/androidSubscription";
-import {
-  getExternalPricingUrl,
-  SYNEXUS_PRO_FEATURES,
-  SYNEXUS_PRO_OFFER_TAGLINE,
-  SYNEXUS_PRO_PRICE_LABEL,
-  SYNEXUS_PRO_SUBSCRIBE_LABEL,
-  SYNEXUS_PRICING_PATH,
-} from "../config/proPricing";
-import { SYNEXUS_PRO_TRIAL_DAYS, SYNEXUS_PRO_TRIAL_LABEL } from "../config/proTrial";
+import { SYNEXUS_PRICING_PATH } from "../config/proPricing";
 import { SYNEXUS_REFUND_POLICY_PATH } from "../config/refundPolicy";
+import { startComplimentaryTrial } from "../lib/membershipClient";
+import {
+  nativePurchasesAvailable,
+  purchaseErrorMessage,
+  purchaseNativePackage,
+  restoreNativePurchases,
+  type NativePackageId,
+} from "../lib/revenuecatNative";
+import { refreshMembershipAfterRestore } from "../lib/membershipClient";
+
+const TIERS = [
+  {
+    name: "Next Level",
+    price: "$10/month",
+    annual: "$96/year",
+    monthly: "next_level_monthly" as NativePackageId,
+    yearly: "next_level_annual" as NativePackageId,
+    points: [
+      "Trading intelligence and alerts",
+      "SyNexus swap fee 0.05%",
+      "One complimentary 30-day trial, once per account, with no card",
+    ],
+  },
+  {
+    name: "Pantheon",
+    price: "$20/month",
+    annual: null,
+    monthly: "pantheon_monthly" as NativePackageId,
+    yearly: null,
+    points: [
+      "Everything in Next Level",
+      "Full social network access",
+      "No SyNexus trading or swap fee",
+    ],
+  },
+];
 
 export function Pricing() {
-  const externalPricingUrl = getExternalPricingUrl();
+  const native = nativePurchasesAvailable();
+  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function buy(packageId: NativePackageId) {
+    setBusy(true);
+    setMessage("");
+    try {
+      await purchaseNativePackage(packageId);
+      await refreshMembershipAfterRestore();
+      setMessage("Purchase sent. Membership updates after the store confirms it.");
+    } catch (error) {
+      setMessage(purchaseErrorMessage(error));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function restore() {
+    setBusy(true);
+    setMessage("");
+    try {
+      await restoreNativePurchases();
+      const membership = await refreshMembershipAfterRestore();
+      setMessage(membership.tier === "free" ? "No active store subscription was found." : "Purchases restored.");
+    } catch (error) {
+      setMessage(purchaseErrorMessage(error));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function trial() {
+    setBusy(true);
+    setMessage("");
+    try {
+      await startComplimentaryTrial();
+      setMessage("Your 30-day Next Level trial is active. It does not renew and it does not include the social network.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "The trial could not be started.");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <div className="page">
       <section className="page__intro">
         <h1 className="page__headline">Pricing</h1>
-        <p className="page__lede">
-          One plan — full SyNexusPro intelligence. {SYNEXUS_PRO_OFFER_TAGLINE}.
-        </p>
+        <p className="page__lede">Next Level is $10 a month. Pantheon is $20 a month and includes the social network with no SyNexus swap fee.</p>
       </section>
 
-      <div className="pulse-card pulse-synexus-pro-wrap pricing-page__sheet" id="synexus-pro">
-        <div className="pulse-synexus-pro-promo">
-          <div className="pulse-synexus-pro-promo__honeycomb" aria-hidden />
-          <p className="pulse-synexus-pro-promo__label">SyNexusPro</p>
-          <p className="pulse-synexus-pro-promo__price">{SYNEXUS_PRO_PRICE_LABEL}</p>
-          <p className="pulse-synexus-pro-promo__headline">Unlimited trading intelligence. One simple price.</p>
-          <p className="pulse-synexus-pro-promo__body">
-            Sign up for a {SYNEXUS_PRO_TRIAL_DAYS}-day full Pro trial
-            {androidRequiresWebSubscription()
-              ? " — on Android, paid billing later completes at synexus.pro in your browser."
-              : " — no card required"}
-            . After the trial, subscribe at {SYNEXUS_PRO_PRICE_LABEL} to keep Pro. Payments
-            are processed by our third-party subscription platform (shown at checkout).
-          </p>
-          {androidRequiresWebSubscription() ? (
-            <p className="pricing-page__android-note" role="note">
-              {ANDROID_WEB_SUBSCRIBE_HINT}
+      {TIERS.map((tier) => (
+        <div className="pulse-card pulse-synexus-pro-wrap pricing-page__sheet" key={tier.name}>
+          <div className="pulse-synexus-pro-promo">
+            <div className="pulse-synexus-pro-promo__honeycomb" aria-hidden />
+            <p className="pulse-synexus-pro-promo__label">{tier.name}</p>
+            <p className="pulse-synexus-pro-promo__price">{tier.price}</p>
+            {tier.annual ? <p className="pulse-synexus-pro-promo__headline">or {tier.annual}</p> : null}
+            <ul className="pulse-synexus-pro-promo__bullets">
+              {tier.points.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+            <p className="pulse-synexus-pro-promo__body">
+              Solana network fees and fees charged by other venues are separate. SyNexus does not keep those.
             </p>
-          ) : null}
-          <ul className="pulse-synexus-pro-promo__bullets">
-            {SYNEXUS_PRO_FEATURES.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-          <div className="pulse-synexus-pro-promo__cta-wrap">
-            <ProDemoButton
-              className="pulse-demo-button pulse-demo-button--first pulse-synexus-pro-promo__demo"
-              label={`${SYNEXUS_PRO_TRIAL_LABEL} — see everything`}
-              goToPulse
-              pulseHash="#synexus-pro"
-            />
-            <SynexusSubscribeButton
-              className="pulse-button--pro pulse-synexus-pro-promo__cta"
-              label={SYNEXUS_PRO_SUBSCRIBE_LABEL}
-            />
+            <div className="pulse-synexus-pro-promo__cta-wrap">
+              {native ? (
+                <>
+                  <button type="button" className="pulse-button--pro pulse-synexus-pro-promo__cta" disabled={busy} onClick={() => void buy(tier.monthly)}>
+                    Subscribe {tier.price}
+                  </button>
+                  {tier.yearly ? (
+                    <button type="button" className="pulse-button--pro pulse-synexus-pro-promo__cta" disabled={busy} onClick={() => void buy(tier.yearly)}>
+                      Subscribe {tier.annual}
+                    </button>
+                  ) : null}
+                </>
+              ) : (
+                <p className="pulse-synexus-pro-promo__body">Web checkout is not available yet. Store purchases open in the iOS and Android app.</p>
+              )}
+            </div>
           </div>
-          {externalPricingUrl ? (
-            <p className="pricing-page__external">
-              <a href={externalPricingUrl} target="_blank" rel="noopener noreferrer">
-                View subscription details ↗
-              </a>
-            </p>
-          ) : null}
-          <p className="pulse-synexus-pro-promo__disclaimer">
-            Not financial advice. Sentinel scores are informational. Cancel anytime from the billing portal linked at checkout.
-          </p>
         </div>
-      </div>
+      ))}
 
       <section className="marketing-panel pricing-page__links">
+        <button type="button" className="pulse-demo-button" disabled={busy} onClick={() => void trial()}>
+          Start the 30-day trial
+        </button>
+        {native ? (
+          <button type="button" className="pulse-demo-button" disabled={busy} onClick={() => void restore()}>
+            Restore purchases
+          </button>
+        ) : null}
+        {message ? <p>{message}</p> : null}
         <p>
           <Link to="/faq">FAQ</Link>
           {" · "}
@@ -89,5 +151,4 @@ export function Pricing() {
   );
 }
 
-/** Stable path for links site-wide. */
 export { SYNEXUS_PRICING_PATH };

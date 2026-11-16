@@ -7,6 +7,7 @@ import { useTitanBotName } from "../hooks/useTitanBotName";
 import { PasswordRevealToggle } from "./PasswordRevealToggle";
 import { GoogleAuthOption } from "./GoogleSignInButton";
 import { LanguagePicker } from "./LanguagePicker";
+import { requestWelcomeReplay } from "../lib/welcomeWalkthrough";
 
 type AuthTone = "info" | "success" | "error";
 type SignInMethod = "magic" | "password";
@@ -246,9 +247,22 @@ export function PulseOperatorLink({
           </p>
         ) : null}
 
+        {ownerUnlocked ? (
+          <Link className="operator-link__disconnect" to="/hera-developer">
+            Hera Developer
+          </Link>
+        ) : null}
+        {ownerUnlocked ? (
+          <Link className="operator-link__disconnect" to="/owner/olympus">
+            Olympus
+          </Link>
+        ) : null}
         <Link className="operator-link__disconnect" to="/security">
           Security settings
         </Link>
+        <button type="button" className="operator-link__disconnect" onClick={() => requestWelcomeReplay()}>
+          Replay welcome
+        </button>
         <button type="button" className="operator-link__disconnect" disabled={authBusy} onClick={onSignOut}>
           {ownerUnlocked && !linked ? "Exit god mode" : "Disconnect link"}
         </button>

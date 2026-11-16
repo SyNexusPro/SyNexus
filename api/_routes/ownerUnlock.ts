@@ -1,12 +1,11 @@
-import crypto from "node:crypto";
-import { signOwnerGrant, verifyOwnerGrant } from "../../lib/server/ownerGrant.js";
+import { signOwnerGrant } from "../../lib/server/ownerGrant.js";
+import {
+  ownerFromAccessToken,
+  ownerFromPassword,
+  type OwnerCheck,
+  type OwnerEnv,
+} from "../../lib/server/ownerSession.js";
 import { useApiRoute, type ConnectHandler, type ViteDevServer } from "./viteDevServer.js";
-
-type OwnerEnv = {
-  SYNEXUS_OWNER_EMAIL?: string;
-  SYNEXUS_OWNER_PASSWORD?: string;
-  SYNEXUS_OWNER_SIGNING_KEY?: string;
-};
 
 type UnlockPayload = {
   email?: string;
@@ -32,14 +31,20 @@ function readRequestBody(req: NodeJS.ReadableStream): Promise<string> {
   });
 }
 
-function ownerConfigured(env: OwnerEnv): boolean {
-  return Boolean(env.SYNEXUS_OWNER_EMAIL?.trim() && env.SYNEXUS_OWNER_PASSWORD?.trim());
-}
+type OwnerUnlockDeps = {
+  verifyAccessToken: (token: string, env: OwnerEnv) => Promise<OwnerCheck>;
+  verifyPassword: (email: string, password: string, env: OwnerEnv) => Promise<OwnerCheck>;
+};
 
-function secretEqual(a: string, b: string): boolean {
-  const left = crypto.createHash("sha256").update(a).digest();
-  const right = crypto.createHash("sha256").update(b).digest();
-  return crypto.timingSafeEqual(left, right);
+const defaultDeps: OwnerUnlockDeps = {
+  verifyAccessToken: ownerFromAccessToken,
+  verifyPassword: ownerFromPassword,
+};
+
+function bearerFrom(authorization: string | null | undefined): string | null {
+  if (!authorization) return null;
+  const match = authorization.match(/^Bearer\s+(\S+)/i);
+  return match?.[1]?.trim() || null;
 }
 
 function issueGrant(email: string, env: OwnerEnv): { grant: string; expiresAt: number } | null {
@@ -48,45 +53,27 @@ function issueGrant(email: string, env: OwnerEnv): { grant: string; expiresAt: n
   return grant ? { grant, expiresAt } : null;
 }
 
-function verifyGrantToken(grant: string, env: OwnerEnv): boolean {
-  return verifyOwnerGrant(grant, env) !== null;
-}
-
-async function handleOwnerUnlock(
+export async function handleOwnerUnlock(
   payload: UnlockPayload,
   env: OwnerEnv,
+  authorization?: string | null,
+  deps: OwnerUnlockDeps = defaultDeps,
 ): Promise<{ statusCode: number; body: JsonBody }> {
-  if (!ownerConfigured(env)) {
-    return {
-      statusCode: 503,
-      body: { error: "Owner access is not configured on this server." },
-    };
-  }
-
-  const grant = payload.grant?.trim();
-  if (grant) {
-    if (!verifyGrantToken(grant, env)) {
-      return { statusCode: 401, body: { error: "Command code expired or invalid." } };
-    }
-    return { statusCode: 200, body: { ok: true } };
-  }
-
-  const email = payload.email?.trim().toLowerCase() ?? "";
+  const token = bearerFrom(authorization);
+  const email = payload.email?.trim() ?? "";
   const password = payload.password ?? "";
-  const expectedEmail = env.SYNEXUS_OWNER_EMAIL!.trim().toLowerCase();
-  const expectedPassword = env.SYNEXUS_OWNER_PASSWORD!.trim();
 
-  if (!email || !password) {
-    return { statusCode: 400, body: { error: "Enter your command ID and key." } };
-  }
+  let check: OwnerCheck | null = null;
+  if (token) check = await deps.verifyAccessToken(token, env);
+  else if (email || password) check = await deps.verifyPassword(email, password, env);
+  else return { statusCode: 400, body: { error: "Sign in with the owner account." } };
 
-  if (!secretEqual(email, expectedEmail) || !secretEqual(password, expectedPassword)) {
-      return { statusCode: 401, body: { error: "Wrong owner email or password." } };
-  }
+  if (check && !check.ok) return { statusCode: check.status, body: { error: check.error } };
+  if (!check) return { statusCode: 401, body: { error: "Sign in with the owner account." } };
 
-  const issued = issueGrant(email, env);
+  const issued = issueGrant(check.email, env);
   if (!issued) {
-    return { statusCode: 500, body: { error: "Could not issue owner grant." } };
+    return { statusCode: 503, body: { error: "Owner signing key is not configured on this server." } };
   }
 
   return {
@@ -96,13 +83,16 @@ async function handleOwnerUnlock(
 }
 
 async function respondJson(
-  req: NodeJS.ReadableStream,
+  req: NodeJS.ReadableStream & { headers?: { authorization?: string | string[] } },
   res: { statusCode: number; setHeader: (k: string, v: string) => void; end: (b: string) => void },
   env: OwnerEnv,
 ) {
   try {
-    const payload = JSON.parse(await readRequestBody(req)) as UnlockPayload;
-    const result = await handleOwnerUnlock(payload, env);
+    const rawAuth = req.headers?.authorization;
+    const authorization = Array.isArray(rawAuth) ? rawAuth[0] : rawAuth;
+    const raw = await readRequestBody(req);
+    const payload = (raw.trim() ? JSON.parse(raw) : {}) as UnlockPayload;
+    const result = await handleOwnerUnlock(payload, env, authorization);
     res.statusCode = result.statusCode;
     res.setHeader("Content-Type", "application/json");
     res.end(JSON.stringify(result.body));
@@ -128,6 +118,7 @@ export function configureOwnerUnlockApi(server: ViteDevServer, env: OwnerEnv) {
 type ServerlessRequest = NodeJS.ReadableStream & {
   method?: string;
   body?: unknown;
+  headers?: { authorization?: string | string[] };
 };
 
 type ServerlessResponse = {
@@ -175,6 +166,8 @@ export default async function handler(req: ServerlessRequest, res: ServerlessRes
     return;
   }
 
-  const result = await handleOwnerUnlock(payload, process.env);
+  const rawAuth = req.headers?.authorization;
+  const authorization = Array.isArray(rawAuth) ? rawAuth[0] : rawAuth;
+  const result = await handleOwnerUnlock(payload, process.env, authorization);
   sendUnlockResult(res, result);
 }

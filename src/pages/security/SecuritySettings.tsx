@@ -16,6 +16,7 @@ import {
 import { enrollDevicePasskey, passkeysAvailable } from "../../security/passkeys";
 import { isPhoneVerified, maskPhoneNumber } from "../../security/phoneVerification";
 import { listOwnSecurityEvents, recordSecurityEvent, type SecurityEventRow } from "../../security/securityEvents";
+import { requestWelcomeReplay } from "../../lib/welcomeWalkthrough";
 
 export function SecuritySettings() {
   const navigate = useNavigate();
@@ -159,6 +160,18 @@ export function SecuritySettings() {
       <section className="synexus-sec__card synexus-sec__card--wide" aria-labelledby="sec-settings-title">
         <p className="synexus-sec__eyebrow">Settings · Security</p>
         <h1 id="sec-settings-title">Account security</h1>
+        <p>
+          <button
+            type="button"
+            className="synexus-sec__text-btn"
+            onClick={() => {
+              requestWelcomeReplay();
+              navigate("/");
+            }}
+          >
+            Replay welcome walkthrough
+          </button>
+        </p>
 
         {message ? <p className="synexus-sec__note">{message}</p> : null}
 

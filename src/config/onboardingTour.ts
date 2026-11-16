@@ -1,4 +1,5 @@
 export const ONBOARDING_TOUR_KEY = "synexus_onboarding_tour_completed";
+export const ONBOARDING_TOUR_VOICE_KEY = "synexus_onboarding_tour_voice";
 
 export type OnboardingStepId =
   | "welcome"

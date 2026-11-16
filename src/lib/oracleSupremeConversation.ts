@@ -187,11 +187,21 @@ export function loadConversationHistory(): ConversationTurn[] {
 }
 
 export function saveConversationHistory(turns: ConversationTurn[]): void {
+  const next = turns.slice(-40);
   try {
-    localStorage.setItem(ORACLE_CONVO_HISTORY_KEY, JSON.stringify(turns.slice(-40)));
+    localStorage.setItem(ORACLE_CONVO_HISTORY_KEY, JSON.stringify(next));
   } catch {
     /* ignore */
   }
+  conversationThreadSink?.(next);
+}
+
+type ConversationThreadSink = (turns: ConversationTurn[]) => void;
+let conversationThreadSink: ConversationThreadSink | null = null;
+
+/** Owner direct access uses this to keep the phone and desktop on one thread. */
+export function setConversationThreadSink(sink: ConversationThreadSink | null): void {
+  conversationThreadSink = sink;
 }
 
 /** Wipe the active Titan thread (used after archiving on close). */

@@ -1,6 +1,8 @@
 package com.synexus.app;
 
+import android.content.Intent;
 import android.content.pm.ApplicationInfo;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -22,6 +24,7 @@ public class MainActivity extends BridgeActivity {
   @Override
   public void onCreate(Bundle savedInstanceState) {
     registerPlugin(HeraWakeWordPlugin.class);
+    registerPlugin(HeraShortcutPlugin.class);
 
     try {
       SplashScreen.installSplashScreen(this);
@@ -39,7 +42,29 @@ public class MainActivity extends BridgeActivity {
 
     View content = findViewById(android.R.id.content);
     if (content != null) {
-      content.post(this::tuneWebView);
+      content.post(() -> {
+        tuneWebView();
+        openOwnerHera(getIntent());
+      });
+    }
+  }
+
+  @Override
+  public void onNewIntent(Intent intent) {
+    super.onNewIntent(intent);
+    setIntent(intent);
+    openOwnerHera(intent);
+  }
+
+  private void openOwnerHera(Intent intent) {
+    try {
+      Uri data = intent == null ? null : intent.getData();
+      if (data == null || data.getPath() == null || !data.getPath().startsWith("/owner/hera")) return;
+      Bridge bridge = getBridge();
+      if (bridge == null || bridge.getWebView() == null) return;
+      bridge.getWebView().loadUrl("https://www.synexus.pro/owner/hera");
+    } catch (Throwable t) {
+      Log.e(TAG, "openOwnerHera", t);
     }
   }
 

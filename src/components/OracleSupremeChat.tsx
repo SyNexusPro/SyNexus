@@ -42,6 +42,8 @@ import { firstSpokenSentence } from "../lib/hera/endpointing";
 import { useTranslation } from "react-i18next";
 import { useHeraVersion } from "../hooks/useHeraVersion";
 import { buildHeraSignupDemoLine, markHeraSignupDemoComplete } from "../lib/heraSignupDemo";
+import { fetchOwnerBrief, isOwnerBriefRequest } from "../lib/ownerBriefing";
+import { fetchDeveloperReport, isDeveloperReportRequest } from "../lib/heraDeveloper";
 
 function firstVoiceChunk(text: string): string | null {
   return firstSpokenSentence(text);
@@ -58,6 +60,8 @@ type OracleSupremeChatProps = {
   seedUtterance?: string | null;
   wakePulse?: boolean;
   guidedDemo?: boolean;
+  /** Owner phone route: one button when the microphone needs a tap. */
+  voiceActivation?: boolean;
 };
 
 export function OracleSupremeChat({
@@ -70,6 +74,7 @@ export function OracleSupremeChat({
   seedUtterance = null,
   wakePulse = false,
   guidedDemo = false,
+  voiceActivation = false,
 }: OracleSupremeChatProps) {
   const { t } = useTranslation();
   const { tag: heraTag } = useHeraVersion(context.titanBotName);
@@ -242,6 +247,59 @@ export function OracleSupremeChat({
     }
   }, [appendOracle, context.operatorName, guidedDemo, voiceMode, voiceOut]);
 
+  const ownerBriefState = useRef<"idle" | "pending" | "done" | "skip">("idle");
+  const voiceOutRef = useRef(voiceOut);
+  voiceOutRef.current = voiceOut;
+  const liveVoiceRef = useRef(liveVoice);
+  liveVoiceRef.current = liveVoice;
+  useEffect(() => {
+    if (!voiceMode || guidedDemo || ownerBriefState.current !== "idle") return;
+    const day = new Date().toDateString();
+    try {
+      if (localStorage.getItem("synexus_owner_brief_day") === day) {
+        ownerBriefState.current = "done";
+        return;
+      }
+    } catch {
+      /* ignore */
+    }
+    ownerBriefState.current = "pending";
+    let cancelled = false;
+    void (async () => {
+      let brief = await fetchOwnerBrief();
+      if (!brief) {
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        if (!cancelled) brief = await fetchOwnerBrief();
+      }
+      if (cancelled) return;
+      if (!brief) {
+        ownerBriefState.current = "skip";
+        return;
+      }
+      ownerBriefState.current = "done";
+      try {
+        localStorage.setItem("synexus_owner_brief_day", day);
+      } catch {
+        /* ignore */
+      }
+      appendOracle(brief.detail);
+      if (liveVoiceRef.current) {
+        speakTitan(brief.spoken, {
+          onStart: () => setSpeaking(true),
+          onEnd: () => setSpeaking(false),
+          onError: () => setSpeaking(false),
+        });
+        return;
+      }
+      unlockTitanSpeech();
+      void voiceOutRef.current.speak(brief.spoken);
+    })();
+    return () => {
+      cancelled = true;
+      if (ownerBriefState.current === "pending") ownerBriefState.current = "idle";
+    };
+  }, [appendOracle, guidedDemo, voiceMode]);
+
   function speakReply(text: string) {
     if (!text.trim()) return;
     if (voiceMode) {
@@ -271,6 +329,48 @@ export function OracleSupremeChat({
 
     stopTitanSpeech();
     voiceOut.stop();
+    if (isOwnerBriefRequest(trimmed)) {
+      const brief = await fetchOwnerBrief();
+      if (brief) {
+        setDraft("");
+        setAwaitingDayReply(false);
+        setLastUserTopic(trimmed);
+        appendUser(trimmed);
+        appendOracle(brief.detail);
+        if (liveVoice || !voiceMode) {
+          speakTitan(brief.spoken, {
+            onStart: () => setSpeaking(true),
+            onEnd: () => setSpeaking(false),
+            onError: () => setSpeaking(false),
+          });
+        } else {
+          unlockTitanSpeech();
+          void voiceOut.speak(brief.spoken);
+        }
+        return;
+      }
+    }
+    if (isDeveloperReportRequest(trimmed)) {
+      const report = await fetchDeveloperReport();
+      if (report) {
+        setDraft("");
+        setAwaitingDayReply(false);
+        setLastUserTopic(trimmed);
+        appendUser(trimmed);
+        appendOracle(report.detail);
+        if (liveVoice || !voiceMode) {
+          speakTitan(report.spoken, {
+            onStart: () => setSpeaking(true),
+            onEnd: () => setSpeaking(false),
+            onError: () => setSpeaking(false),
+          });
+        } else {
+          unlockTitanSpeech();
+          void voiceOut.speak(report.spoken);
+        }
+        return;
+      }
+    }
     if (liveVoice) {
       const sent = realtime.sendText(trimmed);
       setDraft("");
@@ -467,7 +567,12 @@ export function OracleSupremeChat({
         </div>
 
         <div className="hera-screen__dock">
-              {liveCaption ? (
+          {voiceActivation && realtime.unavailable ? (
+            <button type="button" className="hera-screen__activate" onClick={() => realtime.retry()}>
+              Talk to Hera
+            </button>
+          ) : null}
+          {liveCaption ? (
             <p className={`hera-screen__caption${(textTalk || realtime.listening) && !isActivelySpeaking ? " hera-screen__caption--listen" : ""}`}>
               {realtime.userSpeaking && realtime.transcript ? realtime.transcript : liveCaption}
             </p>
