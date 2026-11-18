@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { getAccessToken } from "../lib/authSession";
 import { hasStoredOwnerGrant, OWNER_ACCESS_CHANGED } from "../lib/ownerAccess";
+import { isOwnerScreen } from "../lib/ownerScreen";
 import { supabase } from "../lib/supabaseClient";
 
 type Role = { id: string; role: string; agent: string | null; status: string; gate: string };
@@ -57,7 +58,7 @@ export function OwnerOlympus() {
   }, [load, owner]);
 
   if (!owner) return <Navigate to="/" replace />;
-  if (signedIn === false) return <Navigate to="/god" replace />;
+  if (signedIn === false) return <Navigate to={isOwnerScreen() ? "/god" : "/"} replace />;
 
   async function post(body: Record<string, unknown>) {
     const token = await getAccessToken();

@@ -171,7 +171,7 @@ class RealtimeManager {
     if (this.pollTimer || this.usingSocket) return;
     this.pollTimer = window.setInterval(() => {
       if (!this.usingSocket) void this.refresh();
-    }, 25_000);
+    }, 1_000);
   }
 
   private openSocket(): void {

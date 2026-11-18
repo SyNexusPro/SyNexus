@@ -33,9 +33,9 @@ type PatienceProfile = {
 };
 
 const PROFILES: Record<HeraPatience, PatienceProfile> = {
-  quick: { finishedMs: 1200, unfinishedMs: 2400, recorderMs: 1500, liveTurnMs: 1000 },
-  natural: { finishedMs: 1900, unfinishedMs: 4000, recorderMs: 2400, liveTurnMs: 1800 },
-  patient: { finishedMs: 2800, unfinishedMs: 6500, recorderMs: 3600, liveTurnMs: 2800 },
+  quick: { finishedMs: 450, unfinishedMs: 1100, recorderMs: 550, liveTurnMs: 400 },
+  natural: { finishedMs: 650, unfinishedMs: 1400, recorderMs: 700, liveTurnMs: 550 },
+  patient: { finishedMs: 1400, unfinishedMs: 2800, recorderMs: 1600, liveTurnMs: 1200 },
 };
 
 /** No speech at all for this long: close the mic quietly instead of hanging open. */
@@ -101,7 +101,7 @@ export function endpointDelayMs(text: string, patience: HeraPatience = HERA_DEFA
   const wordCount = wordsOf(text).length;
   const longBonus = Math.min(800, Math.max(0, wordCount - 12) * 40);
   if (soundsUnfinished(text)) return Math.round(profile.unfinishedMs + longBonus);
-  if (soundsFinished(text)) return Math.round(Math.max(900, profile.finishedMs * 0.85) + longBonus * 0.5);
+  if (soundsFinished(text)) return Math.round(Math.max(380, profile.finishedMs * 0.85) + longBonus * 0.5);
   return Math.round(profile.finishedMs + longBonus);
 }
 
@@ -115,6 +115,32 @@ export function recorderSilenceMs(patience: HeraPatience, speechMs: number): num
 /** Quiet gap (no transcript fragments) that ends a user turn in the live voice session. */
 export function liveTurnQuietMs(patience: HeraPatience = HERA_DEFAULT_PATIENCE): number {
   return patienceProfile(patience).liveTurnMs;
+}
+
+/**
+ * Same quiet-gap rule, but a dangling "and…" or "um…" waits longer than a finished sentence.
+ * A pause is not treated as the end of the turn.
+ */
+export function liveQuietForTranscript(text: string, patience: HeraPatience = HERA_DEFAULT_PATIENCE): number {
+  const partial = text.replace(/\s+/g, " ").trim();
+  if (!partial) return liveTurnQuietMs(patience);
+  return endpointDelayMs(partial, patience);
+}
+
+export type VadEagerness = "low" | "medium" | "high" | "auto";
+
+/**
+ * Semantic turn detection. Quick answers as soon as the thought is complete.
+ * Natural lets the model wait through a real pause. Patient waits longer.
+ * An env override still wins.
+ */
+export function vadEagernessForPatience(patience?: string | null, forced?: string | null): VadEagerness {
+  const override = forced?.trim().toLowerCase();
+  if (override === "low" || override === "medium" || override === "high" || override === "auto") return override;
+  const chosen = normalizeHeraPatience(patience);
+  if (chosen === "quick") return "high";
+  if (chosen === "patient") return "low";
+  return "auto";
 }
 
 export type NoiseCalibration = {

@@ -538,15 +538,10 @@ export function OracleSupremeChat({
   const condensedThread = hologramMode;
   const isActivelySpeaking = liveVoice ? realtime.speaking : speaking || voiceOut.speaking;
   const lastSpoken = [...visibleTurns].reverse().find((turn) => turn.role === "oracle" && turn.text.trim());
-  const liveCaption = liveVoice
-    ? realtime.state === "thinking"
-      ? realtime.transcript || lastSpoken?.text || "Thinking…"
-      : lastSpoken?.text || (realtime.state === "speaking" ? null : realtime.transcript || "Listening…")
-    : thinking
-      ? "Thinking…"
-      : voiceIn.partial
-        ? voiceIn.partial
-        : lastSpoken?.text || "Listening…";
+  const heard = (realtime.userSpeaking && realtime.transcript) || voiceIn.partial || realtime.transcript || "";
+  const liveCaption = isActivelySpeaking
+    ? lastSpoken?.text || null
+    : heard || lastSpoken?.text || (realtime.listening || voiceIn.listening ? "Listening…" : null);
 
   if (screenMode) {
     return (
@@ -620,7 +615,7 @@ export function OracleSupremeChat({
           audioLevel={avatar.audioLevel}
           viseme={avatar.viseme}
           emotion={avatar.emotion}
-          statusLabel={`${context.titanBotName} ${heraTag} · ${avatar.statusLabel}`}
+          statusLabel={avatar.statusLabel ? `${context.titanBotName} ${heraTag} · ${avatar.statusLabel}` : `${context.titanBotName} ${heraTag}`}
           expanded={variant === "overlay" || variant === "inline"}
           immersive={presenceMode}
           onStageTap={presenceMode ? () => void handleMicToggle() : undefined}
@@ -800,7 +795,7 @@ export function OracleSupremeChat({
           disabled={thinking}
         />
         <button type="submit" disabled={!draft.trim() || thinking}>
-          {thinking ? t("titan.thinking") : "Send"}
+          Send
         </button>
       </form>
 

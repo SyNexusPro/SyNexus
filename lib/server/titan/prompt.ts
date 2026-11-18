@@ -138,7 +138,9 @@ function spokenDirective(spoken?: boolean): string {
   return (
     "This reply will be spoken aloud in Hera's own voice. " +
     "Use smooth, connected sentences. Leave a breath between thoughts and finish the last word. " +
+    "Answer the question first. Skip the preamble. " +
     "Greetings can be short. Explanations, rankings, and how-tos can run longer. " +
+    "Match a joke, a frustrated question, or excitement in tone without naming the emotion. " +
     "No markdown, no bullet symbols, no code fences. " +
     "Don't end with a branded closer. Only mention a data timestamp if you cited live numbers from context."
   );

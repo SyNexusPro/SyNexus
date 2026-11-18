@@ -5,7 +5,6 @@ import { NonCustodialDisclaimer } from "../components/NonCustodialDisclaimer";
 import { SynexusLiveScanner } from "../components/SynexusLiveScanner";
 import { ShouldIBuyPanel } from "../components/ShouldIBuyPanel";
 import { TopMoversPanel } from "../components/TopMoversPanel";
-import { CircuitBoardBackdrop } from "../components/CircuitBoardBackdrop";
 import { SynCoinLaunchBanner } from "../components/SynCoinLaunchBanner";
 import { BeginnerQuickStart } from "../components/BeginnerQuickStart";
 import { SentinelAlertsHub } from "../components/SentinelAlertsHub";
@@ -239,8 +238,6 @@ export function HomeFeed() {
 
   return (
     <div className={`page page--command${isSimple ? " page--easy" : ""}`}>
-      <CircuitBoardBackdrop alive={!nativeAndroid && appActive} />
-
       <section className="home-command" aria-label="SyNexus home">
         <div className="home-command__brand" data-tour="welcome-brand">
           <img

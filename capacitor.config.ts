@@ -9,11 +9,15 @@ const useRemoteServer = process.env.CAPACITOR_USE_LOCAL !== "1";
 
 const config: CapacitorConfig = {
   appId: "com.synexus.app",
-  appName: "Synexus",
+  appName: "SyNexus",
   webDir: "dist",
   android: {
     backgroundColor: "#071007",
     allowMixedContent: false,
+  },
+  ios: {
+    backgroundColor: "#000000",
+    allowsLinkPreview: false,
   },
   // FCM is not wired (no google-services.json). Including the Capacitor
   // push plugin makes PushNotifications.register() crash the process.

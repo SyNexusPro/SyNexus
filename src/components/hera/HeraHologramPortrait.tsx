@@ -3,16 +3,10 @@ import type { HeraAvatarRendererProps } from "../../lib/hera/types";
 import { detectHeraLowPerf, prefersReducedMotion } from "../../lib/hera/hologramPerf";
 import { heraFaceController } from "../../lib/hera/HeraFaceController";
 import { heraVoice } from "../../lib/hera/HeraVoice";
+import { lipEnvelope } from "../../lib/hera/turnTiming";
 
 /** New holographic Hera (head-and-shoulders, not the old green android bust). */
 export const HERA_FACE_SRC = "/hera/hera-face.jpg?v=holo-v2";
-
-function envelope(prev: number, raw: number): number {
-  const gated = raw < 0.04 ? 0 : Math.min(1, raw);
-  const k = gated > prev ? 0.28 : 0.1;
-  const next = prev + (gated - prev) * k;
-  return next < 0.008 ? 0 : next;
-}
 
 function blinkEase(amount: number): number {
   const x = Math.max(0, Math.min(1, amount));
@@ -48,15 +42,14 @@ export function HeraHologramPortrait({
   const lipLRef = useRef<HTMLDivElement>(null);
   const openingRef = useRef<HTMLSpanElement>(null);
   const lipEnvRef = useRef(0);
+  const poseRef = useRef({ x: 0, y: 0, rx: 0, ry: 0, rz: 0 });
   const reducedMotion = reducedMotionProp ?? prefersReducedMotion();
   const lowPerf = lowPerfProp ?? detectHeraLowPerf();
 
   const stateRef = useRef(state);
-  const emotionRef = useRef(emotion);
   const audioLevelRef = useRef(audioLevel);
   const visemeRef = useRef(viseme);
   stateRef.current = state;
-  emotionRef.current = emotion;
   audioLevelRef.current = audioLevel;
   visemeRef.current = viseme;
 
@@ -68,14 +61,13 @@ export function HeraHologramPortrait({
       const stack = stackRef.current;
       const scan = scanRef.current;
       const s = stateRef.current;
-      const e = emotionRef.current;
       const speaking = s === "speaking";
       const listening = s === "listening" || s === "interrupted";
       const thinking = s === "thinking" || s === "connecting";
       const rawOpen = speaking
         ? Math.max(heraFaceController.mouthOpen, audioLevelRef.current)
         : 0;
-      const open = (lipEnvRef.current = envelope(lipEnvRef.current, rawOpen));
+      const open = (lipEnvRef.current = lipEnvelope(lipEnvRef.current, rawOpen));
 
       heraFaceController.setMode(s);
       heraFaceController.setMouthOpen(open);
@@ -91,13 +83,20 @@ export function HeraHologramPortrait({
       const glowLevel = speaking ? open : listening ? 0.2 : thinking ? 0.14 : 0.08;
 
       if (!reducedMotion && stack) {
-        const breathe = Math.sin(t * 1.15) * (lowPerf ? 1.2 : 2.2);
-        const talkNod = speaking ? Math.sin(t * 1.35) * 0.18 + open * 0.22 : 0;
-        const talkTurn = speaking ? Math.sin(t * 0.55) * 0.28 : 0;
-        const listenSway = listening ? Math.sin(t * 0.85) * 0.9 : Math.sin(t * 0.55) * 0.55;
-        const thinkSway = thinking || e === "thinking" ? Math.sin(t * 1.4) * 1.6 : 0;
-        const lean = listening ? 1.1 : speaking ? 0.45 : 0;
-        stack.style.transform = `perspective(900px) translate3d(${talkTurn + listenSway + thinkSway}px, ${breathe + talkNod}px, 0) rotateX(${lean}deg) rotateZ(${talkTurn * 0.12}deg)`;
+        const breathe = Math.sin(t * 0.72) * (lowPerf ? 0.45 : 0.85);
+        const talkNod = speaking ? open * 0.28 : 0;
+        const listenSettle = listening ? Math.sin(t * 0.4) * 0.18 : Math.sin(t * 0.28) * 0.1;
+        const lean = listening ? 0.22 : speaking ? 0.08 : thinking ? 0.06 : 0;
+        const attention = speaking ? 0.4 : listening ? 0.16 : 0;
+        const pose = poseRef.current;
+        const tx = listenSettle;
+        const ty = breathe + talkNod;
+        pose.x += (tx - pose.x) * 0.06;
+        pose.y += (ty - pose.y) * 0.06;
+        pose.rx += (lean - pose.rx) * 0.05;
+        pose.ry += (attention - pose.ry) * 0.05;
+        pose.rz += (0 - pose.rz) * 0.08;
+        stack.style.transform = `perspective(900px) translate3d(${pose.x.toFixed(2)}px, ${pose.y.toFixed(2)}px, 0) rotateX(${pose.rx.toFixed(2)}deg) rotateY(${pose.ry.toFixed(2)}deg) rotateZ(${pose.rz.toFixed(2)}deg)`;
       }
 
       if (!reducedMotion) {
@@ -107,12 +106,12 @@ export function HeraHologramPortrait({
 
         applyFeat(
           lashLRef.current,
-          `translateY(${(blinkL * 2.8).toFixed(2)}px)`,
+          `translateY(${(blinkL * 3.1).toFixed(2)}px)`,
           "38% 42.8%",
         );
         applyFeat(
           lashRRef.current,
-          `translateY(${(blinkR * 2.8).toFixed(2)}px)`,
+          `translateY(${(blinkR * 3.1).toFixed(2)}px)`,
           "62% 42.8%",
         );
         applyFeat(

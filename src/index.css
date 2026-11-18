@@ -895,20 +895,20 @@ html:has(.app-shell--home) #root {
       90deg,
       transparent 0,
       transparent 14px,
-      rgba(0, 255, 70, 0.045) 14px,
-      rgba(0, 255, 70, 0.045) 15px
+      rgba(90, 230, 255, 0.05) 14px,
+      rgba(90, 230, 255, 0.05) 15px
     ),
     repeating-linear-gradient(
       0deg,
       transparent 0,
       transparent 17px,
-      rgba(0, 255, 70, 0.035) 17px,
-      rgba(0, 255, 70, 0.035) 18px
+      rgba(90, 230, 255, 0.04) 17px,
+      rgba(90, 230, 255, 0.04) 18px
     ),
-    radial-gradient(circle at 18% 22%, rgba(0, 255, 70, 0.16), transparent 10%),
-    radial-gradient(circle at 72% 38%, rgba(0, 255, 70, 0.12), transparent 12%),
-    radial-gradient(circle at 40% 68%, rgba(0, 255, 70, 0.1), transparent 11%),
-    radial-gradient(circle at 84% 78%, rgba(0, 255, 70, 0.14), transparent 9%);
+    radial-gradient(circle at 18% 22%, rgba(90, 230, 255, 0.12), transparent 10%),
+    radial-gradient(circle at 72% 38%, rgba(137, 255, 47, 0.1), transparent 12%),
+    radial-gradient(circle at 40% 68%, rgba(90, 230, 255, 0.08), transparent 11%),
+    radial-gradient(circle at 84% 78%, rgba(90, 230, 255, 0.1), transparent 9%);
 }
 
 .home-command-tools__loading {
@@ -950,7 +950,7 @@ html:has(.app-shell--home) #root {
   border: none;
   border-radius: 0;
   box-shadow: none;
-  filter: drop-shadow(0 0 22px rgba(0, 255, 70, 0.22));
+  filter: none;
   user-select: none;
   -webkit-user-drag: none;
 }
@@ -964,9 +964,7 @@ html:has(.app-shell--home) #root {
   line-height: 1.2;
   text-transform: uppercase;
   color: #f2ffe0;
-  text-shadow:
-    0 0 18px rgba(137, 255, 47, 0.35),
-    0 1px 0 rgba(0, 0, 0, 0.85);
+  text-shadow: none;
 }
 
 .home-command__lede {

@@ -6,6 +6,8 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import { useApiRoute, type ConnectHandler, type ViteDevServer } from "../viteDevServer.js";
 
 import { HERA_CONVERSATION_INSTRUCTIONS, HERA_VOICE_INSTRUCTIONS } from "../../../src/lib/hera/heraPrompt.js";
+import { HERA_TOOL_LINE, HERA_VOICE_TOOLS } from "../../../src/lib/hera/voiceToolSpec.js";
+import { vadEagernessForPatience } from "../../../src/lib/hera/endpointing.js";
 import { readHeraMind } from "../../../lib/server/hera/mindStore.js";
 import { requireHeraUser } from "../../../lib/server/heraGuard.js";
 
@@ -64,21 +66,21 @@ function voiceName(requested?: string): string {
 }
 
 function liveInstructions(mind?: string): string {
-  const base = `${HERA_CONVERSATION_INSTRUCTIONS}\n\nSpoken voice: ${HERA_VOICE_INSTRUCTIONS}`;
+  const base = `${HERA_CONVERSATION_INSTRUCTIONS}\n\n${HERA_TOOL_LINE}\n\nSpoken voice: ${HERA_VOICE_INSTRUCTIONS}`;
   return mind?.trim() ? `${base}\n\n${mind.trim()}` : base;
 }
 
-type VadEagerness = "low" | "medium" | "high" | "auto";
+async function mindForSession(userId: string): Promise<string> {
+  try {
+    const mind = await readHeraMind(sessionEnv, userId, false);
+    return mind.context || "";
+  } catch {
+    return "";
+  }
+}
 
-/**
- * How eagerly the model decides the user has finished. "low" waits through thinking pauses
- * (up to several seconds) instead of replying over the user. Only the explicit "quick"
- * preference opts into the faster "medium". HERA_VAD_EAGERNESS overrides everything.
- */
-function vadEagerness(requestedPatience?: string): VadEagerness {
-  const forced = process.env.HERA_VAD_EAGERNESS?.trim().toLowerCase();
-  if (forced === "low" || forced === "medium" || forced === "high" || forced === "auto") return forced;
-  return requestedPatience?.trim().toLowerCase() === "quick" ? "medium" : "auto";
+function vadEagerness(requestedPatience?: string): "low" | "medium" | "high" | "auto" {
+  return vadEagernessForPatience(requestedPatience, process.env.HERA_VAD_EAGERNESS);
 }
 
 function realtimeSessionConfig(model = realtimeModelName(), requestedVoice?: string, requestedPatience?: string, mind?: string) {
@@ -89,18 +91,21 @@ function realtimeSessionConfig(model = realtimeModelName(), requestedVoice?: str
     instructions: liveInstructions(mind),
     output_modalities: ["audio"] as const,
     temperature: 0.68,
-    audio: {
-      input: {
-        transcription: { model: "gpt-4o-mini-transcribe" },
-        turn_detection: {
-          type: "semantic_vad",
-          eagerness: vadEagerness(requestedPatience),
-          create_response: true,
-          interrupt_response: true,
+        audio: {
+          input: {
+            transcription: { model: "gpt-4o-mini-transcribe" },
+            noise_reduction: { type: "near_field" },
+            turn_detection: {
+              type: "semantic_vad",
+              eagerness: vadEagerness(requestedPatience),
+              create_response: true,
+              interrupt_response: true,
+            },
+          },
+          output: { voice, instructions: HERA_VOICE_INSTRUCTIONS },
         },
-      },
-      output: { voice, instructions: HERA_VOICE_INSTRUCTIONS },
-    },
+    tools: HERA_VOICE_TOOLS,
+    tool_choice: "auto",
   };
 }
 
@@ -168,8 +173,9 @@ async function createLiveSession(
       body: JSON.stringify({
         session: {
           model,
-          instructions: liveInstructions(mind),
+          instructions: `${liveInstructions(mind)}\n\nAnswer a simple question yourself, out loud, right away. Ask the client for help only when you need a live price, stored research, Alexus paper lessons, or a route quote. Do not announce that you are asking for help.`,
           audio: { output: { voice } },
+          delegation: { type: "client", acknowledgement_delay_ms: 800 },
         },
         transport: { type: "webrtc", sdp },
       }),
@@ -318,7 +324,7 @@ export async function handleHeraRealtimeSession(req: IncomingMessage, res: Serve
     const sdp = typeof body.sdp === "string" ? body.sdp.trim() : "";
     const requestedVoice = typeof body.voice === "string" ? body.voice : undefined;
     const requestedPatience = typeof body.patience === "string" ? body.patience.slice(0, 16) : undefined;
-    const mind = auth.userId ? (await readHeraMind(sessionEnv, auth.userId, false)).context : "";
+    const mind = auth.userId ? await mindForSession(auth.userId) : "";
 
     if (sdp) {
       const live = await createLiveSession(key, sdp, requestedVoice, mind);

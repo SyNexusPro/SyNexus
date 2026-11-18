@@ -51,6 +51,7 @@ async function elevenLabsTts(text: string): Promise<{ buffer: ArrayBuffer; conte
 const HERA_TTS_INSTRUCTIONS =
   "Speak as the same Hera: a warm feminine alto on a close mic, smooth and real, with a quiet futuristic calm. " +
   "Connected phrases, natural breaths, even volume, unhurried American English. Finish every word. Natural contractions. " +
+  "Let warmth, humor, or calm show in the pace. Stay the same alto. " +
   "Never metallic, robotic, mumbled, or clipped. Do not imitate any copyrighted character, game AI, or voice actor.";
 
 async function openAiTts(text: string): Promise<{ buffer: ArrayBuffer; contentType: string } | null> {

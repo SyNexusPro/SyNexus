@@ -14,7 +14,7 @@ export type VenueQuote = {
 type FetchImpl = (url: string, init?: RequestInit) => Promise<Response>;
 
 const TIMEOUT_MS = 6_000;
-const CACHE_MS = 90_000;
+const CACHE_MS = 1_000;
 
 let cache: { at: number; brief: string } | null = null;
 

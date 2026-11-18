@@ -3,6 +3,7 @@ import { isNativeAndroid, isNativeMobile } from "./bootExperience";
 
 /** Scale polling for WebView / mobile — avoids main-thread + network pile-ups. */
 export function nativePollIntervalMs(webMs: number): number {
+  if (webMs <= 1_000) return webMs;
   if (isNativeAndroid()) return Math.max(30_000, Math.round(webMs * 4.5));
   if (isNativeMobile()) return Math.max(webMs, Math.round(webMs * 2.5));
   return webMs;
@@ -10,6 +11,7 @@ export function nativePollIntervalMs(webMs: number): number {
 
 /** Longer in-memory cache on native so overlapping panels share one network pull. */
 export function nativeFeedCacheTtlMs(webMs: number): number {
+  if (webMs <= 1_000) return webMs;
   if (isNativeAndroid()) return Math.max(webMs, Math.round(webMs * 3));
   if (isNativeMobile()) return Math.max(webMs, Math.round(webMs * 2));
   return webMs;

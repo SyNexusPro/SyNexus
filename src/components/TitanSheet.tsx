@@ -52,7 +52,7 @@ export function TitanSheet() {
   });
   const { board: moversBoard } = useSolanaMoversBoard({
     enabled: titanChatActive,
-    intervalMs: 300_000,
+    intervalMs: 1_000,
   });
 
   useEffect(() => {

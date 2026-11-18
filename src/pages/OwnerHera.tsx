@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
+import { GodModeLogin } from "../components/GodModeLogin";
+import { isOwnerScreen } from "../lib/ownerScreen";
 import { HeraHologramPortrait } from "../components/hera/HeraHologramPortrait";
 import { HeraScreen } from "../components/hera/HeraScreen";
 import { DEFAULT_TITAN_BOT_NAME } from "../config/titanBot";
@@ -31,7 +33,7 @@ export function OwnerHera() {
   const [status, setStatus] = useState<"checking" | "ready" | "denied">("checking");
   const ready = status === "ready";
   const { tokens, feedSource } = useOracleMarketFeed({ enabled: ready, intervalMs: 20_000 });
-  const { board: moversBoard } = useSolanaMoversBoard({ enabled: ready, intervalMs: 300_000 });
+  const { board: moversBoard } = useSolanaMoversBoard({ enabled: ready, intervalMs: 1_000 });
 
   useEffect(() => {
     let alive = true;
@@ -80,7 +82,14 @@ export function OwnerHera() {
     [feedSource, moversBoard, titanBotName, tokens],
   );
 
-  if (status === "denied") return <Navigate to="/god" replace />;
+  if (status === "denied") {
+    if (!isOwnerScreen()) return <Navigate to="/" replace />;
+    return (
+      <div className="hera-screen" role="dialog" aria-modal="true" aria-label="Hera">
+        <GodModeLogin redirectTo="/owner/hera" />
+      </div>
+    );
+  }
 
   if (!ready) {
     return (

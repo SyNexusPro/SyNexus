@@ -24,7 +24,8 @@ export type DashboardToken = {
 };
 
 let memory: { at: number; tokens: DashboardToken[] } | null = null;
-const TTL_MS = 12_000;
+/** One shared DexScreener pull per second. updatedAt is that pull, not the time the cache was read. */
+const TTL_MS = 1_000;
 
 function sendJson(res: ServerResponse, status: number, body: unknown): void {
   res.writeHead(status, { "Content-Type": "application/json", "Cache-Control": "no-store" });
@@ -71,9 +72,9 @@ function toToken(pair: Pair): DashboardToken | null {
   };
 }
 
-export async function loadDashboardTokens(): Promise<DashboardToken[]> {
+export async function loadDashboardTokens(): Promise<{ tokens: DashboardToken[]; updatedAt: number }> {
   const now = Date.now();
-  if (memory && now - memory.at < TTL_MS) return memory.tokens;
+  if (memory && now - memory.at < TTL_MS) return { tokens: memory.tokens, updatedAt: memory.at };
   let pairs = await fetchPairsForMints(await collectSolanaMints(30));
   if (pairs.length < 8) {
     const response = await fetch("https://api.dexscreener.com/latest/dex/search?q=sol");
@@ -99,7 +100,7 @@ export async function loadDashboardTokens(): Promise<DashboardToken[]> {
     if (tokens.length >= 24) break;
   }
   memory = { at: now, tokens };
-  return tokens;
+  return { tokens, updatedAt: now };
 }
 
 export async function handleDashboard(req: IncomingMessage, res: ServerResponse): Promise<void> {
@@ -116,9 +117,9 @@ export async function handleDashboard(req: IncomingMessage, res: ServerResponse)
     return;
   }
   try {
-    const tokens = await loadDashboardTokens();
+    const { tokens, updatedAt } = await loadDashboardTokens();
     sendJson(res, 200, {
-      updatedAt: Date.now(),
+      updatedAt,
       tokens,
       alerts: tokens.filter((token) => token.risk === "DANGER").slice(0, 4).map((token) => `${token.symbol} safety ${token.safetyScore}`),
     });

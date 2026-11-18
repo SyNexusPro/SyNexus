@@ -8,7 +8,7 @@ import {
   type TokenMover5m,
 } from "../services/marketDataService";
 
-const REFRESH_MS = nativePollIntervalMs(45_000);
+const REFRESH_MS = nativePollIntervalMs(1_000);
 
 type Tab = "gainers" | "losers";
 

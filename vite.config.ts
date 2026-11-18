@@ -28,6 +28,7 @@ import { configureHeraMcpApi } from "./api/_routes/hera/mcp";
 import { configureHeraLiveTokenApi } from "./api/_routes/hera/live-token";
 import { configureHeraLaunchWatchApi } from "./api/_routes/hera/launch-watch";
 import { configureHeraMindApi } from "./api/_routes/hera/mind";
+import { configureHeraAssistApi } from "./api/_routes/hera/assist";
 import { configureDashboardApi } from "./api/_routes/dashboard";
 import { configureRealtimeBridge } from "./api/_routes/realtime/bridge";
 import { configureCommunityAccessApi } from "./api/_routes/community/access";
@@ -125,6 +126,7 @@ export default defineConfig(({ mode }) => {
           configureHeraLiveTokenApi(server);
           configureHeraLaunchWatchApi(server);
           configureHeraMindApi(server, env);
+          configureHeraAssistApi(server, env);
           configureDashboardApi(server);
           configureRealtimeBridge(server, env);
         },

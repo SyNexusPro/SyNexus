@@ -64,7 +64,7 @@ export class HeraFaceController {
   tick(now = performance.now()): void {
     const t = (now - this.t0) / 1000;
     this.composeTargets(t, now);
-    const lip = this.visualMode() === "speaking" ? 0.22 : 0.14;
+    const lip = this.visualMode() === "speaking" ? 0.38 : 0.14;
     const idle = 0.18;
     for (const name of HERA_BLENDSHAPE_NAMES) {
       const isLip = name.startsWith("jaw") || name.startsWith("mouth");
@@ -86,7 +86,7 @@ export class HeraFaceController {
     }
 
     if (now > this.nextBlinkAt) {
-      this.blinkUntil = now + 42 + Math.random() * 28;
+      this.blinkUntil = now + 110 + Math.random() * 40;
       const double = Math.random() < 0.16;
       const longGap = !double && Math.random() < 0.12;
       this.nextBlinkAt = double
@@ -105,13 +105,13 @@ export class HeraFaceController {
       this.nextSaccadeAt = now + (speaking ? 600 + Math.random() * 900 : attentive || thinking ? 1400 + Math.random() * 2200 : 800 + Math.random() * 1600);
       this.saccade = {
         x: speaking
-          ? (Math.random() - 0.5) * 0.1
+          ? (Math.random() - 0.5) * 0.04
           : attentive
-            ? (Math.random() - 0.5) * 0.12
+            ? (Math.random() - 0.5) * 0.1
             : thinking
-              ? -0.22 - Math.random() * 0.2
-              : (Math.random() - 0.5) * 0.28,
-        y: speaking ? (Math.random() - 0.5) * 0.08 : attentive ? (Math.random() - 0.5) * 0.08 : thinking ? -0.18 : (Math.random() - 0.5) * 0.2,
+              ? (Math.random() - 0.5) * 0.06
+              : (Math.random() - 0.5) * 0.16,
+        y: speaking ? -0.03 : attentive ? (Math.random() - 0.5) * 0.06 : thinking ? -0.02 : (Math.random() - 0.5) * 0.12,
       };
     }
 
@@ -130,9 +130,7 @@ export class HeraFaceController {
     else this.target.eyeLookDown = -lookY;
 
     if (visual === "thinking") {
-      this.target.browDownLeft = 0.18;
-      this.target.browDownRight = 0.12;
-      this.target.eyeLookDown = Math.max(this.target.eyeLookDown, 0.16);
+      this.target.browInnerUp += 0.08;
     }
     if (visual === "listening") {
       this.target.browInnerUp += 0.12;

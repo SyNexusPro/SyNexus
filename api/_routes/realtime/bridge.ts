@@ -68,19 +68,19 @@ function diffTokens(next: DashboardToken[]): DashboardToken[] {
 
 async function pump(): Promise<void> {
   try {
-    const tokens = await loadDashboardTokens();
+    const { tokens, updatedAt } = await loadDashboardTokens();
     if (!lastTokens.length) {
       lastTokens = tokens;
       broadcast({
         type: "snapshot",
-        dashboard: { tokens, updatedAt: Date.now() },
+        dashboard: { tokens, updatedAt },
       });
       return;
     }
     const changed = diffTokens(tokens);
     lastTokens = tokens;
     if (changed.length) {
-      broadcast({ type: "patch", tokens: changed, updatedAt: Date.now() });
+      broadcast({ type: "patch", tokens: changed, updatedAt });
     }
   } catch {
     /* keep the last tape */
@@ -165,7 +165,7 @@ export function configureRealtimeBridge(
   void pump();
   pumpTimer = setInterval(() => {
     void pump();
-  }, 15_000);
+  }, 1_000);
 
   const url = heliusUrl(env);
   if (url) void openHelius(url);

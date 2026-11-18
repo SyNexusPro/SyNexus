@@ -6,6 +6,7 @@ import { resolveTitanAuthPlan } from "../../../lib/server/titan/authPlan.js";
 import { guardTitanServerMessage } from "../../../lib/server/titan/sanitize.js";
 import { titanCacheGet, titanCacheSet } from "../../../lib/server/titan/responseCache.js";
 import { fetchLiveSolanaWatchlist, needsLiveMarketFetch } from "../../../lib/server/titan/liveMarketBrief.js";
+import { needsDeeperReasoning } from "../../../src/lib/hera/questionDepth.js";
 import {
   fetchVerifiedTokenSnapshot,
   needsLiveTokenFetch,
@@ -140,6 +141,20 @@ function resolveLlmConfig(env: TitanEnv, plan: "FREE" | "PRO" = "FREE", fastMode
   );
   const apiKey = groqKey || openaiKey || "";
   return { apiKey, baseUrl, model, maxTokens };
+}
+
+function resolveReasoningEndpoint(env: TitanEnv, plan: "FREE" | "PRO"): LlmEndpoint | null {
+  const apiKey = env.OPENAI_API_KEY?.trim();
+  if (!apiKey) return null;
+  const model = env.HERA_REASONING_MODEL?.trim() || "gpt-4.1";
+  const current = resolveHeraOpenAi(env, plan);
+  if (current?.model === model) return null;
+  return {
+    apiKey,
+    baseUrl: openaiBase(env),
+    model,
+    maxTokens: plan === "PRO" ? 2800 : 2000,
+  };
 }
 
 function resolveChatEndpoint(
@@ -475,6 +490,9 @@ async function* streamOpenAiChat(
   const fastMode = body.fastMode === true;
   const { primary, fallback } = resolveChatEndpoint(env, body);
   if (!primary.apiKey) throw new Error("llm_unavailable");
+  const reasoning = needsDeeperReasoning(body.message, body.intentHint)
+    ? resolveReasoningEndpoint(env, body.plan)
+    : null;
 
   const system = buildTitanSystemPrompt(body);
   const messages = [
@@ -483,12 +501,17 @@ async function* streamOpenAiChat(
     { role: "user" as const, content: body.message },
   ];
 
-  try {
-    yield* streamChatCompletions(primary, messages, body.plan, fastMode, body.intentHint, (usage) => onUsage?.(usage, primary.model));
-  } catch (err) {
-    if (!fallback?.apiKey) throw err;
-    yield* streamChatCompletions(fallback, messages, body.plan, fastMode, body.intentHint, (usage) => onUsage?.(usage, fallback.model));
+  const chain = [reasoning, primary, fallback].filter((item): item is LlmEndpoint => Boolean(item?.apiKey));
+  let lastError: unknown = new Error("llm_unavailable");
+  for (const endpoint of chain) {
+    try {
+      yield* streamChatCompletions(endpoint, messages, body.plan, fastMode, body.intentHint, (usage) => onUsage?.(usage, endpoint.model));
+      return;
+    } catch (err) {
+      lastError = err;
+    }
   }
+  throw lastError;
 }
 
 export async function handleTitanChatStream(

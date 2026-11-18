@@ -5,8 +5,10 @@ import {
   calibrateNoise,
   endpointDelayMs,
   firstSpokenSentence,
+  liveQuietForTranscript,
   liveTurnQuietMs,
   normalizeHeraPatience,
+  vadEagernessForPatience,
   recorderSilenceMs,
   soundsFinished,
   soundsUnfinished,
@@ -66,8 +68,12 @@ describe("endpointDelayMs", () => {
     assert.ok(quick < natural && natural < patient);
   });
 
-  it("never commits sooner than the old fixed 1.4s pause in the default profile for unfinished speech", () => {
-    assert.ok(endpointDelayMs("and then", HERA_DEFAULT_PATIENCE) > 1400);
+  it("answers a finished sentence without a long pause", () => {
+    const finished = endpointDelayMs("What is the price of bitcoin?", HERA_DEFAULT_PATIENCE);
+    const unfinished = endpointDelayMs("and then", HERA_DEFAULT_PATIENCE);
+    assert.ok(finished < 900);
+    assert.ok(unfinished > finished);
+    assert.ok(unfinished < 2000);
   });
 
   it("gives long thoughts a little more grace, capped", () => {
@@ -86,17 +92,28 @@ describe("recorderSilenceMs", () => {
     assert.ok(long - brief <= 1200);
   });
 
-  it("is more patient than the previous fixed 1.1s", () => {
-    for (const patience of ["quick", "natural", "patient"] as const) {
-      assert.ok(recorderSilenceMs(patience, 0) > 1100);
-    }
+  it("closes quickly once the person goes quiet", () => {
+    assert.ok(recorderSilenceMs("natural", 0) < 1000);
+    assert.ok(recorderSilenceMs("quick", 0) < recorderSilenceMs("natural", 0));
+    assert.ok(recorderSilenceMs("patient", 0) > recorderSilenceMs("natural", 0));
   });
 });
 
 describe("liveTurnQuietMs", () => {
-  it("is slower than the previous fixed 900ms", () => {
-    assert.ok(liveTurnQuietMs("natural") > 900);
-    assert.ok(liveTurnQuietMs("quick") >= 900);
+  it("ends the turn soon after speech stops", () => {
+    assert.ok(liveTurnQuietMs("natural") < 700);
+    assert.ok(liveTurnQuietMs("quick") < liveTurnQuietMs("natural"));
+    assert.ok(liveTurnQuietMs("patient") > liveTurnQuietMs("natural"));
+  });
+});
+
+describe("vadEagernessForPatience", () => {
+  it("waits through a natural pause and stays quick when asked", () => {
+    assert.equal(vadEagernessForPatience("natural"), "auto");
+    assert.equal(vadEagernessForPatience("quick"), "high");
+    assert.equal(vadEagernessForPatience(null), "auto");
+    assert.equal(vadEagernessForPatience("patient"), "low");
+    assert.equal(vadEagernessForPatience("natural", "low"), "low");
   });
 });
 

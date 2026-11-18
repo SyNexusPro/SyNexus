@@ -8,8 +8,11 @@ import { SYN_MINT, SYN_SYMBOL } from "../../config/synToken";
 import { authHeaders } from "../authSession";
 import { HERA_CONVERSATION_INSTRUCTIONS, HERA_VOICE_INSTRUCTIONS } from "./heraPrompt";
 import { getHeraVoicePreference } from "./heraVoicePreference";
-import { liveTurnQuietMs } from "./endpointing";
+import { liveQuietForTranscript, vadEagernessForPatience } from "./endpointing";
 import { getHeraPatience } from "./heraPatiencePreference";
+import { ICE_CAP_MS, ICE_EARLY_MS, MOUTH_FOLLOW, turnLatencyMs } from "./turnTiming";
+import { HERA_TOOL_LINE, HERA_VOICE_TOOLS } from "./voiceToolSpec";
+import { voiceLookupForTranscript } from "./voiceLookup";
 
 function heraLog(message: string, extra?: unknown): void {
   if (extra !== undefined) console.info(`[HERA] ${message}`, extra);
@@ -57,6 +60,11 @@ type RealtimeEvent = {
     output?: Array<{ content?: Array<{ transcript?: string; text?: string }> }>;
   };
   error?: { message?: string } | string;
+  name?: string;
+  call_id?: string;
+  arguments?: string;
+  item?: { type?: string; name?: string; call_id?: string; arguments?: string };
+  delegation?: { id?: string; target?: string };
 };
 
 type StartOpts = {
@@ -106,6 +114,7 @@ export class HeraRealtimeController {
   private mouthOpen = 0;
   private lastUiLevelAt = 0;
   private userPartial = "";
+  private lastUserUtterance = "";
   private activeResponse: HeraResponse | null = null;
   private committedResponseIds = new Set<string>();
   private listeners = new Set<HeraRealtimeEvents>();
@@ -124,6 +133,10 @@ export class HeraRealtimeController {
   private liveUserTimer = 0;
   private liveOutputTimer = 0;
   private pendingTyped: string[] = [];
+  private speechStoppedAt = 0;
+  private loggedThisTurn = false;
+  private toolRunning = false;
+  private handledCalls = new Set<string>();
 
   get conversationState(): HeraConversationState {
     return this.state;
@@ -237,8 +250,8 @@ export class HeraRealtimeController {
     heraLog("assistant interrupted");
     this.outputLive = false;
     this.finishResponse(true);
+    this.muteRemote(true);
     if (this.protocol === "realtime") {
-      this.muteRemote(true);
       this.send({ type: "response.cancel" });
       this.send({ type: "output_audio_buffer.clear" });
     }
@@ -418,28 +431,40 @@ export class HeraRealtimeController {
     }
   }
 
-  /** Waits for ICE gathering so the server receives a complete offer. */
+  /** Waits for ICE gathering so the server receives a usable offer. Leaves early once a candidate exists. */
   private async waitForIce(pc: RTCPeerConnection): Promise<void> {
     if (pc.iceGatheringState === "complete") return;
     await new Promise<void>((resolve) => {
-      const done = () => {
-        if (pc.iceGatheringState !== "complete") return;
-        pc.removeEventListener("icegatheringstatechange", done);
-        window.clearTimeout(timer);
+      let settled = false;
+      let sawCandidate = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        pc.removeEventListener("icegatheringstatechange", onGather);
+        pc.removeEventListener("icecandidate", onCandidate);
+        window.clearTimeout(early);
+        window.clearTimeout(cap);
         resolve();
       };
-      const timer = window.setTimeout(() => {
-        pc.removeEventListener("icegatheringstatechange", done);
-        resolve();
-      }, 1500);
-      pc.addEventListener("icegatheringstatechange", done);
-      done();
+      const onGather = () => {
+        if (pc.iceGatheringState === "complete") finish();
+      };
+      const onCandidate = (event: RTCPeerConnectionIceEvent) => {
+        if (event.candidate) sawCandidate = true;
+      };
+      const early = window.setTimeout(() => {
+        if (sawCandidate) finish();
+      }, ICE_EARLY_MS);
+      const cap = window.setTimeout(finish, ICE_CAP_MS);
+      pc.addEventListener("icegatheringstatechange", onGather);
+      pc.addEventListener("icecandidate", onCandidate);
+      onGather();
     });
   }
 
   /**
-   * Server exchanges our offer for an answer. GPT-Live-1 answers with
-   * `mode: "live"`; the Realtime fallback answers with `mode: "realtime"`.
+   * Server exchanges our offer for an answer. GPT-Live-1, with Marin, is tried
+   * first. The existing Realtime session answers if Live cannot start.
    */
   private async createServerSession(
     offerSdp: string,
@@ -451,7 +476,7 @@ export class HeraRealtimeController {
       patience: getHeraPatience(),
     });
     let res = await fetch("/api/hera/session", { method: "POST", headers, body }).catch(() => null);
-    if (!res?.ok) {
+    if (!res) {
       res = await fetch("/api/hera/realtime-session", { method: "POST", headers, body });
     }
     const json = (await res.json()) as TokenPayload;
@@ -484,10 +509,11 @@ export class HeraRealtimeController {
   private liveAppend(
     type: "session.instructions.append" | "session.thinking.append" | "session.commentary.append",
     content: string,
+    delegationId: string | null = null,
   ): void {
     const text = content.trim();
-    if (!text) return;
-    this.send({ type, event_id: newId(), delegation_id: null, content: text.slice(0, 1800) });
+    if (!text && !delegationId) return;
+    this.send({ type, event_id: newId(), delegation_id: delegationId, content: text.slice(0, 1800) });
   }
 
   private async primeConversation(): Promise<void> {
@@ -500,36 +526,59 @@ export class HeraRealtimeController {
         type: "session.update",
         session: {
           type: "realtime",
-          instructions: HERA_CONVERSATION_INSTRUCTIONS,
+          instructions: `${HERA_CONVERSATION_INSTRUCTIONS}\n\n${HERA_TOOL_LINE}`,
+          tools: HERA_VOICE_TOOLS,
+          tool_choice: "auto",
           audio: {
+            input: {
+              transcription: { model: "gpt-4o-mini-transcribe" },
+              noise_reduction: { type: "near_field" },
+              turn_detection: {
+                type: "semantic_vad",
+                eagerness: vadEagernessForPatience(getHeraPatience()),
+                create_response: true,
+                interrupt_response: true,
+              },
+            },
             output: { instructions: HERA_VOICE_INSTRUCTIONS },
           },
         },
       });
     }
     let context = this.pendingContext;
-    try {
-      const live = await fetchHeraLiveToken({ mint: SYN_MINT, symbol: SYN_SYMBOL, tz: hostTimeZone() });
-      if (live?.ok) {
-        const bits = [live.symbol || SYN_SYMBOL, live.source, ...(live.live ?? []).slice(0, 6)].filter(Boolean);
-        context = `${context ? `${context} ` : ""}Live ${SYN_SYMBOL} snapshot: ${bits.join(" · ")}.`;
-      }
-    } catch (err) {
-      heraError("live context skipped", err);
+    const [live, launches, ownerBrief] = await Promise.all([
+      fetchHeraLiveToken({ mint: SYN_MINT, symbol: SYN_SYMBOL, tz: hostTimeZone() }).catch((err) => {
+        heraError("live context skipped", err);
+        return null;
+      }),
+      fetchHeraLaunchWatch({ tz: hostTimeZone() }).catch((err) => {
+        heraError("launch watch skipped", err);
+        return null;
+      }),
+      authHeaders()
+        .then((headers) => fetch("/api/owner/brief", { headers }))
+        .then(async (response) => {
+          if (!response.ok) return "";
+          const body = (await response.json()) as { spoken?: unknown };
+          return typeof body.spoken === "string" ? body.spoken.trim().slice(0, 900) : "";
+        })
+        .catch(() => ""),
+    ]);
+    if (live?.ok) {
+      const bits = [live.symbol || SYN_SYMBOL, live.source, ...(live.live ?? []).slice(0, 6)].filter(Boolean);
+      context = `${context ? `${context} ` : ""}Live ${SYN_SYMBOL} snapshot: ${bits.join(" · ")}.`;
     }
-    try {
-      const launches = await fetchHeraLaunchWatch({ tz: hostTimeZone() });
-      if (launches?.ok && launches.brief) {
-        context = `${context ? `${context} ` : ""}LIVE LAUNCH WATCH: ${launches.brief.slice(0, 1800)}`;
-      } else if (launches?.leads?.length) {
-        const bits = launches.leads
-          .slice(0, 6)
-          .map((lead) => `${lead.symbol || lead.title} (${lead.source}, ${lead.ageMin}m)`)
-          .join("; ");
-        context = `${context ? `${context} ` : ""}LIVE LAUNCH WATCH: ${bits}.`;
-      }
-    } catch (err) {
-      heraError("launch watch skipped", err);
+    if (launches?.ok && launches.brief) {
+      context = `${context ? `${context} ` : ""}LIVE LAUNCH WATCH: ${launches.brief.slice(0, 1800)}`;
+    } else if (launches?.leads?.length) {
+      const bits = launches.leads
+        .slice(0, 6)
+        .map((lead) => `${lead.symbol || lead.title} (${lead.source}, ${lead.ageMin}m)`)
+        .join("; ");
+      context = `${context ? `${context} ` : ""}LIVE LAUNCH WATCH: ${bits}.`;
+    }
+    if (ownerBrief) {
+      context = `${context ? `${context} ` : ""}OWNER BRIEFING (do not read aloud unless asked; if a figure is unavailable, do not invent it): ${ownerBrief}`;
     }
     const history = this.pendingHistory.filter((item) => item.text.trim()).slice(-10);
     if (this.protocol === "live") {
@@ -608,11 +657,18 @@ export class HeraRealtimeController {
       return;
     }
 
+    if (type === "session.delegation.created") {
+      const id = data.delegation?.id || "";
+      if (id && data.delegation?.target === "client") void this.answerLiveDelegation(id);
+      return;
+    }
+
     if (type === "session.input_transcript.delta") {
       const fragment = data.delta || data.text || data.content || "";
       if (!fragment) return;
       this.userPartial = `${this.userPartial}${this.userPartial ? " " : ""}${fragment}`.trim();
       this.transcript = this.userPartial;
+      this.lastUserUtterance = this.userPartial;
       this.emit("onTranscript", this.transcript);
       this.noteLiveUserSpeech();
       return;
@@ -640,6 +696,8 @@ export class HeraRealtimeController {
       heraLog("user speech ended");
       this.userSpeaking = false;
       this.emit("onUserSpeaking", false);
+      this.speechStoppedAt = performance.now();
+      this.loggedThisTurn = false;
       this.setState("thinking");
       return;
     }
@@ -652,6 +710,20 @@ export class HeraRealtimeController {
     }
 
     if (type === "output_audio_buffer.started" || type === "response.output_audio.delta" || type === "response.audio.delta") {
+      if (this.userSpeaking) {
+        window.clearTimeout(this.liveUserTimer);
+        this.userSpeaking = false;
+        this.emit("onUserSpeaking", false);
+        if (!this.speechStoppedAt) this.speechStoppedAt = performance.now();
+      }
+      if (!this.loggedThisTurn && this.speechStoppedAt) {
+        const latency = turnLatencyMs(this.speechStoppedAt, performance.now());
+        this.loggedThisTurn = true;
+        if (latency != null) {
+          heraLog("response latency", `${latency}ms`);
+          this.recordLatency(latency);
+        }
+      }
       if (!this.activeResponse) this.activeResponse = { id: newId(), text: "", startedAt: Date.now() };
       this.outputLive = true;
       this.muteRemote(false);
@@ -671,7 +743,17 @@ export class HeraRealtimeController {
       return;
     }
 
+    if (type === "response.function_call_arguments.done" || type === "response.output_item.done") {
+      const name = data.name || data.item?.name || "";
+      const callId = data.call_id || data.item?.call_id || "";
+      const args = data.arguments || data.item?.arguments || "{}";
+      const isCall = type === "response.function_call_arguments.done" || data.item?.type === "function_call";
+      if (isCall && name && callId) void this.finishToolCall(name, callId, args);
+      return;
+    }
+
     if (type === "response.done") {
+      if (this.toolRunning) return;
       this.outputLive = false;
       const fromOutput = (data.response?.output ?? [])
         .flatMap((item) => item.content ?? [])
@@ -700,6 +782,7 @@ export class HeraRealtimeController {
       const finalText = eventText(data) || this.userPartial.trim();
       this.userPartial = "";
       this.transcript = finalText;
+      if (finalText) this.lastUserUtterance = finalText;
       this.emit("onTranscript", this.transcript);
       if (finalText) this.emit("onUserTurn", finalText);
       return;
@@ -740,13 +823,22 @@ export class HeraRealtimeController {
     this.liveUserTimer = window.setTimeout(() => {
       this.userSpeaking = false;
       this.emit("onUserSpeaking", false);
+      this.speechStoppedAt = performance.now();
+      this.loggedThisTurn = false;
       const finalText = this.userPartial.trim();
       this.userPartial = "";
+      if (finalText) this.lastUserUtterance = finalText;
       if (finalText) this.emit("onUserTurn", finalText);
-    }, liveTurnQuietMs(getHeraPatience()));
+    }, liveQuietForTranscript(this.userPartial, getHeraPatience()));
   }
 
   private noteLiveOutput(): void {
+    window.clearTimeout(this.liveUserTimer);
+    if (this.userSpeaking) {
+      this.userSpeaking = false;
+      this.emit("onUserSpeaking", false);
+      if (!this.speechStoppedAt) this.speechStoppedAt = performance.now();
+    }
     this.outputLive = true;
     this.muteRemote(false);
     this.setState("speaking");
@@ -812,7 +904,7 @@ export class HeraRealtimeController {
       const rms = this.outputLive ? rmsFromTimeDomain(this.analyser, this.analyserData) : 0;
       const current = Math.max(0, Math.min(1, rms * 6.2));
       const gated = current < 0.045 ? 0 : current;
-      this.setMouth(this.mouthOpen * 0.84 + gated * 0.16);
+      this.setMouth(this.mouthOpen * (1 - MOUTH_FOLLOW) + gated * MOUTH_FOLLOW);
       this.levelRaf = requestAnimationFrame(tick);
     };
     this.levelRaf = requestAnimationFrame(tick);
@@ -932,10 +1024,81 @@ export class HeraRealtimeController {
       this.reconnectTimer = 0;
     }
     this.activeResponse = null;
+    this.toolRunning = false;
+    this.handledCalls.clear();
     this.teardownPeer();
     if (next === "idle") this.committedResponseIds.clear();
     this.setState(next);
     void gen;
+  }
+
+  private recordLatency(ms: number): void {
+    void authHeaders({ "Content-Type": "application/json" })
+      .then((headers) =>
+        fetch("/api/hera/assist", {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ action: "latency", ms }),
+          keepalive: true,
+        }),
+      )
+      .catch(() => undefined);
+  }
+
+  private async answerLiveDelegation(id: string): Promise<void> {
+    if (this.handledCalls.has(id)) return;
+    this.handledCalls.add(id);
+    this.liveAppend("session.thinking.append", "", id);
+    const said = (this.lastUserUtterance || this.userPartial || this.transcript).trim();
+    const lookup = voiceLookupForTranscript(said);
+    if (!lookup) {
+      this.liveAppend(
+        "session.thinking.append",
+        "No lookup ran. Answer from the conversation. Do not invent a price, a memory, or a completed action.",
+        id,
+      );
+      return;
+    }
+    let output = "Tool unavailable. Do not invent a result.";
+    try {
+      const headers = await authHeaders({ "Content-Type": "application/json" });
+      const response = await fetch("/api/hera/assist", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ action: "tool", name: lookup.tool, arguments: lookup.arguments }),
+      });
+      const body = (await response.json().catch(() => null)) as { text?: unknown } | null;
+      if (typeof body?.text === "string" && body.text.trim()) output = body.text.slice(0, 1500);
+    } catch (err) {
+      heraError("live lookup", err);
+    }
+    this.liveAppend("session.commentary.append", output, id);
+  }
+
+  private async finishToolCall(name: string, callId: string, args: string): Promise<void> {
+    if (this.handledCalls.has(callId)) return;
+    this.handledCalls.add(callId);
+    this.toolRunning = true;
+    this.setState("thinking");
+    let output = "Tool unavailable. Do not invent a result.";
+    try {
+      const headers = await authHeaders({ "Content-Type": "application/json" });
+      const response = await fetch("/api/hera/assist", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ action: "tool", name, arguments: args }),
+      });
+      const body = (await response.json().catch(() => null)) as { text?: unknown } | null;
+      if (typeof body?.text === "string" && body.text.trim()) output = body.text.slice(0, 4000);
+    } catch (err) {
+      heraError("voice tool", err);
+    }
+    const sent = this.send({
+      type: "conversation.item.create",
+      item: { type: "function_call_output", call_id: callId, output },
+    });
+    if (sent) this.send({ type: "response.create" });
+    this.toolRunning = false;
   }
 
   private canSend(): boolean {

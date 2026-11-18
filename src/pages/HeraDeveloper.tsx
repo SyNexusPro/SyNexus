@@ -8,6 +8,7 @@ import {
 import { decideHeraSharedLesson, fetchHeraMind } from "../lib/heraMind";
 import { getAccessToken } from "../lib/authSession";
 import { hasStoredOwnerGrant, OWNER_ACCESS_CHANGED } from "../lib/ownerAccess";
+import { isOwnerScreen } from "../lib/ownerScreen";
 import { supabase } from "../lib/supabaseClient";
 
 export function HeraDeveloper() {
@@ -67,7 +68,7 @@ export function HeraDeveloper() {
     if (result.ok) await load();
   }
 
-  if (signedIn === false) return <Navigate to="/god" replace />;
+  if (signedIn === false) return <Navigate to={isOwnerScreen() ? "/god" : "/"} replace />;
 
   return (
     <div className="page analytics-page">

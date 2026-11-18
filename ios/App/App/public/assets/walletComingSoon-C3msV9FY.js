@@ -1,1 +1,0 @@
-var e=`/wallet-terms`,t=`SyNexus Vault`,n=`Coming soon`;export{t as n,n as r,e as t};

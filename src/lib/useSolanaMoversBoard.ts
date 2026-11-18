@@ -13,7 +13,7 @@ type Options = {
 };
 
 export function useSolanaMoversBoard(options: Options = {}) {
-  const { enabled = false, intervalMs: baseIntervalMs = 300_000 } = options;
+  const { enabled = false, intervalMs: baseIntervalMs = 1_000 } = options;
   const intervalMs = nativePollIntervalMs(baseIntervalMs);
   const appActive = useAppIsActive();
   const [board, setBoard] = useState<SolanaMoversBoard | null>(null);

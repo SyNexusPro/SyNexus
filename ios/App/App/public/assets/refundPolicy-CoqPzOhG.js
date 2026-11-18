@@ -1,1 +1,0 @@
-var e=`/refund-policy`;export{e as t};

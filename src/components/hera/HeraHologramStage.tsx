@@ -1,6 +1,5 @@
 import { Component, lazy, Suspense, useState, type ReactNode } from "react";
 import type { HeraAvatarState, HeraEmotion, HeraViseme } from "../../lib/hera/types";
-import { HeraExpressionStrip } from "./HeraExpressionStrip";
 
 const HeraHologram = lazy(() =>
   import("./HeraHologram").then((m) => ({ default: m.HeraHologram })),
@@ -23,7 +22,7 @@ type Props = {
   onForceEmotion?: (emotion: HeraEmotion | null) => void;
 };
 
-const PREVIEW_STATES: HeraAvatarState[] = ["idle", "listening", "thinking", "speaking"];
+const PREVIEW_STATES: HeraAvatarState[] = ["idle", "listening", "speaking"];
 
 /**
  * Lazy hologram stage — portrait face + optional expression strip.
@@ -42,7 +41,6 @@ export function HeraHologramStage({
   onPreviewState,
   previewState = null,
   forceEmotion = null,
-  onForceEmotion,
 }: Props) {
   const [failed, setFailed] = useState(false);
 
@@ -71,11 +69,7 @@ export function HeraHologramStage({
         </div>
       ) : (
         <Suspense
-          fallback={
-            <div className="hera-hologram-stage__loading" aria-hidden>
-              Projecting…
-            </div>
-          }
+          fallback={<div className="hera-hologram-stage__loading" aria-hidden />}
         >
           <HologramErrorBoundary onError={() => setFailed(true)}>
             <HeraHologram
@@ -91,13 +85,6 @@ export function HeraHologramStage({
       <p className="hera-hologram-stage__status" aria-live="polite">
         {statusLabel}
       </p>
-      {immersive ? null : (
-        <HeraExpressionStrip
-          emotion={emotion}
-          forceEmotion={forceEmotion}
-          onChange={onForceEmotion}
-        />
-      )}
       {!immersive && showStatePreview && onPreviewState ? (
         <div
           className="hera-hologram-stage__preview"

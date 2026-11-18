@@ -70,8 +70,8 @@ const BIRDEYE_CONCURRENCY = 2;
 const BIRDEYE_STAGGER_MS = 400;
 
 const MOVER_CACHE_TTL_MS: Record<MoverTimeframe, number> = {
-  "5m": 60_000,
-  "24h": 120_000,
+  "5m": 1_000,
+  "24h": 1_000,
   "7d": 900_000,
   "30d": 900_000,
   "365d": 900_000,
@@ -501,7 +501,7 @@ export async function fetchTokenPriceHistory(
 }
 
 const MVP_FEED_CACHE_KEY = "mvp:feed";
-const MVP_FEED_TTL_MS = nativeFeedCacheTtlMs(45_000);
+const MVP_FEED_TTL_MS = nativeFeedCacheTtlMs(1_000);
 
 async function fetchMvpTokenFeedUncached() {
   const guardianOverride = await loadGuardianConfigOverride();
@@ -850,7 +850,7 @@ function hydrateHistoricalMoversBoard(): void {
       await fetchSolanaTopMovers(timeframe);
       await sleep(1200);
     }
-    writeMoversCache("movers:board", buildBoardFromCaches(), MOVER_CACHE_TTL_MS["7d"]);
+    writeMoversCache("movers:board", buildBoardFromCaches(), MOVER_CACHE_TTL_MS["5m"]);
   });
 }
 
@@ -872,7 +872,7 @@ export async function fetchSolanaMoversBoard(): Promise<SolanaMoversBoard> {
       "365d": readMoversCache("movers:365d") ?? emptyMovers("365d"),
     };
 
-    writeMoversCache("movers:board", board, 120_000);
+    writeMoversCache("movers:board", board, MOVER_CACHE_TTL_MS["5m"]);
     hydrateHistoricalMoversBoard();
     return board;
   });

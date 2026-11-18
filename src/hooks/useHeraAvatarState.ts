@@ -60,12 +60,11 @@ function labelFor(state: HeraAvatarState, emotion: HeraEmotion, botName: string)
   if (emotion === "warning") return "Warning";
   switch (state) {
     case "connecting":
-      return "Connecting…";
+    case "thinking":
+      return "";
     case "listening":
     case "interrupted":
       return "Listening…";
-    case "thinking":
-      return emotion === "analyzing" ? "Analyzing…" : "Thinking…";
     case "speaking":
       return `${botName} speaking`;
     case "error":

@@ -57,9 +57,7 @@ export function SiteAnalytics() {
         <header className="analytics-page__head marketing-panel">
           <p className="analytics-page__eyebrow">Owner only</p>
           <h1>Site analytics</h1>
-          <p>
-            Sign in with god mode at <Link to="/god">/god</Link> to view live traffic, sign-ins, and sign-outs.
-          </p>
+          <p>This view stays on the owner phone.</p>
         </header>
       </div>
     );

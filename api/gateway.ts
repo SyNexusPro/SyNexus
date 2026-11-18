@@ -27,6 +27,7 @@ const loaders: Record<string, () => Promise<RouteModule>> = {
   "/api/hera/mcp": () => import("./_routes/hera/mcp.js"),
   "/api/hera/launch-watch": () => import("./_routes/hera/launch-watch.js"),
   "/api/hera/mind": () => import("./_routes/hera/mind.js"),
+  "/api/hera/assist": () => import("./_routes/hera/assist.js"),
   "/api/hera/live-token": () => import("./_routes/hera/live-token.js"),
   "/api/hera/realtime-session": () => import("./_routes/hera/realtime-session.js"),
   "/api/hera/session": () => import("./_routes/hera/session.js"),
