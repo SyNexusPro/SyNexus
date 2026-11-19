@@ -41,7 +41,7 @@ export async function handleTitanDiscoveryCron(
   }
 
   try {
-    const evaluations = await scanEmergingSolanaAssets(16);
+    const evaluations = await scanEmergingSolanaAssets(16, env);
     const result = await persistDiscoveryEvaluations(admin, evaluations, env);
     res.statusCode = 200;
     res.setHeader("Content-Type", "application/json");

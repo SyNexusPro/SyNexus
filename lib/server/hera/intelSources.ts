@@ -1,3 +1,4 @@
+import { heliusHttpEndpoint } from "../helius/client.js";
 import { pairsFromDexPayload, type DexPair } from "../market/dexscreener.js";
 import type { HeraIntelEnv } from "./partnerAuth.js";
 
@@ -291,11 +292,7 @@ export async function loadMarketReading(mint: string, fetchImpl: FetchLike = fet
   return blankMarket("unavailable", sources);
 }
 
-export function solanaRpcEndpoint(env: HeraIntelEnv): string | null {
-  const preferred = typeof env.SOLANA_RPC_URL === "string" ? env.SOLANA_RPC_URL.trim() : "";
-  const fallback = typeof env.VITE_SOLANA_RPC_URL === "string" ? env.VITE_SOLANA_RPC_URL.trim() : "";
-  const raw = preferred || fallback;
-  if (!raw) return null;
+function httpRpc(raw: string): string | null {
   try {
     const url = new URL(raw);
     if (url.protocol !== "https:" && url.protocol !== "http:") return null;
@@ -303,6 +300,17 @@ export function solanaRpcEndpoint(env: HeraIntelEnv): string | null {
   } catch {
     return null;
   }
+}
+
+/** Server mint reads. An explicit SOLANA_RPC_URL wins. Otherwise Helius is used when its key is set. Never return this URL to a browser. */
+export function solanaRpcEndpoint(env: HeraIntelEnv): string | null {
+  const preferred = typeof env.SOLANA_RPC_URL === "string" ? env.SOLANA_RPC_URL.trim() : "";
+  const explicit = preferred ? httpRpc(preferred) : null;
+  if (explicit) return explicit;
+  const helius = heliusHttpEndpoint(env);
+  if (helius) return helius;
+  const fallback = typeof env.VITE_SOLANA_RPC_URL === "string" ? env.VITE_SOLANA_RPC_URL.trim() : "";
+  return fallback ? httpRpc(fallback) : null;
 }
 
 function programFromOwner(owner: unknown): SecurityReading["program"] {

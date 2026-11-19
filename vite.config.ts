@@ -3,6 +3,7 @@ import { defineConfig, loadEnv } from "vite";
 import { configureCheckoutApi } from "./api/_routes/checkout";
 import { configureOwnerUnlockApi } from "./api/_routes/ownerUnlock";
 import { configureOwnerBriefApi } from "./api/_routes/owner/brief";
+import { configureOwnerHeliusApi } from "./api/_routes/owner/helius";
 import { configureOwnerHeraApi } from "./api/_routes/owner/hera";
 import { configureOwnerOlympusApi } from "./api/_routes/owner/olympus";
 import { configureOwnerDeveloperApi } from "./api/_routes/owner/developer";
@@ -101,6 +102,7 @@ export default defineConfig(({ mode }) => {
           configureTradeApi(server, env);
           configureOwnerUnlockApi(server, env);
           configureOwnerBriefApi(server, env);
+          configureOwnerHeliusApi(server, env);
           configureOwnerHeraApi(server, env);
           configureOwnerOlympusApi(server, env);
           configureOwnerDeveloperApi(server, env);

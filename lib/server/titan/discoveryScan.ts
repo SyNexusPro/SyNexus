@@ -7,6 +7,7 @@ import {
 } from "./discoveryEval.js";
 import { shouldSendInstantPremium } from "./classifyEvent.js";
 import { sendPremiumAlert } from "./sendPremiumAlert.js";
+import { discoverNewTokens } from "../helius/client.js";
 import {
   bestPairByMint,
   collectSolanaMints,
@@ -47,9 +48,16 @@ function pairToInput(pair: DexPair): DiscoveryAssetInput | null {
   };
 }
 
-/** Pull emerging Solana pairs from current DexScreener boost, profile, and takeover feeds. */
-export async function scanEmergingSolanaAssets(limit = 24): Promise<DiscoveryEvaluation[]> {
+/** Pull emerging Solana pairs from DexScreener, plus Helius when its server key is set. */
+export async function scanEmergingSolanaAssets(limit = 24, env?: Env): Promise<DiscoveryEvaluation[]> {
   const mintSet = new Set(await collectSolanaMints(30));
+  if (env) {
+    try {
+      for (const token of await discoverNewTokens(env, 8)) mintSet.add(token.mint);
+    } catch {
+      /* DexScreener remains the source when Helius is quiet */
+    }
+  }
 
   if (mintSet.size < 6) {
     try {

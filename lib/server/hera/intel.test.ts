@@ -290,6 +290,30 @@ describe("mint account readings", () => {
     assert.equal(JSON.stringify(reading).includes("supersecretvalue"), false);
     assert.equal(JSON.stringify(await loadSecurityReading(WSOL, {})).includes("not_configured"), true);
   });
+
+  test("uses Helius for mint reads when no explicit rpc is set", async () => {
+    let host = "";
+    const reading = await loadSecurityReading(WSOL, { HELIUS_API_KEY: "fixture-helius-key" }, async (input) => {
+      host = new URL(String(input)).hostname;
+      return new Response(JSON.stringify({ result: { value: null } }), { status: 200 });
+    });
+    assert.equal(host, "mainnet.helius-rpc.com");
+    assert.equal(reading.status, "not_found");
+    assert.equal(JSON.stringify(reading).includes("fixture-helius-key"), false);
+  });
+
+  test("an explicit rpc stays ahead of Helius", async () => {
+    let host = "";
+    await loadSecurityReading(
+      WSOL,
+      { SOLANA_RPC_URL: "https://rpc.example/rpc", HELIUS_API_KEY: "fixture-helius-key" },
+      async (input) => {
+        host = new URL(String(input)).hostname;
+        return new Response(JSON.stringify({ result: { value: null } }), { status: 200 });
+      },
+    );
+    assert.equal(host, "rpc.example");
+  });
 });
 
 describe("intel report", () => {

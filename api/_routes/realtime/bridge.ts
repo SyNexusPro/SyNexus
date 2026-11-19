@@ -5,6 +5,7 @@
  */
 import type { Server } from "node:http";
 import type { ViteDevServer } from "../viteDevServer.js";
+import { heliusWsEndpoint } from "../../../lib/server/helius/client.js";
 import { loadDashboardTokens, type DashboardToken } from "../dashboard.js";
 
 declare module "ws" {
@@ -87,14 +88,6 @@ async function pump(): Promise<void> {
   }
 }
 
-function heliusUrl(env: Record<string, string | undefined>): string | null {
-  const explicit = env.HELIUS_WS_URL?.trim();
-  if (explicit) return explicit;
-  const key = env.HELIUS_API_KEY?.trim();
-  if (!key) return null;
-  return `wss://mainnet.helius-rpc.com/?api-key=${key}`;
-}
-
 async function openHelius(url: string): Promise<void> {
   const mod = await import("ws");
   const WS = mod.default;
@@ -167,6 +160,6 @@ export function configureRealtimeBridge(
     void pump();
   }, 1_000);
 
-  const url = heliusUrl(env);
+  const url = heliusWsEndpoint(env);
   if (url) void openHelius(url);
 }
