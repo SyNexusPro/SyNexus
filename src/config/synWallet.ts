@@ -1,12 +1,18 @@
+import { resolveSolanaCluster } from "./solanaCluster";
+
 /** SyN Wallet — self-custodial Solana wallet inside SyNexus. */
 export const SYN_WALLET_PATH = "/wallet";
 export const SYN_WALLET_PRODUCT_NAME = "SyN Wallet";
 export const SYN_WALLET_TAGLINE = "Scan. Sign. Own.";
 
-/** Public Solana RPC — override with VITE_SOLANA_RPC_URL in production. */
-export const SYN_WALLET_RPC_URL =
-  (typeof import.meta !== "undefined" && import.meta.env?.VITE_SOLANA_RPC_URL?.trim()) ||
-  "https://api.mainnet-beta.solana.com";
+const clusterChoice = resolveSolanaCluster(
+  typeof import.meta !== "undefined" ? import.meta.env?.VITE_SOLANA_CLUSTER : undefined,
+  typeof import.meta !== "undefined" ? import.meta.env?.VITE_SOLANA_RPC_URL : undefined,
+);
+
+/** Public Solana RPC. Mainnet unless a testing build sets VITE_SOLANA_CLUSTER=devnet. */
+export const SOLANA_CLUSTER = clusterChoice.cluster;
+export const SYN_WALLET_RPC_URL = clusterChoice.rpc;
 
 export const SYN_WALLET_DERIVATION_PATH = "m/44'/501'/0'/0'";
 

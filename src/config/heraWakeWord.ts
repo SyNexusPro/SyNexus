@@ -14,7 +14,7 @@ export const HERA_LISTEN_DOCKED_KEY = "synexus_hera_listen_docked";
 export const HERA_WAKE_CONSENT_COPY = {
   title: "Listen for “Hera”",
   body:
-    "While SyNexus is open, this device can listen for “Hera” (or “Titan”). Wake-word audio stays on the device and is not uploaded to SyNexus. After she hears her name, Hera opens and starts listening automatically. Background listening is off. You can turn Listen off anytime.",
+    "This device can listen for “Hera” or “Titan”. On the Titan AI owner phone, listening continues while the screen is off. Wake-word audio stays on the device and is not uploaded to SyNexus. After she hears her name, she wakes immediately and listens. You can turn Listen off anytime on the customer app.",
   confirm: "Enable Listen",
   cancel: "Not now",
 } as const;

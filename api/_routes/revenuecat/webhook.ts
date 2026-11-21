@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { productTier, webhookAuthorized } from "../../../lib/server/membership/policy.js";
-import { recordStoreEvent } from "../../../lib/server/membership/store.js";
+import { productTier, profilePlanForTier, webhookAuthorized } from "../../../lib/server/membership/policy.js";
+import { recordStoreEvent, syncProfilePlan } from "../../../lib/server/membership/store.js";
 import { useApiRoute, type ConnectHandler, type ViteDevServer } from "../viteDevServer.js";
 
 type Env = Record<string, string | undefined>;
@@ -16,7 +16,7 @@ function send(res: Pick<ServerResponse, "statusCode" | "setHeader" | "end">, sta
 function statusFor(type: string): string | null {
   if (["INITIAL_PURCHASE", "RENEWAL", "UNCANCELLATION", "PRODUCT_CHANGE", "SUBSCRIPTION_EXTENDED"].includes(type)) return "active";
   if (type === "CANCELLATION") return "canceled";
-  if (type === "EXPIRATION") return "expired";
+  if (type === "EXPIRATION" || type === "REFUND") return "expired";
   if (type === "BILLING_ISSUE") return "billing_issue";
   return null;
 }

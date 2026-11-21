@@ -13,6 +13,12 @@ const PACKAGE_KEYS: Record<NativePackageId, string> = {
   pantheon_monthly: PANTHEON_MONTHLY,
 };
 
+const STORE_PRODUCTS: Record<NativePackageId, string> = {
+  next_level_monthly: "next_level_monthly",
+  next_level_annual: "next_level_annual",
+  pantheon_monthly: "the_pantheon_monthly",
+};
+
 function publicSdkKey(): string {
   return (import.meta.env.VITE_REVENUECAT_TEST_API_KEY || import.meta.env.VITE_REVENUECAT_API_KEY || "").trim();
 }
@@ -36,7 +42,10 @@ export async function purchaseNativePackage(packageId: NativePackageId): Promise
   if (!nativePurchasesAvailable()) throw new Error("Store purchases are available in the iOS and Android app.");
   const offerings = await Purchases.getOfferings();
   const packages = offerings.current?.availablePackages ?? [];
-  const selected = packages.find((item) => item.identifier === PACKAGE_KEYS[packageId]);
+  const selected = packages.find((item) => {
+    const productId = (item as { product?: { identifier?: string } }).product?.identifier;
+    return item.identifier === PACKAGE_KEYS[packageId] || productId === STORE_PRODUCTS[packageId];
+  });
   if (!selected) throw new Error("That subscription is not in the current store offering.");
   await Purchases.purchasePackage({ aPackage: selected });
 }

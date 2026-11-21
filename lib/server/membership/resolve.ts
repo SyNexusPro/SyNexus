@@ -5,11 +5,12 @@ import {
   developerAccessAllowed,
   membershipFeeBps,
   pickMembershipTier,
+  profilePlanForTier,
   socialNetworkAllowed,
   type MembershipTier,
 } from "./policy.js";
 import { fetchRevenueCatAccess } from "./revenuecat.js";
-import { readMembershipRecord, trialEndsAt } from "./store.js";
+import { readMembershipRecord, syncProfilePlan, trialEndsAt } from "./store.js";
 
 type Env = Record<string, string | undefined>;
 
@@ -30,8 +31,10 @@ export type MembershipSnapshot = {
   verification: "live" | "unavailable";
 };
 
-const FEE_DISCLOSURE =
+const FEE_DISCLOSURE_PAID =
   "SyNexus charges its own swap fee on top of the quote. Solana network fees and fees charged by other venues still apply, and SyNexus does not keep those.";
+const FEE_DISCLOSURE_NONE =
+  "SyNexus charges no swap fee on this membership. Solana network fees and fees charged by other venues still apply, and SyNexus does not keep those.";
 
 function snapshot(partial: Omit<MembershipSnapshot, "feeDisclosure" | "webCheckout" | "developer" | "social" | "feeBps"> & {
   developer?: boolean;
@@ -42,7 +45,7 @@ function snapshot(partial: Omit<MembershipSnapshot, "feeDisclosure" | "webChecko
     developer: developerAccessAllowed(owner),
     social: socialNetworkAllowed(partial.tier, owner),
     feeBps: membershipFeeBps(partial.tier, owner),
-    feeDisclosure: FEE_DISCLOSURE,
+    feeDisclosure: membershipFeeBps(partial.tier, owner) === 0 ? FEE_DISCLOSURE_NONE : FEE_DISCLOSURE_PAID,
     webCheckout: "disabled",
   };
 }
@@ -50,6 +53,7 @@ function snapshot(partial: Omit<MembershipSnapshot, "feeDisclosure" | "webChecko
 export async function resolveMembership(req: IncomingMessage, env: Env, now = Date.now()): Promise<MembershipSnapshot> {
   const auth = await resolveTitanAuthPlan(req, env);
   if (auth.owner) {
+    if (auth.userId) await syncProfilePlan(env, auth.userId, profilePlanForTier("pantheon", true));
     return snapshot({
       userId: auth.userId,
       authenticated: true,
@@ -84,6 +88,9 @@ export async function resolveMembership(req: IncomingMessage, env: Env, now = Da
   const nextLevel = live?.nextLevel === true;
   const tier = pickMembershipTier({ owner: false, pantheon, nextLevel, trial: trial && !pantheon && !nextLevel });
   const source = pantheon || nextLevel ? "revenuecat" : trial ? "complimentary_trial" : "none";
+  if ((secret && live) || source === "complimentary_trial") {
+    await syncProfilePlan(env, auth.userId, profilePlanForTier(tier, false));
+  }
 
   return snapshot({
     userId: auth.userId,

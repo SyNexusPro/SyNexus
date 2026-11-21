@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { useApiRoute, type ViteDevServer } from "../viteDevServer.js";
+import { openWhenSecretMissing } from "../../../lib/server/cronGuard.js";
 import { supabaseAdminFromEnv } from "../../../lib/server/titan/authPlan.js";
 import { whaleTrackMints } from "../../../lib/server/whale/config.js";
 import { detectDexVolumeWhales } from "../../../lib/server/whale/detect.js";
@@ -9,7 +10,7 @@ type Env = Record<string, string | undefined>;
 
 function authorizePoll(req: IncomingMessage, env: Env): boolean {
   const secret = env.WHALE_POLL_SECRET?.trim() || env.CRON_SECRET?.trim() || "";
-  if (!secret) return true; // allow when unset (dev); set in prod
+  if (!secret) return openWhenSecretMissing(env);
   const auth = typeof req.headers.authorization === "string" ? req.headers.authorization : "";
   const header = typeof req.headers["x-cron-secret"] === "string" ? req.headers["x-cron-secret"] : "";
   return auth.includes(secret) || header === secret;

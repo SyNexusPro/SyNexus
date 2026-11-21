@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:testing": "VITE_SOLANA_CLUSTER=devnet tsc -b && VITE_SOLANA_CLUSTER=devnet vite build",
     "preview": "vite preview",
     "cap:sync": "npm run build && npx cap sync android",
     "cap:sync:all": "npm run build && npx cap sync",

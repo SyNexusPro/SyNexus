@@ -6,6 +6,8 @@ import {
   entitlementGrantsAccess,
   membershipFeeBps,
   pickMembershipTier,
+  productTier,
+  profilePlanForTier,
   socialNetworkAllowed,
   webhookAuthorized,
 } from "./policy.js";
@@ -27,6 +29,11 @@ test("next level keeps a fee and does not open the social network", () => {
   assert.equal(tier, "next_level");
   assert.equal(socialNetworkAllowed(tier, false), false);
   assert.equal(membershipFeeBps(tier, false), 5);
+  assert.equal(profilePlanForTier(tier, false), "BASIC");
+  assert.equal(profilePlanForTier("pantheon", false), "PRO");
+  assert.equal(profilePlanForTier("free", false), "FREE");
+  assert.equal(productTier("the_pantheon_monthly"), "pantheon");
+  assert.equal(productTier("pantheon_monthly"), "pantheon");
 });
 
 test("the complimentary trial is next level and does not open owner tools", () => {

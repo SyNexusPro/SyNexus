@@ -16,8 +16,8 @@ export type HeraVoiceOption = {
 
 /** Feminine-presenting voices first — Hera's established range. */
 export const HERA_VOICE_OPTIONS: readonly HeraVoiceOption[] = [
-  { id: "marin", label: "Marin", note: "Default — warm American alto" },
-  { id: "gleam", label: "Gleam", note: "North American, bright and even" },
+  { id: "gleam", label: "Gleam", note: "Default — clear, bright, composed" },
+  { id: "marin", label: "Marin", note: "Warm American alto" },
   { id: "quartz", label: "Quartz", note: "Australian, crisp" },
   { id: "willow", label: "Willow", note: "Irish, soft" },
   { id: "delta", label: "Delta", note: "Southern US, relaxed" },
@@ -34,7 +34,7 @@ export const HERA_VOICE_OPTIONS: readonly HeraVoiceOption[] = [
 
 export const HERA_VOICE_IDS: readonly string[] = HERA_VOICE_OPTIONS.map((v) => v.id);
 
-export const HERA_DEFAULT_VOICE = "marin";
+export const HERA_DEFAULT_VOICE = "gleam";
 
 /** Returns the voice if it is on the allowlist, otherwise null. */
 export function normalizeHeraVoice(value: string | null | undefined): string | null {

@@ -11,7 +11,7 @@ export const MEMBERSHIP_FEE_BPS: Record<MembershipTier, number> = {
 };
 
 const NEXT_LEVEL_PRODUCTS = new Set(["next_level_monthly", "next_level_annual"]);
-const PANTHEON_PRODUCTS = new Set(["the_pantheon_monthly"]);
+const PANTHEON_PRODUCTS = new Set(["the_pantheon_monthly", "pantheon_monthly"]);
 
 export function productTier(storeIdentifier: string | null | undefined): MembershipTier | null {
   const id = storeIdentifier?.trim() ?? "";
@@ -63,6 +63,13 @@ export function socialNetworkAllowed(tier: MembershipTier, owner: boolean): bool
 /** Pantheon is a member plan. It never opens the owner command center. */
 export function developerAccessAllowed(owner: boolean): boolean {
   return owner === true;
+}
+
+/** Profile value enforced by the database. PRO is Pantheon or the owner. BASIC is Next Level. */
+export function profilePlanForTier(tier: MembershipTier, owner: boolean): "FREE" | "BASIC" | "PRO" {
+  if (owner || tier === "pantheon") return "PRO";
+  if (tier === "next_level") return "BASIC";
+  return "FREE";
 }
 
 export function webhookAuthorized(header: string | undefined, secret: string): boolean {

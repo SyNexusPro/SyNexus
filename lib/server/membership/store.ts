@@ -109,6 +109,36 @@ export async function recordStoreEvent(
   }
 }
 
+export async function syncProfilePlan(
+  env: Env,
+  userId: string,
+  plan: "FREE" | "BASIC" | "PRO",
+): Promise<void> {
+  const sql = connect(env);
+  if (!sql) return;
+  const tier = plan === "PRO" ? "pantheon" : plan === "BASIC" ? "next_level" : "free";
+  try {
+    await sql`
+      update public.profiles
+      set paid_plan = ${plan}
+      where id = ${userId} and paid_plan is distinct from ${plan}
+    `;
+    try {
+      await sql`
+        update public.profiles
+        set membership_tier = ${tier}
+        where id = ${userId} and membership_tier is distinct from ${tier}
+      `;
+    } catch {
+      /* The tier column is added by the membership migration. */
+    }
+  } catch {
+    /* A profile write must not block a membership read. */
+  } finally {
+    await sql.end({ timeout: 2 }).catch(() => undefined);
+  }
+}
+
 export function trialEndsAt(startedAt: string | null): string | null {
   if (!startedAt) return null;
   const start = Date.parse(startedAt);

@@ -1,4 +1,5 @@
 import { Connection, PublicKey, VersionedTransaction } from "@solana/web3.js";
+import { SYN_WALLET_RPC_URL } from "../config/synWallet";
 import { JUPITER_SOL_MINT } from "./solanaTradeLinks";
 import {
   WALLETCONNECT_ICON,
@@ -343,8 +344,7 @@ export function shortenAddress(address: string, size = 4): string {
 }
 
 export function getSolanaRpcUrl(): string {
-  const fromEnv = (import.meta.env.VITE_SOLANA_RPC_URL ?? "").trim();
-  return fromEnv || "https://api.mainnet-beta.solana.com";
+  return SYN_WALLET_RPC_URL;
 }
 
 export function getSolanaConnection(): Connection {

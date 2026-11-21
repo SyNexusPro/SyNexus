@@ -5,11 +5,17 @@
 import { normalizeHeraVoice } from "../../config/heraVoices";
 
 const VOICE_KEY = "synexus_hera_voice";
+const VOICE_REV_KEY = "synexus_hera_voice_rev";
+const VOICE_REV = "gleam-1";
 
 const listeners = new Set<(voice: string | null) => void>();
 
 export function getHeraVoicePreference(): string | null {
   try {
+    if (localStorage.getItem(VOICE_REV_KEY) !== VOICE_REV) {
+      localStorage.removeItem(VOICE_KEY);
+      localStorage.setItem(VOICE_REV_KEY, VOICE_REV);
+    }
     return normalizeHeraVoice(localStorage.getItem(VOICE_KEY));
   } catch {
     return null;

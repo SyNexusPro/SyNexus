@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { useApiRoute, type ViteDevServer } from "../viteDevServer.js";
+import { openWhenSecretMissing } from "../../../lib/server/cronGuard.js";
 import { supabaseAdminFromEnv } from "../../../lib/server/titan/authPlan.js";
 import { persistLaunchLeads, scanLaunchWatch } from "../../../lib/server/titan/launchWatchScan.js";
 
@@ -7,7 +8,7 @@ type Env = Record<string, string | undefined>;
 
 function authorize(req: IncomingMessage, env: Env): boolean {
   const secret = env.CRON_SECRET?.trim() || env.TITAN_EVENT_SECRET?.trim() || "";
-  if (!secret) return true;
+  if (!secret) return openWhenSecretMissing(env);
   const auth = typeof req.headers.authorization === "string" ? req.headers.authorization : "";
   const header = typeof req.headers["x-cron-secret"] === "string" ? req.headers["x-cron-secret"] : "";
   return auth.includes(secret) || header === secret;

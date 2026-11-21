@@ -1,13 +1,16 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { useApiRoute, type ViteDevServer } from "../viteDevServer.js";
+import { openWhenSecretMissing } from "../../../lib/server/cronGuard.js";
+import { ingestCryptoLearning } from "../../../lib/server/hera/cryptoLearning.js";
 import { supabaseAdminFromEnv } from "../../../lib/server/titan/authPlan.js";
 import { GROQ_DEFAULT_STRONG, remapGroqModel } from "../../../lib/server/titan/groqModels.js";
+import { scanEmergingSolanaAssets, persistDiscoveryEvaluations } from "../../../lib/server/titan/discoveryScan.js";
 
 type Env = Record<string, string | undefined>;
 
 function authorize(req: IncomingMessage, env: Env): boolean {
   const secret = env.CRON_SECRET?.trim() || env.TITAN_EVENT_SECRET?.trim() || "";
-  if (!secret) return true;
+  if (!secret) return openWhenSecretMissing(env);
   const auth = typeof req.headers.authorization === "string" ? req.headers.authorization : "";
   const header = typeof req.headers["x-cron-secret"] === "string" ? req.headers["x-cron-secret"] : "";
   return auth.includes(secret) || header === secret;
@@ -163,9 +166,32 @@ Keep it under 900 words. Direct, analyst voice.
       );
     }
 
+    // Same Hera memory. Public YouTube titles + crypto headlines, then a fresh coin scan.
+    const learning = await ingestCryptoLearning(env).catch(() => ({
+      youtubeStored: 0,
+      newsStored: 0,
+      skipped: 0,
+    }));
+    let discovery: { scannedReportable?: number; inserted?: number; updated?: number } = {};
+    try {
+      const evaluations = await scanEmergingSolanaAssets(20, env);
+      discovery = await persistDiscoveryEvaluations(admin, evaluations, env);
+      discovery = { ...discovery, scannedReportable: evaluations.length };
+    } catch {
+      discovery = {};
+    }
+
     res.statusCode = 200;
     res.setHeader("Content-Type", "application/json");
-    res.end(JSON.stringify({ success: true, briefing, recipients: users.length }));
+    res.end(
+      JSON.stringify({
+        success: true,
+        briefing,
+        recipients: users.length,
+        learning,
+        discovery,
+      }),
+    );
   } catch (error) {
     console.error(error);
     res.statusCode = 500;

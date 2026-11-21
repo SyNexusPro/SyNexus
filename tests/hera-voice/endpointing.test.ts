@@ -109,9 +109,9 @@ describe("liveTurnQuietMs", () => {
 
 describe("vadEagernessForPatience", () => {
   it("waits through a natural pause and stays quick when asked", () => {
-    assert.equal(vadEagernessForPatience("natural"), "auto");
+    assert.equal(vadEagernessForPatience("natural"), "high");
     assert.equal(vadEagernessForPatience("quick"), "high");
-    assert.equal(vadEagernessForPatience(null), "auto");
+    assert.equal(vadEagernessForPatience(null), "high");
     assert.equal(vadEagernessForPatience("patient"), "low");
     assert.equal(vadEagernessForPatience("natural", "low"), "low");
   });

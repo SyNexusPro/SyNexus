@@ -69,6 +69,7 @@ const GodMode = lazy(() => import("./pages/GodMode").then((m) => ({ default: m.G
 const HeraDeveloper = lazy(() => import("./pages/HeraDeveloper").then((m) => ({ default: m.HeraDeveloper })));
 const OwnerHera = lazy(() => import("./pages/OwnerHera").then((m) => ({ default: m.OwnerHera })));
 const OwnerOlympus = lazy(() => import("./pages/OwnerOlympus").then((m) => ({ default: m.OwnerOlympus })));
+const OwnerIntegrations = lazy(() => import("./pages/OwnerIntegrations").then((m) => ({ default: m.OwnerIntegrations })));
 const ResetPassword = lazy(() =>
   import("./pages/ResetPassword").then((m) => ({ default: m.ResetPassword })),
 );
@@ -162,6 +163,7 @@ export default function App() {
             <Route path="hera-developer" element={<HeraDeveloper />} />
             <Route path="owner/hera" element={<OwnerHera />} />
             <Route path="owner/olympus" element={<OwnerOlympus />} />
+            <Route path="owner/integrations" element={<OwnerIntegrations />} />
             <Route path="reset-password" element={<ResetPassword />} />
             <Route path="invite" element={<InviteEarn />} />
             <Route path="invite/:code" element={<InviteEarn />} />

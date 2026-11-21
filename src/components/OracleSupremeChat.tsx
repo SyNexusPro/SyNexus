@@ -37,7 +37,8 @@ import { fetchHeraLiveToken } from "../lib/hera/liveIntel";
 import { hostTimeZone } from "../lib/hera/formatLiveStamp";
 import { SYN_MINT, SYN_SYMBOL } from "../config/synToken";
 import { HeraHologramStage } from "./hera/HeraHologramStage";
-import { isWakeOnlyUtterance, stripWakePrefix } from "../lib/hera/wakeWord";
+import { isOwnerScreen } from "../lib/ownerScreen";
+import { isOwnerDeskShowCommand, isWakeOnlyUtterance, stripWakePrefix } from "../lib/hera/wakeWord";
 import { firstSpokenSentence } from "../lib/hera/endpointing";
 import { useTranslation } from "react-i18next";
 import { useHeraVersion } from "../hooks/useHeraVersion";
@@ -86,6 +87,8 @@ export function OracleSupremeChat({
   const [streamingTurnId, setStreamingTurnId] = useState<string | null>(null);
   const [speaking, setSpeaking] = useState(false);
   const screenMode = variant === "hera-screen";
+  const ownerPhone = screenMode && isOwnerScreen();
+  const [deskOpen, setDeskOpen] = useState(true);
   const [interfaceMode, setInterfaceMode] = useState<HeraInterfaceMode>(screenMode ? "vision" : "chat");
   const [forceAvatarState, setForceAvatarState] = useState<HeraAvatarState | null>(null);
   const [forceEmotion, setForceEmotion] = useState<HeraEmotion | null>(null);
@@ -111,6 +114,11 @@ export function OracleSupremeChat({
       return stripWakePrefix(seed) || seed;
     })(),
     onUserTurn: (text) => {
+      if (ownerPhone && isOwnerDeskShowCommand(text)) {
+        setDeskOpen(true);
+        return;
+      }
+      if (ownerPhone) setDeskOpen(false);
       setTurns((prev) => {
         if (prev.some((turn) => turn.role === "user" && turn.text === text)) return prev;
         const next = [...prev, createTurn("user", text)];
@@ -120,6 +128,7 @@ export function OracleSupremeChat({
     },
     onAssistantTurn: (response) => {
       if (!response.text) return;
+      if (ownerPhone) setDeskOpen(false);
       setTurns((prev) => {
         if (prev.some((turn) => turn.id === response.id || turn.responseId === response.id)) return prev;
         const turn = { ...createTurn("oracle", response.text), id: response.id, responseId: response.id };
@@ -504,6 +513,26 @@ export function OracleSupremeChat({
     appendOracle("I'm here — markets, strategy, life, whatever you need. Talk to me.");
   }
 
+  useEffect(() => {
+    if (!ownerPhone) return;
+    const heard = realtime.transcript?.trim() ?? "";
+    if (heard && isOwnerDeskShowCommand(heard)) {
+      setDeskOpen(true);
+      return;
+    }
+    if (realtime.userSpeaking || realtime.speaking) setDeskOpen(false);
+  }, [ownerPhone, realtime.speaking, realtime.transcript, realtime.userSpeaking]);
+
+  useEffect(() => {
+    if (!ownerPhone) return;
+    const onDesk = (event: Event) => {
+      const text = (event as CustomEvent<{ text?: string }>).detail?.text ?? "";
+      if (isOwnerDeskShowCommand(text)) setDeskOpen(true);
+    };
+    window.addEventListener("titan-desk-command", onDesk as EventListener);
+    return () => window.removeEventListener("titan-desk-command", onDesk as EventListener);
+  }, [ownerPhone]);
+
   async function handleMicToggle() {
     if (screenMode && liveVoice) {
       unlockTitanSpeech();
@@ -543,9 +572,18 @@ export function OracleSupremeChat({
     ? lastSpoken?.text || null
     : heard || lastSpoken?.text || (realtime.listening || voiceIn.listening ? "Listening…" : null);
 
+  const deskActions = [
+    ["Daily briefing", "Give me the owner briefing for SyNexus today."],
+    ["System health", "What problems need fixing in SyNexus right now?"],
+    ["Development", "What improvements would you recommend?"],
+    ["Approve updates", "What proposed updates are waiting for my approval? Do not deploy anything."],
+    ["Business analytics", "Give me the business report you actually have."],
+    ["Security center", "What security status can you verify right now?"],
+  ] as const;
+
   if (screenMode) {
     return (
-      <div className="hera-screen" role="dialog" aria-modal="true" aria-label={`Talk to ${context.titanBotName}`}>
+      <div className={`hera-screen${ownerPhone ? " hera-screen--owner" : ""}${ownerPhone && !deskOpen ? " hera-screen--talking" : ""}`} role="dialog" aria-modal="true" aria-label={`Talk to ${context.titanBotName}`}>
         <button type="button" className="hera-screen__close" onClick={onDismiss} aria-label="Close Hera">
           ×
         </button>
@@ -561,36 +599,71 @@ export function OracleSupremeChat({
           />
         </div>
 
-        <div className="hera-screen__dock">
-          {voiceActivation && realtime.unavailable ? (
+        <div className={`hera-screen__dock${ownerPhone ? " hera-screen__dock--owner" : ""}`}>
+          {ownerPhone ? (
+            <div className="titan-desk">
+              <div className={`titan-desk__grid${deskOpen ? "" : " titan-desk__grid--away"}`}>
+                {deskActions.map(([label, ask]) => (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => {
+                      setDeskOpen(false);
+                      void submitQuery(ask);
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="titan-desk__mic"
+                aria-label="Talk to Hera"
+                onClick={() => {
+                  unlockTitanSpeech();
+                  if (realtime.unavailable) realtime.retry();
+                  else {
+                    realtime.setMuted(false);
+                    realtime.startListening();
+                  }
+                }}
+              />
+            </div>
+          ) : null}
+          {voiceActivation && realtime.unavailable && !ownerPhone ? (
             <button type="button" className="hera-screen__activate" onClick={() => realtime.retry()}>
               Talk to Hera
             </button>
           ) : null}
-          {liveCaption ? (
-            <p className={`hera-screen__caption${(textTalk || realtime.listening) && !isActivelySpeaking ? " hera-screen__caption--listen" : ""}`}>
-              {realtime.userSpeaking && realtime.transcript ? realtime.transcript : liveCaption}
-            </p>
-          ) : null}
-          <form
-            className="hera-screen__type"
-            onSubmit={(event) => {
-              event.preventDefault();
-              handleSend();
-            }}
-          >
-            <input
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-              placeholder="Type to Hera…"
-              aria-label={`Message to ${context.titanBotName}`}
-              autoComplete="off"
-              enterKeyHint="send"
-            />
-            <button type="submit" disabled={!draft.trim()} aria-label="Send">
-              Send
-            </button>
-          </form>
+          {isOwnerScreen() ? null : (
+            <>
+              {liveCaption ? (
+                <p className={`hera-screen__caption${(textTalk || realtime.listening) && !isActivelySpeaking ? " hera-screen__caption--listen" : ""}`}>
+                  {realtime.userSpeaking && realtime.transcript ? realtime.transcript : liveCaption}
+                </p>
+              ) : null}
+              <form
+                className="hera-screen__type"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  handleSend();
+                }}
+              >
+                <input
+                  value={draft}
+                  onChange={(event) => setDraft(event.target.value)}
+                  placeholder="Type to Hera…"
+                  aria-label={`Message to ${context.titanBotName}`}
+                  autoComplete="off"
+                  enterKeyHint="send"
+                />
+                <button type="submit" disabled={!draft.trim()} aria-label="Send">
+                  Send
+                </button>
+              </form>
+            </>
+          )}
         </div>
       </div>
     );

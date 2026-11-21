@@ -1,10 +1,10 @@
 /** Measured against the previous lip follower (attack 0.28, release 0.10) and a 1.5s ICE cap. */
 
 export const LIP_ATTACK = 0.55;
-export const LIP_RELEASE = 0.18;
+export const LIP_RELEASE = 0.32;
 export const MOUTH_FOLLOW = 0.42;
-export const ICE_EARLY_MS = 120;
-export const ICE_CAP_MS = 800;
+export const ICE_EARLY_MS = 600;
+export const ICE_CAP_MS = 1800;
 
 export function lipEnvelope(prev: number, raw: number): number {
   const gated = raw < 0.04 ? 0 : Math.min(1, raw);

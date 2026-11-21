@@ -13547,6 +13547,102 @@ body:has(.oracle-chat--presence) .titan-sheet-backdrop {
   display: none;
 }
 
+.hera-screen--owner {
+  background: #070b14;
+}
+
+.hera-screen--talking .hera-screen__stage {
+  flex: 1 1 auto;
+}
+
+.titan-desk {
+  width: min(100%, 420px);
+  padding: 0 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  transition: transform 0.35s ease, opacity 0.35s ease;
+}
+
+.titan-desk__grid--away {
+  display: none;
+}
+
+.titan-desk__brand {
+  margin: 0;
+  color: #8ea0b8;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.titan-desk__name {
+  margin: 0;
+  color: #f4f7fb;
+  font-size: 1.8rem;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+}
+
+.titan-desk__status {
+  margin: 0;
+  color: #8ea0b8;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.titan-desk__status--on {
+  color: #3dd68c;
+}
+
+.titan-desk__line {
+  margin: 0 0 6px;
+  color: #d5deea;
+  text-align: center;
+  line-height: 1.35;
+}
+
+.titan-desk__grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.titan-desk__grid button {
+  min-height: 74px;
+  border: 1px solid rgba(120, 150, 190, 0.28);
+  border-radius: 16px;
+  background: #121826;
+  color: #e8eef6;
+  font: inherit;
+  font-size: 0.92rem;
+}
+
+.titan-desk__mic {
+  width: 64px;
+  height: 64px;
+  margin-top: 6px;
+  border: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, #3aa0ff, #1558d6 70%);
+  box-shadow: 0 8px 24px rgba(21, 88, 214, 0.35);
+}
+
+.titan-desk__mic::before {
+  content: "";
+  display: block;
+  width: 16px;
+  height: 22px;
+  margin: 0 auto;
+  border: 2px solid #fff;
+  border-radius: 9px 9px 9px 9px;
+  border-bottom: 0;
+  box-shadow: 0 8px 0 -4px #fff;
+}
+
 .hera-screen__dock {
   flex-shrink: 0;
   display: flex;
@@ -13559,6 +13655,11 @@ body:has(.oracle-chat--presence) .titan-sheet-backdrop {
   pointer-events: auto;
   padding: 8px 20px calc(20px + env(safe-area-inset-bottom, 0px));
   background: linear-gradient(to top, #000 40%, rgba(0, 16, 10, 0.12) 78%, transparent);
+}
+
+.hera-screen--owner .hera-screen__dock {
+  background: transparent;
+  padding-top: 0;
 }
 
 .hera-screen__caption {
@@ -13849,9 +13950,13 @@ body:has(.oracle-chat--presence) .titan-sheet-backdrop {
   overflow: hidden;
   display: grid;
   place-items: center;
-  background:
-    radial-gradient(ellipse at 50% 42%, rgba(30, 90, 18, 0.38), transparent 55%),
-    #000;
+  background: #000;
+}
+
+.hera-hologram--portrait .hera-hologram__circuit,
+.hera-hologram--portrait .hera-hologram__particles,
+.hera-hologram--portrait .hera-hologram__opening {
+  display: none;
 }
 
 .hera-hologram__face-stack {
@@ -13874,7 +13979,7 @@ body:has(.oracle-chat--presence) .titan-sheet-backdrop {
   object-position: center center;
   pointer-events: none;
   user-select: none;
-  filter: brightness(1.02) contrast(1.04) saturate(1.05) drop-shadow(0 0 16px rgba(137, 255, 47, 0.38));
+  filter: none;
 }
 
 .hera-hologram__feat {

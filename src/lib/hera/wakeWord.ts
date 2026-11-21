@@ -80,6 +80,16 @@ export function closeHeraWakeConsent(): void {
   window.dispatchEvent(new Event(HERA_WAKE_CONSENT_EVENT));
 }
 
+/** Owner phone: say this to bring the six desk buttons back after they hide. */
+export function isOwnerDeskShowCommand(transcript: string): boolean {
+  const text = normalizeWakeTranscript(transcript);
+  if (!text) return false;
+  if (/\b(?:titan|hera|harry)\s+buttons?\b/.test(text)) return true;
+  if (/\b(?:show|bring up|open|pull up)\s+(?:the\s+)?(?:titan\s+|hera\s+)?buttons?\b/.test(text)) return true;
+  if (/^buttons?$/.test(text)) return true;
+  return false;
+}
+
 export function isWakeOnlyUtterance(transcript: string): boolean {
   const stripped = stripWakePrefix(transcript);
   if (!stripped) return true;

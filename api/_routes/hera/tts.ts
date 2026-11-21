@@ -49,10 +49,9 @@ async function elevenLabsTts(text: string): Promise<{ buffer: ArrayBuffer; conte
 }
 
 const HERA_TTS_INSTRUCTIONS =
-  "Speak as the same Hera: a warm feminine alto on a close mic, smooth and real, with a quiet futuristic calm. " +
-  "Connected phrases, natural breaths, even volume, unhurried American English. Finish every word. Natural contractions. " +
-  "Let warmth, humor, or calm show in the pace. Stay the same alto. " +
-  "Never metallic, robotic, mumbled, or clipped. Do not imitate any copyrighted character, game AI, or voice actor.";
+  "Speak as Hera: clear, bright, and composed. North American, even tone, precise diction, light warmth, a lively calm pace. " +
+  "Connected phrases, natural breaths, even volume. Finish every word. Natural contractions. " +
+  "Not a slow alto, not bubbly, not breathy, not metallic, not robotic. Do not role-play a game character.";
 
 async function openAiTts(text: string): Promise<{ buffer: ArrayBuffer; contentType: string } | null> {
   const key = process.env.OPENAI_API_KEY?.trim();
@@ -65,10 +64,10 @@ async function openAiTts(text: string): Promise<{ buffer: ArrayBuffer; contentTy
     },
     body: JSON.stringify({
       model: process.env.OPENAI_TTS_MODEL?.trim() || "gpt-4o-mini-tts",
-      voice: process.env.OPENAI_TTS_VOICE?.trim() || "marin",
+      voice: process.env.OPENAI_TTS_VOICE?.trim() || "gleam",
       instructions: process.env.OPENAI_TTS_INSTRUCTIONS?.trim() || HERA_TTS_INSTRUCTIONS,
       input: text.slice(0, 2500),
-      speed: 0.96,
+      speed: 1,
       response_format: "mp3",
     }),
   });

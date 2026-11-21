@@ -24,7 +24,7 @@ export async function fetchOwnerBrief(): Promise<OwnerBriefing | null> {
     if (!response.ok) return null;
     const data = (await response.json()) as { spoken?: unknown; detail?: unknown };
     if (typeof data.spoken !== "string" || typeof data.detail !== "string") return null;
-    if (!data.spoken.includes("Data unavailable")) return null;
+    if (!data.spoken.trim() || !data.detail.trim()) return null;
     return { spoken: data.spoken, detail: data.detail };
   } catch {
     return null;

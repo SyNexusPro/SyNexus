@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { useApiRoute, type ViteDevServer } from "../viteDevServer.js";
+import { openWhenSecretMissing } from "../../../lib/server/cronGuard.js";
 import { supabaseAdminFromEnv } from "../../../lib/server/titan/authPlan.js";
 import {
   persistDiscoveryEvaluations,

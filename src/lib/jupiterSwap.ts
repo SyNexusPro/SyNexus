@@ -42,6 +42,7 @@ export type SwapQuoteView = {
   routeHops: number;
   platformFeeBps: number;
   platformFeeApplied: boolean;
+  screeningNote: string | null;
 };
 
 export function jupiterFeeAccount(): string {
@@ -115,6 +116,7 @@ export async function fetchJupiterQuote(opts: {
     platformFeeBps?: number;
     platformFeeApplied?: boolean;
     error?: string;
+    screening?: { note?: string };
   } | null;
   if (!response.ok || !data?.quote?.outAmount || !data.quoteToken) {
     throw new Error(data?.error || "SyNexus could not price this swap.");
@@ -143,6 +145,7 @@ export async function fetchJupiterQuote(opts: {
     routeHops: Array.isArray(quote.routePlan) ? quote.routePlan.length : 0,
     platformFeeBps: applyFee ? feeBps : 0,
     platformFeeApplied: applyFee,
+    screeningNote: data.screening?.note ?? null,
   };
 }
 

@@ -389,7 +389,9 @@ export class HeraRealtimeController {
       const session = await this.createServerSession(localSdp);
       if (this.generation !== gen) return false;
       this.protocol = session.mode;
-      await pc.setRemoteDescription({ type: "answer", sdp: session.sdp });
+      const answerSdp = session.sdp.includes("\r\n") ? session.sdp : session.sdp.replace(/\n/g, "\r\n");
+      heraLog("answer sdp", `${answerSdp.length} chars`);
+      await pc.setRemoteDescription({ type: "answer", sdp: answerSdp.endsWith("\n") ? answerSdp : `${answerSdp}\r\n` });
       heraLog(
         "voice session",
         `${this.protocol} · ${session.model ?? "default model"} · voice ${session.voice ?? "default"}`,
@@ -402,7 +404,8 @@ export class HeraRealtimeController {
       }, 12000);
       return true;
     } catch (err) {
-      heraError("connection failure", err);
+      const detail = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+      heraError("connection failure", detail);
       this.connecting = false;
       if (isMicPermissionError(err) || isFatalSessionError(err)) {
         this.failPermanent();
@@ -450,7 +453,8 @@ export class HeraRealtimeController {
         if (pc.iceGatheringState === "complete") finish();
       };
       const onCandidate = (event: RTCPeerConnectionIceEvent) => {
-        if (event.candidate) sawCandidate = true;
+        const kind = event.candidate?.type;
+        if (kind === "srflx" || kind === "relay") sawCandidate = true;
       };
       const early = window.setTimeout(() => {
         if (sawCandidate) finish();
@@ -472,7 +476,7 @@ export class HeraRealtimeController {
     const headers = await authHeaders({ "Content-Type": "application/json" });
     const body = JSON.stringify({
       sdp: offerSdp,
-      voice: getHeraVoicePreference() ?? undefined,
+      voice: getHeraVoicePreference() ?? "gleam",
       patience: getHeraPatience(),
     });
     let res = await fetch("/api/hera/session", { method: "POST", headers, body }).catch(() => null);
@@ -684,6 +688,9 @@ export class HeraRealtimeController {
     }
 
     if (type === "input_audio_buffer.speech_started") {
+      // Live turns are timed from transcript fragments. A start event with no
+      // matching stop leaves the desk hidden and cuts her off on her own voice.
+      if (this.protocol === "live") return;
       heraLog("user speech started");
       this.userSpeaking = true;
       this.emit("onUserSpeaking", true);
@@ -693,6 +700,7 @@ export class HeraRealtimeController {
     }
 
     if (type === "input_audio_buffer.speech_stopped") {
+      if (this.protocol === "live") return;
       heraLog("user speech ended");
       this.userSpeaking = false;
       this.emit("onUserSpeaking", false);
@@ -1008,7 +1016,7 @@ export class HeraRealtimeController {
       if (!this.enabled) return;
       this.cleanup("connecting");
       void this.openCall();
-    }, 700 + this.reconnectAttempts * 400);
+    }, 300 + this.reconnectAttempts * 200);
   }
 
   private failPermanent(): void {

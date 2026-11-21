@@ -718,6 +718,7 @@ function TradeScreen() {
                   : " · fee wallet not configured this session"}
             </li>
             <li>Solana network fees and fees charged by other venues are separate. SyNexus does not keep those.</li>
+            {quote.screeningNote ? <li>{quote.screeningNote}</li> : null}
           </ul>
           <p className="trade-page__hint">
             Your {wallet.kind ?? "wallet"} will ask you to approve. SyNexus cannot sign this for you.

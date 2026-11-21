@@ -4,6 +4,7 @@ import { detectHeraLowPerf, prefersReducedMotion } from "../../lib/hera/hologram
 import { heraFaceController } from "../../lib/hera/HeraFaceController";
 import { heraVoice } from "../../lib/hera/HeraVoice";
 import { lipEnvelope } from "../../lib/hera/turnTiming";
+import { nextSpeechNod, speechPose } from "../../lib/hera/speechMotion";
 
 /** New holographic Hera (head-and-shoulders, not the old green android bust). */
 export const HERA_FACE_SRC = "/hera/hera-face.jpg?v=holo-v2";
@@ -43,6 +44,8 @@ export function HeraHologramPortrait({
   const openingRef = useRef<HTMLSpanElement>(null);
   const lipEnvRef = useRef(0);
   const poseRef = useRef({ x: 0, y: 0, rx: 0, ry: 0, rz: 0 });
+  const nodRef = useRef(0);
+  const prevOpenRef = useRef(0);
   const reducedMotion = reducedMotionProp ?? prefersReducedMotion();
   const lowPerf = lowPerfProp ?? detectHeraLowPerf();
 
@@ -83,19 +86,36 @@ export function HeraHologramPortrait({
       const glowLevel = speaking ? open : listening ? 0.2 : thinking ? 0.14 : 0.08;
 
       if (!reducedMotion && stack) {
-        const breathe = Math.sin(t * 0.72) * (lowPerf ? 0.45 : 0.85);
-        const talkNod = speaking ? open * 0.28 : 0;
-        const listenSettle = listening ? Math.sin(t * 0.4) * 0.18 : Math.sin(t * 0.28) * 0.1;
-        const lean = listening ? 0.22 : speaking ? 0.08 : thinking ? 0.06 : 0;
-        const attention = speaking ? 0.4 : listening ? 0.16 : 0;
         const pose = poseRef.current;
-        const tx = listenSettle;
-        const ty = breathe + talkNod;
-        pose.x += (tx - pose.x) * 0.06;
-        pose.y += (ty - pose.y) * 0.06;
-        pose.rx += (lean - pose.rx) * 0.05;
-        pose.ry += (attention - pose.ry) * 0.05;
-        pose.rz += (0 - pose.rz) * 0.08;
+        let tx = 0;
+        let ty = 0;
+        let lean = 0;
+        let attention = 0;
+        let roll = 0;
+        if (speaking) {
+          nodRef.current = nextSpeechNod(nodRef.current, open, prevOpenRef.current);
+          const talk = speechPose(t, open, nodRef.current);
+          tx = talk.x;
+          ty = talk.y;
+          lean = talk.rx;
+          attention = talk.ry;
+          roll = talk.rz;
+        } else {
+          nodRef.current *= 0.8;
+          const breathe = Math.sin(t * 0.72) * (lowPerf ? 0.45 : 0.85);
+          const listenSettle = listening ? Math.sin(t * 0.4) * 0.18 : Math.sin(t * 0.28) * 0.1;
+          tx = listenSettle;
+          ty = breathe;
+          lean = listening ? 0.22 : thinking ? 0.06 : 0;
+          attention = listening ? 0.16 : 0;
+        }
+        prevOpenRef.current = open;
+        const follow = speaking ? 0.16 : 0.06;
+        pose.x += (tx - pose.x) * follow;
+        pose.y += (ty - pose.y) * follow;
+        pose.rx += (lean - pose.rx) * follow;
+        pose.ry += (attention - pose.ry) * follow;
+        pose.rz += (roll - pose.rz) * follow;
         stack.style.transform = `perspective(900px) translate3d(${pose.x.toFixed(2)}px, ${pose.y.toFixed(2)}px, 0) rotateX(${pose.rx.toFixed(2)}deg) rotateY(${pose.ry.toFixed(2)}deg) rotateZ(${pose.rz.toFixed(2)}deg)`;
       }
 
@@ -116,14 +136,14 @@ export function HeraHologramPortrait({
         );
         applyFeat(
           lipLRef.current,
-          `translateY(${(jaw * 4.2).toFixed(2)}px)`,
+          `translateY(${(jaw * 6.2).toFixed(2)}px)`,
           "50% 60.8%",
         );
 
         const opening = openingRef.current;
         if (opening) {
-          opening.style.opacity = String(Math.min(0.88, jaw * 1.55));
-          opening.style.transform = `translate(-50%, -50%) scale(1, ${(0.12 + jaw * 0.9).toFixed(3)})`;
+          opening.style.opacity = String(Math.min(0.9, jaw * 1.7));
+          opening.style.transform = `translate(-50%, -50%) scale(1, ${(0.14 + jaw * 1.15).toFixed(3)})`;
         }
       }
 

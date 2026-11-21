@@ -60,9 +60,9 @@ const ALLOWED_VOICES = new Set([
 function voiceName(requested?: string): string {
   const asked = requested?.trim().toLowerCase();
   if (asked && ALLOWED_VOICES.has(asked)) return asked;
-  const raw = (process.env.OPENAI_REALTIME_VOICE?.trim() || "marin").toLowerCase();
-  if (raw === "coral" || raw === "shimmer") return "marin";
-  return ALLOWED_VOICES.has(raw) ? raw : "marin";
+  const raw = (process.env.OPENAI_REALTIME_VOICE?.trim() || "gleam").toLowerCase();
+  if (raw === "coral" || raw === "shimmer") return "gleam";
+  return ALLOWED_VOICES.has(raw) ? raw : "gleam";
 }
 
 function liveInstructions(mind?: string): string {
@@ -72,8 +72,11 @@ function liveInstructions(mind?: string): string {
 
 async function mindForSession(userId: string): Promise<string> {
   try {
-    const mind = await readHeraMind(sessionEnv, userId, false);
-    return mind.context || "";
+    const mind = await Promise.race([
+      readHeraMind(sessionEnv, userId, false).then((value) => value.context || ""),
+      new Promise<string>((resolve) => setTimeout(() => resolve(""), 500)),
+    ]);
+    return mind;
   } catch {
     return "";
   }
@@ -117,6 +120,10 @@ function extractSecret(json: Record<string, unknown>): string {
     return (secret as { value: string }).value.trim();
   }
   return "";
+}
+
+function sdpWithFinalLine(sdp: string): string {
+  return sdp.endsWith("\n") ? sdp : `${sdp}\r\n`;
 }
 
 function extractTransportSdp(json: Record<string, unknown>): string {
@@ -163,33 +170,38 @@ async function createLiveSession(
 ): Promise<{ sdp: string; sessionId: string; model: string; voice: string } | null> {
   const voice = voiceName(requestedVoice);
   for (const model of liveModelCandidates()) {
-    const upstream = await fetch("https://api.openai.com/v1/live/sessions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${key}`,
-        "Content-Type": "application/json",
-        "OpenAI-Safety-Identifier": "synexus-hera-web",
-      },
-      body: JSON.stringify({
-        session: {
-          model,
-          instructions: `${liveInstructions(mind)}\n\nAnswer a simple question yourself, out loud, right away. Ask the client for help only when you need a live price, stored research, Alexus paper lessons, or a route quote. Do not announce that you are asking for help.`,
-          audio: { output: { voice } },
-          delegation: { type: "client", acknowledgement_delay_ms: 800 },
+    try {
+      const upstream = await fetch("https://api.openai.com/v1/live/sessions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${key}`,
+          "Content-Type": "application/json",
+          "OpenAI-Safety-Identifier": "synexus-hera-web",
         },
-        transport: { type: "webrtc", sdp },
-      }),
-    });
-    const json = (await upstream.json()) as Record<string, unknown>;
-    if (!upstream.ok) {
-      console.error("[hera/realtime-session] live sessions failed", model, upstream.status, json);
-      continue;
+        signal: AbortSignal.timeout(2500),
+        body: JSON.stringify({
+          session: {
+            model,
+            instructions: `${liveInstructions(mind)}\n\nAnswer a simple question yourself, out loud, right away. Ask the client for help only when you need a live price, stored research, Alexus paper lessons, or a route quote. Do not announce that you are asking for help.`,
+            audio: { output: { voice } },
+            delegation: { type: "client", acknowledgement_delay_ms: 100 },
+          },
+          transport: { type: "webrtc", sdp },
+        }),
+      });
+      const json = (await upstream.json()) as Record<string, unknown>;
+      if (!upstream.ok) {
+        console.error("[hera/realtime-session] live sessions failed", model, upstream.status, json);
+        continue;
+      }
+      const answer = extractTransportSdp(json);
+      if (answer.startsWith("v=")) {
+        return { sdp: sdpWithFinalLine(answer), sessionId: extractSessionId(json), model, voice };
+      }
+      console.error("[hera/realtime-session] live sessions missing SDP", model, json);
+    } catch (err) {
+      console.error("[hera/realtime-session] live sessions timed out", model, err);
     }
-    const answer = extractTransportSdp(json);
-    if (answer) {
-      return { sdp: answer, sessionId: extractSessionId(json), model, voice };
-    }
-    console.error("[hera/realtime-session] live sessions missing SDP", model, json);
   }
   return null;
 }
@@ -202,32 +214,37 @@ async function createRealtimeCall(
   mind?: string,
 ): Promise<{ sdp: string; model: string } | null> {
   for (const model of realtimeModelCandidates()) {
-    const fd = new FormData();
-    fd.set("sdp", sdp);
-    fd.set("session", JSON.stringify(realtimeSessionConfig(model, requestedVoice, requestedPatience, mind)));
-    const upstream = await fetch("https://api.openai.com/v1/realtime/calls", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${key}`,
-        "OpenAI-Safety-Identifier": "synexus-hera-web",
-      },
-      body: fd,
-    });
-    const body = await upstream.text();
-    if (!upstream.ok) {
-      console.error("[hera/realtime-session] realtime/calls failed", model, upstream.status, body.slice(0, 240));
-      continue;
-    }
-    const answer = body.trim();
-    if (answer.startsWith("v=") || answer.includes("m=audio")) {
-      return { sdp: answer, model };
-    }
     try {
-      const json = JSON.parse(body) as Record<string, unknown>;
-      const nested = extractTransportSdp(json);
-      if (nested) return { sdp: nested, model };
-    } catch {
-      /* not JSON */
+      const fd = new FormData();
+      fd.set("sdp", sdp);
+      fd.set("session", JSON.stringify(realtimeSessionConfig(model, requestedVoice, requestedPatience, mind)));
+      const upstream = await fetch("https://api.openai.com/v1/realtime/calls", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${key}`,
+          "OpenAI-Safety-Identifier": "synexus-hera-web",
+        },
+        body: fd,
+        signal: AbortSignal.timeout(8000),
+      });
+      const body = await upstream.text();
+      if (!upstream.ok) {
+        console.error("[hera/realtime-session] realtime/calls failed", model, upstream.status, body.slice(0, 240));
+        continue;
+      }
+      const answer = body.trim();
+      if (answer.startsWith("v=")) {
+        return { sdp: sdpWithFinalLine(answer), model };
+      }
+      try {
+        const json = JSON.parse(body) as Record<string, unknown>;
+        const nested = extractTransportSdp(json);
+        if (nested.startsWith("v=")) return { sdp: sdpWithFinalLine(nested), model };
+      } catch {
+        /* not JSON */
+      }
+    } catch (err) {
+      console.error("[hera/realtime-session] realtime/calls timed out", model, err);
     }
   }
   return null;
@@ -321,32 +338,38 @@ export async function handleHeraRealtimeSession(req: IncomingMessage, res: Serve
     } catch {
       body = {};
     }
-    const sdp = typeof body.sdp === "string" ? body.sdp.trim() : "";
+    const receivedSdp = typeof body.sdp === "string" ? body.sdp : "";
+    // OpenAI rejects an offer whose final CRLF was removed. Validate on a trimmed
+    // copy, then forward the original text with that line ending restored.
+    const sdp = receivedSdp.endsWith("\n") ? receivedSdp : `${receivedSdp.replace(/\s+$/, "")}\r\n`;
     const requestedVoice = typeof body.voice === "string" ? body.voice : undefined;
     const requestedPatience = typeof body.patience === "string" ? body.patience.slice(0, 16) : undefined;
     const mind = auth.userId ? await mindForSession(auth.userId) : "";
 
-    if (sdp) {
-      const live = await createLiveSession(key, sdp, requestedVoice, mind);
-      if (live) {
-        sendJson(res, 200, {
-          mode: "live",
-          model: live.model,
-          voice: live.voice,
-          session: { id: live.sessionId },
-          transport: { type: "webrtc", sdp: live.sdp },
-        });
-        return;
-      }
-      const realtime = await createRealtimeCall(key, sdp, requestedVoice, requestedPatience, mind);
-      if (realtime) {
-        sendJson(res, 200, {
-          mode: "realtime",
-          model: realtime.model,
-          voice: voiceName(requestedVoice),
-          transport: { type: "webrtc", sdp: realtime.sdp },
-        });
-        return;
+    if (receivedSdp.trim().startsWith("v=0") && receivedSdp.includes("m=audio")) {
+      const voices = requestedVoice && requestedVoice !== "marin" ? [requestedVoice, "marin"] : [requestedVoice];
+      for (const voice of voices) {
+        const live = await createLiveSession(key, sdp, voice, mind);
+        if (live) {
+          sendJson(res, 200, {
+            mode: "live",
+            model: live.model,
+            voice: live.voice,
+            session: { id: live.sessionId },
+            transport: { type: "webrtc", sdp: live.sdp },
+          });
+          return;
+        }
+        const realtime = await createRealtimeCall(key, sdp, voice, requestedPatience, mind);
+        if (realtime) {
+          sendJson(res, 200, {
+            mode: "realtime",
+            model: realtime.model,
+            voice: voiceName(voice),
+            transport: { type: "webrtc", sdp: realtime.sdp },
+          });
+          return;
+        }
       }
       sendJson(res, 502, { error: "Voice session unavailable" });
       return;

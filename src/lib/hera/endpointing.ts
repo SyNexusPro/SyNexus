@@ -33,8 +33,8 @@ type PatienceProfile = {
 };
 
 const PROFILES: Record<HeraPatience, PatienceProfile> = {
-  quick: { finishedMs: 450, unfinishedMs: 1100, recorderMs: 550, liveTurnMs: 400 },
-  natural: { finishedMs: 650, unfinishedMs: 1400, recorderMs: 700, liveTurnMs: 550 },
+  quick: { finishedMs: 280, unfinishedMs: 850, recorderMs: 360, liveTurnMs: 240 },
+  natural: { finishedMs: 360, unfinishedMs: 920, recorderMs: 440, liveTurnMs: 300 },
   patient: { finishedMs: 1400, unfinishedMs: 2800, recorderMs: 1600, liveTurnMs: 1200 },
 };
 
@@ -101,7 +101,7 @@ export function endpointDelayMs(text: string, patience: HeraPatience = HERA_DEFA
   const wordCount = wordsOf(text).length;
   const longBonus = Math.min(800, Math.max(0, wordCount - 12) * 40);
   if (soundsUnfinished(text)) return Math.round(profile.unfinishedMs + longBonus);
-  if (soundsFinished(text)) return Math.round(Math.max(380, profile.finishedMs * 0.85) + longBonus * 0.5);
+  if (soundsFinished(text)) return Math.round(Math.max(220, profile.finishedMs * 0.85) + longBonus * 0.5);
   return Math.round(profile.finishedMs + longBonus);
 }
 
@@ -138,9 +138,8 @@ export function vadEagernessForPatience(patience?: string | null, forced?: strin
   const override = forced?.trim().toLowerCase();
   if (override === "low" || override === "medium" || override === "high" || override === "auto") return override;
   const chosen = normalizeHeraPatience(patience);
-  if (chosen === "quick") return "high";
   if (chosen === "patient") return "low";
-  return "auto";
+  return "high";
 }
 
 export type NoiseCalibration = {

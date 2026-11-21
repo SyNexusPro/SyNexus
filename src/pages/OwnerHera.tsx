@@ -6,6 +6,8 @@ import { HeraHologramPortrait } from "../components/hera/HeraHologramPortrait";
 import { HeraScreen } from "../components/hera/HeraScreen";
 import { DEFAULT_TITAN_BOT_NAME } from "../config/titanBot";
 import { useTitanBotName } from "../hooks/useTitanBotName";
+import { watchHeraSelfUpdate } from "../lib/hera/heraSelfUpdate";
+import { isOwnerDeskShowCommand } from "../lib/hera/wakeWord";
 import { heraLiveVoice } from "../services/heraVoice";
 import {
   readDaysSinceLastVisit,
@@ -39,10 +41,28 @@ export function OwnerHera() {
     let alive = true;
     const stopMic = () => heraLiveVoice.disconnect();
     const onHide = () => {
+      if (isOwnerScreen()) return;
       if (document.hidden) stopMic();
     };
+    const onPageHide = () => {
+      if (isOwnerScreen()) return;
+      stopMic();
+    };
+    const onWake = (event: Event) => {
+      if (!isOwnerScreen()) return;
+      const detail = (event as CustomEvent<{ remainder?: string }>).detail;
+      const remainder = detail?.remainder?.trim() ?? "";
+      heraLiveVoice.setMuted(false);
+      heraLiveVoice.startListening();
+      if (!remainder) return;
+      window.dispatchEvent(new CustomEvent("titan-desk-command", { detail: { text: remainder } }));
+      if (isOwnerDeskShowCommand(remainder)) return;
+      if (remainder.length >= 3) void heraLiveVoice.sendText(remainder);
+    };
     document.addEventListener("visibilitychange", onHide);
-    window.addEventListener("pagehide", stopMic);
+    window.addEventListener("pagehide", onPageHide);
+    window.addEventListener("titan-hera-wake", onWake as EventListener);
+    const stopUpdateWatch = watchHeraSelfUpdate();
 
     void (async () => {
       const allowed = await verifyOwnerHera();
@@ -63,7 +83,9 @@ export function OwnerHera() {
       alive = false;
       stopMic();
       document.removeEventListener("visibilitychange", onHide);
-      window.removeEventListener("pagehide", stopMic);
+      window.removeEventListener("pagehide", onPageHide);
+      window.removeEventListener("titan-hera-wake", onWake as EventListener);
+      stopUpdateWatch();
     };
   }, []);
 

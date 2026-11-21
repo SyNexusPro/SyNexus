@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
+import { assessSwap } from "../../../lib/server/market/buyGate.js";
 import { resolveMembership } from "../../../lib/server/membership/resolve.js";
 import { signTradeQuote, tradeQuoteMatches } from "../../../lib/server/membership/quoteToken.js";
 import { useApiRoute, type ConnectHandler, type ViteDevServer } from "../viteDevServer.js";
@@ -49,6 +50,10 @@ export async function handleTradeQuote(req: IncomingMessage, res: ServerResponse
   const outputMint = String(body.outputMint ?? "").trim();
   const amount = String(body.amount ?? "").trim();
   if (!inputMint || !outputMint || !amount) return send(res, 400, { error: "Quote needs both tokens and an amount." });
+  const screening = await assessSwap(outputMint);
+  if (!screening.allowed) {
+    return send(res, 403, { error: screening.note, screening });
+  }
   const account = feeAccount(env);
   const params = new URLSearchParams({
     inputMint,
@@ -70,6 +75,7 @@ export async function handleTradeQuote(req: IncomingMessage, res: ServerResponse
     quoteToken: token,
     tier: membership.tier,
     feeDisclosure: membership.feeDisclosure,
+    screening,
   });
 }
 
@@ -82,6 +88,9 @@ export async function handleTradeSwap(req: IncomingMessage, res: ServerResponse,
   const userPublicKey = String(body.userPublicKey ?? "").trim();
   const quoteToken = String(body.quoteToken ?? "");
   if (!quote || !userPublicKey || !quoteToken) return send(res, 400, { error: "Swap needs a signed quote." });
+  const outputMint = String(quote.outputMint ?? "").trim();
+  const screening = await assessSwap(outputMint);
+  if (!screening.allowed) return send(res, 403, { error: screening.note, screening });
   if (!tradeQuoteMatches(canonicalQuote(quote, membership.feeBps), quoteToken, env)) {
     return send(res, 409, { error: "This quote does not match the current membership fee. Request a new quote." });
   }

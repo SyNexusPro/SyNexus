@@ -39,6 +39,7 @@ const loaders: Record<string, () => Promise<RouteModule>> = {
   "/api/owner-unlock": () => import("./_routes/ownerUnlock.js"),
   "/api/owner/brief": () => import("./_routes/owner/brief.js"),
   "/api/owner/helius": () => import("./_routes/owner/helius.js"),
+  "/api/owner/integrations": () => import("./_routes/owner/integrations.js"),
   "/api/owner/hera": () => import("./_routes/owner/hera.js"),
   "/api/owner/hera/thread": () => import("./_routes/owner/hera.js"),
   "/api/owner/hera/push": () => import("./_routes/owner/hera.js"),

@@ -20,9 +20,10 @@ const TIERS = [
     monthly: "next_level_monthly" as NativePackageId,
     yearly: "next_level_annual" as NativePackageId,
     points: [
-      "Trading intelligence and alerts",
+      "Hera conversation, market discovery, and token security checks",
+      "Standard alerts, wallet access, and swaps",
       "SyNexus swap fee 0.05%",
-      "One complimentary 30-day trial, once per account, with no card",
+      "The members-only social network is not included",
     ],
   },
   {
@@ -33,8 +34,9 @@ const TIERS = [
     yearly: null,
     points: [
       "Everything in Next Level",
-      "Full social network access",
+      "The members-only social network",
       "No SyNexus trading or swap fee",
+      "Pantheon is a member plan. It does not open owner controls",
     ],
   },
 ];
