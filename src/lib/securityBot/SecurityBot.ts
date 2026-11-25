@@ -18,7 +18,7 @@ import type {
 const PLAN_GRANT_KEY = "synexus_aegis_plan_grant";
 const TRUSTED_PLAN_SOURCES = [
   "subscription_checkout",
-  "square_checkout",
+  "paddle_checkout",
   "supabase_profile",
   "demo_session",
   "trial_7d",
@@ -82,7 +82,7 @@ class SecurityBotCore {
     return this.fingerprint;
   }
 
-  /** Call when Pro is legitimately granted (Stripe, profile sync, demo). */
+  /** Call when Pro is legitimately granted (Paddle, profile sync, demo). */
   recordPlanGrant(plan: "PRO" | "FREE", source: string) {
     const grant: PlanGrant = { plan, source, at: Date.now() };
     try {
@@ -118,8 +118,9 @@ class SecurityBotCore {
     return this.guardUserInput(email, { action });
   }
 
-  /** Strip fake Pro if local storage was tampered with. */
-  enforcePlanIntegrity(storedPlan: string, hasPaidProfile: boolean): "PRO" | "FREE" {
+  /** Strip fake Pro if local storage was tampered with. BASIC (Next Level) is allowed. */
+  enforcePlanIntegrity(storedPlan: string, hasPaidProfile: boolean): "PRO" | "BASIC" | "FREE" {
+    if (storedPlan === "BASIC") return "BASIC";
     const verdict = this.verifyPlanIntegrity(storedPlan, hasPaidProfile);
     if (!verdict.allowed && storedPlan === "PRO") {
       try {

@@ -8,7 +8,7 @@ export function EnterSynexusButton() {
     <Link
       className="enter-synexus enter-synexus--home"
       to={COMMUNITY_PATH}
-      aria-label="Enter the SyNexus social network"
+      aria-label="Open the SyNexus community"
     >
       {COMMUNITY_ENTRY_LABEL}
     </Link>

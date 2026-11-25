@@ -77,6 +77,15 @@ const Pricing = lazy(() => import("./pages/Pricing").then((m) => ({ default: m.P
 const RefundPolicy = lazy(() =>
   import("./pages/RefundPolicy").then((m) => ({ default: m.RefundPolicy })),
 );
+const ConnectWallet = lazy(() =>
+  import("./pages/ConnectWallet").then((m) => ({ default: m.ConnectWallet })),
+);
+const SynWalletDevGate = lazy(() =>
+  import("./pages/SynWalletDevGate").then((m) => ({ default: m.SynWalletDevGate })),
+);
+const HeraFacePreview = import.meta.env.DEV
+  ? lazy(() => import("./pages/HeraFacePreview").then((m) => ({ default: m.HeraFacePreview })))
+  : null;
 const WalletComingSoon = lazy(() =>
   import("./pages/WalletComingSoon").then((m) => ({ default: m.WalletComingSoon })),
 );
@@ -176,22 +185,8 @@ export default function App() {
             <Route path="data-deletion" element={<DataDeletion />} />
             <Route path="request-data-deletion" element={<Navigate to="/data-deletion" replace />} />
             <Route path="wallet-terms" element={<WalletComingSoon />} />
-            <Route
-              path="wallet"
-              element={
-                <AuthGuard requireAal2>
-                  <WalletComingSoon />
-                </AuthGuard>
-              }
-            />
-            <Route
-              path="wallet/*"
-              element={
-                <AuthGuard requireAal2>
-                  <WalletComingSoon />
-                </AuthGuard>
-              }
-            />
+            <Route path="wallet" element={<ConnectWallet />} />
+            <Route path="dev/syn-wallet/*" element={<SynWalletDevGate />} />
             <Route path="liquidity-treasury" element={<LiquidityTreasury />} />
             <Route path="marketing-command" element={<MarketingCommand />} />
             <Route path="analytics" element={<SiteAnalytics />} />
@@ -213,6 +208,7 @@ export default function App() {
             <Route path="token/:tokenId" element={<TokenDetail />} />
             <Route path="trade" element={<Trade />} />
           </Route>
+          {HeraFacePreview ? <Route path="dev/hera-face" element={<HeraFacePreview />} /> : null}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

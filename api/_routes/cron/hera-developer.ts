@@ -2,16 +2,15 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import { runDailyDeveloperReview } from "../owner/developer.js";
 import { collectOwnerBrief } from "../../../lib/server/owner/briefCollect.js";
 import { notifyOwnerHera } from "../../../lib/server/owner/heraDirect.js";
+import { authorizeCronRequest } from "../../../lib/server/cronGuard.js";
 import { useApiRoute, type ViteDevServer } from "../viteDevServer.js";
 
 type Env = Record<string, string | undefined>;
 
 function authorize(req: IncomingMessage, env: Env): boolean {
-  const secret = env.CRON_SECRET?.trim() || "";
-  if (!secret) return false;
-  const auth = typeof req.headers.authorization === "string" ? req.headers.authorization : "";
-  const header = typeof req.headers["x-cron-secret"] === "string" ? req.headers["x-cron-secret"] : "";
-  return auth === `Bearer ${secret}` || header === secret;
+  // Developer cron stays fail-closed until CRON_SECRET is set, even locally.
+  if (!env.CRON_SECRET?.trim()) return false;
+  return authorizeCronRequest(req, env);
 }
 
 export async function handleHeraDeveloperCron(req: IncomingMessage, res: ServerResponse, env: Env): Promise<void> {

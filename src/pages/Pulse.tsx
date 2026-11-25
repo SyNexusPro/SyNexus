@@ -49,7 +49,6 @@ import {
   refreshOwnerAccess,
 } from "../lib/ownerAccess";
 import { ProTrialBanner } from "../components/ProTrialBanner";
-import { ProDemoButton } from "../components/ProDemoButton";
 import { InviteEarnButton } from "../components/InviteEarnButton";
 import { ShouldIBuyPanel } from "../components/ShouldIBuyPanel";
 import { TopMoversPanel } from "../components/TopMoversPanel";
@@ -91,13 +90,11 @@ import {
   getProDemoRemainingMs,
   syncProTrialForUser,
 } from "../lib/proDemo";
+import { ensureComplimentaryNextLevel } from "../lib/membershipClient";
 import { redirectToProCheckout, startProCheckout } from "../lib/proCheckout";
-import {
-  androidRequiresWebSubscription,
-  resolveSubscribeLabel,
-} from "../lib/androidSubscription";
-import { SYNEXUS_PRO_PRICE_LABEL, SYNEXUS_PRO_SUBSCRIBE_LABEL } from "../config/proPricing";
-import { SYNEXUS_PRO_TRIAL_DAYS, SYNEXUS_PRO_TRIAL_LABEL } from "../config/proTrial";
+import { androidRequiresWebSubscription } from "../lib/androidSubscription";
+import { SYNEXUS_PRO_PRICE_LABEL } from "../config/proPricing";
+import { SYNEXUS_PRO_TRIAL_DAYS } from "../config/proTrial";
 import {
   SIGNUP_WELCOME_ACTIVE,
   clearSignupWelcomeParam,
@@ -135,7 +132,7 @@ type SentinelAlertItem = {
   note: string;
 };
 
-type AppPlan = "FREE" | "PRO";
+type AppPlan = "FREE" | "BASIC" | "PRO";
 
 type PaidSignal = {
   id: string;
@@ -155,14 +152,16 @@ const USER_FRIENDLY_ERROR = AUTH_USER_FRIENDLY_ERROR;
 
 function normalizeStoredPlan(plan: string | null | undefined): AppPlan {
   if (plan === "PRO") return "PRO";
+  if (plan === "BASIC") return "BASIC";
   return "FREE";
 }
 
 function formatPlanName(plan: AppPlan) {
   if (plan === "PRO" && isProDemoActive()) {
-    return `SyNexusPro trial · ${formatProDemoRemaining(getProDemoRemainingMs())}`;
+    return `Complimentary grant · ${formatProDemoRemaining(getProDemoRemainingMs())}`;
   }
-  if (plan === "PRO") return "SyNexusPro";
+  if (plan === "PRO") return "Pantheon";
+  if (plan === "BASIC") return "Next Level";
   return "Free";
 }
 
@@ -366,10 +365,11 @@ export function Pulse() {
       setOperatorName(resolveOperatorDisplayName(profile, user.email));
       saveIntroOperatorName(resolveOperatorName(profile));
       const hasPaidProfile = profile?.paid_plan === "PRO" || playReviewPro || inviteReward;
-      const trialActive = isProDemoActive();
-      const rawPlan =
-        hasPaidProfile || trialActive
-          ? "PRO"
+      const hasBasicProfile = profile?.paid_plan === "BASIC" || isProDemoActive();
+      const rawPlan = hasPaidProfile
+        ? "PRO"
+        : hasBasicProfile
+          ? "BASIC"
           : (profile?.paid_plan ?? localStorage.getItem(PLAN_STORAGE_KEY) ?? "FREE");
       if (hasStoredOwnerGrant() || playReviewPro || inviteReward) {
         setPlan("PRO");
@@ -479,10 +479,19 @@ export function Pulse() {
         setRecoveryMode(false);
         const showWelcome = hasSignupWelcomeParam() || consumeAwaitingSignupWelcome();
         clearSignupWelcomeParam();
-        const trialStarted = syncProTrialForUser(signedInUser.id);
-        if (trialStarted) {
-          setPlan("PRO");
-          notifySynexusPlanChanged();
+        const method = pendingAuthMethod.current;
+        signedInMethod = method;
+        pendingAuthMethod.current = null;
+        if (method === "signup" || showWelcome) {
+          void ensureComplimentaryNextLevel(signedInUser.id).then((result) => {
+            if (result === "started" || result === "restored") {
+              setPlan("BASIC");
+              notifySynexusPlanChanged();
+            }
+          });
+          queueHeraSignupDemo();
+        } else {
+          syncProTrialForUser(signedInUser.id);
         }
         const verifiedMessage = showWelcome
           ? SIGNUP_WELCOME_ACTIVE
@@ -493,12 +502,6 @@ export function Pulse() {
           tone: "success",
           text: verifiedMessage,
         });
-        const method = pendingAuthMethod.current;
-        signedInMethod = method;
-        pendingAuthMethod.current = null;
-        if (method === "signup" || showWelcome) {
-          queueHeraSignupDemo();
-        }
         if (method === "signup") {
           trackSiteEvent("sign_up", { userId: signedInUser.id, path: "/pulse" });
         } else if (method === "biometric") {
@@ -545,11 +548,12 @@ export function Pulse() {
     const fromSignup = consumeAwaitingSignupWelcome();
     if (!fromLink && !fromSignup) return;
     queueHeraSignupDemo();
-    const trialStarted = syncProTrialForUser(userId);
-    if (trialStarted) {
-      setPlan("PRO");
-      notifySynexusPlanChanged();
-    }
+    void ensureComplimentaryNextLevel(userId).then((result) => {
+      if (result === "started" || result === "restored") {
+        setPlan("BASIC");
+        notifySynexusPlanChanged();
+      }
+    });
     setAuthMessage({ tone: "success", text: SIGNUP_WELCOME_ACTIVE });
     clearSignupWelcomeParam();
   }, [userId]);
@@ -718,13 +722,14 @@ export function Pulse() {
       }
       const message = SIGNUP_WELCOME_ACTIVE;
       if (result.session && signupUser) {
-        const trialStarted = syncProTrialForUser(signupUser.id);
         void attachPendingInvite();
         void syncInviteRewardForUser();
-        if (trialStarted) {
-          setPlan("PRO");
-          notifySynexusPlanChanged();
-        }
+        void ensureComplimentaryNextLevel(signupUser.id).then((grant) => {
+          if (grant === "started" || grant === "restored") {
+            setPlan("BASIC");
+            notifySynexusPlanChanged();
+          }
+        });
         queueHeraSignupDemo();
         setAuthMessage({
           tone: "success",
@@ -1095,6 +1100,10 @@ export function Pulse() {
         setAuthMessage({ tone: "info", text: "Complete subscription in your browser at synexus.pro." });
         return;
       }
+      if (checkout.openedOverlay) {
+        setAuthMessage({ tone: "info", text: "Complete checkout in the Paddle window." });
+        return;
+      }
       redirectToProCheckout(checkout.url);
     } finally {
       setCheckoutBusy(false);
@@ -1159,10 +1168,10 @@ export function Pulse() {
   return (
     <div className={`page${isSimple ? " page--easy" : ""}`}>
       <section className="page__intro">
-        <h1 className="page__headline">{isSimple ? "Titan" : "Sentinels"}</h1>
+        <h1 className="page__headline">{isSimple ? "Ask Hera" : "Sentinels"}</h1>
         <p className="page__lede">
           {isSimple
-            ? `Talk to ${titanBotName} from the bottom nav. Sign in to unlock your command center.`
+            ? `Talk to ${titanBotName} from Listen in the bottom nav. Sign in to save your scans and unlock more.`
             : `Sentinel grid, alerts, and operator tools — sign in via Login in the nav.`}
         </p>
       </section>
@@ -1202,8 +1211,8 @@ export function Pulse() {
       {isSimple ? (
         <div className="ui-mode-hint ui-mode-hint--easy">
           <p>
-            You&apos;re in <strong>Easy</strong> mode — we show only what beginners need. Flip to{" "}
-            <strong>Advanced</strong> for live Sentinel alerts, watchlists, and the full operator grid.
+            You&apos;re in <strong>Easy</strong> mode — we show only what you need to start. Flip to{" "}
+            <strong>Advanced</strong> for live alerts, watchlists, and pro tools.
           </p>
           <UIModeToggle compact />
         </div>
@@ -1410,56 +1419,45 @@ export function Pulse() {
       <div className="pulse-card pulse-synexus-pro-wrap" id="synexus-pro">
         <div className="pulse-synexus-pro-promo">
           <div className="pulse-synexus-pro-promo__honeycomb" aria-hidden />
-          <p className="pulse-synexus-pro-promo__label">SyNexusPro</p>
-          <p className="pulse-synexus-pro-promo__price">{SYNEXUS_PRO_PRICE_LABEL}</p>
-          <p className="pulse-synexus-pro-promo__headline">Unlimited trading intelligence. One simple price.</p>
+          <p className="pulse-synexus-pro-promo__label">Membership</p>
+          <p className="pulse-synexus-pro-promo__price">Next Level {SYNEXUS_PRO_PRICE_LABEL}</p>
+          <p className="pulse-synexus-pro-promo__headline">
+            Want the social feed? Pantheon is $20/mo — community access plus $0 SyNexus fees.
+          </p>
           <p className="pulse-synexus-pro-promo__body">
-            Sign up for a {SYNEXUS_PRO_TRIAL_DAYS}-day full Pro trial — no card required. Then subscribe to keep the full
-            SyNexus system with real-time Sentinel analysis, risk scanning, momentum tracking, whale activity
-            signals, pattern detection, and unlimited trading intelligence tools.
+            New here? Eligible accounts can try Next Level free for {SYNEXUS_PRO_TRIAL_DAYS} days (no card). That trial
+            does not unlock social. When you&apos;re ready, pick Next Level or Pantheon on Pricing.
           </p>
           <ul className="pulse-synexus-pro-promo__bullets">
-            <li>Unlimited SyNexus access</li>
-            <li>Real-time Sentinel signals</li>
-            <li>Scam and risk alerts</li>
-            <li>Whale activity tracking</li>
-            <li>Momentum and trend analysis</li>
-            <li>Pattern recognition insights</li>
-            <li>Fast trading links</li>
-            <li>Priority platform updates</li>
+            <li>Next Level: Hera, market tools, small swap fee</li>
+            <li>Pantheon: everything in Next Level + members-only social</li>
+            <li>Pantheon: $0 SyNexus trading fee (network fees still apply)</li>
+            <li>Owner tools stay separate from paid plans</li>
           </ul>
           <div className="pulse-synexus-pro-promo__cta-wrap">
-            {plan !== "PRO" ? (
+            {plan === "FREE" ? (
               <>
-                <ProDemoButton
-                  className="pulse-demo-button pulse-demo-button--first pulse-synexus-pro-promo__demo"
-                  label={`${SYNEXUS_PRO_TRIAL_LABEL} — see everything`}
-                />
                 <button
                   type="button"
                   className="pulse-button--pro pulse-synexus-pro-promo__cta"
-                  disabled={checkoutBusy}
-                  onClick={() => void handleUpgradeTrigger()}
+                  onClick={() => navigate("/pricing")}
                 >
-                  {checkoutBusy ? "Opening…" : resolveSubscribeLabel(SYNEXUS_PRO_SUBSCRIBE_LABEL)}
+                  View Next Level and Pantheon
                 </button>
               </>
-            ) : isProDemoActive() ? (
+            ) : plan === "BASIC" ? (
               <>
-                <p className="pulse-synexus-pro-promo__active">
-                  {SYNEXUS_PRO_TRIAL_LABEL} active — full Pro unlocked.
-                </p>
+                <p className="pulse-synexus-pro-promo__active">Next Level is active on your account.</p>
                 <button
                   type="button"
                   className="pulse-button--pro pulse-synexus-pro-promo__cta"
-                  disabled={checkoutBusy}
-                  onClick={() => void handleUpgradeTrigger()}
+                  onClick={() => navigate("/pricing")}
                 >
-                  {checkoutBusy ? "Opening…" : resolveSubscribeLabel("Keep Pro — Subscribe")}
+                  Upgrade to Pantheon
                 </button>
               </>
             ) : (
-              <p className="pulse-synexus-pro-promo__active">SyNexusPro is active on your account.</p>
+              <p className="pulse-synexus-pro-promo__active">Pantheon is active on your account.</p>
             )}
             <InviteEarnButton className="pulse-demo-button invite-earn-btn" />
           </div>
@@ -1476,7 +1474,7 @@ export function Pulse() {
                   {signal.title} — {signal.detail}
                 </span>
                 {signal.isLocked ? (
-                  <strong>Included in SyNexusPro</strong>
+                  <strong>Included with membership</strong>
                 ) : (
                   <strong>Unlocked</strong>
                 )}
@@ -1484,7 +1482,7 @@ export function Pulse() {
             ))}
           </ul>
         ) : (
-          <p className="pulse-card__body">Sentinels are scanning for SyNexusPro signal candidates.</p>
+          <p className="pulse-card__body">Sentinels are scanning for membership signal candidates.</p>
         )}
       </div>
         </>

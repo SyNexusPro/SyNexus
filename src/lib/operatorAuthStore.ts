@@ -125,9 +125,23 @@ function start(): void {
     if (isBackgroundAuthRefresh(event)) return;
     const user = session?.user ?? null;
     refresh(async () => user);
-    void import("./revenuecatNative")
-      .then((mod) => mod.syncRevenueCatUser(user?.id ?? null))
-      .catch(() => undefined);
+    void import("./revenuecatArchive").then(async ({ isRevenueCatArchived }) => {
+      if (isRevenueCatArchived()) return;
+      await import("./revenuecatNative")
+        .then((mod) => mod.syncRevenueCatUser(user?.id ?? null))
+        .catch(() => undefined);
+      await import("./revenuecatWeb")
+        .then((mod) => mod.syncRevenueCatWebUser(user?.id ?? null))
+        .catch(() => undefined);
+    }).catch(() => undefined);
+    // Prevent cross-account wallet session bleed after sign-out / account switch.
+    if (!user) {
+      void import("./solanaWallet")
+        .then((mod) => {
+          mod.forgetSolanaWallet();
+        })
+        .catch(() => undefined);
+    }
   });
 }
 

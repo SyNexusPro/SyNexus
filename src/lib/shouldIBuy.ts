@@ -70,11 +70,11 @@ function buildPlainEnglish(
     );
   } else if (verdict === "WATCH") {
     parts.push(
-      `${token.symbol} is not clean enough to ape. Momentum and liquidity look mixed — wait for a clearer Sentinel read.`,
+      `${token.symbol} is not clean enough to buy yet. Momentum and liquidity look mixed — wait for a clearer read.`,
     );
   } else {
     parts.push(
-      `${token.symbol} passes a basic Sentinel screen, but no memecoin is safe. Liquidity health is ${card.liquidityHealth}/100 — still verify the mint and size small.`,
+      `${token.symbol} passes a basic screen, but no memecoin is safe. Liquidity health is ${card.liquidityHealth}/100 — still verify the coin ID and size small.`,
     );
   }
 
@@ -116,8 +116,8 @@ export function verdictBeginnerMeta(verdict: BuyVerdict): {
     case "HIGH_RISK":
       return { icon: "⚠️", label: "Very risky", hint: "Only trade if you accept big loss." };
     case "WATCH":
-      return { icon: "👀", label: "Wait & watch", hint: "Not clear enough to ape yet." };
+      return { icon: "👀", label: "Wait & watch", hint: "Not clear enough to buy yet." };
     default:
-      return { icon: "✓", label: "Looks okay", hint: "Still verify the mint — start small." };
+      return { icon: "✓", label: "Looks okay", hint: "Still double-check the coin ID — start small." };
   }
 }

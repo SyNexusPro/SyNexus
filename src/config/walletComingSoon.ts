@@ -1,6 +1,6 @@
-/** Public route — SyN Wallet is on hold (see future/syn-wallet/). */
-export const SYNEXUS_VAULT_PATH = "/wallet-terms";
+/** Public users connect external wallets. SyN Wallet stays preserved for a later release. */
+export const SYNEXUS_VAULT_PATH = "/wallet";
 
-export const SYNEXUS_VAULT_PRODUCT_NAME = "SyN Wallet";
+export const SYNEXUS_VAULT_PRODUCT_NAME = "Connect Wallet";
 
-export const SYNEXUS_VAULT_STATUS = "Coming soon";
+export const SYNEXUS_VAULT_STATUS = "External wallets";

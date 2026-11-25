@@ -17,6 +17,7 @@ test("Olympus registers fifty roles in ten divisions under one Hera", () => {
   assert.equal(organizationReady(), true);
   assert.equal(new Set(roster.map((role) => role.id)).size, 50);
   assert.equal(roster.some((role) => role.agent === "Hera" || role.role === "Hera"), false);
+  assert.ok(roster.some((role) => role.agent === "Alexus"));
   assert.ok(roster.some((role) => role.agent === "Aegis"));
   assert.ok(roster.some((role) => role.agent === "Hera Developer"));
   for (const id of divisionIds()) assert.equal(validateDivision(id).ok, true);

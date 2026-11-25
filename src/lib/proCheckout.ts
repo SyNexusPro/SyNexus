@@ -1,14 +1,27 @@
 import { androidRequiresWebSubscription, openWebSubscription } from "./androidSubscription";
+import {
+  openPaddleCheckout,
+  paddleCheckoutAvailable,
+  paddleConfiguredButAwaitingApproval,
+} from "./paddleCheckout";
+import { SYNEXUS_PRICING_PATH } from "../config/proPricing";
 
 export type StartProCheckoutInput = {
   userId?: string | null;
   email?: string | null;
+  /** Defaults to pantheon (legacy "PRO"). Use next_level for the entry plan. */
+  plan?: "next_level" | "pantheon";
+  trialEligible?: boolean;
 };
 
 export type StartProCheckoutResult =
-  | { ok: true; url: string; openedExternally?: boolean }
+  | { ok: true; url: string; openedExternally?: boolean; openedOverlay?: boolean }
   | { ok: false; error: string; needsSignIn?: boolean };
 
+/**
+ * Opens Paddle overlay when live checkout is enabled; otherwise sends the user to Pricing.
+ * RevenueCat paths stay archived and are not used here.
+ */
 export async function startProCheckout(
   input: StartProCheckoutInput = {},
 ): Promise<StartProCheckoutResult> {
@@ -19,31 +32,33 @@ export async function startProCheckout(
 
   const userId = input.userId?.trim();
   const email = input.email?.trim();
+  const plan = input.plan ?? "pantheon";
 
-  const response = await fetch("/api/checkout", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      plan: "PRO",
-      userId: userId || undefined,
-      email: email || undefined,
-    }),
-  });
+  if (paddleCheckoutAvailable()) {
+    if (!userId) {
+      return { ok: false, error: "Sign in before starting checkout.", needsSignIn: true };
+    }
+    await openPaddleCheckout({
+      plan,
+      userId,
+      email,
+      trialEligible: input.trialEligible !== false,
+    });
+    return { ok: true, url: "", openedOverlay: true };
+  }
 
-  const data = (await response.json().catch(() => ({}))) as { url?: string; error?: string };
-
-  if (!response.ok || !data.url) {
+  if (paddleConfiguredButAwaitingApproval()) {
     return {
       ok: false,
       error:
-        data.error ||
-        (response.status === 503
-          ? "Checkout is not available right now."
-          : "Checkout could not be opened. Please try again."),
+        "Paddle is configured but live checkout is awaiting approval (VITE_PADDLE_LIVE_CHECKOUT).",
     };
   }
 
-  return { ok: true, url: data.url };
+  return {
+    ok: true,
+    url: `${SYNEXUS_PRICING_PATH}?plan=${plan}`,
+  };
 }
 
 export function redirectToProCheckout(url: string) {

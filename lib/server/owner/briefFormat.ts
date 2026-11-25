@@ -49,7 +49,7 @@ export function composeOwnerBrief(facts: OwnerBriefFacts): OwnerBrief {
     facts.recordedRevenueUsd === null
       ? "Recorded payment ledger: Data unavailable."
       : `Recorded payment ledger, last 24 hours: ${money(facts.recordedRevenueUsd)}.`,
-    "App store subscription charges: Data unavailable. RevenueCat is not connected to this report.",
+    "Subscription charges: Data unavailable in this report. Web billing is Paddle; RevenueCat remains archived.",
     countLine("New signups recorded in site analytics, last 24 hours", facts.signups),
     countLine("Accounts", facts.accounts),
     countLine("New accounts, last 24 hours", facts.newAccounts),

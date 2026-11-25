@@ -49,13 +49,24 @@ export function configureCheckoutApi(server: ViteDevServer, env: Record<string, 
     }
 
     try {
-      const payload = JSON.parse(await readRequestBody(req)) as CheckoutPayload;
+      const raw = await readRequestBody(req);
+      let payload: CheckoutPayload = {};
+      if (raw.trim()) {
+        try {
+          payload = JSON.parse(raw) as CheckoutPayload;
+        } catch {
+          res.statusCode = 400;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: "Invalid JSON body." }));
+          return;
+        }
+      }
       const result = await createSubscriptionCheckoutResponse(payload, req.headers, env);
       res.statusCode = result.statusCode;
       res.setHeader("Content-Type", "application/json");
       res.end(JSON.stringify(result.body));
     } catch {
-      res.statusCode = 500;
+      res.statusCode = 503;
       res.setHeader("Content-Type", "application/json");
       res.end(
         JSON.stringify({

@@ -17,7 +17,6 @@ import {
   needsLaunchWatchFetch,
   scanLaunchWatch,
 } from "../../../lib/server/titan/launchWatchScan.js";
-import { GROQ_DEFAULT_STRONG, remapGroqModel } from "../../../lib/server/titan/groqModels.js";
 import { loadAlexusLearningBrief } from "../../../lib/server/hera/alexusLearning.js";
 import { readHeraMind, savePersonalNote } from "../../../lib/server/hera/mindStore.js";
 import { personalNoteFromUtterance } from "../../../lib/server/hera/unifiedMind.js";
@@ -77,50 +76,46 @@ type LlmEndpoint = {
 };
 
 function openaiBase(env: TitanEnv): string {
-  return (env.OPENAI_API_BASE?.trim() || "https://api.openai.com/v1").replace(/\/$/, "");
+  const base = (env.OPENAI_API_BASE?.trim() || "https://api.openai.com/v1").replace(/\/$/, "");
+  // Groq and other non-OpenAI hosts are not used.
+  if (/groq\.com/i.test(base)) return "https://api.openai.com/v1";
+  return base;
 }
 
-/** Hera spoken path — real OpenAI, never the Groq/Titan proxy key. */
-function resolveHeraOpenAi(env: TitanEnv, plan: "FREE" | "PRO"): LlmEndpoint | null {
-  const apiKey = env.OPENAI_API_KEY?.trim();
-  if (!apiKey) return null;
-  const model =
-    env.HERA_OPENAI_MODEL?.trim() ||
-    env.OPENAI_MODEL_HERA?.trim() ||
-    env.OPENAI_MODEL_PRO?.trim() ||
-    env.OPENAI_MODEL?.trim() ||
-    "gpt-4o";
-  return {
-    apiKey,
-    baseUrl: openaiBase(env),
-    model,
-    maxTokens: plan === "PRO" ? 2200 : 1800,
-  };
+function isOpenAiModelName(model: string): boolean {
+  return !/groq|gpt-oss|llama|mixtral|gemma/i.test(model);
 }
 
-function resolveLlmConfig(env: TitanEnv, plan: "FREE" | "PRO" = "FREE", fastMode = false): LlmEndpoint {
-  const groqKey = env.TITAN_API_KEY?.trim();
-  const openaiKey = env.OPENAI_API_KEY?.trim();
-  const baseUrl = (
-    env.TITAN_API_BASE?.trim() ||
-    env.OPENAI_API_BASE?.trim() ||
-    "https://api.openai.com/v1"
-  ).replace(/\/$/, "");
-  const groq = /groq\.com/i.test(baseUrl);
-  const strongGroq = GROQ_DEFAULT_STRONG;
-  const rawModel =
+function pickOpenAiModel(env: TitanEnv, plan: "FREE" | "PRO"): string {
+  const candidates =
     plan === "PRO"
-      ? env.TITAN_MODEL_PRO?.trim() ||
-        env.OPENAI_MODEL_PRO?.trim() ||
-        env.TITAN_MODEL?.trim() ||
-        env.OPENAI_MODEL?.trim() ||
-        (groq ? strongGroq : "gpt-4o")
-      : env.TITAN_MODEL_FREE?.trim() ||
-        env.OPENAI_MODEL_FREE?.trim() ||
-        env.TITAN_MODEL?.trim() ||
-        env.OPENAI_MODEL?.trim() ||
-        (groq ? strongGroq : "gpt-4o-mini");
-  const model = remapGroqModel(rawModel, baseUrl);
+      ? [
+          env.HERA_OPENAI_MODEL,
+          env.OPENAI_MODEL_HERA,
+          env.OPENAI_MODEL_PRO,
+          env.OPENAI_MODEL,
+          env.TITAN_MODEL_PRO,
+          env.TITAN_MODEL,
+        ]
+      : [
+          env.OPENAI_MODEL_FREE,
+          env.OPENAI_MODEL,
+          env.HERA_OPENAI_MODEL,
+          env.TITAN_MODEL_FREE,
+          env.TITAN_MODEL,
+        ];
+  for (const raw of candidates) {
+    const model = raw?.trim();
+    if (model && isOpenAiModelName(model)) return model;
+  }
+  return plan === "PRO" ? "gpt-4o" : "gpt-4o-mini";
+}
+
+/** OpenAI only. No Groq / Titan proxy path. */
+function resolveLlmConfig(env: TitanEnv, plan: "FREE" | "PRO" = "FREE", fastMode = false): LlmEndpoint {
+  const apiKey = env.OPENAI_API_KEY?.trim() || "";
+  const baseUrl = openaiBase(env);
+  const model = pickOpenAiModel(env, plan);
   const defaultMax = fastMode
     ? plan === "PRO"
       ? 900
@@ -139,14 +134,30 @@ function resolveLlmConfig(env: TitanEnv, plan: "FREE" | "PRO" = "FREE", fastMode
       ) || defaultMax,
     ),
   );
-  const apiKey = groqKey || openaiKey || "";
   return { apiKey, baseUrl, model, maxTokens };
+}
+
+function resolveHeraOpenAi(env: TitanEnv, plan: "FREE" | "PRO"): LlmEndpoint | null {
+  const endpoint = resolveLlmConfig(env, plan, false);
+  if (!endpoint.apiKey) return null;
+  if (plan === "PRO" || env.HERA_OPENAI_MODEL?.trim() || env.OPENAI_MODEL_HERA?.trim()) {
+    return {
+      ...endpoint,
+      model:
+        env.HERA_OPENAI_MODEL?.trim() ||
+        env.OPENAI_MODEL_HERA?.trim() ||
+        endpoint.model,
+      maxTokens: plan === "PRO" ? 2200 : 1800,
+    };
+  }
+  return endpoint;
 }
 
 function resolveReasoningEndpoint(env: TitanEnv, plan: "FREE" | "PRO"): LlmEndpoint | null {
   const apiKey = env.OPENAI_API_KEY?.trim();
   if (!apiKey) return null;
   const model = env.HERA_REASONING_MODEL?.trim() || "gpt-4.1";
+  if (!isOpenAiModelName(model)) return null;
   const current = resolveHeraOpenAi(env, plan);
   if (current?.model === model) return null;
   return {
@@ -161,13 +172,8 @@ function resolveChatEndpoint(
   env: TitanEnv,
   body: TitanChatRequestBody,
 ): { primary: LlmEndpoint; fallback: LlmEndpoint | null } {
-  const openai = resolveHeraOpenAi(env, body.plan);
-  const groq = resolveLlmConfig(env, body.plan, body.fastMode === true);
-  if (openai) {
-    const fallback = groq.apiKey && groq.baseUrl !== openai.baseUrl ? groq : null;
-    return { primary: openai, fallback };
-  }
-  return { primary: groq, fallback: null };
+  const openai = resolveHeraOpenAi(env, body.plan) ?? resolveLlmConfig(env, body.plan, body.fastMode === true);
+  return { primary: openai, fallback: null };
 }
 
 /** Grounded temperature: analytical/market turns stay sharp; open conversation stays warm. */
@@ -241,6 +247,11 @@ function validateBody(raw: unknown): TitanChatRequestBody | null {
   const operatorBrief =
     typeof body.operatorBrief === "string" && body.operatorBrief.trim()
       ? body.operatorBrief.trim().slice(0, 800)
+      : null;
+
+  const connectedWalletBrief =
+    typeof body.connectedWalletBrief === "string" && body.connectedWalletBrief.trim()
+      ? body.connectedWalletBrief.trim().slice(0, 1600)
       : null;
 
   const sentinelBrief =
@@ -335,6 +346,7 @@ function validateBody(raw: unknown): TitanChatRequestBody | null {
     marketBrief,
     moversBrief,
     operatorBrief,
+    connectedWalletBrief,
     sentinelBrief,
     watchlistBrief,
     intentHint,
@@ -353,22 +365,20 @@ function validateBody(raw: unknown): TitanChatRequestBody | null {
   };
 }
 
-/** Ping the LLM once so the first real chat token arrives faster (Groq/OpenAI cold start). */
-export async function warmTitanLlm(env: TitanEnv): Promise<boolean> {
-  const { apiKey, baseUrl, model } = resolveLlmConfig(env, "FREE", true);
-  if (!apiKey) return false;
-
+/** Ping OpenAI once so the first real chat token arrives faster. */
+async function pingLlmEndpoint(endpoint: LlmEndpoint): Promise<{ ok: boolean; status?: number }> {
   try {
-    const response = await fetch(`${baseUrl}/chat/completions`, {
+    // Keep the warm call tiny but valid — some providers reject max_tokens: 1.
+    const response = await fetch(`${endpoint.baseUrl}/chat/completions`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: `Bearer ${endpoint.apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model,
+        model: endpoint.model,
         stream: false,
-        max_tokens: 1,
+        max_tokens: 8,
         temperature: 0,
         messages: [
           { role: "system", content: "ok" },
@@ -376,10 +386,16 @@ export async function warmTitanLlm(env: TitanEnv): Promise<boolean> {
         ],
       }),
     });
-    return response.ok;
+    return { ok: response.ok, status: response.status };
   } catch {
-    return false;
+    return { ok: false };
   }
+}
+
+export async function warmTitanLlm(env: TitanEnv): Promise<{ ok: boolean; status?: number }> {
+  const { primary } = resolveChatEndpoint(env, { plan: "FREE", fastMode: true, message: "ping" });
+  if (!primary.apiKey) return { ok: false };
+  return pingLlmEndpoint(primary);
 }
 
 export async function handleTitanWarm(
@@ -387,10 +403,11 @@ export async function handleTitanWarm(
   res: ServerResponse,
   env: TitanEnv,
 ): Promise<void> {
-  const ready = !!(env.TITAN_API_KEY?.trim() || env.OPENAI_API_KEY?.trim());
+  const ready = !!env.OPENAI_API_KEY?.trim();
   if (!ready) {
     res.statusCode = 503;
-    res.end();
+    res.setHeader("Content-Type", "application/json");
+    res.end(JSON.stringify({ ok: false, error: "llm_unavailable" }));
     return;
   }
 
@@ -401,14 +418,16 @@ export async function handleTitanWarm(
   }
 
   if (req.method === "POST") {
-    const ok = await warmTitanLlm(env);
-    res.statusCode = ok ? 204 : 502;
-    res.end();
+    const result = await warmTitanLlm(env);
+    res.statusCode = result.ok ? 204 : 502;
+    res.setHeader("Content-Type", "application/json");
+    res.end(JSON.stringify(result.ok ? { ok: true } : { ok: false, error: "warm_failed", upstream: result.status ?? null }));
     return;
   }
 
   res.statusCode = 405;
-  res.end();
+  res.setHeader("Content-Type", "application/json");
+  res.end(JSON.stringify({ error: "Method not allowed" }));
 }
 
 async function* streamChatCompletions(
@@ -603,18 +622,23 @@ export async function handleTitanChatStream(
     }
   }
 
+  // Always attach the newest Alexus paper brief so Hera stays connected to Alexus.
+  const alexusLearningPromise = loadAlexusLearningBrief(env).catch(
+    () => "ALEXUS LEARNING unavailable. Do not invent Alexus results, win rates, or prices.",
+  );
+
   if (needsVenueDesk(parsed.message, parsed.intentHint) || needsLiveMarketFetch(parsed.message, parsed.intentHint)) {
     const [desk, learning] = await Promise.all([
       fetchVenueDeskBrief().catch(
         () => "VENUE DESK unavailable. Tell the user live venue prices could not be retrieved — do not invent prices.",
       ),
-      loadAlexusLearningBrief(env).catch(
-        () => "ALEXUS LEARNING unavailable. Do not invent Alexus results, win rates, or prices.",
-      ),
+      alexusLearningPromise,
     ]);
     parsed.venueDesk = desk;
     parsed.alexusLearning = learning;
     parsed.fastMode = false;
+  } else {
+    parsed.alexusLearning = await alexusLearningPromise;
   }
 
   if (needsLaunchWatchFetch(parsed.message, parsed.intentHint)) {

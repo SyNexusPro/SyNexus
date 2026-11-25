@@ -30,6 +30,10 @@ export function ProDemoBanner() {
         email: user?.email,
       });
       if (!checkout.ok) throw new Error(checkout.error);
+      if (checkout.openedOverlay || checkout.openedExternally) {
+        setCheckoutBusy(false);
+        return;
+      }
       redirectToProCheckout(checkout.url);
     } catch {
       setCheckoutError(true);

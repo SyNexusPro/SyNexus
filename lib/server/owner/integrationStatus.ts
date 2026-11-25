@@ -24,7 +24,9 @@ export function integrationPresence(env: Env): IntegrationRow[] {
     { service: "Jupiter fee account", variable: "JUPITER_FEE_ACCOUNT", configured: present(env, "JUPITER_FEE_ACCOUNT", "VITE_JUPITER_FEE_ACCOUNT"), required: false },
     { service: "CoinGecko", variable: "COINGECKO_API_KEY", configured: present(env, "COINGECKO_API_KEY"), required: false },
     { service: "GoPlus", variable: "GOPLUS_APP_KEY", configured: present(env, "GOPLUS_APP_KEY"), required: false },
-    { service: "RevenueCat", variable: "REVENUECAT_SECRET_API_KEY", configured: present(env, "REVENUECAT_SECRET_API_KEY"), required: false },
+    { service: "Paddle", variable: "PADDLE_API_KEY", configured: present(env, "PADDLE_API_KEY"), required: false },
+    { service: "Paddle webhook", variable: "PADDLE_WEBHOOK_SECRET", configured: present(env, "PADDLE_WEBHOOK_SECRET"), required: false },
+    { service: "RevenueCat (archived)", variable: "REVENUECAT_SECRET_API_KEY", configured: present(env, "REVENUECAT_SECRET_API_KEY"), required: false },
     { service: "Cron", variable: "CRON_SECRET", configured: present(env, "CRON_SECRET"), required: true },
     { service: "ElevenLabs", variable: "ELEVENLABS_API_KEY", configured: present(env, "ELEVENLABS_API_KEY"), required: false },
   ];

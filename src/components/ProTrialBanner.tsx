@@ -73,6 +73,10 @@ export function ProTrialBanner() {
         email: user?.email,
       });
       if (!checkout.ok) throw new Error(checkout.error);
+      if (checkout.openedOverlay || checkout.openedExternally) {
+        setBusy(false);
+        return;
+      }
       redirectToProCheckout(checkout.url);
     } catch {
       setError(true);
@@ -85,13 +89,13 @@ export function ProTrialBanner() {
     : androidRequiresWebSubscription()
       ? ANDROID_WEB_SUBSCRIBE_HINT
       : !linked
-        ? `${SYNEXUS_PRO_TRIAL_DAYS} days of Pro free when you sign up · no card · then ${SYNEXUS_PRO_PRICE_LABEL}`
-        : `${SYNEXUS_PRO_TRIAL_LABEL} active or available · ${SYNEXUS_PRO_PRICE_LABEL} after trial · cancel anytime`;
+        ? `${SYNEXUS_PRO_TRIAL_DAYS}-day complimentary Next Level grant when eligible · no card · then ${SYNEXUS_PRO_PRICE_LABEL} or Pantheon $20/mo`
+        : `${SYNEXUS_PRO_TRIAL_LABEL} · ${SYNEXUS_PRO_PRICE_LABEL} or Pantheon $20/mo after · cancel anytime`;
 
   return (
-    <div className="pro-trial-banner" role="region" aria-label="SyNexusPro subscription">
+    <div className="pro-trial-banner" role="region" aria-label="SyNexus membership">
       <div className="pro-trial-banner__text">
-        <span className="pro-trial-banner__headline">SyNexusPro</span>
+        <span className="pro-trial-banner__headline">Next Level</span>
         <span className="pro-trial-banner__detail">{detail}</span>
       </div>
       <ProDemoButton

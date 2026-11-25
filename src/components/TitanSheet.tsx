@@ -24,6 +24,11 @@ import { HeraScreen } from "./hera/HeraScreen";
 import { warmTitanBrain } from "../lib/titanConversation";
 import { QuickOperatorLogin } from "./QuickOperatorLogin";
 import { SynexusSymbolMark } from "./SynexusSymbolMark";
+import { useConnectedWalletOptional } from "../context/ConnectedWalletContext";
+import {
+  HERA_SIGNUP_DEMO_EVENT,
+  isHeraSignupDemoPending,
+} from "../lib/heraSignupDemo";
 
 const PLAN_STORAGE_KEY = "synexus_paid_plan";
 
@@ -32,7 +37,7 @@ function normalizePlan(raw: string | null | undefined): "FREE" | "PRO" {
 }
 
 export function TitanSheet() {
-  const { sheetOpen, sheetMode, closeSheet } = useTitanShell();
+  const { sheetOpen, sheetMode, closeSheet, openChat } = useTitanShell();
   const { name: titanBotName } = useTitanBotName();
   const commanderLabel = titanBotName || resolveTitanBotName() || DEFAULT_TITAN_BOT_NAME;
   const [bootReady, setBootReady] = useState(isSynexusBootComplete());
@@ -45,6 +50,8 @@ export function TitanSheet() {
   );
   const titanChatActive = sheetOpen && sheetMode === "chat";
   const [wakeLaunch, setWakeLaunch] = useState<HeraWakeLaunch | null>(null);
+  const [guidedDemo, setGuidedDemo] = useState(false);
+  const connectedWallet = useConnectedWalletOptional();
 
   const { tokens, feedSource } = useOracleMarketFeed({
     enabled: titanChatActive,
@@ -65,11 +72,23 @@ export function TitanSheet() {
     if (chatOpen) {
       wasChatOpen.current = true;
       setWakeLaunch(consumeHeraWakeLaunch());
+      if (isHeraSignupDemoPending()) setGuidedDemo(true);
       return;
     }
     setWakeLaunch(null);
+    setGuidedDemo(false);
     if (wasChatOpen.current) wasChatOpen.current = false;
   }, [sheetOpen, sheetMode]);
+
+  useEffect(() => {
+    const onSignupDemo = () => {
+      if (!isHeraSignupDemoPending()) return;
+      setGuidedDemo(true);
+      openChat();
+    };
+    window.addEventListener(HERA_SIGNUP_DEMO_EVENT, onSignupDemo);
+    return () => window.removeEventListener(HERA_SIGNUP_DEMO_EVENT, onSignupDemo);
+  }, [openChat]);
 
   useEffect(() => subscribeSynexusBootComplete(() => setBootReady(true)), []);
 
@@ -146,8 +165,20 @@ export function TitanSheet() {
       tokens,
       feedSource,
       moversBoard,
+      connectedWalletBrief: connectedWallet?.walletBrief ?? null,
     }),
-    [alertCount, feedSource, operatorName, plan, commanderLabel, tokens, watchlistCount, watchlistSymbols, moversBoard],
+    [
+      alertCount,
+      connectedWallet?.walletBrief,
+      feedSource,
+      operatorName,
+      plan,
+      commanderLabel,
+      tokens,
+      watchlistCount,
+      watchlistSymbols,
+      moversBoard,
+    ],
   );
 
   const fromWake = Boolean(wakeLaunch);
@@ -163,7 +194,7 @@ export function TitanSheet() {
           autoListen={autoListen}
           seedUtterance={fromWake && seed.length >= 6 ? seed : null}
           wakePulse={fromWake}
-          guidedDemo={false}
+          guidedDemo={guidedDemo}
         />
       ) : null}
 

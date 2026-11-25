@@ -21,3 +21,4 @@ android/**/*.keystore
 android/KEYSTORE-BACKUP.txt
 .vercel
 .env*
+public/rc-test-config.js

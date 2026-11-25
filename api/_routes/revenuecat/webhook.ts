@@ -1,10 +1,27 @@
+/**
+ * ARCHIVED — RevenueCat store webhook. Retained so historical App Store / Play
+ * events can still be ingested if REVENUECAT_ARCHIVED=false. Web billing is Paddle.
+ */
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { productTier, profilePlanForTier, webhookAuthorized } from "../../../lib/server/membership/policy.js";
-import { recordStoreEvent, syncProfilePlan } from "../../../lib/server/membership/store.js";
+import { productTier, webhookAuthorized } from "../../../lib/server/membership/policy.js";
+import { isRevenueCatArchived } from "../../../lib/server/membership/revenuecatArchive.js";
+import {
+  applyWebhookEvent,
+  type ApplyWebhookInput,
+  type ApplyWebhookResult,
+} from "../../../lib/server/membership/store.js";
 import { useApiRoute, type ConnectHandler, type ViteDevServer } from "../viteDevServer.js";
 
 type Env = Record<string, string | undefined>;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export type RevenueCatWebhookDeps = {
+  applyEvent: (env: Env, input: ApplyWebhookInput) => Promise<ApplyWebhookResult>;
+};
+
+const defaultDeps: RevenueCatWebhookDeps = {
+  applyEvent: applyWebhookEvent,
+};
 
 function send(res: Pick<ServerResponse, "statusCode" | "setHeader" | "end">, status: number, body: unknown) {
   res.statusCode = status;
@@ -14,7 +31,9 @@ function send(res: Pick<ServerResponse, "statusCode" | "setHeader" | "end">, sta
 }
 
 function statusFor(type: string): string | null {
-  if (["INITIAL_PURCHASE", "RENEWAL", "UNCANCELLATION", "PRODUCT_CHANGE", "SUBSCRIPTION_EXTENDED"].includes(type)) return "active";
+  if (["INITIAL_PURCHASE", "RENEWAL", "UNCANCELLATION", "PRODUCT_CHANGE", "SUBSCRIPTION_EXTENDED"].includes(type)) {
+    return "active";
+  }
   if (type === "CANCELLATION") return "canceled";
   if (type === "EXPIRATION" || type === "REFUND") return "expired";
   if (type === "BILLING_ISSUE") return "billing_issue";
@@ -33,24 +52,70 @@ async function readJson(req: IncomingMessage & { body?: unknown }): Promise<Reco
   return JSON.parse(raw) as Record<string, unknown>;
 }
 
-export async function handleRevenueCatWebhook(req: IncomingMessage, res: ServerResponse, env: Env): Promise<void> {
+export async function handleRevenueCatWebhook(
+  req: IncomingMessage,
+  res: ServerResponse,
+  env: Env,
+  deps: RevenueCatWebhookDeps = defaultDeps,
+): Promise<void> {
   if (req.method !== "POST") return send(res, 405, { error: "Method not allowed" });
+  if (isRevenueCatArchived(env)) {
+    return send(res, 503, { error: "RevenueCat is archived. Use Paddle webhooks." });
+  }
   const secret = env.REVENUECAT_WEBHOOK_AUTHORIZATION?.trim() ?? "";
   if (!secret) return send(res, 503, { error: "Webhook authorization is not configured." });
   const header = req.headers.authorization;
   if (!webhookAuthorized(Array.isArray(header) ? header[0] : header, secret)) {
+    console.error("[revenuecat/webhook] unauthorized");
     return send(res, 401, { error: "Unauthorized webhook." });
   }
-  const body = await readJson(req);
-  const event = (body.event ?? {}) as { type?: string; app_user_id?: string; product_id?: string; expiration_at_ms?: number | null };
-  const status = statusFor(event.type?.trim() ?? "");
+
+  let body: Record<string, unknown>;
+  try {
+    body = await readJson(req);
+  } catch (error) {
+    console.error("[revenuecat/webhook] invalid json", error);
+    return send(res, 400, { error: "Invalid JSON." });
+  }
+
+  const event = (body.event ?? {}) as {
+    id?: string;
+    type?: string;
+    app_user_id?: string;
+    product_id?: string;
+    expiration_at_ms?: number | null;
+  };
+  const type = event.type?.trim() ?? "";
+  const status = statusFor(type);
   const userId = event.app_user_id?.trim() ?? "";
+  const eventId = event.id?.trim() ?? "";
   if (!status || !UUID.test(userId)) return send(res, 200, { received: true, applied: false });
+  if (!eventId) return send(res, 200, { received: true, applied: false, reason: "missing_event_id" });
+
   const productId = event.product_id?.trim() || null;
   if (productId && !productTier(productId)) return send(res, 200, { received: true, applied: false });
+
   const expiresAt = typeof event.expiration_at_ms === "number" ? new Date(event.expiration_at_ms).toISOString() : null;
-  const saved = await recordStoreEvent(env, { userId, productId, status, expiresAt });
-  send(res, saved ? 200 : 503, { received: true, applied: saved });
+  const result = await deps.applyEvent(env, {
+    eventId,
+    userId,
+    eventType: type,
+    productId,
+    status,
+    expiresAt,
+  });
+
+  if (result === "duplicate") return send(res, 200, { received: true, applied: false, duplicate: true });
+  if (result === "unavailable") {
+    console.error("[revenuecat/webhook] ledger unavailable", eventId);
+    return send(res, 503, { error: "Webhook ledger unavailable." });
+  }
+  if (result === "failed") {
+    console.error("[revenuecat/webhook] apply failed", type, userId, eventId);
+    return send(res, 503, { received: true, applied: false });
+  }
+
+  send(res, 200, { received: true, applied: true });
 }
 
 export function configureRevenueCatWebhook(server: ViteDevServer, env: Env) {

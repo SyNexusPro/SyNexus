@@ -12,7 +12,7 @@ const LINKS: { id: string; title: string; body: string; to?: string; titan?: boo
   { id: "security", title: "Cybersecurity", body: "Risk checks and alerts.", to: "/pulse" },
   { id: "news", title: "News", body: "Market headlines.", to: "/news" },
   { id: "hub", title: "Hub", body: "Tools and ecosystem.", to: "/hub" },
-  { id: "trade", title: "Trade", body: "Swap on Solana with Titan safety.", to: "/trade" },
+  { id: "wallet", title: "Connect Wallet", body: "Link any Solana wallet with WalletConnect for read-only analysis.", to: "/wallet" },
 ];
 
 export function AndroidHomeStatic() {
@@ -29,8 +29,8 @@ export function AndroidHomeStatic() {
           fetchPriority="high"
           draggable={false}
         />
-        <h1 className="android-home__headline">One AI. Unlimited Intelligence.</h1>
-        <p className="android-home__lede">Markets. Business. Security. Automation.</p>
+        <h1 className="android-home__headline">Check a coin before you buy</h1>
+        <p className="android-home__lede">Paste a coin. Get a clear answer. Talk to Hera anytime.</p>
       </header>
 
       <nav className="android-home__grid" aria-label="Features">

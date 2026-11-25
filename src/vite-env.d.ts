@@ -15,6 +15,17 @@ interface ImportMetaEnv {
   readonly VITE_JUPITER_FEE_ACCOUNT?: string;
   /** Optional: Stripe Connect / Lemon Squeezy / other affiliate payout portal URL. */
   readonly VITE_AFFILIATE_PAYOUT_URL?: string;
+  /** Paddle.js client-side token (public). Never an API key or webhook secret. */
+  readonly VITE_PADDLE_CLIENT_TOKEN?: string;
+  readonly VITE_PADDLE_ENVIRONMENT?: string;
+  readonly VITE_PADDLE_NEXT_LEVEL_PRICE_ID?: string;
+  readonly VITE_PADDLE_PANTHEON_PRICE_ID?: string;
+  readonly VITE_PADDLE_NEXT_LEVEL_PRICE_ID_NO_TRIAL?: string;
+  readonly VITE_PADDLE_PANTHEON_PRICE_ID_NO_TRIAL?: string;
+  /** Must be "true" to open live/production Paddle checkout after your approval. */
+  readonly VITE_PADDLE_LIVE_CHECKOUT?: string;
+  /** RevenueCat is archived by default. Set "false" only for emergency rollback. */
+  readonly VITE_REVENUECAT_ARCHIVED?: string;
   /** Google Analytics 4 measurement ID (e.g. G-XXXXXXXXXX). */
   readonly VITE_GA_MEASUREMENT_ID?: string;
   /** AdSense home display unit slot ID (numeric string from AdSense dashboard). */

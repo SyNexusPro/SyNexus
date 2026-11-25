@@ -27,6 +27,7 @@ import { withTimeout } from "../lib/withTimeout";
 import { PasswordRecoveryPanel } from "./PasswordRecoveryPanel";
 import { attachPendingInvite, syncInviteRewardForUser } from "../lib/inviteEarn";
 import { syncProTrialForUser } from "../lib/proDemo";
+import { ensureComplimentaryNextLevel } from "../lib/membershipClient";
 import { queueHeraSignupDemo } from "../lib/heraSignupDemo";
 import { LanguagePicker } from "./LanguagePicker";
 import { PasswordRevealToggle } from "./PasswordRevealToggle";
@@ -53,8 +54,12 @@ type Props = {
   showTabs?: boolean;
 };
 
-function finishLinkedSession(userId: string) {
-  syncProTrialForUser(userId);
+function finishLinkedSession(userId: string, mode: "signin" | "signup" = "signin") {
+  if (mode === "signup") {
+    void ensureComplimentaryNextLevel(userId);
+  } else {
+    syncProTrialForUser(userId);
+  }
   void attachPendingInvite();
   void syncInviteRewardForUser();
 }
@@ -217,7 +222,7 @@ export function QuickOperatorLogin({
           return;
         }
 
-        finishLinkedSession(user!.id);
+        finishLinkedSession(user!.id, "signup");
         queueHeraSignupDemo();
         setMessage({ tone: "success", text: SIGNUP_WELCOME_ACTIVE });
         const mfaPath = mfaPathForNewSignup(user);

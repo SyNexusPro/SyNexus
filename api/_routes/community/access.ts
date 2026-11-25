@@ -29,7 +29,9 @@ async function respond(
         ? 403
         : access.reason === "account_restricted"
           ? 423
-          : 404;
+          : access.reason === "feature_disabled"
+            ? 403
+            : 404;
   res.setHeader("Cache-Control", "private, no-store");
   res.setHeader("Content-Type", "application/json");
   res.end(JSON.stringify(access));

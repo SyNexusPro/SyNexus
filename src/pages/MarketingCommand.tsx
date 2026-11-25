@@ -21,17 +21,17 @@ const CHECK_ITEMS: readonly CheckDef[] = [
   { id: "discord", label: "Post Discord update" },
   { id: "reply5", label: "Reply thoughtfully to 5 crypto posts (value, not spam)" },
   { id: "share", label: "Share live SyNexus app link responsibly" },
-  { id: "trial-promo", label: "Promote 30-day free Pro on sign-up · $9.99/mo after (X, TikTok, Telegram)" },
+  { id: "trial-promo", label: "Promote 30-day complimentary Next Level grant · $10/mo or Pantheon $20/mo after" },
 ] as const;
 
 const CONTENT_CALENDAR = [
-  { day: "Day 1", title: "Launch announcement", detail: "Tease SyNexus + 30 days of Pro free when you sign up." },
+  { day: "Day 1", title: "Launch announcement", detail: "Tease SyNexus + one-time 30-day Next Level grant (no card)." },
   { day: "Day 2", title: "Don’t get rugged", detail: "Sentinel Aegis framing on risk scans + pattern anomalies." },
   { day: "Day 3", title: "Sentinel Aegis risk scan", detail: "Walk through how risk overlays stay structured." },
   { day: "Day 4", title: "Whale tracking", detail: "Sentinel Leviathan cues + reading flow without guaranteeing moves." },
-  { day: "Day 5", title: "30-day free trial offer", detail: "Sign up · full Pro for 30 days · no card · $9.99/mo after if you subscribe." },
-  { day: "Day 6", title: "SyNexusPro benefits", detail: "Titan briefings, Sentinel grid, faster refresh — what trial unlocks." },
-  { day: "Day 7", title: "User feedback post", detail: "Amplify sober wins + trial-to-paid journey tone." },
+  { day: "Day 5", title: "30-day complimentary grant", detail: "Sign up · Next Level for 30 days · no card · not a store trial · $10/mo or Pantheon $20/mo after." },
+  { day: "Day 6", title: "Next Level + Pantheon", detail: "Next Level fees/features vs Pantheon social + $0 SyNexus fee." },
+  { day: "Day 7", title: "User feedback post", detail: "Amplify sober wins + grant-to-paid journey tone." },
 ] as const;
 
 function todayKey(): string {
@@ -196,7 +196,7 @@ export function MarketingCommand() {
           </h2>
         </div>
         <p className="marketing-cmd-card__muted">
-          Brand pillars: SyNexus · The SyNexus · Titan · Sentinels · SyNexusPro · $9.99/month ·
+          Brand pillars: SyNexus · The SyNexus · Titan · Sentinels · Next Level $10/mo · Pantheon $20/mo ·
           AI intelligence · Sentinel analysis · whales · momentum · risk scanning.
         </p>
 

@@ -12,39 +12,41 @@ export function RefundPolicy() {
       <p className="legal-page__eyebrow">{EFFECTIVE_LABEL}</p>
       <h1 className="legal-page__title">Refund Policy</h1>
       <p className="legal-page__summary">
-        This Refund Policy explains how refunds, cancellations, and billing disputes work for SyNexusPro and
-        other paid features offered by {OPERATOR_LABEL} (&quot;we,&quot; &quot;us&quot;). It supplements our{" "}
-        <Link to="/terms">Terms of Service</Link> and should be read with our{" "}
+        This Refund Policy explains how refunds, cancellations, and billing disputes work for SyNexus membership
+        (Next Level and Pantheon) and other paid features offered by {OPERATOR_LABEL} (&quot;we,&quot;
+        &quot;us&quot;). It supplements our <Link to="/terms">Terms of Service</Link> and should be read with our{" "}
         <Link to="/privacy">Privacy Policy</Link>.
       </p>
 
       <section className="legal-section marketing-panel">
         <h2>Overview</h2>
         <p>
-          SyNexusPro is a recurring subscription billed at{" "}
-          <strong>{SYNEXUS_PRO_PRICE_LABEL}</strong> (plus applicable taxes where required). Checkout and
-          recurring billing are processed by our third-party subscription and payment platform (the provider
-          shown at checkout). That provider may appear on your card or bank statement for your subscription.
+          Next Level is a recurring subscription billed at <strong>{SYNEXUS_PRO_PRICE_LABEL}</strong>. Pantheon is
+          billed at <strong>$20/month</strong> (plus applicable taxes where required). Checkout and recurring billing
+          are processed by our third-party subscription and payment platform (the provider shown at checkout). That
+          provider may appear on your card or bank statement for your subscription.
         </p>
       </section>
 
       <section className="legal-section marketing-panel">
-        <h2>Free trial</h2>
+        <h2>Complimentary Next Level grant</h2>
         <p>
-          Where offered, SyNexusPro includes a <strong>{SYNEXUS_PRO_TRIAL_DAYS}-day free trial</strong> after
-          you create and verify your account. No payment method is required to start the trial. You will not be
-          charged until you subscribe. If you subscribe after the trial, your payment method will be charged{" "}
-          {SYNEXUS_PRO_PRICE_LABEL} and billing will continue on a recurring monthly basis until you cancel.
+          Where offered, eligible verified accounts may receive a one-time{" "}
+          <strong>{SYNEXUS_PRO_TRIAL_DAYS}-day complimentary Next Level grant</strong> with no payment method
+          required. This is a promotional in-app grant, not a payment-provider subscription trial, and it can be used
+          only once per account. You will not be charged until you subscribe. If you subscribe after the grant ends,
+          your payment method will be charged the plan price shown at checkout and billing will continue on a
+          recurring monthly basis until you cancel.
         </p>
       </section>
 
       <section className="legal-section marketing-panel">
         <h2>Cancellation</h2>
         <p>
-          You may cancel SyNexusPro at any time through the billing portal or subscription tools linked
-          from Pulse and your account settings. Cancellation stops future renewals; it does not automatically
-          refund charges already processed. Paid access typically continues until the end of the current billing
-          period unless otherwise stated at checkout or required by law.
+          You may cancel Next Level or Pantheon at any time through the billing portal or subscription tools linked
+          from Pulse and your account settings. Cancellation stops future renewals; it does not automatically refund
+          charges already processed. Paid access typically continues until the end of the current billing period unless
+          otherwise stated at checkout or required by law.
         </p>
       </section>
 

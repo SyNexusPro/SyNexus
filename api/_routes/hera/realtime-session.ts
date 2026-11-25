@@ -8,6 +8,7 @@ import { useApiRoute, type ConnectHandler, type ViteDevServer } from "../viteDev
 import { HERA_CONVERSATION_INSTRUCTIONS, HERA_VOICE_INSTRUCTIONS } from "../../../src/lib/hera/heraPrompt.js";
 import { HERA_TOOL_LINE, HERA_VOICE_TOOLS } from "../../../src/lib/hera/voiceToolSpec.js";
 import { vadEagernessForPatience } from "../../../src/lib/hera/endpointing.js";
+import { loadAlexusLearningBrief } from "../../../lib/server/hera/alexusLearning.js";
 import { readHeraMind } from "../../../lib/server/hera/mindStore.js";
 import { requireHeraUser } from "../../../lib/server/heraGuard.js";
 
@@ -16,11 +17,7 @@ type Incoming = IncomingMessage & { body?: unknown };
 let sessionEnv: Record<string, string | undefined> = process.env;
 
 function openaiRealtimeKey(): string {
-  const openai = sessionEnv.OPENAI_API_KEY?.trim() || process.env.OPENAI_API_KEY?.trim() || "";
-  if (openai) return openai;
-  const titan = sessionEnv.TITAN_API_KEY?.trim() || process.env.TITAN_API_KEY?.trim() || "";
-  if (titan.startsWith("sk-") || titan.startsWith("sk_")) return titan;
-  return "";
+  return sessionEnv.OPENAI_API_KEY?.trim() || process.env.OPENAI_API_KEY?.trim() || "";
 }
 
 function sendJson(res: ServerResponse, status: number, body: unknown): void {
@@ -72,11 +69,17 @@ function liveInstructions(mind?: string): string {
 
 async function mindForSession(userId: string): Promise<string> {
   try {
-    const mind = await Promise.race([
-      readHeraMind(sessionEnv, userId, false).then((value) => value.context || ""),
-      new Promise<string>((resolve) => setTimeout(() => resolve(""), 500)),
+    const [mind, alexus] = await Promise.all([
+      Promise.race([
+        readHeraMind(sessionEnv, userId, false).then((value) => value.context || ""),
+        new Promise<string>((resolve) => setTimeout(() => resolve(""), 500)),
+      ]),
+      Promise.race([
+        loadAlexusLearningBrief(sessionEnv).catch(() => ""),
+        new Promise<string>((resolve) => setTimeout(() => resolve(""), 700)),
+      ]),
     ]);
-    return mind;
+    return [mind, alexus].filter((part) => typeof part === "string" && part.trim()).join("\n\n");
   } catch {
     return "";
   }
@@ -405,7 +408,6 @@ export function configureHeraRealtimeSessionApi(
   if (env) {
     for (const key of [
       "OPENAI_API_KEY",
-      "TITAN_API_KEY",
       "OPENAI_LIVE_MODEL",
       "OPENAI_REALTIME_MODEL",
       "OPENAI_REALTIME_VOICE",

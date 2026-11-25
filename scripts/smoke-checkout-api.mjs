@@ -1,5 +1,5 @@
 /**
- * Smoke test: local /api/checkout no longer starts a card checkout.
+ * Smoke test: /api/checkout stays a non-redirect stub (Paddle uses client overlay).
  * Run: node scripts/smoke-checkout-api.mjs
  */
 const BASE = process.env.SMOKE_BASE_URL ?? "http://localhost:5173";
@@ -12,9 +12,12 @@ async function main() {
   });
   const body = await res.json();
   if (res.status !== 503) {
-    throw new Error(`Checkout API failed (${res.status}): ${JSON.stringify(body)}`);
+    throw new Error(`Expected 503 from checkout stub (${res.status}): ${JSON.stringify(body)}`);
   }
-  console.log("OK — checkout is unavailable.");
+  if (!body?.error || typeof body.error !== "string") {
+    throw new Error(`Expected error message: ${JSON.stringify(body)}`);
+  }
+  console.log("OK — checkout stub returns 503:", body.error);
 }
 
 main().catch((err) => {

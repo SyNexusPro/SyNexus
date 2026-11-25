@@ -2,17 +2,17 @@ const STEPS = [
   {
     num: "01",
     title: "Paste any coin",
-    detail: "Drop a token name or mint address into the scanner.",
+    detail: "Drop a name like BONK, or the long coin ID from the chart.",
   },
   {
     num: "02",
     title: "Read your answer",
-    detail: "SyNexus gives a simple verdict — don't buy, wait, or looks okay.",
+    detail: "You get a plain call — don’t buy, wait, or looks okay.",
   },
   {
     num: "03",
     title: "Trade in your wallet",
-    detail: "You always sign in Phantom or your wallet. SyNexus never holds funds.",
+    detail: "You always approve the trade in your wallet. We never hold your money.",
   },
 ] as const;
 

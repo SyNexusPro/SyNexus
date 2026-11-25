@@ -113,6 +113,9 @@ export function OracleSupremeChat({
       if (!seed || isWakeOnlyUtterance(seed)) return "";
       return stripWakePrefix(seed) || seed;
     })(),
+    contextNote: context.connectedWalletBrief
+      ? `Connected external wallet (read-only): ${context.connectedWalletBrief}`
+      : undefined,
     onUserTurn: (text) => {
       if (ownerPhone && isOwnerDeskShowCommand(text)) {
         setDeskOpen(true);

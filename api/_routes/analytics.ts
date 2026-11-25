@@ -189,19 +189,41 @@ function readRequestBody(req: NodeJS.ReadableStream): Promise<string> {
 export function configureAnalyticsApi(server: ViteDevServer) {
   useApiRoute(server, "/api/analytics", async (req, res, next) => {
     if (req.method !== "POST") {
+      if (req.method === "GET" || req.method === "HEAD") {
+        res.statusCode = 405;
+        res.setHeader("Content-Type", "application/json");
+        res.setHeader("Allow", "POST");
+        res.end(JSON.stringify({ error: "Method not allowed" }));
+        return;
+      }
       next();
       return;
     }
     try {
-      const payload = JSON.parse(await readRequestBody(req)) as AnalyticsPayload;
+      const raw = await readRequestBody(req);
+      let payload: AnalyticsPayload = {};
+      if (raw.trim()) {
+        try {
+          payload = JSON.parse(raw) as AnalyticsPayload;
+        } catch {
+          res.statusCode = 400;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: "Invalid JSON body." }));
+          return;
+        }
+      }
       const result = await handleAnalyticsRequest(payload);
       res.statusCode = result.statusCode;
       res.setHeader("Content-Type", "application/json");
       res.end(JSON.stringify(result.body));
-    } catch {
-      res.statusCode = 500;
+    } catch (err) {
+      res.statusCode = 503;
       res.setHeader("Content-Type", "application/json");
-      res.end(JSON.stringify({ error: "Analytics request failed." }));
+      res.end(
+        JSON.stringify({
+          error: err instanceof Error ? err.message : "Analytics request failed.",
+        }),
+      );
     }
   });
 }

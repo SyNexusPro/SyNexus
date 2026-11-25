@@ -1,7 +1,8 @@
+import { SYN_WALLET_DEV_PATH } from "./connectWallet";
 import { resolveSolanaCluster } from "./solanaCluster";
 
-/** SyN Wallet — self-custodial Solana wallet inside SyNexus. */
-export const SYN_WALLET_PATH = "/wallet";
+/** SyN Wallet — preserved self-custodial wallet (owner/dev only for this release). */
+export const SYN_WALLET_PATH = SYN_WALLET_DEV_PATH;
 export const SYN_WALLET_PRODUCT_NAME = "SyN Wallet";
 export const SYN_WALLET_TAGLINE = "Scan. Sign. Own.";
 

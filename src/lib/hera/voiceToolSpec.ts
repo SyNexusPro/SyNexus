@@ -35,7 +35,8 @@ export const HERA_VOICE_TOOLS: readonly VoiceToolSpec[] = [
   {
     type: "function",
     name: "alexus_learning",
-    description: "Read Alexus paper-trading lessons. Not a trade instruction and not a change to her settings.",
+    description:
+      "Check on Alexus — Hera's paper-trading charge. Returns watch status and paper lessons. Not a trade, unpause, or settings change.",
     parameters: { type: "object", properties: {}, required: [], additionalProperties: false },
   },
   {
@@ -52,6 +53,6 @@ export const HERA_VOICE_TOOLS: readonly VoiceToolSpec[] = [
 ];
 
 export const HERA_TOOL_LINE =
-  "You can look up stored research, public venue prices, Alexus paper lessons, and a quote comparison. " +
+  "You can look up stored research, public venue prices, a quote comparison, and Alexus — your paper-trading charge you guide and watch over. " +
   "Call a tool only when the answer depends on it. A greeting or a question you can answer directly needs no tool. " +
-  "If a tool says unavailable or empty, say that. Do not claim a lookup you did not receive. Do not place a trade.";
+  "If a tool says unavailable or empty, say that. Do not claim a lookup you did not receive. Do not place a trade or unpause Alexus.";

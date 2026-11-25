@@ -24,12 +24,23 @@ export async function handleMembershipTrial(req: IncomingMessage, res: ServerRes
   const membership = await resolveMembership(req, env);
   if (!membership.authenticated || !membership.userId) return send(res, 401, { error: "Sign in to start the trial." });
   if (membership.owner) return send(res, 200, { ...membership, trial: "owner" });
-  if (membership.source === "revenuecat") return send(res, 409, { error: "A store subscription is already active." });
+  if (membership.source === "revenuecat" || membership.source === "paddle") {
+    return send(res, 409, { error: "A store subscription is already active." });
+  }
+  if (!membership.trialEligible) {
+    return send(res, 409, {
+      error: "A free trial was already used on this account. Paid plans remain available.",
+    });
+  }
   const result = await startComplimentaryTrial(env, membership.userId);
-  if (result === "unavailable") return send(res, 503, { error: "The trial ledger is not connected." });
-  if (result === "used") return send(res, 409, { error: "The 30-day trial can only be used once." });
+  if (result === "unavailable") return send(res, 503, { error: "The complimentary grant ledger is not connected." });
+  if (result === "used") {
+    return send(res, 409, {
+      error: "The 30-day complimentary Next Level grant can only be used once per account.",
+    });
+  }
   const next = await resolveMembership(req, env);
-  send(res, 200, { ...next, trial: "started" });
+  send(res, 200, { ...next, trial: "started", grantKind: "complimentary_next_level" });
 }
 
 export async function handleMembershipRestore(req: IncomingMessage, res: ServerResponse, env: Env): Promise<void> {

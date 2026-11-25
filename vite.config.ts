@@ -36,6 +36,8 @@ import { configureRealtimeBridge } from "./api/_routes/realtime/bridge";
 import { configureCommunityAccessApi } from "./api/_routes/community/access";
 import { configureMembershipApi } from "./api/_routes/membership/index";
 import { configureRevenueCatWebhook } from "./api/_routes/revenuecat/webhook";
+import { configurePaddleWebhook } from "./api/_routes/paddle/webhook";
+import { configurePaddlePortal } from "./api/_routes/paddle/portal";
 import { configureTradeApi } from "./api/_routes/trade/quote";
 
 /** Client bundle reads only VITE_* from import.meta.env; Vercel often sets SUPABASE_* without the prefix. */
@@ -100,6 +102,8 @@ export default defineConfig(({ mode }) => {
           configureCommunityAccessApi(server, env);
           configureMembershipApi(server, env);
           configureRevenueCatWebhook(server, env);
+          configurePaddleWebhook(server, env);
+          configurePaddlePortal(server, env);
           configureTradeApi(server, env);
           configureOwnerUnlockApi(server, env);
           configureOwnerBriefApi(server, env);

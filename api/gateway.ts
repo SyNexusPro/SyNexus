@@ -16,6 +16,8 @@ const loaders: Record<string, () => Promise<RouteModule>> = {
   "/api/membership/trial": () => import("./_routes/membership/index.js"),
   "/api/membership/restore": () => import("./_routes/membership/index.js"),
   "/api/revenuecat/webhook": () => import("./_routes/revenuecat/webhook.js"),
+  "/api/paddle/webhook": () => import("./_routes/paddle/webhook.js"),
+  "/api/paddle/portal": () => import("./_routes/paddle/portal.js"),
   "/api/trade/quote": () => import("./_routes/trade/quote.js"),
   "/api/trade/swap": () => import("./_routes/trade/quote.js"),
   "/api/dashboard": () => import("./_routes/dashboard.js"),

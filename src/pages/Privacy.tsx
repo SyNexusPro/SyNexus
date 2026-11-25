@@ -43,6 +43,13 @@ export function Privacy() {
           locally on your device (for example via browser or app storage).
         </p>
         <p>
+          <strong>External wallets.</strong> When you use Connect Wallet, SyNexus requests a public Solana address
+          from your wallet app (for example Phantom, Solflare, or Backpack) to show balances and run advisory
+          analysis. We do not request, receive, or store private keys, seed phrases, or recovery phrases. Wallet
+          connection sessions can be disconnected from the app; signing stays in your wallet app if transaction
+          features are later enabled with your approval.
+        </p>
+        <p>
           <strong>Microphone and Hera wake word.</strong> If you enable Listen, SyNexus uses the microphone while
           the app is in the foreground to detect the spoken wake word “Hera” (or “Titan”). That wake-word detection runs on
           the device (web: browser speech engine; Android: on-device recognizer). We do not continuously upload

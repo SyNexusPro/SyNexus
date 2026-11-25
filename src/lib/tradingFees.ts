@@ -11,7 +11,9 @@ export type { SynexusPlan, TradingFeeAllocationId };
 export const PLAN_STORAGE_KEY = "synexus_paid_plan";
 
 export function normalizeSynexusPlan(plan: string | null | undefined): SynexusPlan {
-  return plan === "PRO" ? "PRO" : "FREE";
+  if (plan === "PRO") return "PRO";
+  if (plan === "BASIC") return "BASIC";
+  return "FREE";
 }
 
 export function getTradingFeeBps(plan: SynexusPlan): number {

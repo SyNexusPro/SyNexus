@@ -76,6 +76,7 @@ test("the system prompt carries the desk and the lesson without turning them int
   } satisfies TitanPromptInput;
   const prompt = buildTitanSystemPrompt(input);
   assert.match(prompt, /VENUE DESK/);
-  assert.match(prompt, /ALEXUS LEARNING/);
-  assert.match(prompt, /cannot trade/);
+  assert.match(prompt, /ALEXUS WATCH/);
+  assert.match(prompt, /guide and watch over Alexus/);
+  assert.match(prompt, /never trade/);
 });

@@ -1,7 +1,8 @@
-/** SyNexus trading fee tiers (100 bps = 1%). */
+/** SyNexus trading fee tiers (100 bps = 1%). Matches server membership policy. */
 export const TRADING_FEE_BPS = {
   FREE: 10,
-  PRO: 5,
+  BASIC: 5,
+  PRO: 0,
 } as const;
 
 export type SynexusPlan = keyof typeof TRADING_FEE_BPS;

@@ -21,33 +21,73 @@ export type OnboardingStep = {
   interactHint?: string;
 };
 
-export function getOnboardingSteps(opts: { android: boolean; listenVisible: boolean }): OnboardingStep[] {
+function scanStep(android: boolean): OnboardingStep {
+  return android
+    ? {
+        id: "scan",
+        title: "Check a coin",
+        body: "Tap Scan to open your tools. Paste a coin name or its long ID to get Don’t buy, Wait, or Looks okay.",
+        target: "android-scan-card",
+        route: "/",
+        interactHint: "Tap Scan to open it, or press Next.",
+      }
+    : {
+        id: "scan",
+        title: "Check a coin",
+        body: "Paste a coin name or its long ID here. You’ll get a plain answer — and you always approve trades in your own wallet.",
+        target: "scan-input",
+        route: "/",
+        interactHint: "Type a coin, or tap BONK / SYN / SOL, then continue.",
+      };
+}
+
+function listenStep(): OnboardingStep {
+  return {
+    id: "listen",
+    title: "Talk to Hera",
+    body: "Turn on Listen, then say “Hera”. She opens and hears you. If the mic is blocked, this same control lets you type instead.",
+    target: "nav-listen",
+    interactHint: "Tap Listen if you want her waiting — or skip this for later.",
+  };
+}
+
+function loginStep(): OnboardingStep {
+  return {
+    id: "login",
+    title: "Save your account",
+    body: "Sign in to keep watchlists, unlimited scans, and membership. You can explore without an account — this is here when you want it.",
+    target: "nav-login",
+    interactHint: "Tap Login to sign in, or press Next to keep going.",
+  };
+}
+
+/**
+ * First-run: Scan → Listen → Login (3 steps). Replay / ?tour=1 gets the fuller walkthrough.
+ */
+export function getOnboardingSteps(opts: {
+  android: boolean;
+  listenVisible: boolean;
+  /** Compact first-run path (default false = full tour). */
+  compact?: boolean;
+}): OnboardingStep[] {
   const scanRoute = opts.android ? "/pulse" : "/";
+
+  if (opts.compact) {
+    const steps: OnboardingStep[] = [scanStep(opts.android)];
+    if (opts.listenVisible) steps.push(listenStep());
+    steps.push(loginStep());
+    return steps;
+  }
+
   const steps: OnboardingStep[] = [
     {
       id: "welcome",
       title: "Welcome to SyNexus",
-      body: "Scan a token before you buy, talk to Hera, and keep watchlists on your operator account. This walkthrough highlights the real buttons — you can use them as we go.",
+      body: "Check a coin before you buy, talk to Hera, and save your stuff when you sign in. This walkthrough highlights the real buttons — you can tap them as we go.",
       target: "welcome-brand",
       route: "/",
     },
-    opts.android
-      ? {
-          id: "scan",
-          title: "Scan a token",
-          body: "Tap Scan to open the command center. Paste a coin name or mint address to get Avoid, Watch, or OK in plain English.",
-          target: "android-scan-card",
-          route: "/",
-          interactHint: "Tap Scan to open it, or press Next.",
-        }
-      : {
-          id: "scan",
-          title: "Scan a token",
-          body: "Paste a Solana token name or mint address here. SyNexus returns Avoid, Watch, or OK — you always sign in your own wallet.",
-          target: "scan-input",
-          route: "/",
-          interactHint: "Type a token, or tap BONK / SYN / SOL, then continue.",
-        },
+    scanStep(opts.android),
     {
       id: "scan-go",
       title: "Run the scan",
@@ -58,35 +98,21 @@ export function getOnboardingSteps(opts: { android: boolean; listenVisible: bool
     },
   ];
 
-  if (opts.listenVisible) {
-    steps.push({
-      id: "listen",
-      title: "Talk to Hera",
-      body: "Turn on Listen, then say “Hera” or “Titan”. She opens and hears you. If the mic is blocked, this same control lets you type instead.",
-      target: "nav-listen",
-      interactHint: "Tap Listen if you want her waiting — or skip this for later.",
-    });
-  }
+  if (opts.listenVisible) steps.push(listenStep());
 
   steps.push(
-    {
-      id: "login",
-      title: "Save your account",
-      body: "Log in to keep watchlists, unlimited scans, and Pro. You can explore without an account — this is here when you want it.",
-      target: "nav-login",
-      interactHint: "Tap Login to sign in, or press Next to keep going.",
-    },
+    loginStep(),
     {
       id: "hub",
       title: "Hub",
-      body: "Affiliates, $SYN, and staking live here. The bottom bar is your map: Scan, Hub, Login, and Listen.",
+      body: "Extras live here — invites, $SYN, and more. The bottom bar is your map: Scan, Hub, Login, and Listen.",
       target: "hub-hero",
       route: "/hub",
     },
     {
       id: "done",
       title: "You’re set",
-      body: "Scan before you buy, ask Hera when you want a second read, and use Hub for the ecosystem. Skip this tour anytime from the button below if you’d rather poke around.",
+      body: "Check a coin before you buy, ask Hera when you want a second opinion, and poke around Hub when you’re curious. Skip this tour anytime below.",
       target: null,
     },
   );

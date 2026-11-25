@@ -32,8 +32,8 @@ export function BeginnerModeCoach() {
       <div className="beginner-coach__body">
         <p className="beginner-coach__eyebrow">You&apos;re in Easy mode</p>
         <p className="beginner-coach__text">
-          We hide the complex stuff. Paste a token, get a plain answer, then switch to{" "}
-          <strong>Advanced</strong> when you want the full Sentinel grid.
+          We hide the complex stuff. Paste a coin, get a plain answer, then switch to{" "}
+          <strong>Advanced</strong> when you want live alerts and pro tools.
         </p>
       </div>
       <button type="button" className="beginner-coach__close" onClick={dismiss} aria-label="Dismiss">

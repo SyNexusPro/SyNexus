@@ -248,13 +248,18 @@ export function HomeFeed() {
             decoding="async"
             fetchPriority="high"
           />
-          <h1 className="home-command__headline">One AI. Unlimited Intelligence.</h1>
+          <h1 className="home-command__headline">
+            {isSimple ? "Check a coin before you buy" : "One AI. Unlimited Intelligence."}
+          </h1>
           {listenEnabled && !nativeAndroid ? <EnterSynexusButton /> : null}
           <p className="home-command__lede">
-            Markets. Business. Security. Automation. All Connected.
+            {isSimple
+              ? "Paste a coin. Get a clear yes, wait, or don’t. Talk to Hera anytime."
+              : "Markets. Business. Security. Automation. All Connected."}
           </p>
         </div>
 
+        {isSimple ? null : (
         <div className="home-feature-grid" role="list">
           {featureCards.map((card) => {
             const inner = (
@@ -292,6 +297,7 @@ export function HomeFeed() {
             );
           })}
         </div>
+        )}
       </section>
 
       <div className="home-command-tools">
@@ -318,9 +324,9 @@ export function HomeFeed() {
                 <p>See wins, losses, and habits — your trading stats in one place.</p>
               </Link>
               <button type="button" className="simple-launch-links__card" onClick={enableHeraWakeWordFromUi}>
-                <p className="simple-launch-links__eyebrow">Bonus · Command</p>
+                <p className="simple-launch-links__eyebrow">Bonus · Ask</p>
                 <h2>Say Hera</h2>
-                <p>Turn on Listen, then say “Hera” — she opens and hears your question.</p>
+                <p>Turn on Listen, then say “Hera” — ask her about any coin in plain English.</p>
               </button>
             </section>
 

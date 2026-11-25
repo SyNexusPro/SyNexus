@@ -1,8 +1,7 @@
-import { isSignupTrialGrantSource, SYNEXUS_PRO_TRIAL_GRANT_SOURCE, SYNEXUS_PRO_TRIAL_MS } from "../config/proTrial";
+import { isSignupTrialGrantSource, SYNEXUS_PRO_TRIAL_MS } from "../config/proTrial";
 import { notifySynexusPlanChanged } from "../hooks/useSynexusPlan";
 import { hasStoredOwnerGrant } from "./ownerAccess";
 import { PLAN_STORAGE_KEY } from "./tradingFees";
-import { recordTrustedPlanGrant } from "./securityBot";
 
 /** Active trial end timestamp (ms). */
 export const PRO_TRIAL_UNTIL_KEY = "synexus_pro_trial_until";
@@ -17,7 +16,7 @@ export const PRO_TRIAL_DURATION_MS = SYNEXUS_PRO_TRIAL_MS;
 
 const PAID_GRANT_SOURCES = new Set([
   "subscription_checkout",
-  "square_checkout",
+  "paddle_checkout",
   "supabase_profile",
   "owner",
   "admin",
@@ -108,8 +107,8 @@ function writeTrialUntil(until: number, userId: string) {
     localStorage.setItem(PRO_TRIAL_STARTED_KEY, "1");
     localStorage.setItem(PRO_TRIAL_USER_ID_KEY, userId);
     localStorage.removeItem(PRO_DEMO_UNTIL_KEY);
-    recordTrustedPlanGrant("PRO", SYNEXUS_PRO_TRIAL_GRANT_SOURCE);
-    localStorage.setItem(PLAN_STORAGE_KEY, "PRO");
+    // Complimentary grant is Next Level (BASIC), never Pantheon (PRO).
+    localStorage.setItem(PLAN_STORAGE_KEY, "BASIC");
   } catch {
     /* ignore */
   }
@@ -133,7 +132,8 @@ export function clearExpiredProDemo(now = Date.now()): boolean {
   const trialGrant = isSignupTrialGrantSource(grantSource);
 
   try {
-    if (trialGrant && localStorage.getItem(PLAN_STORAGE_KEY) === "PRO") {
+    const plan = localStorage.getItem(PLAN_STORAGE_KEY);
+    if (trialGrant && (plan === "PRO" || plan === "BASIC")) {
       localStorage.setItem(PLAN_STORAGE_KEY, "FREE");
       notifySynexusPlanChanged();
     }
@@ -163,7 +163,7 @@ export function startProTrial(userId: string, now = Date.now()): number {
   return startProDemo(userId, now);
 }
 
-/** Re-apply trusted trial grant after reload (sessionStorage grant is lost on restart). */
+/** Re-apply an active complimentary Next Level grant after reload. */
 export function restoreProTrialGrant(userId: string, now = Date.now()): boolean {
   if (!userId || userId.startsWith("demo-")) return false;
   clearExpiredProDemo(now);
@@ -172,10 +172,9 @@ export function restoreProTrialGrant(userId: string, now = Date.now()): boolean 
   const trialUserId = localStorage.getItem(PRO_TRIAL_USER_ID_KEY);
   if (!trialUserId || trialUserId !== userId || !isProTrialActive(now)) return false;
 
-  recordTrustedPlanGrant("PRO", SYNEXUS_PRO_TRIAL_GRANT_SOURCE);
   try {
-    if (localStorage.getItem(PLAN_STORAGE_KEY) !== "PRO") {
-      localStorage.setItem(PLAN_STORAGE_KEY, "PRO");
+    if (localStorage.getItem(PLAN_STORAGE_KEY) !== "BASIC") {
+      localStorage.setItem(PLAN_STORAGE_KEY, "BASIC");
     }
   } catch {
     /* ignore */
@@ -193,32 +192,27 @@ export function restoreActiveProTrialGrant(now = Date.now()): boolean {
 }
 
 /**
- * Start the 30-day free Pro trial after a verified sign-up / sign-in.
- * No card. One trial per user; a paid subscription overrides trial access.
+ * Local mirror helper for an already-started complimentary grant.
+ * New grants must go through POST /api/membership/trial (server one-shot ledger).
  */
 export function ensureProTrialAfterSignup(userId: string, now = Date.now()): boolean {
   if (!userId || userId.startsWith("demo-")) return false;
   clearExpiredProDemo(now);
   if (hasPaidProGrant()) return false;
-
-  const trialUserId = localStorage.getItem(PRO_TRIAL_USER_ID_KEY);
-  if (isProTrialActive(now)) {
-    if (trialUserId === userId) {
-      restoreProTrialGrant(userId, now);
-      return true;
-    }
-    return false;
-  }
-
-  if (hasProTrialBeenUsed(userId)) return false;
-
-  startProDemo(userId, now);
-  return true;
+  return restoreProTrialGrant(userId, now);
 }
 
-/** Restore or start trial for a verified operator after auth. */
+/** Restore a local complimentary grant mirror only — does not auto-start. */
 export function syncProTrialForUser(userId: string, now = Date.now()): boolean {
-  return restoreProTrialGrant(userId, now) || ensureProTrialAfterSignup(userId, now);
+  return restoreProTrialGrant(userId, now);
+}
+
+/** Mirror a server complimentary Next Level grant into local UI state. */
+export function mirrorComplimentaryNextLevelGrant(userId: string, endsAt: string | null, now = Date.now()): void {
+  if (!userId || userId.startsWith("demo-")) return;
+  const ends = endsAt ? Date.parse(endsAt) : now + PRO_TRIAL_DURATION_MS;
+  if (!Number.isFinite(ends) || ends <= now) return;
+  writeTrialUntil(ends, userId);
 }
 
 /** @deprecated Use ensureProTrialAfterSignup after verified sign-in. */
@@ -232,10 +226,8 @@ export function endProDemo() {
     localStorage.removeItem(PRO_TRIAL_UNTIL_KEY);
     localStorage.removeItem(PRO_DEMO_UNTIL_KEY);
     const grantSource = readPlanGrantSource();
-    if (
-      isSignupTrialGrantSource(grantSource) &&
-      localStorage.getItem(PLAN_STORAGE_KEY) === "PRO"
-    ) {
+    const plan = localStorage.getItem(PLAN_STORAGE_KEY);
+    if (isSignupTrialGrantSource(grantSource) && (plan === "PRO" || plan === "BASIC")) {
       localStorage.setItem(PLAN_STORAGE_KEY, "FREE");
     }
   } catch {

@@ -35,6 +35,7 @@ export function SynexusSubscribeButton({
         onCheckoutError?.(checkout.error);
         return;
       }
+      if (checkout.openedOverlay || checkout.openedExternally) return;
       redirectToProCheckout(checkout.url);
     } catch {
       onCheckoutError?.("Checkout could not be opened. Please try again.");

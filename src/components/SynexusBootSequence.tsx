@@ -14,19 +14,19 @@ import {
 import { notifySynexusBootComplete } from "../lib/synexusBootComplete";
 
 const PHASE_COPY: readonly string[] = [
-  "SYNEXUS INITIALIZING",
-  "WELCOME TO THE SYNEXUS",
-  "DEPLOYING SENTINELS",
-  "MARKET FEED LIVE — NOTHING MOVES UNSEEN",
-  "ENTER THE SYNEXUS",
+  "GETTING SYNEXUS READY",
+  "WELCOME TO SYNEXUS",
+  "LOADING YOUR HELPERS",
+  "LIVE MARKETS — READY WHEN YOU ARE",
+  "LET'S GO",
 ] as const;
 
 const SENTINELS = [
-  { name: AEGIS_SENTINEL_NAME, role: `${AEGIS_ROLE} — scams, rugs, and operator privacy.` },
-  { name: "Sentinel Pulse", role: "Reads momentum as it breaks." },
-  { name: "Sentinel Leviathan", role: "Shadows the whale wallets." },
-  { name: "Sentinel Cipher", role: "Decodes patterns with AI." },
-  { name: "Sentinel Helix", role: "Guards SyN Wallet keys and every signature." },
+  { name: AEGIS_SENTINEL_NAME, role: `${AEGIS_ROLE} — flags scams and sketchy coins.` },
+  { name: "Sentinel Pulse", role: "Spots when a coin starts moving." },
+  { name: "Sentinel Leviathan", role: "Watches big wallet buys and sells." },
+  { name: "Sentinel Cipher", role: "Uses AI to read the pattern." },
+  { name: "Sentinel Helix", role: "Keeps your wallet keys and signatures safe." },
 ] as const;
 
 type Props = {

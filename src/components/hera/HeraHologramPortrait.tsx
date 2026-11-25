@@ -8,10 +8,25 @@ import { nextSpeechNod, speechPose } from "../../lib/hera/speechMotion";
 
 /** New holographic Hera (head-and-shoulders, not the old green android bust). */
 export const HERA_FACE_SRC = "/hera/hera-face.jpg?v=holo-v2";
+/** Upper lids only. No iris. Same pixel size as the portrait so it stays aligned. */
+const HERA_LIDS_SRC = "/hera/hera-lids.png?v=lid-v5";
 
-function blinkEase(amount: number): number {
-  const x = Math.max(0, Math.min(1, amount));
-  return x * x * (3 - 2 * x);
+/** Slide the lid sheet down over the still eye. Hidden at rest so the photo is unchanged. */
+function applyLid(el: HTMLElement | null, blink: number) {
+  if (!el) return;
+  const sheet = el.querySelector("img");
+  if (!(sheet instanceof HTMLElement)) return;
+  const amount = Math.max(0, Math.min(1, blink));
+  if (amount < 0.01) {
+    if (el.style.opacity !== "0") el.style.opacity = "0";
+    if (sheet.style.transform !== "none" && sheet.style.transform !== "") {
+      sheet.style.transform = "none";
+    }
+    return;
+  }
+  const travel = Number(el.dataset.travel || "5.5");
+  el.style.opacity = "1";
+  sheet.style.transform = `translateY(${(amount * travel).toFixed(3)}%)`;
 }
 
 function applyFeat(el: HTMLElement | null, transform: string, origin: string) {
@@ -21,8 +36,8 @@ function applyFeat(el: HTMLElement | null, transform: string, origin: string) {
 }
 
 /**
- * Image-based holographic Hera. The portrait PNG stays as-is.
- * Only the lash line flicks on a blink — nothing else on the face moves for that.
+ * Image-based holographic Hera. One portrait only.
+ * A second copy of the eye is not drawn over the original.
  */
 export function HeraHologramPortrait({
   state = "idle",
@@ -38,9 +53,9 @@ export function HeraHologramPortrait({
   const stackRef = useRef<HTMLDivElement>(null);
   const faceRef = useRef<HTMLImageElement>(null);
   const scanRef = useRef<HTMLDivElement>(null);
-  const lashLRef = useRef<HTMLDivElement>(null);
-  const lashRRef = useRef<HTMLDivElement>(null);
   const lipLRef = useRef<HTMLDivElement>(null);
+  const lidLRef = useRef<HTMLDivElement>(null);
+  const lidRRef = useRef<HTMLDivElement>(null);
   const openingRef = useRef<HTMLSpanElement>(null);
   const lipEnvRef = useRef(0);
   const poseRef = useRef({ x: 0, y: 0, rx: 0, ry: 0, rz: 0 });
@@ -57,6 +72,7 @@ export function HeraHologramPortrait({
   visemeRef.current = viseme;
 
   useEffect(() => {
+    heraFaceController.reducedMotion = reducedMotion;
     let raf = 0;
     let t0 = performance.now();
     const tick = (now: number) => {
@@ -82,7 +98,7 @@ export function HeraHologramPortrait({
       }
 
       heraFaceController.tick(now);
-      const w = heraFaceController.current;
+      const weights = heraFaceController.current;
       const glowLevel = speaking ? open : listening ? 0.2 : thinking ? 0.14 : 0.08;
 
       if (!reducedMotion && stack) {
@@ -120,20 +136,10 @@ export function HeraHologramPortrait({
       }
 
       if (!reducedMotion) {
-        const blinkL = blinkEase(w.eyeBlinkLeft);
-        const blinkR = blinkEase(w.eyeBlinkRight);
         const jaw = open;
+        applyLid(lidLRef.current, weights.eyeBlinkLeft);
+        applyLid(lidRRef.current, weights.eyeBlinkRight);
 
-        applyFeat(
-          lashLRef.current,
-          `translateY(${(blinkL * 3.1).toFixed(2)}px)`,
-          "38% 42.8%",
-        );
-        applyFeat(
-          lashRRef.current,
-          `translateY(${(blinkR * 3.1).toFixed(2)}px)`,
-          "62% 42.8%",
-        );
         applyFeat(
           lipLRef.current,
           `translateY(${(jaw * 6.2).toFixed(2)}px)`,
@@ -203,11 +209,19 @@ export function HeraHologramPortrait({
         />
         {reducedMotion ? null : (
           <>
-            <div ref={lashLRef} className="hera-hologram__feat hera-hologram__feat--lash-l">
-              <img src={HERA_FACE_SRC} alt="" draggable={false} />
+            <div
+              ref={lidLRef}
+              className="hera-hologram__feat hera-hologram__lid hera-hologram__lid--l"
+              data-travel="6.076"
+            >
+              <img src={HERA_LIDS_SRC} alt="" draggable={false} />
             </div>
-            <div ref={lashRRef} className="hera-hologram__feat hera-hologram__feat--lash-r">
-              <img src={HERA_FACE_SRC} alt="" draggable={false} />
+            <div
+              ref={lidRRef}
+              className="hera-hologram__feat hera-hologram__lid hera-hologram__lid--r"
+              data-travel="6.250"
+            >
+              <img src={HERA_LIDS_SRC} alt="" draggable={false} />
             </div>
             <div ref={lipLRef} className="hera-hologram__feat hera-hologram__feat--lip-l">
               <img src={HERA_FACE_SRC} alt="" draggable={false} />

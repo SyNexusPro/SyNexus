@@ -1,5 +1,10 @@
+/**
+ * ARCHIVED — RevenueCat native purchases. Kept for rollback only.
+ * Web billing is Paddle. See src/lib/revenuecatArchive.ts.
+ */
 import { Capacitor } from "@capacitor/core";
 import { Purchases, PURCHASES_ERROR_CODE } from "@revenuecat/purchases-capacitor";
+import { isRevenueCatArchived } from "./revenuecatArchive";
 
 const NEXT_LEVEL_MONTHLY = "$rc_custom_next_level_monthly";
 const NEXT_LEVEL_ANNUAL = "$rc_custom_next_level_annual";
@@ -20,15 +25,21 @@ const STORE_PRODUCTS: Record<NativePackageId, string> = {
 };
 
 function publicSdkKey(): string {
-  return (import.meta.env.VITE_REVENUECAT_TEST_API_KEY || import.meta.env.VITE_REVENUECAT_API_KEY || "").trim();
+  const useTestStore = String(import.meta.env.VITE_REVENUECAT_USE_TEST_STORE || "").trim().toLowerCase() === "true";
+  const testKey = (import.meta.env.VITE_REVENUECAT_TEST_API_KEY || "").trim();
+  const liveKey = (import.meta.env.VITE_REVENUECAT_API_KEY || "").trim();
+  // Never prefer the Test Store key unless the explicit test flag is on.
+  if (useTestStore && testKey) return testKey;
+  return liveKey || testKey;
 }
 
 export function nativePurchasesAvailable(): boolean {
+  if (isRevenueCatArchived()) return false;
   return Capacitor.isNativePlatform() && Boolean(publicSdkKey());
 }
 
 export async function syncRevenueCatUser(userId: string | null): Promise<void> {
-  if (!nativePurchasesAvailable()) return;
+  if (isRevenueCatArchived() || !nativePurchasesAvailable()) return;
   const apiKey = publicSdkKey();
   if (!userId) {
     await Purchases.configure({ apiKey });

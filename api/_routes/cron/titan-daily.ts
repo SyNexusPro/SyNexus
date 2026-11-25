@@ -1,36 +1,35 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { useApiRoute, type ViteDevServer } from "../viteDevServer.js";
-import { openWhenSecretMissing } from "../../../lib/server/cronGuard.js";
+import { authorizeCronRequest } from "../../../lib/server/cronGuard.js";
 import { ingestCryptoLearning } from "../../../lib/server/hera/cryptoLearning.js";
 import { supabaseAdminFromEnv } from "../../../lib/server/titan/authPlan.js";
-import { GROQ_DEFAULT_STRONG, remapGroqModel } from "../../../lib/server/titan/groqModels.js";
 import { scanEmergingSolanaAssets, persistDiscoveryEvaluations } from "../../../lib/server/titan/discoveryScan.js";
 
 type Env = Record<string, string | undefined>;
 
 function authorize(req: IncomingMessage, env: Env): boolean {
-  const secret = env.CRON_SECRET?.trim() || env.TITAN_EVENT_SECRET?.trim() || "";
-  if (!secret) return openWhenSecretMissing(env);
-  const auth = typeof req.headers.authorization === "string" ? req.headers.authorization : "";
-  const header = typeof req.headers["x-cron-secret"] === "string" ? req.headers["x-cron-secret"] : "";
-  return auth.includes(secret) || header === secret;
+  return authorizeCronRequest(req, env, { allowTitanEventSecret: true });
 }
 
 function resolveLlm(env: Env) {
-  const apiKey = env.TITAN_API_KEY?.trim() || env.OPENAI_API_KEY?.trim();
-  const baseUrl = (
-    env.TITAN_API_BASE?.trim() ||
-    env.OPENAI_API_BASE?.trim() ||
-    "https://api.openai.com/v1"
-  ).replace(/\/$/, "");
-  const rawModel =
-    env.TITAN_MODEL_PRO?.trim() ||
-    env.TITAN_MODEL?.trim() ||
-    env.OPENAI_MODEL_PRO?.trim() ||
-    env.OPENAI_MODEL?.trim() ||
-    (/groq\.com/i.test(baseUrl) ? GROQ_DEFAULT_STRONG : "gpt-4o");
-  const model = remapGroqModel(rawModel, baseUrl);
-  return { apiKey, baseUrl, model };
+  const apiKey = env.OPENAI_API_KEY?.trim() || "";
+  const baseUrl = (env.OPENAI_API_BASE?.trim() || "https://api.openai.com/v1").replace(/\/$/, "");
+  const candidates = [
+    env.OPENAI_MODEL_PRO,
+    env.OPENAI_MODEL,
+    env.HERA_OPENAI_MODEL,
+    env.TITAN_MODEL_PRO,
+    env.TITAN_MODEL,
+  ];
+  let model = "gpt-4o";
+  for (const raw of candidates) {
+    const value = raw?.trim();
+    if (value && !/groq|gpt-oss|llama|mixtral|gemma/i.test(value)) {
+      model = value;
+      break;
+    }
+  }
+  return { apiKey, baseUrl: /groq\.com/i.test(baseUrl) ? "https://api.openai.com/v1" : baseUrl, model };
 }
 
 export async function handleTitanDailyBrief(

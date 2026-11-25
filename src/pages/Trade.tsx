@@ -19,7 +19,6 @@ import { JUPITER_SOL_MINT } from "../lib/solanaTradeLinks";
 import {
   maxSpendable,
   shortenAddress,
-  walletBrowseLinks,
   toAtomicAmount,
   walletSignAndSend,
 } from "../lib/solanaWallet";
@@ -68,7 +67,6 @@ function TradeScreen() {
   const [params] = useSearchParams();
   const plan = useSynexusPlan();
   const wallet = useSolanaWallet();
-  const hasInstalledWallet = wallet.wallets.some((w) => w.kind !== WALLETCONNECT_WALLET_NAME);
   const feeBps = getTradingFeeBps(plan);
   const feeAccount = jupiterFeeAccount();
 
@@ -470,40 +468,23 @@ function TradeScreen() {
         ) : (
           <>
             <p className="trade-page__hint">
-              {hasInstalledWallet
-                ? "Pick any Solana wallet. The private key stays in the wallet."
-                : "No wallet extension detected. Use WalletConnect to scan with any Solana wallet app, install a Solana wallet extension, or open this page inside your wallet's browser."}
+              Connect with WalletConnect — any compatible Solana wallet. The private key stays in your wallet app.
             </p>
-            {wallet.wallets.length ? (
+            {wallet.wallets.some((w) => w.kind === WALLETCONNECT_WALLET_NAME) ? (
               <div className="trade-page__actions">
-                {wallet.wallets.map((w) => (
-                  <button
-                    key={w.kind}
-                    type="button"
-                    className="trade-page__cta trade-page__cta--wallet"
-                    disabled={wallet.busy}
-                    onClick={() => void wallet.connect(w.kind)}
-                  >
-                    {w.icon ? <img src={w.icon} alt="" width={22} height={22} /> : null}
-                    {w.kind === WALLETCONNECT_WALLET_NAME ? "WalletConnect (scan QR)" : `Connect ${w.kind}`}
-                  </button>
-                ))}
+                <button
+                  type="button"
+                  className="trade-page__cta trade-page__cta--wallet"
+                  disabled={wallet.busy}
+                  onClick={() => void wallet.connect(WALLETCONNECT_WALLET_NAME)}
+                >
+                  Connect with WalletConnect
+                </button>
               </div>
-            ) : null}
-            {hasInstalledWallet ? null : (
-              <div className="trade-page__actions">
-                {walletBrowseLinks().map((link) => (
-                  <a
-                    key={link.name}
-                    className="trade-page__cta trade-page__cta--secondary"
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Open in {link.name}
-                  </a>
-                ))}
-              </div>
+            ) : (
+              <p className="trade-page__hint" role="status">
+                WalletConnect is not configured yet.
+              </p>
             )}
           </>
         )}

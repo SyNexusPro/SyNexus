@@ -28,7 +28,7 @@ export function TradingFeeDisclosure({
   const feeRate = formatTradingFeeRate(plan);
   const feeUsd = calculateTradeFeeUsd(notionalUsd, plan);
   const allocation = allocateTradingFeeRevenue(feeUsd);
-  const planLabel = plan === "PRO" ? "SyNexusPro" : "Free";
+  const planLabel = plan === "PRO" ? "Pantheon" : plan === "BASIC" ? "Next Level" : "Free";
 
   if (compact) {
     return (
@@ -38,7 +38,8 @@ export function TradingFeeDisclosure({
           <>
             {" "}
             ·{" "}
-            <Link to="/pulse">Upgrade to Pro</Link> for {formatTradingFeeRate("PRO")}
+            <Link to="/pricing">View plans</Link> — Next Level {formatTradingFeeRate("BASIC")}, Pantheon{" "}
+            {formatTradingFeeRate("PRO")}
           </>
         ) : null}
       </p>
@@ -59,7 +60,8 @@ export function TradingFeeDisclosure({
         {plan === "FREE" ? (
           <>
             {" "}
-            — <Link to="/pulse">SyNexusPro</Link> pays {formatTradingFeeRate("PRO")}
+            — <Link to="/pricing">membership plans</Link>: Next Level {formatTradingFeeRate("BASIC")}, Pantheon{" "}
+            {formatTradingFeeRate("PRO")}
           </>
         ) : null}
       </p>

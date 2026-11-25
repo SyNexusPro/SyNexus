@@ -14,7 +14,7 @@ export function marketingAppOrigin(): string {
   return "";
 }
 
-const PRO_PRICE_LINE = `SyNexusPro · ${SYNEXUS_PRO_PRICE_SHORT} · cancel anytime.`;
+const PRO_PRICE_LINE = `Next Level · ${SYNEXUS_PRO_PRICE_SHORT} · Pantheon $20/mo · cancel anytime.`;
 const TRIAL_OFFER_SHORT = SYNEXUS_PRO_OFFER_SHORT;
 
 const HOOKS = [
@@ -27,7 +27,7 @@ const HOOKS = [
 ];
 
 const SUPPORT = [
-  "Sign up → 30 days of Pro free. No card. Then $9.99/mo if you keep it.",
+  "Sign up → 30-day complimentary Next Level grant. No card. Then $10/mo or Pantheon $20/mo.",
   "Free scan on every token. Pro unlocks Titan briefings + full Sentinel grid.",
   "Your wallet signs every trade — SyNexus just shows you the risk first.",
   "Trade journal tracks entries, exits, and P/L so you see your habits.",
@@ -170,9 +170,9 @@ export function growthMissionLine(date: Date): string {
     'Post a reel: on-screen text "7-day Pro free when you sign up" + paste → Avoid/Watch demo.',
     'Post a 15s clip: paste a trending ticker → show the "Avoid" or "Watch" verdict on screen.',
     "Screen record: sign up → show 7-day Pro trial banner → scan BONK on home.",
-    'TikTok text overlay: "7 days Pro free · card on file · $9.99/mo after."',
+    'TikTok text overlay: "30-day Next Level grant · no card · $10/mo or Pantheon $20/mo after."',
     "X thread (3 tweets): aping blind → paste verdict fix → 7-day free trial link.",
-    "Telegram: pin the offer — 7-day Pro trial, sign up free, $9.99/mo after.",
+    "Telegram: pin the offer — 30-day Next Level complimentary grant, no card, $10/mo or Pantheon $20/mo after.",
     "Discord: share one Avoid verdict + trial offer in footer — educational not hype.",
     "Reddit comment: mention free scan + 7-day Pro trial after sign-up — no spam.",
     "Film wallet journal stats — people love seeing their own win rate.",

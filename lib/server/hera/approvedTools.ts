@@ -18,7 +18,7 @@ export type ApprovedRunners = {
 
 const APPROVED = [
   { name: "venue_desk", description: "Read public last prices from major venues. No orders." },
-  { name: "alexus_learning", description: "Read Alexus paper lessons. Not a trade instruction." },
+  { name: "alexus_learning", description: "Watch over Alexus — status and paper lessons. Not a trade or unpause." },
   { name: "route_compare", description: "Compare a Jupiter round-trip quote with the GMGN fee schedule. Quote only." },
   { name: "memory_search", description: "Retrieve previous Hera research and stored trade-pattern notes." },
 ] as const;

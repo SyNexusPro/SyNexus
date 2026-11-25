@@ -157,13 +157,13 @@ export async function respondToTitanMessage(
   if (!trimmed) return "What can I help with?";
   recordHeraGrowth("reply");
 
-  let plan: "FREE" | "PRO" = "FREE";
+  let plan: "FREE" | "BASIC" | "PRO" = "FREE";
   try {
     plan = normalizeSynexusPlan(localStorage.getItem(PLAN_STORAGE_KEY));
   } catch {
     /* ignore */
   }
-  if (WHALE_ASK.test(trimmed) && plan === "PRO") {
+  if (WHALE_ASK.test(trimmed) && (plan === "PRO" || plan === "BASIC")) {
     const events = await fetchRecentWhaleEvents();
     const brief = titanWhaleBrief(events, ctx.operatorName);
     if (brief) return brief;

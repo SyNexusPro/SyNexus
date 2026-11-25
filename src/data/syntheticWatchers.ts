@@ -42,7 +42,7 @@ type SentinelSignals = {
   alertCount: number;
   trackedCount: number;
   reportCount: number;
-  plan: "FREE" | "PRO";
+  plan: "FREE" | "BASIC" | "PRO";
 };
 
 export type OracleSupremeDailyReport = {
@@ -127,7 +127,7 @@ function getRankForLevel(level: number): SentinelRank {
 }
 
 function scoreSignals(signals: SentinelSignals) {
-  const planBoost = signals.plan === "PRO" ? 160 : 0;
+  const planBoost = signals.plan === "PRO" ? 160 : signals.plan === "BASIC" ? 80 : 0;
   return (
     signals.watchlistCount * 24 +
     signals.alertCount * 30 +
@@ -151,7 +151,7 @@ export function buildSyntheticSentinels(
     const xp = sentinel.baseXp + signalXp + index * 17;
     const level = Math.min(5, Math.max(1, Math.floor(xp / XP_PER_LEVEL) + 1));
     const nextLevelXp = level >= 5 ? xp : level * XP_PER_LEVEL;
-    const proBoost = signals.plan === "PRO" ? 14 : 0;
+    const proBoost = signals.plan === "PRO" ? 14 : signals.plan === "BASIC" ? 7 : 0;
     const confidence = Math.min(
       99,
       64 + level * 9 + signals.alertCount * 2 + signals.reportCount * 3 + proBoost,

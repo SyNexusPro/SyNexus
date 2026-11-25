@@ -98,12 +98,20 @@ export function ShouldIBuyPanel({ poolTokens = [], initialScan = "" }: Props) {
           .slice(0, 3)
           .map((hit) => `${hit.symbol} ${hit.mintAddress?.slice(0, 4) ?? ""}…`)
           .join(", ");
-        setError(`Several tokens use that name. Paste the mint. ${choices}`);
+        setError(
+          isSimple
+            ? `A few coins share that name. Paste the full coin ID. ${choices}`
+            : `Several tokens use that name. Paste the mint. ${choices}`,
+        );
         return;
       }
       const token = hits[0];
       if (!token) {
-        setError("Token not found. Paste a Solana mint or try a symbol like BONK.");
+        setError(
+          isSimple
+            ? "Coin not found. Try a name like BONK, or paste the full coin ID from the chart."
+            : "Token not found. Paste a Solana mint or try a symbol like BONK.",
+        );
         return;
       }
       if (!hasDeepScanAccess(linked, token)) {
@@ -142,11 +150,11 @@ export function ShouldIBuyPanel({ poolTokens = [], initialScan = "" }: Props) {
         <ResearchTokenTutorialButton />
         <p className="should-i-buy__eyebrow">{isSimple ? "Step 1 · Scan" : "Instant read"}</p>
         <h2 className="should-i-buy__title" id="should-i-buy-title">
-          Scan a token
+          {isSimple ? "Should I buy this?" : "Scan a token"}
         </h2>
         <p className="should-i-buy__lede">
           {isSimple
-            ? "Paste any Solana token below. SyNexus returns Avoid, Watch, or OK in plain English."
+            ? "Paste a coin name or its long ID. You’ll get Don’t buy, Wait, or Looks okay — in plain English."
             : "Paste a token mint or symbol. SyNexus returns Avoid, Watch, or OK — plus risk, whales, and liquidity."}
         </p>
         {!unlimited ? (
@@ -179,8 +187,8 @@ export function ShouldIBuyPanel({ poolTokens = [], initialScan = "" }: Props) {
           data-tour="scan-input"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder={isSimple ? "Paste token name or mint address…" : "Mint address or symbol (e.g. BONK)"}
-          aria-label="Token to analyze"
+          placeholder={isSimple ? "Coin name or long ID (try BONK)…" : "Mint address or symbol (e.g. BONK)"}
+          aria-label={isSimple ? "Coin to check" : "Token to analyze"}
           onKeyDown={(e) => {
             if (e.key === "Enter") void handleAnalyze();
           }}

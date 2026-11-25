@@ -6,7 +6,7 @@ export const COMMUNITY_BUILD_ENABLED =
   (import.meta.env.VITE_COMMUNITY_ENABLED ?? "").trim().toLowerCase() === "true";
 
 export const COMMUNITY_PATH = "/community";
-export const COMMUNITY_ENTRY_LABEL = "ENTER THE SYNEXUS";
+export const COMMUNITY_ENTRY_LABEL = "Open community";
 
 export function isCommunityEnabled(): boolean {
   return COMMUNITY_BUILD_ENABLED;

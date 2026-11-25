@@ -16,7 +16,7 @@ type PulseOperatorLinkProps = {
   userId: string | null;
   operatorName: string;
   userEmail: string | null;
-  plan: "FREE" | "PRO";
+  plan: "FREE" | "BASIC" | "PRO";
   email: string;
   password: string;
   authBusy: boolean;
@@ -190,7 +190,7 @@ export function PulseOperatorLink({
               </p>
             </div>
             <span className={`operator-link__plan operator-link__plan--${plan.toLowerCase()}`}>
-              {ownerUnlocked ? "God mode · full access" : plan === "PRO" ? "SyNexusPro" : "Free tier"}
+              {ownerUnlocked ? "God mode · full access" : plan === "PRO" ? "Pantheon" : plan === "BASIC" ? "Next Level" : "Free tier"}
             </span>
           </div>
         </header>
@@ -295,7 +295,7 @@ export function PulseOperatorLink({
           {variant === "oracle" ? (
             <>
               Sign up to enter {titanBotName} and start a{" "}
-              <strong>{SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial</strong> — completely free, no card. Already
+              <strong>{SYNEXUS_PRO_TRIAL_DAYS}-day complimentary Next Level grant</strong> — free, no card, not a store trial. Already
               linked? Switch to Return.
             </>
           ) : (

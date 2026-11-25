@@ -1,9 +1,12 @@
-/** SyNexusPro trial — full Pro for 30 days after sign-up. No card required. */
+/**
+ * Complimentary Next Level grant — one-time, no card.
+ * This is an in-app promotional grant, not a Paddle / App Store / Play billing trial.
+ */
 export const SYNEXUS_PRO_TRIAL_DAYS = 30;
 
 export const SYNEXUS_PRO_TRIAL_MS = SYNEXUS_PRO_TRIAL_DAYS * 24 * 60 * 60 * 1000;
 
-export const SYNEXUS_PRO_TRIAL_LABEL = `${SYNEXUS_PRO_TRIAL_DAYS}-day Pro trial`;
+export const SYNEXUS_PRO_TRIAL_LABEL = `${SYNEXUS_PRO_TRIAL_DAYS}-day Next Level complimentary grant`;
 
 export const SYNEXUS_PRO_TRIAL_GRANT_SOURCE = "trial_30d";
 
@@ -13,4 +16,5 @@ export function isSignupTrialGrantSource(source: string | null | undefined): boo
 }
 
 /** Shown near Enter Titan / checkout. */
-export const SYNEXUS_PRO_TRIAL_CARD_NOTE = "No card needed — 30 days of Pro free when you sign up";
+export const SYNEXUS_PRO_TRIAL_CARD_NOTE =
+  "No card needed — one-time 30-day Next Level grant (promotional access, not a store subscription trial)";

@@ -38,17 +38,18 @@ returns table (
 )
 language sql
 stable
+set search_path = ''
 as $$
   select
     m.id,
     m.kind,
     m.source,
     m.content,
-    1 - (m.embedding <=> query_embedding) as similarity
+    1 - (m.embedding operator(public.<=>) query_embedding) as similarity
   from public.hera_memory m
   where m.embedding is not null
     and (filter_kind is null or m.kind = filter_kind)
-  order by m.embedding <=> query_embedding
+  order by m.embedding operator(public.<=>) query_embedding
   limit greatest(1, least(match_count, 8));
 $$;
 

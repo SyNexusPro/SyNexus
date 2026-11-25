@@ -4,6 +4,7 @@ import { useTitanShell } from "../context/TitanShellContext";
 import { useOpenTitanGate } from "../hooks/useOpenTitanGate";
 import { useOperatorAuth } from "../hooks/useOperatorAuth";
 import { useTitanLoginOpen } from "../hooks/useTitanChatOpen";
+import { CONNECT_WALLET_PATH } from "../config/connectWallet";
 import { isTradingEnabled } from "../config/trading";
 import { HeraWakeWordControl } from "./HeraWakeWordControl";
 
@@ -60,7 +61,14 @@ export function BottomNav() {
           </span>
           {t("nav.trade")}
         </NavLink>
-      ) : null}
+      ) : (
+        <NavLink to={CONNECT_WALLET_PATH} className={linkClass} onClick={closeSheet} data-tour="nav-wallet">
+          <span className="bottom-nav__icon" aria-hidden>
+            ◈
+          </span>
+          Wallet
+        </NavLink>
+      )}
       <HeraWakeWordControl />
     </nav>
   );

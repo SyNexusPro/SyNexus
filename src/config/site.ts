@@ -81,7 +81,7 @@ export const HOW_SYNEXUS_WORKS = [
   {
     step: 3,
     title: "Connect your wallet",
-    body: "Use Phantom, Solflare, Backpack, or another Solana wallet. SyNexus does not store seed phrases or private keys.",
+    body: "Connect any Solana wallet with WalletConnect. SyNexus does not store seed phrases or private keys.",
   },
   {
     step: 4,
@@ -129,19 +129,19 @@ export const FAQ_ITEMS = [
   },
   {
     q: "Which wallets are supported?",
-    a: "Any Solana wallet that works with Jupiter — including Phantom, Solflare, and Backpack. SyNexus opens swap flows; your wallet app handles signing.",
+    a: "Use WalletConnect on the Connect Wallet screen — any compatible Solana wallet. SyNexus never asks for private keys or seed phrases. This release focuses on read-only analysis; live in-app swaps stay off until trading is approved.",
   },
   {
-    q: "What is SyNexusPro?",
-    a: "SyNexusPro ($9.99/month, cancel anytime) unlocks Oracle briefings, the full Sentinel grid, faster refresh, reduced trading fees (0.05% vs 0.10% free tier), and priority surfaces on Pulse. After you sign up, you get 30 days of Pro completely free — no card required.",
+    q: "What are Next Level and Pantheon?",
+    a: "Next Level is $10/month and includes Hera, market tools, and a 0.05% SyNexus swap fee (vs 0.10% free). Pantheon is $20/month and includes everything in Next Level, members-only social access, and a $0 SyNexus swap fee. Blockchain and third-party fees still apply. Eligible accounts may use a one-time 30-day complimentary Next Level grant with no card — that grant is not a store subscription trial and does not unlock social.",
   },
   {
-    q: "How do I cancel SyNexusPro?",
-    a: "Cancel through the billing portal or subscription tools linked from Pulse (the provider shown at checkout). Access continues until the end of the paid billing period. See our Refund Policy for refund eligibility.",
+    q: "How do I cancel a membership?",
+    a: "Cancel through the billing portal or subscription tools linked from Pricing / Pulse (the provider shown at checkout). Access continues until the end of the paid billing period. See our Refund Policy for refund eligibility.",
   },
   {
     q: "What is SyNexus's refund policy?",
-    a: "SyNexusPro is $9.99/month after the 30-day free trial. Subscription fees are generally non-refundable once a billing period starts. We may refund duplicate or erroneous charges and other cases described in the Refund Policy at /refund-policy.",
+    a: "Next Level is $10/month and Pantheon is $20/month after any complimentary grant ends. Subscription fees are generally non-refundable once a billing period starts. We may refund duplicate or erroneous charges and other cases described in the Refund Policy at /refund-policy.",
   },
   {
     q: "Is Sentinel, Titan, or “Avoid / Watch / OK” financial advice?",

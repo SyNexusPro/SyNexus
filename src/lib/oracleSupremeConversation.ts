@@ -20,6 +20,8 @@ export type OracleConversationContext = {
   feedSource: "live" | "mock";
   /** Pre-fetched multi-timeframe gainers/losers for Titan instant answers. */
   moversBoard?: SolanaMoversBoard | null;
+  /** Read-only external wallet brief for Hera (public address + holdings). Never includes keys. */
+  connectedWalletBrief?: string | null;
 };
 
 export type ConversationTurn = {

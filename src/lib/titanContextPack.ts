@@ -217,6 +217,8 @@ export type TitanChatPayload = {
   /** Last-discussed Solana mint so follow-ups keep the same token. */
   focusMint?: string;
   focusSymbol?: string;
+  /** Read-only connected external wallet brief (public address + holdings). */
+  connectedWalletBrief?: string | null;
 };
 
 export function buildTitanChatPayload(
@@ -256,6 +258,7 @@ export function buildTitanChatPayload(
     operatorBrief: buildOperatorStrengthBrief(ctx),
     sentinelBrief: marketAsk ? buildTitanSentinelBrief(ctx.tokens) : null,
     watchlistBrief: marketAsk ? buildTitanWatchlistBrief(ctx.watchlistSymbols ?? [], ctx.tokens) : null,
+    connectedWalletBrief: ctx.connectedWalletBrief ?? null,
     intentHint: intent,
     tokenIntel: marketAsk
       ? resolveTitanTokenIntel(message, ctx.tokens) ??

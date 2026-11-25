@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
 import { Browser } from "@capacitor/browser";
+import { SYN_WALLET_DEV_PATH } from "../config/connectWallet";
 import { useSynWallet } from "../context/SynWalletContext";
 import { SYN_WALLET_PRODUCT_NAME, SYN_WALLET_TAGLINE } from "../config/synWallet";
 import { shortenAddress } from "../lib/synWallet/crypto";
@@ -63,7 +64,7 @@ function SetupFlow() {
     setBusy(true);
     try {
       await importWallet(importPhrase, pin);
-      navigate("/wallet", { replace: true });
+      navigate(SYN_WALLET_DEV_PATH, { replace: true });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not import wallet.");
     } finally {
@@ -166,7 +167,7 @@ function SetupFlow() {
             type="button"
             className="syn-wallet__cta"
             disabled={!acked}
-            onClick={() => navigate("/wallet", { replace: true })}
+            onClick={() => navigate(SYN_WALLET_DEV_PATH, { replace: true })}
           >
             Enter {SYN_WALLET_PRODUCT_NAME}
           </button>
@@ -189,7 +190,7 @@ function UnlockGate({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
-  if (!hasVault) return <Navigate to="/wallet/setup" replace />;
+  if (!hasVault) return <Navigate to={`${SYN_WALLET_DEV_PATH}/setup`} replace />;
   if (unlocked) return <>{children}</>;
 
   return (
@@ -284,7 +285,7 @@ function WalletHome() {
           </p>
         </div>
         <div className="syn-wallet__top-actions">
-          <Link to="/wallet/settings" className="syn-wallet__icon-btn" aria-label="Settings">
+          <Link to={`${SYN_WALLET_DEV_PATH}/settings`} className="syn-wallet__icon-btn" aria-label="Settings">
             ⚙
           </Link>
           <button type="button" className="syn-wallet__icon-btn" onClick={lock} aria-label="Lock">
@@ -303,11 +304,11 @@ function WalletHome() {
       </section>
 
       <nav className="syn-wallet__actions" aria-label="Wallet actions">
-        <Link className="syn-wallet__action" to="/wallet/receive">
+        <Link className="syn-wallet__action" to={`${SYN_WALLET_DEV_PATH}/receive`}>
           <span aria-hidden>↓</span>
           Receive
         </Link>
-        <Link className="syn-wallet__action" to="/wallet/send">
+        <Link className="syn-wallet__action" to={`${SYN_WALLET_DEV_PATH}/send`}>
           <span aria-hidden>↑</span>
           Send
         </Link>
@@ -394,7 +395,7 @@ function ReceiveView() {
 
   return (
     <div className="syn-wallet">
-      <Link to="/wallet" className="syn-wallet__back">
+      <Link to={SYN_WALLET_DEV_PATH} className="syn-wallet__back">
         ← Back
       </Link>
       <header className="syn-wallet__hero">
@@ -437,7 +438,7 @@ function SendView() {
 
   return (
     <div className="syn-wallet">
-      <Link to="/wallet" className="syn-wallet__back">
+      <Link to={SYN_WALLET_DEV_PATH} className="syn-wallet__back">
         ← Back
       </Link>
       <header className="syn-wallet__hero">
@@ -471,7 +472,7 @@ function SendView() {
           {busy ? "Sending…" : "Send"}
         </button>
         {sig ? (
-          <button type="button" className="syn-wallet__linkish" onClick={() => navigate("/wallet")}>
+          <button type="button" className="syn-wallet__linkish" onClick={() => navigate(SYN_WALLET_DEV_PATH)}>
             Done
           </button>
         ) : null}
@@ -487,7 +488,7 @@ function SettingsView() {
 
   return (
     <div className="syn-wallet">
-      <Link to="/wallet" className="syn-wallet__back">
+      <Link to={SYN_WALLET_DEV_PATH} className="syn-wallet__back">
         ← Back
       </Link>
       <header className="syn-wallet__hero">
@@ -509,7 +510,7 @@ function SettingsView() {
           className="syn-wallet__cta syn-wallet__cta--danger"
           disabled={confirm !== "DELETE"}
           onClick={() => {
-            void wipe().then(() => navigate("/wallet/setup", { replace: true }));
+            void wipe().then(() => navigate(`${SYN_WALLET_DEV_PATH}/setup`, { replace: true }));
           }}
         >
           Wipe local wallet
@@ -559,7 +560,7 @@ export function SynWalletPage() {
           </UnlockGate>
         }
       />
-      <Route path="*" element={<Navigate to="/wallet" replace />} />
+      <Route path="*" element={<Navigate to={SYN_WALLET_DEV_PATH} replace />} />
     </Routes>
   );
 }

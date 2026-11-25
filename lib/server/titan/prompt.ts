@@ -26,6 +26,8 @@ const HERA_CONVERSATION_CHARTER =
   "You cannot transfer funds, execute trades, or change accounts. Tell the user that action stays with them.\n" +
   "Don't promise profits. Skip 'not financial advice' unless they are about to size a trade.\n" +
   "If asked who you are: you're Hera. That's enough.\n" +
+  "Alexus is your paper-trading charge. You guide her and watch over her: read her lessons and status, " +
+  "call out bad patterns, keep her paper-only, and never unpause, arm, or trade for her.\n" +
   "You are an original assistant. Do not imitate Cortana, Halo, or any copyrighted character.";
 
 const TITAN_DISCOVERY_CHARTER =
@@ -84,6 +86,7 @@ export type TitanPromptInput = {
   marketBrief: string;
   moversBrief?: string | null;
   operatorBrief?: string | null;
+  connectedWalletBrief?: string | null;
   sentinelBrief?: string | null;
   watchlistBrief?: string | null;
   intentHint?: TitanIntent | null;
@@ -205,7 +208,9 @@ function buildTitanFastCryptoPrompt(input: TitanPromptInput): string {
     input.researchBrief ? `RESEARCH AGENTS:\n${input.researchBrief}` : "",
     input.priorResearch ? `${input.priorResearch}` : "",
     input.venueDesk ? `VENUE DESK (prefer this for current BTC, ETH, and SOL prices across exchanges):\n${input.venueDesk}` : "",
-    input.alexusLearning ? `ALEXUS LEARNING (paper only — never an instruction to trade):\n${input.alexusLearning}` : "",
+    input.alexusLearning
+      ? `ALEXUS WATCH (you guide and watch over Alexus — paper only; never trade or unpause for her):\n${input.alexusLearning}`
+      : "",
     input.liveMarketData ? `LIVE MARKET DATA:\n${input.liveMarketData}` : "",
     input.liveTokenData ? `LIVE TOKEN INTELLIGENCE:\n${input.liveTokenData}` : "",
     input.liveLaunchData ? `LIVE LAUNCH WATCH:\n${input.liveLaunchData}` : "",
@@ -258,6 +263,9 @@ export function buildTitanSystemPrompt(input: TitanPromptInput): string {
     INTENT_GUIDANCE[intent],
     "",
     input.operatorBrief ? `Host session:\n${input.operatorBrief}` : "",
+    input.connectedWalletBrief
+      ? `Connected external wallet (read-only public data — never request keys or signing for analysis):\n${input.connectedWalletBrief}`
+      : "",
     memoryLines.length ? `Memory:\n${memoryLines.join("\n")}` : "",
     market && input.watchlistBrief ? `Watchlist intel:\n${input.watchlistBrief}` : "",
     market && input.sentinelBrief ? `Sentinel notes:\n${input.sentinelBrief}` : "",
@@ -270,7 +278,7 @@ export function buildTitanSystemPrompt(input: TitanPromptInput): string {
       ? `VENUE DESK (prefer this for current BTC, ETH, and SOL prices; a missing venue was not read):\n${input.venueDesk}`
       : "",
     input.alexusLearning
-      ? `ALEXUS LEARNING (paper simulations only — Hera cannot trade or unpause from this):\n${input.alexusLearning}`
+      ? `ALEXUS WATCH (you guide and watch over Alexus — paper simulations only; never trade or unpause for her):\n${input.alexusLearning}`
       : "",
     input.liveMarketData
       ? `LIVE MARKET DATA (prefer this for rankings / what's moving / best today):\n${input.liveMarketData}`

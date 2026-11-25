@@ -119,21 +119,22 @@ async function ping(path, init = {}) {
   }
 }
 
-section("Commander LLM (local Groq key)");
+section("Commander LLM (OpenAI only)");
 try {
-  const groqKey = env.TITAN_API_KEY?.trim();
-  const groqBase = (env.TITAN_API_BASE?.trim() || "").replace(/\/$/, "");
-  if (!groqKey || !/groq\.com/i.test(groqBase)) {
-    check(false, "Groq Titan ping", "TITAN_API_KEY / TITAN_API_BASE (groq) missing");
+  const openaiKey = env.OPENAI_API_KEY?.trim();
+  const openaiBase = (env.OPENAI_API_BASE?.trim() || "https://api.openai.com/v1").replace(/\/$/, "");
+  const model = env.HERA_OPENAI_MODEL?.trim() || env.OPENAI_MODEL?.trim() || "gpt-4o-mini";
+  if (!openaiKey) {
+    check(false, "OpenAI Titan ping", "OPENAI_API_KEY missing");
   } else {
-    const groqRes = await fetch(`${groqBase}/chat/completions`, {
+    const openaiRes = await fetch(`${openaiBase}/chat/completions`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${groqKey}`,
+        Authorization: `Bearer ${openaiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "openai/gpt-oss-120b",
+        model,
         messages: [
           { role: "system", content: "You are Hera. Reply in one short sentence." },
           { role: "user", content: "Helix status." },
@@ -142,13 +143,13 @@ try {
         temperature: 0.4,
       }),
     });
-    const groqJson = await groqRes.json().catch(() => ({}));
-    const reply = groqJson?.choices?.[0]?.message?.content?.trim() || "";
-    check(groqRes.ok && reply.length > 0, "Groq openai/gpt-oss-120b", `HTTP ${groqRes.status}`);
+    const openaiJson = await openaiRes.json().catch(() => ({}));
+    const reply = openaiJson?.choices?.[0]?.message?.content?.trim() || "";
+    check(openaiRes.ok && reply.length > 0, `OpenAI ${model}`, `HTTP ${openaiRes.status}`);
     if (reply) console.log(`    ↳ ${reply.slice(0, 120)}`);
   }
 } catch (err) {
-  check(false, "Groq Titan ping", err instanceof Error ? err.message : String(err));
+  check(false, "OpenAI Titan ping", err instanceof Error ? err.message : String(err));
 }
 
 section(`Live production APIs (${ORIGIN})`);
@@ -190,7 +191,6 @@ try {
   });
   const ctype = chat.headers.get("content-type") || "";
   const text = await chat.text();
-  const staleGroq = /llama-3\.3-70b-versatile|model_not_found/i.test(text);
   const streamed = chat.ok && (ctype.includes("text/event-stream") || text.length > 8);
   const jsonReply = (() => {
     try {
@@ -200,18 +200,10 @@ try {
       return false;
     }
   })();
-  if (staleGroq && !chat.ok) {
-    check(
-      false,
-      "Hera / Titan chat (production)",
-      "Groq Llama 3.3 retired — deploy this branch so Vercel remaps to openai/gpt-oss-120b",
-    );
-  } else {
-    check(streamed || jsonReply, "Hera / Titan chat (production)", `HTTP ${chat.status} ${ctype.slice(0, 40)}`);
-    if (streamed || jsonReply) {
-      const sample = text.replace(/\s+/g, " ").slice(0, 80);
-      if (sample) console.log(`    ↳ ${sample}`);
-    }
+  check(streamed || jsonReply, "Hera / Titan chat (OpenAI)", `HTTP ${chat.status} ${ctype.slice(0, 40)}`);
+  if (streamed || jsonReply) {
+    const sample = text.replace(/\s+/g, " ").slice(0, 80);
+    if (sample) console.log(`    ↳ ${sample}`);
   }
 } catch (err) {
   check(false, "Hera / Titan chat", err instanceof Error ? err.message : String(err));

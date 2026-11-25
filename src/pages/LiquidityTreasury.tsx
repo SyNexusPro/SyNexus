@@ -37,25 +37,30 @@ export function LiquidityTreasury() {
         <h2>Platform fee tiers</h2>
         <p>
           Fees are calculated on swap notional value and are separate from network gas, DEX spread, slippage, and
-          Jupiter routing costs. SyNexusPro subscribers pay a reduced rate.
+          Jupiter routing costs. Next Level reduces the SyNexus fee; Pantheon sets the SyNexus fee to zero.
         </p>
         <div className="ecosystem-hub__fee-grid ecosystem-hub__fee-grid--two">
           <article>
-            <p className="ecosystem-hub__fee-label">Free tier</p>
+            <p className="ecosystem-hub__fee-label">Free</p>
             <p className="ecosystem-hub__fee-value">{formatTradingFeeRate("FREE")}</p>
             <p className="ecosystem-hub__fee-note">{bpsToLabel(TRADING_FEE_BPS.FREE)} per swap notional</p>
           </article>
           <article>
-            <p className="ecosystem-hub__fee-label">SyNexusPro</p>
+            <p className="ecosystem-hub__fee-label">Next Level</p>
+            <p className="ecosystem-hub__fee-value">{formatTradingFeeRate("BASIC")}</p>
+            <p className="ecosystem-hub__fee-note">{bpsToLabel(TRADING_FEE_BPS.BASIC)} per swap notional</p>
+          </article>
+          <article>
+            <p className="ecosystem-hub__fee-label">Pantheon</p>
             <p className="ecosystem-hub__fee-value">{formatTradingFeeRate("PRO")}</p>
-            <p className="ecosystem-hub__fee-note">{bpsToLabel(TRADING_FEE_BPS.PRO)} per swap notional</p>
+            <p className="ecosystem-hub__fee-note">{bpsToLabel(TRADING_FEE_BPS.PRO)} SyNexus fee (chain/venue fees still apply)</p>
           </article>
         </div>
         <p>
           Example on {formatFeeUsd(EXAMPLE_NOTIONAL_USD)} swap:{" "}
           <strong>{formatFeeUsd(freeFee)}</strong> (free) or{" "}
-          <strong>{formatFeeUsd(proFee)}</strong> (Pro).{" "}
-          <Link to="/pulse">Upgrade to SyNexusPro</Link> for the lower tier.
+          <strong>{formatFeeUsd(proFee)}</strong> (Pantheon SyNexus fee).{" "}
+          <Link to="/pricing">View membership plans</Link>.
         </p>
       </section>
 

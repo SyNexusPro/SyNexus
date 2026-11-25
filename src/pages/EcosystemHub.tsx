@@ -9,6 +9,7 @@ import {
   readStoredAffiliateHandle,
   saveAffiliateHandle,
 } from "../config/ecosystem";
+import { CONNECT_WALLET_PATH } from "../config/connectWallet";
 import { SYN_IS_LIVE, SYN_MINT, SYN_PUMPFUN_URL, SYN_SYMBOL, SYN_TOKEN_ID } from "../config/synToken";
 import { isTradingEnabled } from "../config/trading";
 
@@ -192,14 +193,9 @@ export function EcosystemHub() {
           in on-chain configs and audited program docs before money moves.
         </p>
         <div className="ecosystem-hub__wallet-actions">
-          <a
-            className="ecosystem-hub__phantom"
-            href="https://phantom.app/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Get Phantom Wallet
-          </a>
+          <Link className="ecosystem-hub__phantom" to={CONNECT_WALLET_PATH}>
+            Connect with WalletConnect
+          </Link>
           <Link className="ecosystem-hub__wallet-terms" to="/terms">
             Read Terms of Service
           </Link>

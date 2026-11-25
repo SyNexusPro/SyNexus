@@ -109,18 +109,18 @@ export function Terms() {
       <section className="legal-section marketing-panel">
         <h2>Subscriptions and billing</h2>
         <p>
-          Paid plans (including SyNexusPro at the price shown at checkout, currently {SYNEXUS_PRO_PRICE_LABEL}{" "}
-          where applicable) include a <strong>{SYNEXUS_PRO_TRIAL_DAYS}-day free trial</strong> of full Pro access
-          after you create and verify your account — no payment method is required to start the trial. After the
-          trial, billing on a recurring basis begins only when you subscribe through checkout. Payment is
-          processed by third-party subscription and payment processors (shown at checkout). By subscribing, you
-          authorize us and our processors to charge your payment method on a recurring basis until you cancel
-          according to checkout and processor flows. Prices, taxes, and features may change with notice where
-          required by law. Refunds are governed by our{" "}
-          <Link to={SYNEXUS_REFUND_POLICY_PATH}>Refund Policy</Link>. Unless mandatory law provides otherwise,{" "}
-          <strong>fees are non-refundable</strong> once a billing period begins, including partial periods.
-          Failed payments, disputed charges, or chargebacks may suspend paid features. Cancel before renewal to
-          avoid future charges.
+          Paid membership is Next Level ({SYNEXUS_PRO_PRICE_LABEL}) and Pantheon ($20/month) at the prices shown at
+          checkout. Eligible accounts may receive a one-time <strong>{SYNEXUS_PRO_TRIAL_DAYS}-day complimentary Next
+          Level grant</strong> with no payment method required. That promotional grant is not a payment-provider
+          subscription trial, does not renew, and does not include Pantheon social access. Recurring billing begins
+          only when you subscribe through an approved store or checkout. Payment is processed by third-party
+          subscription and payment processors (shown at checkout). By subscribing, you authorize us and our
+          processors to charge your payment method on a recurring basis until you cancel according to checkout and
+          processor flows. Prices, taxes, and features may change with notice where required by law. Refunds are
+          governed by our <Link to={SYNEXUS_REFUND_POLICY_PATH}>Refund Policy</Link>. Unless mandatory law provides
+          otherwise, <strong>fees are non-refundable</strong> once a billing period begins, including partial periods.
+          Failed payments, disputed charges, or chargebacks may suspend paid features. Cancel before renewal to avoid
+          future charges.
         </p>
       </section>
 
@@ -164,12 +164,12 @@ export function Terms() {
         <p>
           When you initiate a swap through SyNexus shortcuts (for example, links to Jupiter with SyNexus platform
           fees enabled), a <strong>platform trading fee</strong> may apply based on your plan:{" "}
-          <strong>0.10%</strong> for free accounts and <strong>0.05%</strong> for SyNexusPro subscribers, calculated
-          on the notional value of the swap. This fee is in addition to third-party costs such as blockchain network
-          fees, DEX spreads, slippage, and any fees charged by Jupiter or other aggregators. Fee rates, eligibility
-          for discounts, and revenue allocation policies are described in the{" "}
-          <Link to="/liquidity-treasury">SyNexus Coin Liquidity Treasury</Link> and may change with notice where
-          required. You authorize applicable platform fees when you confirm a qualifying swap in your connected
+          <strong>0.10%</strong> for free accounts, <strong>0.05%</strong> for Next Level, and <strong>0%</strong>{" "}
+          SyNexus fee for Pantheon, calculated on the notional value of the swap. This fee is in addition to
+          third-party costs such as blockchain network fees, DEX spreads, slippage, and any fees charged by Jupiter
+          or other aggregators. Fee rates, eligibility for discounts, and revenue allocation policies are described
+          in the <Link to="/liquidity-treasury">SyNexus Coin Liquidity Treasury</Link> and may change with notice
+          where required. You authorize applicable platform fees when you confirm a qualifying swap in your connected
           wallet. We do not guarantee that every trade path will collect fees until on-chain integration is fully
           live.
         </p>

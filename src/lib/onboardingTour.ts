@@ -1,5 +1,8 @@
 import { ONBOARDING_TOUR_KEY, ONBOARDING_TOUR_VOICE_KEY } from "../config/onboardingTour";
 
+/** Keep in sync with `HERA_SIGNUP_DEMO_PENDING_KEY` — avoid importing that module (cycle). */
+const HERA_SIGNUP_DEMO_PENDING_KEY = "synexus_hera_signup_demo_pending";
+
 export function readOnboardingTourVoice(): boolean | null {
   try {
     const v = localStorage.getItem(ONBOARDING_TOUR_VOICE_KEY);
@@ -36,6 +39,17 @@ export function markOnboardingTourComplete(): void {
 export function wantsForcedOnboardingTour(): boolean {
   if (typeof window === "undefined") return false;
   return new URLSearchParams(window.location.search).get("tour") === "1";
+}
+
+/** First visit: auto spotlight once. Skip if already done or Hera signup guide is queued. */
+export function shouldAutoStartOnboardingTour(): boolean {
+  if (hasCompletedOnboardingTour()) return false;
+  try {
+    if (localStorage.getItem(HERA_SIGNUP_DEMO_PENDING_KEY) === "1") return false;
+  } catch {
+    /* ignore */
+  }
+  return true;
 }
 
 const REPLAY_KEY = "synexus_onboarding_replay";

@@ -1564,15 +1564,7 @@ html:has(.app-shell--home) #root {
 }
 
 .synexus-scanner__scanline {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(137, 255, 47, 0.5), transparent);
-  animation: synexus-scanner-sweep 3.2s linear infinite;
-  pointer-events: none;
-  z-index: 1;
+  display: none;
 }
 
 .synexus-scanner__head {
@@ -3246,29 +3238,12 @@ html:has(.app-shell--home) #root {
   overflow: hidden;
 }
 
-.pulse-card::after,
-.token-card::after,
-.guardian-banner::after,
-.synexus-core-panel::after,
-.sentinel-grid-panel::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    linear-gradient(90deg, transparent 0 12%, rgba(137, 255, 47, 0.2) 13% 13.5%, transparent 15%),
-    linear-gradient(120deg, transparent 0 68%, rgba(218, 255, 50, 0.14) 69% 69.5%, transparent 71%);
-  background-size: 220px 100%, 180px 100%;
-  animation: card-circuit-flow 4.2s linear infinite;
-  opacity: 0.36;
-}
+/* Card circuit sweep removed — boxes stay still. */
 
 @keyframes card-circuit-flow {
-  0% {
-    background-position: -220px 0, 180px 0;
-  }
+  0%,
   100% {
-    background-position: 260px 0, -220px 0;
+    background-position: 0 0, 0 0;
   }
 }
 
@@ -3644,20 +3619,7 @@ html:has(.app-shell--home) #root {
 }
 
 .operator-link__scanline {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(
-    180deg,
-    transparent 0%,
-    rgba(94, 231, 255, 0.04) 48%,
-    rgba(94, 231, 255, 0.08) 50%,
-    rgba(94, 231, 255, 0.04) 52%,
-    transparent 100%
-  );
-  background-size: 100% 220%;
-  animation: operator-link-scan 5.5s linear infinite;
-  opacity: 0.7;
+  display: none;
 }
 
 @keyframes operator-link-scan {
@@ -14002,14 +13964,18 @@ body:has(.oracle-chat--presence) .titan-sheet-backdrop {
   user-select: none;
 }
 
-.hera-hologram__feat--lash-l {
-  clip-path: ellipse(5.2% 0.35% at 38% 42.8%);
-  z-index: 6;
+.hera-hologram__lid {
+  z-index: 5;
+  opacity: 0;
+  /* Clip is the eye opening only. The portrait underneath never moves. */
 }
 
-.hera-hologram__feat--lash-r {
-  clip-path: ellipse(5.2% 0.35% at 62% 42.8%);
-  z-index: 6;
+.hera-hologram__lid--l {
+  clip-path: ellipse(6.02% 2.78% at 25.23% 43.4%);
+}
+
+.hera-hologram__lid--r {
+  clip-path: ellipse(6.25% 2.86% at 54.17% 42.19%);
 }
 
 .hera-hologram__feat--lip-l {

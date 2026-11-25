@@ -36,7 +36,7 @@ type BuildIntelInput = {
   sentinels: SyntheticSentinel[];
   tokens: Token[];
   sentinelAlerts: AlertItem[];
-  plan: "FREE" | "PRO";
+  plan: "FREE" | "BASIC" | "PRO";
 };
 
 function sentinelById(sentinels: SyntheticSentinel[], id: SentinelLaneId) {
@@ -54,7 +54,7 @@ export function buildSentinelLiveIntel({
   sentinelAlerts,
   plan,
 }: BuildIntelInput): Record<SentinelLaneId, SentinelLiveIntel> {
-  const pro = plan === "PRO";
+  const pro = plan === "PRO" || plan === "BASIC";
   const pool = tokens.length ? tokens : [];
 
   const danger = pool.filter((t) => t.guardianRisk === "DANGER");

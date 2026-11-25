@@ -2,6 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 
 export type MembershipTier = "free" | "next_level" | "pantheon";
 
+/** Promotional in-app Next Level grant length. Not a RevenueCat / store subscription trial. */
 export const COMPLIMENTARY_TRIAL_DAYS = 30;
 
 export const MEMBERSHIP_FEE_BPS: Record<MembershipTier, number> = {

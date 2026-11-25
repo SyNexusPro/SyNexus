@@ -1,5 +1,6 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { ConnectedWalletProvider } from "../context/ConnectedWalletContext";
 import { TitanShellProvider } from "../context/TitanShellContext";
 import { useSynexusUIMode } from "../hooks/useSynexusUIMode";
 import { useTitanChatOpen } from "../hooks/useTitanChatOpen";
@@ -22,7 +23,9 @@ import { isOwnerScreen } from "../lib/ownerScreen";
 export function AppShell() {
   return (
     <TitanShellProvider>
-      <AppShellFrame />
+      <ConnectedWalletProvider>
+        <AppShellFrame />
+      </ConnectedWalletProvider>
     </TitanShellProvider>
   );
 }
