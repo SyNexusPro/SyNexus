@@ -29,10 +29,11 @@ export function Privacy() {
           the Service.
         </p>
         <p>
-          <strong>Payment data.</strong> Subscriptions are processed by third-party subscription and payment
-          processors (shown at checkout). We receive limited billing metadata (such as plan status and
-          transaction IDs), not full card numbers, which are handled by the processor under its privacy policy.
-          See our <Link to={SYNEXUS_REFUND_POLICY_PATH}>Refund Policy</Link> for billing disputes and refunds.
+          <strong>Payment data.</strong> Web subscriptions are processed by <strong>Paddle</strong> (and, where
+          applicable, other processors shown at checkout). We receive limited billing metadata (such as plan
+          status, customer or subscription identifiers, and transaction IDs), not full card numbers. Card and
+          tax data are handled by Paddle under its privacy policy. See our{" "}
+          <Link to={SYNEXUS_REFUND_POLICY_PATH}>Refund Policy</Link> for billing disputes and refunds.
         </p>
         <p>
           <strong>User content.</strong> If you submit token reports, messages to automated features, or
@@ -76,10 +77,10 @@ export function Privacy() {
         <h2>How we share information</h2>
         <p>
           We share information with service providers that help us run the Service—for example hosting,
-          authentication, payment processing, analytics, and market-data APIs—under contractual obligations
-          appropriate to their role. We may disclose information if required by law, to protect rights and
-          safety, or in connection with a merger, acquisition, or asset sale. We may share information when you
-          direct us to (for example, opening a third-party wallet or exchange link).
+          authentication, <strong>Paddle</strong> for subscription billing, analytics, and market-data APIs—under
+          contractual obligations appropriate to their role. We may disclose information if required by law, to
+          protect rights and safety, or in connection with a merger, acquisition, or asset sale. We may share
+          information when you direct us to (for example, opening a third-party wallet or exchange link).
         </p>
       </section>
 

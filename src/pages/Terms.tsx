@@ -109,17 +109,25 @@ export function Terms() {
       <section className="legal-section marketing-panel">
         <h2>Subscriptions and billing</h2>
         <p>
-          Paid membership is Next Level ({SYNEXUS_PRO_PRICE_LABEL}) and Pantheon ($20/month) at the prices shown at
-          checkout. Eligible accounts may receive a one-time <strong>{SYNEXUS_PRO_TRIAL_DAYS}-day complimentary Next
-          Level grant</strong> with no payment method required. That promotional grant is not a payment-provider
-          subscription trial, does not renew, and does not include Pantheon social access. Recurring billing begins
-          only when you subscribe through an approved store or checkout. Payment is processed by third-party
-          subscription and payment processors (shown at checkout). By subscribing, you authorize us and our
-          processors to charge your payment method on a recurring basis until you cancel according to checkout and
-          processor flows. Prices, taxes, and features may change with notice where required by law. Refunds are
-          governed by our <Link to={SYNEXUS_REFUND_POLICY_PATH}>Refund Policy</Link>. Unless mandatory law provides
-          otherwise, <strong>fees are non-refundable</strong> once a billing period begins, including partial periods.
-          Failed payments, disputed charges, or chargebacks may suspend paid features. Cancel before renewal to avoid
+          Paid membership plans are offered as <strong>Starter</strong>, <strong>Pro</strong>, and{" "}
+          <strong>Advanced</strong> (also described in-product as Next Level / Pantheon entitlements). List prices
+          start at approximately {SYNEXUS_PRO_PRICE_LABEL} for Starter-class access and $20/month for Advanced /
+          Pantheon-class access; localized amounts, taxes, and yearly options shown at{" "}
+          <Link to="/pricing">Pricing</Link> and in checkout control what you pay. Eligible accounts may receive a
+          one-time <strong>{SYNEXUS_PRO_TRIAL_DAYS}-day complimentary Starter / Next Level grant</strong> with no
+          payment method required. That promotional grant is not a payment-provider subscription trial, does not
+          renew, and does not include Advanced / Pantheon social access.
+        </p>
+        <p>
+          Recurring billing begins only when you subscribe through our web checkout or an approved store. Web
+          subscription payments are processed by <strong>Paddle</strong> (Paddle.com Market Limited / Paddle
+          Payment processors as shown on your receipt). By subscribing, you authorize us and Paddle (or any other
+          processor shown at checkout) to charge your payment method on a recurring basis until you cancel through
+          the customer portal or subscription tools linked from Pricing / Pulse. Prices, taxes, currency, and
+          features may change with notice where required by law. Refunds are governed by our{" "}
+          <Link to={SYNEXUS_REFUND_POLICY_PATH}>Refund Policy</Link>. Unless mandatory law provides otherwise,{" "}
+          <strong>fees are non-refundable</strong> once a billing period begins, including partial periods. Failed
+          payments, disputed charges, or chargebacks may suspend paid features. Cancel before renewal to avoid
           future charges.
         </p>
       </section>

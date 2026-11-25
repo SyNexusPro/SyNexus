@@ -28,7 +28,10 @@ export function usePaddlePrices(
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!paddle || tiers.length === 0) return;
+    if (!paddle || tiers.length === 0) {
+      setLoading(false);
+      return;
+    }
 
     const items = allTierPriceIds(tiers).map((priceId) => ({ priceId, quantity: 1 }));
     const params: PricePreviewParams = {

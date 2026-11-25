@@ -109,6 +109,24 @@ function AppShellFrame() {
             <span className="app-footer__sep" aria-hidden>
               ·
             </span>
+            <Link className="app-footer__link" to="/terms">
+              {t("footer.terms")}
+            </Link>
+            <span className="app-footer__sep" aria-hidden>
+              ·
+            </span>
+            <Link className="app-footer__link" to="/privacy">
+              {t("footer.privacy")}
+            </Link>
+            <span className="app-footer__sep" aria-hidden>
+              ·
+            </span>
+            <Link className="app-footer__link" to="/refund-policy">
+              {t("footer.refunds")}
+            </Link>
+            <span className="app-footer__sep" aria-hidden>
+              ·
+            </span>
             <Link className="app-footer__link" to="/invite">
               Invite and Earn
             </Link>
@@ -127,18 +145,6 @@ function AppShellFrame() {
             <span className="app-footer__sep" aria-hidden>
               ·
             </span>
-            <Link className="app-footer__link" to="/terms">
-              {t("footer.terms")}
-            </Link>
-            <span className="app-footer__sep" aria-hidden>
-              ·
-            </span>
-            <Link className="app-footer__link" to="/privacy">
-              {t("footer.privacy")}
-            </Link>
-            <span className="app-footer__sep" aria-hidden>
-              ·
-            </span>
             <Link className="app-footer__link" to="/data-deletion">
               {t("footer.deleteData")}
             </Link>
@@ -147,12 +153,6 @@ function AppShellFrame() {
             </span>
             <Link className="app-footer__link" to="/account-deletion">
               {t("footer.deleteAccount")}
-            </Link>
-            <span className="app-footer__sep" aria-hidden>
-              ·
-            </span>
-            <Link className="app-footer__link" to="/refund-policy">
-              {t("footer.refunds")}
             </Link>
             <span className="app-footer__sep" aria-hidden>
               ·

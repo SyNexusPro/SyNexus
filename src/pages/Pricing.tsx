@@ -1,6 +1,7 @@
 import { initializePaddle, type Paddle } from "@paddle/paddle-js";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import type { User } from "@supabase/supabase-js";
 import { requirePaddleClientToken, requirePaddleEnvironment } from "../config/paddle";
 import { SYNEXUS_PRICING_PATH } from "../config/proPricing";
 import {
@@ -10,6 +11,7 @@ import {
 } from "../config/pricingTiers";
 import { SYNEXUS_REFUND_POLICY_PATH } from "../config/refundPolicy";
 import { PADDLE_COUNTRY_OTHERS, usePaddlePrices } from "../hooks/usePaddlePrices";
+import { isEmailVerified } from "../lib/emailVerification";
 import {
   openPaddleCheckout,
   openPaddleCustomerPortal,
@@ -29,23 +31,27 @@ export function Pricing() {
   const [paddle, setPaddle] = useState<Paddle | undefined>();
   const [country, setCountry] = useState<string>(PADDLE_COUNTRY_OTHERS);
   const [userId, setUserId] = useState(() => getOperatorAuthSnapshot().userId);
-  const [email, setEmail] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [membership, setMembership] = useState<MembershipSnapshot | null>(null);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [configError, setConfigError] = useState<string | null>(null);
 
   const { prices, loading, error: priceError } = usePaddlePrices(paddle, country, tiers);
+  const verifiedEmail = user && isEmailVerified(user) ? user.email?.trim() || null : null;
 
   useEffect(() => {
     try {
       setTiers(readPricingTiers());
       setTierError(null);
     } catch (error) {
+      // Still show the public pricing page for Paddle website verification even if price IDs are missing.
       setTierError(error instanceof Error ? error.message : "Pricing tiers are not configured.");
+      setTiers([]);
     }
   }, []);
 
+  // Paddle.js must be initialized on the default payment link page (/pricing).
   useEffect(() => {
     let cancelled = false;
     try {
@@ -80,36 +86,48 @@ export function Pricing() {
   useEffect(() => {
     if (!userId) {
       setMembership(null);
-      setEmail(null);
+      setUser(null);
       return;
     }
     void getCurrentUser()
-      .then((user) => setEmail(user?.email ?? null))
-      .catch(() => setEmail(null));
+      .then((next) => setUser(next))
+      .catch(() => setUser(null));
     void fetchMembership()
       .then(setMembership)
       .catch(() => setMembership(null));
   }, [userId]);
 
   const frequencyLabel = frequency === "month" ? "month" : "year";
-
   const sortedTiers = useMemo(() => tiers, [tiers]);
 
   async function subscribe(tier: Tier) {
     setBusy(true);
     setMessage("");
     try {
+      if (!userId) {
+        throw new Error("Sign in to subscribe. Membership is linked to your SyNexus account.");
+      }
+      if (user && !isEmailVerified(user)) {
+        throw new Error("Verify your email, then return here to subscribe.");
+      }
+
       const priceId = tier.priceId[frequency];
       const formatted = prices[priceId];
       if (!formatted) throw new Error("Price is still loading. Try again in a moment.");
+
+      // Prefill only a verified session email. If somehow missing, Paddle asks the customer.
       await openPaddleCheckout({
         priceId,
         tierId: tier.id,
         frequency,
         userId,
-        email,
+        email: verifiedEmail,
       });
-      setMessage(`Checkout opened for ${tier.name} at ${formatted}.`);
+      setMessage(
+        verifiedEmail
+          ? `Checkout opened for ${tier.name} at ${formatted}.`
+          : `Checkout opened for ${tier.name} at ${formatted}. Enter your email in the Paddle window.`,
+      );
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Checkout could not be opened.");
     } finally {
@@ -153,6 +171,11 @@ export function Pricing() {
           Country-localized prices from Paddle. Subscribe opens a one-page overlay for the exact price shown.
           Advanced unlocks the members-only social network and zero SyNexus trading fees.
         </p>
+        {!userId ? (
+          <p className="page__lede">
+            <Link to="/pulse">Sign in</Link> with a verified email to subscribe and link membership to your account.
+          </p>
+        ) : null}
       </section>
 
       {(configError || tierError) && (
@@ -212,7 +235,7 @@ export function Pricing() {
                   disabled={busy || loading || !formatted || Boolean(configError || tierError)}
                   onClick={() => void subscribe(tier)}
                 >
-                  Subscribe {tier.name}
+                  {userId ? `Subscribe ${tier.name}` : `Sign in to subscribe`}
                 </button>
               </div>
             </div>

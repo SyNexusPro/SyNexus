@@ -5,7 +5,7 @@ export const PUBLIC_SITE_URL =
 
 export const OPERATOR_LABEL = "SyNexus and its operator(s)";
 
-export const LEGAL_EFFECTIVE_DATE = "June 12, 2026";
+export const LEGAL_EFFECTIVE_DATE = "November 25, 2026";
 
 export const SUPPORT_EMAIL =
   (import.meta.env.VITE_SUPPORT_EMAIL as string | undefined)?.trim() ||
@@ -141,7 +141,7 @@ export const FAQ_ITEMS = [
   },
   {
     q: "What is SyNexus's refund policy?",
-    a: "Next Level is $10/month and Pantheon is $20/month after any complimentary grant ends. Subscription fees are generally non-refundable once a billing period starts. We may refund duplicate or erroneous charges and other cases described in the Refund Policy at /refund-policy.",
+    a: "Starter / Pro / Advanced plans start around $10–$20/month (localized prices and taxes at checkout via Paddle). Subscription fees are generally non-refundable once a billing period starts. We may refund duplicate or erroneous charges and other cases described in the Refund Policy at /refund-policy.",
   },
   {
     q: "Is Sentinel, Titan, or “Avoid / Watch / OK” financial advice?",

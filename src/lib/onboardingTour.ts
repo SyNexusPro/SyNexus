@@ -80,15 +80,22 @@ export function clearWelcomeReplay(): void {
   }
 }
 
-const LEGAL_PREFIXES = [
+/** Public / Paddle verification pages — never auto-start or hijack the tour here. */
+const PUBLIC_PREFIXES = [
   "/terms",
   "/privacy",
   "/disclaimer",
   "/account-deletion",
   "/data-deletion",
   "/refund-policy",
+  "/pricing",
+  "/welcome",
+  "/faq",
+  "/contact",
+  "/about",
+  "/trust",
 ];
 
 export function isOnboardingTourRoute(pathname: string): boolean {
-  return !LEGAL_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+  return !PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }

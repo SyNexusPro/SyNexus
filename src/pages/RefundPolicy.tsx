@@ -13,40 +13,43 @@ export function RefundPolicy() {
       <h1 className="legal-page__title">Refund Policy</h1>
       <p className="legal-page__summary">
         This Refund Policy explains how refunds, cancellations, and billing disputes work for SyNexus membership
-        (Next Level and Pantheon) and other paid features offered by {OPERATOR_LABEL} (&quot;we,&quot;
-        &quot;us&quot;). It supplements our <Link to="/terms">Terms of Service</Link> and should be read with our{" "}
+        (Starter, Pro, and Advanced — also described as Next Level / Pantheon entitlements) and other paid features
+        offered by {OPERATOR_LABEL} (&quot;we,&quot; &quot;us&quot;). It supplements our{" "}
+        <Link to="/terms">Terms of Service</Link> and should be read with our{" "}
         <Link to="/privacy">Privacy Policy</Link>.
       </p>
 
       <section className="legal-section marketing-panel">
         <h2>Overview</h2>
         <p>
-          Next Level is a recurring subscription billed at <strong>{SYNEXUS_PRO_PRICE_LABEL}</strong>. Pantheon is
-          billed at <strong>$20/month</strong> (plus applicable taxes where required). Checkout and recurring billing
-          are processed by our third-party subscription and payment platform (the provider shown at checkout). That
-          provider may appear on your card or bank statement for your subscription.
+          Membership is sold as recurring subscriptions. Starter-class access is listed around{" "}
+          <strong>{SYNEXUS_PRO_PRICE_LABEL}</strong>; Advanced / Pantheon-class access around{" "}
+          <strong>$20/month</strong>. Pro sits between those offers. The amount charged is the localized price
+          (and any tax) shown at checkout, including monthly or yearly options. Web checkout and recurring billing
+          are processed by <strong>Paddle</strong>. Paddle or its payment partners may appear on your card or bank
+          statement.
         </p>
       </section>
 
       <section className="legal-section marketing-panel">
-        <h2>Complimentary Next Level grant</h2>
+        <h2>Complimentary Starter / Next Level grant</h2>
         <p>
           Where offered, eligible verified accounts may receive a one-time{" "}
-          <strong>{SYNEXUS_PRO_TRIAL_DAYS}-day complimentary Next Level grant</strong> with no payment method
-          required. This is a promotional in-app grant, not a payment-provider subscription trial, and it can be used
+          <strong>{SYNEXUS_PRO_TRIAL_DAYS}-day complimentary Starter / Next Level grant</strong> with no payment
+          method required. This is a promotional in-app grant, not a Paddle subscription trial, and it can be used
           only once per account. You will not be charged until you subscribe. If you subscribe after the grant ends,
           your payment method will be charged the plan price shown at checkout and billing will continue on a
-          recurring monthly basis until you cancel.
+          recurring basis until you cancel.
         </p>
       </section>
 
       <section className="legal-section marketing-panel">
         <h2>Cancellation</h2>
         <p>
-          You may cancel Next Level or Pantheon at any time through the billing portal or subscription tools linked
-          from Pulse and your account settings. Cancellation stops future renewals; it does not automatically refund
-          charges already processed. Paid access typically continues until the end of the current billing period unless
-          otherwise stated at checkout or required by law.
+          You may cancel Starter, Pro, or Advanced at any time through the Paddle customer portal or subscription
+          tools linked from Pricing, Pulse, and your account settings. Cancellation stops future renewals; it does
+          not automatically refund charges already processed. Paid access typically continues until the end of the
+          current billing period unless otherwise stated at checkout or required by law.
         </p>
       </section>
 
