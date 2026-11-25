@@ -1,75 +1,77 @@
 import { initializePaddle, type Paddle } from "@paddle/paddle-js";
 import {
   isPaddleCheckoutConfigured,
-  isPaddleLiveCheckoutEnabled,
-  paddlePriceIdForPlan,
-  readPaddlePublicConfig,
-  type PaddlePlanId,
+  requirePaddleClientToken,
+  requirePaddleEnvironment,
 } from "../config/paddle";
+import type { BillingFrequency, TierId } from "../config/pricingTiers";
 import { authHeaders } from "./authSession";
 
 let paddlePromise: Promise<Paddle | undefined> | null = null;
 
-async function getPaddle(): Promise<Paddle | undefined> {
-  const config = readPaddlePublicConfig();
-  if (!config || !isPaddleLiveCheckoutEnabled()) return undefined;
+export async function getPaddleInstance(): Promise<Paddle | undefined> {
   if (!paddlePromise) {
-    paddlePromise = initializePaddle({
-      token: config.clientToken,
-      environment: config.environment,
-    }).catch((error) => {
-      console.error("[paddle] init failed", error);
-      paddlePromise = null;
+    try {
+      const token = requirePaddleClientToken();
+      const environment = requirePaddleEnvironment();
+      paddlePromise = initializePaddle({ token, environment }).catch((error) => {
+        console.error("[paddle] init failed", error);
+        paddlePromise = null;
+        return undefined;
+      });
+    } catch (error) {
+      console.error("[paddle] config error", error);
       return undefined;
-    });
+    }
   }
   return paddlePromise;
 }
 
 export function paddleCheckoutAvailable(): boolean {
-  return isPaddleCheckoutConfigured() && isPaddleLiveCheckoutEnabled();
+  return isPaddleCheckoutConfigured();
 }
 
 export function paddleConfiguredButAwaitingApproval(): boolean {
-  return isPaddleCheckoutConfigured() && !isPaddleLiveCheckoutEnabled();
+  return false;
 }
 
 export type OpenPaddleCheckoutInput = {
-  plan: PaddlePlanId;
-  userId: string;
+  priceId: string;
+  tierId: TierId;
+  frequency: BillingFrequency;
+  userId?: string | null;
   email?: string | null;
-  trialEligible?: boolean;
 };
 
+/** Opens one-page overlay checkout for the exact price id shown on the pricing card. */
 export async function openPaddleCheckout(input: OpenPaddleCheckoutInput): Promise<void> {
-  if (!paddleCheckoutAvailable()) {
-    throw new Error(
-      paddleConfiguredButAwaitingApproval()
-        ? "Paddle is configured but live checkout is awaiting approval."
-        : "Paddle checkout is not configured.",
-    );
-  }
-  const userId = input.userId.trim();
-  if (!userId) throw new Error("Sign in before starting checkout.");
+  const priceId = input.priceId.trim();
+  if (!priceId) throw new Error("Missing Paddle price id.");
 
-  const priceId = paddlePriceIdForPlan(input.plan, input.trialEligible !== false);
-  if (!priceId) throw new Error("Paddle price id is missing for that plan.");
-
-  const paddle = await getPaddle();
-  if (!paddle) throw new Error("Paddle.js failed to load.");
+  const paddle = await getPaddleInstance();
+  if (!paddle) throw new Error("Paddle.js failed to load. Check VITE_PADDLE_ENVIRONMENT and VITE_PADDLE_CLIENT_TOKEN.");
 
   const email = input.email?.trim();
+  const userId = input.userId?.trim();
+  const origin = window.location.origin;
+
   paddle.Checkout.open({
     items: [{ priceId, quantity: 1 }],
-    customer: email ? { email } : undefined,
-    customData: {
-      user_id: userId,
-      tier: input.plan,
-    },
+    ...(email ? { customer: { email } } : {}),
+    ...(userId
+      ? {
+          customData: {
+            user_id: userId,
+            tier: input.tierId,
+            frequency: input.frequency,
+          },
+        }
+      : {}),
     settings: {
       displayMode: "overlay",
+      variant: "one-page",
       theme: "dark",
-      successUrl: `${window.location.origin}/pricing?checkout=success&plan=${input.plan}`,
+      successUrl: `${origin}/welcome`,
     },
   });
 }

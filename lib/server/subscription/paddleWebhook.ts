@@ -88,21 +88,32 @@ function firstPriceId(data: Record<string, unknown> | undefined): string {
   return id.trim();
 }
 
-function canonicalProductId(priceId: string, env: Record<string, string | undefined>): string | null {
-  const next = trim(env.PADDLE_NEXT_LEVEL_PRICE_ID) || trim(env.VITE_PADDLE_NEXT_LEVEL_PRICE_ID);
-  const pantheon = trim(env.PADDLE_PANTHEON_PRICE_ID) || trim(env.VITE_PADDLE_PANTHEON_PRICE_ID);
-  const nextNoTrial = trim(env.PADDLE_NEXT_LEVEL_PRICE_ID_NO_TRIAL) || trim(env.VITE_PADDLE_NEXT_LEVEL_PRICE_ID_NO_TRIAL);
-  const pantheonNoTrial = trim(env.PADDLE_PANTHEON_PRICE_ID_NO_TRIAL) || trim(env.VITE_PADDLE_PANTHEON_PRICE_ID_NO_TRIAL);
-  if ((pantheon && priceId === pantheon) || (pantheonNoTrial && priceId === pantheonNoTrial)) {
-    return "the_pantheon_monthly";
+function envPrice(env: Record<string, string | undefined>, ...keys: string[]): string {
+  for (const key of keys) {
+    const value = trim(env[key]);
+    if (value) return value;
   }
-  if ((next && priceId === next) || (nextNoTrial && priceId === nextNoTrial)) {
-    return "next_level_monthly";
+  return "";
+}
+
+function canonicalProductId(priceId: string, env: Record<string, string | undefined>): string | null {
+  const pairs: Array<[string, string]> = [
+    [envPrice(env, "PADDLE_ADVANCED_MONTH_PRICE_ID", "VITE_PADDLE_ADVANCED_MONTH_PRICE_ID", "PADDLE_PANTHEON_PRICE_ID", "VITE_PADDLE_PANTHEON_PRICE_ID"), "the_pantheon_monthly"],
+    [envPrice(env, "PADDLE_ADVANCED_YEAR_PRICE_ID", "VITE_PADDLE_ADVANCED_YEAR_PRICE_ID"), "the_pantheon_annual"],
+    [envPrice(env, "PADDLE_PRO_MONTH_PRICE_ID", "VITE_PADDLE_PRO_MONTH_PRICE_ID"), "pro_monthly"],
+    [envPrice(env, "PADDLE_PRO_YEAR_PRICE_ID", "VITE_PADDLE_PRO_YEAR_PRICE_ID"), "pro_annual"],
+    [envPrice(env, "PADDLE_STARTER_MONTH_PRICE_ID", "VITE_PADDLE_STARTER_MONTH_PRICE_ID", "PADDLE_NEXT_LEVEL_PRICE_ID", "VITE_PADDLE_NEXT_LEVEL_PRICE_ID"), "starter_monthly"],
+    [envPrice(env, "PADDLE_STARTER_YEAR_PRICE_ID", "VITE_PADDLE_STARTER_YEAR_PRICE_ID"), "starter_annual"],
+    [envPrice(env, "PADDLE_NEXT_LEVEL_PRICE_ID_NO_TRIAL", "VITE_PADDLE_NEXT_LEVEL_PRICE_ID_NO_TRIAL"), "starter_monthly"],
+    [envPrice(env, "PADDLE_PANTHEON_PRICE_ID_NO_TRIAL", "VITE_PADDLE_PANTHEON_PRICE_ID_NO_TRIAL"), "the_pantheon_monthly"],
+  ];
+  for (const [id, product] of pairs) {
+    if (id && id === priceId) return product;
   }
 
   const mapped = productTier(priceId);
   if (mapped === "pantheon") return "the_pantheon_monthly";
-  if (mapped === "next_level") return "next_level_monthly";
+  if (mapped === "next_level") return "starter_monthly";
   return null;
 }
 
@@ -116,8 +127,11 @@ function productFromSubscription(
 
   const custom = customData(data);
   const tier = trim(String(custom.tier ?? custom.membership_tier ?? "")).toLowerCase();
-  if (tier === "pantheon" || tier === "pro") return "the_pantheon_monthly";
-  if (tier === "next_level" || tier === "basic" || tier === "nextlevel") return "next_level_monthly";
+  if (tier === "advanced" || tier === "pantheon") return "the_pantheon_monthly";
+  if (tier === "pro") return "pro_monthly";
+  if (tier === "starter" || tier === "next_level" || tier === "basic" || tier === "nextlevel") {
+    return "starter_monthly";
+  }
 
   const productHint = trim(String(custom.product_id ?? custom.productId ?? ""));
   if (productHint && productTier(productHint)) return productHint;

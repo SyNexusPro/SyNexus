@@ -74,6 +74,7 @@ const ResetPassword = lazy(() =>
   import("./pages/ResetPassword").then((m) => ({ default: m.ResetPassword })),
 );
 const Pricing = lazy(() => import("./pages/Pricing").then((m) => ({ default: m.Pricing })));
+const Welcome = lazy(() => import("./pages/Welcome").then((m) => ({ default: m.Welcome })));
 const RefundPolicy = lazy(() =>
   import("./pages/RefundPolicy").then((m) => ({ default: m.RefundPolicy })),
 );
@@ -177,6 +178,7 @@ export default function App() {
             <Route path="invite" element={<InviteEarn />} />
             <Route path="invite/:code" element={<InviteEarn />} />
             <Route path="pricing" element={<Pricing />} />
+            <Route path="welcome" element={<Welcome />} />
             <Route path="refund-policy" element={<RefundPolicy />} />
             <Route path="terms" element={<Terms />} />
             <Route path="privacy" element={<Privacy />} />

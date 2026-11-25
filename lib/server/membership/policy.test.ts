@@ -34,8 +34,11 @@ test("next level keeps a fee and does not open the social network", () => {
   assert.equal(profilePlanForTier("free", false), "FREE");
   assert.equal(productTier("the_pantheon_monthly"), "pantheon");
   assert.equal(productTier("pantheon_monthly"), "pantheon");
+  assert.equal(productTier("advanced_monthly"), "pantheon");
   assert.equal(productTier("next_level_monthly"), "next_level");
   assert.equal(productTier("next_level_annual"), "next_level");
+  assert.equal(productTier("starter_monthly"), "next_level");
+  assert.equal(productTier("pro_monthly"), "next_level");
 });
 
 test("the complimentary trial is next level and does not open owner tools", () => {

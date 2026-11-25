@@ -17,12 +17,19 @@ interface ImportMetaEnv {
   readonly VITE_AFFILIATE_PAYOUT_URL?: string;
   /** Paddle.js client-side token (public). Never an API key or webhook secret. */
   readonly VITE_PADDLE_CLIENT_TOKEN?: string;
+  /** Required: "sandbox" | "production" — never inferred. */
   readonly VITE_PADDLE_ENVIRONMENT?: string;
+  readonly VITE_PADDLE_STARTER_MONTH_PRICE_ID?: string;
+  readonly VITE_PADDLE_STARTER_YEAR_PRICE_ID?: string;
+  readonly VITE_PADDLE_PRO_MONTH_PRICE_ID?: string;
+  readonly VITE_PADDLE_PRO_YEAR_PRICE_ID?: string;
+  readonly VITE_PADDLE_ADVANCED_MONTH_PRICE_ID?: string;
+  readonly VITE_PADDLE_ADVANCED_YEAR_PRICE_ID?: string;
   readonly VITE_PADDLE_NEXT_LEVEL_PRICE_ID?: string;
   readonly VITE_PADDLE_PANTHEON_PRICE_ID?: string;
   readonly VITE_PADDLE_NEXT_LEVEL_PRICE_ID_NO_TRIAL?: string;
   readonly VITE_PADDLE_PANTHEON_PRICE_ID_NO_TRIAL?: string;
-  /** Must be "true" to open live/production Paddle checkout after your approval. */
+  /** Optional kill switch: "false" disables live overlay. */
   readonly VITE_PADDLE_LIVE_CHECKOUT?: string;
   /** RevenueCat is archived by default. Set "false" only for emergency rollback. */
   readonly VITE_REVENUECAT_ARCHIVED?: string;

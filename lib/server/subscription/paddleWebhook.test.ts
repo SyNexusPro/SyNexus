@@ -63,7 +63,7 @@ test("subscription.created maps into the membership ledger shape", () => {
   if (mapped.kind !== "apply") return;
   assert.equal(mapped.input.eventId, "paddle:evt_sub_1");
   assert.equal(mapped.input.userId, userId);
-  assert.equal(mapped.input.productId, "next_level_monthly");
+  assert.equal(mapped.input.productId, "starter_monthly");
   assert.equal(mapped.input.status, "active");
   assert.equal(mapped.input.expiresAt, "2026-12-15T00:00:00.000Z");
   assert.equal(mapped.input.markTrialUsed, true);

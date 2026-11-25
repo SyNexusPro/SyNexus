@@ -1454,6 +1454,39 @@ html:has(.app-shell--home) #root {
   cursor: pointer;
 }
 
+.pricing-page__toggle {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0 0 1.25rem;
+}
+
+.pricing-page__toggle-btn {
+  flex: 1;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 0.75rem;
+  cursor: pointer;
+}
+
+.pricing-page__toggle-btn.is-active {
+  border-color: var(--border-strong);
+  color: var(--text);
+  background: var(--accent-soft);
+}
+
+.pricing-page__per {
+  margin-left: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 450;
+}
+
+.pricing-page__sheet--featured {
+  outline: 1px solid var(--border-strong);
+}
+
 .pulse-synexus-pro-promo__demo {
   margin-bottom: 10px;
 }

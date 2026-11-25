@@ -11,8 +11,21 @@ export const MEMBERSHIP_FEE_BPS: Record<MembershipTier, number> = {
   pantheon: 0,
 };
 
-const NEXT_LEVEL_PRODUCTS = new Set(["next_level_monthly", "next_level_annual"]);
-const PANTHEON_PRODUCTS = new Set(["the_pantheon_monthly", "pantheon_monthly"]);
+const NEXT_LEVEL_PRODUCTS = new Set([
+  "next_level_monthly",
+  "next_level_annual",
+  "starter_monthly",
+  "starter_annual",
+  "pro_monthly",
+  "pro_annual",
+]);
+const PANTHEON_PRODUCTS = new Set([
+  "the_pantheon_monthly",
+  "the_pantheon_annual",
+  "pantheon_monthly",
+  "advanced_monthly",
+  "advanced_annual",
+]);
 
 export function productTier(storeIdentifier: string | null | undefined): MembershipTier | null {
   const id = storeIdentifier?.trim() ?? "";

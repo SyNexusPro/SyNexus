@@ -38,6 +38,7 @@ import { configureMembershipApi } from "./api/_routes/membership/index";
 import { configureRevenueCatWebhook } from "./api/_routes/revenuecat/webhook";
 import { configurePaddleWebhook } from "./api/_routes/paddle/webhook";
 import { configurePaddlePortal } from "./api/_routes/paddle/portal";
+import { configurePaddleGeo } from "./api/_routes/paddle/geo";
 import { configureTradeApi } from "./api/_routes/trade/quote";
 
 /** Client bundle reads only VITE_* from import.meta.env; Vercel often sets SUPABASE_* without the prefix. */
@@ -104,6 +105,7 @@ export default defineConfig(({ mode }) => {
           configureRevenueCatWebhook(server, env);
           configurePaddleWebhook(server, env);
           configurePaddlePortal(server, env);
+          configurePaddleGeo(server, env);
           configureTradeApi(server, env);
           configureOwnerUnlockApi(server, env);
           configureOwnerBriefApi(server, env);

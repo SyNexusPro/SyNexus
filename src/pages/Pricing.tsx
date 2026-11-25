@@ -1,66 +1,77 @@
-import { useEffect, useState } from "react";
+import { initializePaddle, type Paddle } from "@paddle/paddle-js";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { requirePaddleClientToken, requirePaddleEnvironment } from "../config/paddle";
 import { SYNEXUS_PRICING_PATH } from "../config/proPricing";
-import { SYNEXUS_REFUND_POLICY_PATH } from "../config/refundPolicy";
-import type { PaddlePlanId } from "../config/paddle";
-import { getOperatorAuthSnapshot, subscribeOperatorAuth } from "../lib/operatorAuthStore";
 import {
-  fetchMembership,
-  refreshMembershipAfterRestore,
-  startComplimentaryTrial,
-  type MembershipSnapshot,
-} from "../lib/membershipClient";
+  readPricingTiers,
+  type BillingFrequency,
+  type Tier,
+} from "../config/pricingTiers";
+import { SYNEXUS_REFUND_POLICY_PATH } from "../config/refundPolicy";
+import { PADDLE_COUNTRY_OTHERS, usePaddlePrices } from "../hooks/usePaddlePrices";
 import {
   openPaddleCheckout,
   openPaddleCustomerPortal,
-  paddleCheckoutAvailable,
-  paddleConfiguredButAwaitingApproval,
 } from "../lib/paddleCheckout";
+import {
+  fetchMembership,
+  startComplimentaryTrial,
+  type MembershipSnapshot,
+} from "../lib/membershipClient";
+import { getOperatorAuthSnapshot, subscribeOperatorAuth } from "../lib/operatorAuthStore";
 import { getCurrentUser } from "../lib/supabaseData";
 
-const TIERS: Array<{
-  name: string;
-  plan: PaddlePlanId;
-  price: string;
-  points: string[];
-}> = [
-  {
-    name: "Next Level",
-    plan: "next_level",
-    price: "$10/month",
-    points: [
-      "Hera conversation, market discovery, and token security checks",
-      "Connect any Solana wallet via WalletConnect",
-      "Read-only holdings and advisory token-risk analysis",
-      "30-day free trial when eligible (one trial per account across all plans)",
-      "The members-only social network is not included",
-      "Live in-app swaps stay off until trading is approved",
-    ],
-  },
-  {
-    name: "Pantheon",
-    plan: "pantheon",
-    price: "$20/month",
-    points: [
-      "Everything in Next Level",
-      "Members-only social access",
-      "Premium Hera capabilities",
-      "30-day free trial when eligible (one trial per account across all plans)",
-      "Future zero SyNexus platform trading/swap fees (when trading is enabled), subject to published terms",
-      "Blockchain and third-party venue fees still apply",
-      "Pantheon is a member plan. It does not open owner controls",
-    ],
-  },
-];
-
 export function Pricing() {
-  const paddleReady = paddleCheckoutAvailable();
-  const paddleAwaiting = paddleConfiguredButAwaitingApproval();
+  const [tiers, setTiers] = useState<Tier[]>([]);
+  const [tierError, setTierError] = useState<string | null>(null);
+  const [frequency, setFrequency] = useState<BillingFrequency>("month");
+  const [paddle, setPaddle] = useState<Paddle | undefined>();
+  const [country, setCountry] = useState<string>(PADDLE_COUNTRY_OTHERS);
   const [userId, setUserId] = useState(() => getOperatorAuthSnapshot().userId);
   const [email, setEmail] = useState<string | null>(null);
   const [membership, setMembership] = useState<MembershipSnapshot | null>(null);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [configError, setConfigError] = useState<string | null>(null);
+
+  const { prices, loading, error: priceError } = usePaddlePrices(paddle, country, tiers);
+
+  useEffect(() => {
+    try {
+      setTiers(readPricingTiers());
+      setTierError(null);
+    } catch (error) {
+      setTierError(error instanceof Error ? error.message : "Pricing tiers are not configured.");
+    }
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    try {
+      const token = requirePaddleClientToken();
+      const environment = requirePaddleEnvironment();
+      void initializePaddle({ token, environment }).then((instance) => {
+        if (!cancelled && instance) setPaddle(instance);
+      });
+    } catch (error) {
+      setConfigError(error instanceof Error ? error.message : "Paddle is not configured.");
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    void fetch("/api/paddle/geo", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((body: { country?: string | null }) => {
+        const code = body.country?.trim().toUpperCase();
+        if (code) setCountry(code);
+        else setCountry(PADDLE_COUNTRY_OTHERS);
+      })
+      .catch(() => setCountry(PADDLE_COUNTRY_OTHERS));
+  }, []);
 
   useEffect(() => subscribeOperatorAuth(() => {
     setUserId(getOperatorAuthSnapshot().userId);
@@ -80,25 +91,25 @@ export function Pricing() {
       .catch(() => setMembership(null));
   }, [userId]);
 
-  async function buy(plan: PaddlePlanId) {
+  const frequencyLabel = frequency === "month" ? "month" : "year";
+
+  const sortedTiers = useMemo(() => tiers, [tiers]);
+
+  async function subscribe(tier: Tier) {
     setBusy(true);
     setMessage("");
     try {
-      if (!userId) throw new Error("Sign in before starting checkout.");
-      if (!paddleReady) {
-        throw new Error(
-          paddleAwaiting
-            ? "Paddle live checkout is configured but awaiting your approval flag (VITE_PADDLE_LIVE_CHECKOUT)."
-            : "Web checkout is not available yet.",
-        );
-      }
+      const priceId = tier.priceId[frequency];
+      const formatted = prices[priceId];
+      if (!formatted) throw new Error("Price is still loading. Try again in a moment.");
       await openPaddleCheckout({
-        plan,
+        priceId,
+        tierId: tier.id,
+        frequency,
         userId,
         email,
-        trialEligible: membership?.trialEligible !== false,
       });
-      setMessage("Checkout opened. Membership updates after Paddle confirms the subscription.");
+      setMessage(`Checkout opened for ${tier.name} at ${formatted}.`);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Checkout could not be opened.");
     } finally {
@@ -124,11 +135,9 @@ export function Pricing() {
     setMessage("");
     try {
       await startComplimentaryTrial();
-      const next = await refreshMembershipAfterRestore();
+      setMessage("Your complimentary Next Level grant is active when eligible (one per account).");
+      const next = await fetchMembership();
       setMembership(next);
-      setMessage(
-        "Your 30-day complimentary Next Level grant is active. It is not a store subscription trial, does not renew, does not require a card, and does not include the social network.",
-      );
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "The complimentary grant could not be started.");
     } finally {
@@ -137,65 +146,89 @@ export function Pricing() {
   }
 
   return (
-    <div className="page">
+    <div className="page pricing-page">
       <section className="page__intro">
         <h1 className="page__headline">Pick what fits</h1>
         <p className="page__lede">
-          Next Level ($10/mo) unlocks Hera and market tools. Pantheon ($20/mo) adds the community feed and $0 SyNexus
-          trading fees. Both plans include a 30-day free trial when you are still trial-eligible. Network fees from
-          Solana and other apps still apply.
+          Country-localized prices from Paddle. Subscribe opens a one-page overlay for the exact price shown.
+          Advanced unlocks the members-only social network and zero SyNexus trading fees.
         </p>
-        {paddleAwaiting ? (
-          <p className="page__lede">
-            Paddle credentials are present. Live web checkout stays off until you set{" "}
-            <code>VITE_PADDLE_LIVE_CHECKOUT=true</code> after business eligibility confirmation.
-          </p>
-        ) : null}
       </section>
 
-      {TIERS.map((tier) => (
-        <div className="pulse-card pulse-synexus-pro-wrap pricing-page__sheet" key={tier.name}>
-          <div className="pulse-synexus-pro-promo">
-            <div className="pulse-synexus-pro-promo__honeycomb" aria-hidden />
-            <p className="pulse-synexus-pro-promo__label">{tier.name}</p>
-            <p className="pulse-synexus-pro-promo__price">{tier.price}</p>
-            <ul className="pulse-synexus-pro-promo__bullets">
-              {tier.points.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-            <p className="pulse-synexus-pro-promo__body">
-              Solana network fees and fees charged by other venues are separate. SyNexus does not keep those.
-            </p>
-            <div className="pulse-synexus-pro-promo__cta-wrap">
-              {paddleReady ? (
+      {(configError || tierError) && (
+        <p className="page__lede" role="alert">
+          {configError || tierError}
+        </p>
+      )}
+
+      <div className="pricing-page__toggle" role="group" aria-label="Billing frequency">
+        <button
+          type="button"
+          className={frequency === "month" ? "pricing-page__toggle-btn is-active" : "pricing-page__toggle-btn"}
+          onClick={() => setFrequency("month")}
+        >
+          Monthly
+        </button>
+        <button
+          type="button"
+          className={frequency === "year" ? "pricing-page__toggle-btn is-active" : "pricing-page__toggle-btn"}
+          onClick={() => setFrequency("year")}
+        >
+          Yearly
+        </button>
+      </div>
+
+      {priceError ? (
+        <p className="page__lede" role="alert">
+          {priceError}
+        </p>
+      ) : null}
+
+      {sortedTiers.map((tier) => {
+        const priceId = tier.priceId[frequency];
+        const formatted = prices[priceId];
+        return (
+          <div
+            className={`pulse-card pulse-synexus-pro-wrap pricing-page__sheet${tier.featured ? " pricing-page__sheet--featured" : ""}`}
+            key={tier.id}
+          >
+            <div className="pulse-synexus-pro-promo">
+              <div className="pulse-synexus-pro-promo__honeycomb" aria-hidden />
+              <p className="pulse-synexus-pro-promo__label">{tier.name}</p>
+              <p className="pulse-synexus-pro-promo__price">
+                {loading || !formatted ? "…" : formatted}
+                <span className="pricing-page__per">/{frequencyLabel}</span>
+              </p>
+              <p className="pulse-synexus-pro-promo__body">{tier.description}</p>
+              <ul className="pulse-synexus-pro-promo__bullets">
+                {tier.features.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+              <div className="pulse-synexus-pro-promo__cta-wrap">
                 <button
                   type="button"
                   className="pulse-button--pro pulse-synexus-pro-promo__cta"
-                  disabled={busy}
-                  onClick={() => void buy(tier.plan)}
+                  disabled={busy || loading || !formatted || Boolean(configError || tierError)}
+                  onClick={() => void subscribe(tier)}
                 >
-                  Start {tier.name} — {tier.price}
+                  Subscribe {tier.name}
                 </button>
-              ) : (
-                <p className="pulse-synexus-pro-promo__body">
-                  {paddleAwaiting
-                    ? "Paddle checkout is ready but not live yet."
-                    : "Web checkout is not configured in this build."}
-                </p>
-              )}
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
 
       <section className="marketing-panel pricing-page__links">
-        <button type="button" className="pulse-demo-button" disabled={busy || membership?.trialEligible === false} onClick={() => void trial()}>
-          Try Next Level free for 30 days (no card)
+        <button
+          type="button"
+          className="pulse-demo-button"
+          disabled={busy || membership?.trialEligible === false}
+          onClick={() => void trial()}
+        >
+          Try Starter free for 30 days (no card)
         </button>
-        <p className="page__lede">
-          One free trial per signed-in account across complimentary and Paddle plans. Community access stays Pantheon-only.
-        </p>
         {membership?.manageSubscription ? (
           <button type="button" className="pulse-demo-button" disabled={busy} onClick={() => void manage()}>
             Manage subscription
@@ -209,7 +242,7 @@ export function Pricing() {
           {" · "}
           <Link to="/terms">Terms</Link>
           {" · "}
-          <Link to="/pulse">Pulse &amp; Sentinels</Link>
+          <Link to="/pulse">Pulse</Link>
         </p>
       </section>
     </div>

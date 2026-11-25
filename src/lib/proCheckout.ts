@@ -1,16 +1,14 @@
 import { androidRequiresWebSubscription, openWebSubscription } from "./androidSubscription";
-import {
-  openPaddleCheckout,
-  paddleCheckoutAvailable,
-  paddleConfiguredButAwaitingApproval,
-} from "./paddleCheckout";
+import { openPaddleCheckout, paddleCheckoutAvailable } from "./paddleCheckout";
 import { SYNEXUS_PRICING_PATH } from "../config/proPricing";
+import { readPricingTiers, type BillingFrequency, type TierId } from "../config/pricingTiers";
 
 export type StartProCheckoutInput = {
   userId?: string | null;
   email?: string | null;
-  /** Defaults to pantheon (legacy "PRO"). Use next_level for the entry plan. */
-  plan?: "next_level" | "pantheon";
+  /** Defaults to advanced (top tier / Pantheon). */
+  plan?: TierId | "pantheon" | "next_level";
+  frequency?: BillingFrequency;
   trialEligible?: boolean;
 };
 
@@ -18,9 +16,14 @@ export type StartProCheckoutResult =
   | { ok: true; url: string; openedExternally?: boolean; openedOverlay?: boolean }
   | { ok: false; error: string; needsSignIn?: boolean };
 
+function resolveTierId(plan: StartProCheckoutInput["plan"]): TierId {
+  if (plan === "starter" || plan === "pro" || plan === "advanced") return plan;
+  if (plan === "next_level") return "starter";
+  return "advanced";
+}
+
 /**
- * Opens Paddle overlay when live checkout is enabled; otherwise sends the user to Pricing.
- * RevenueCat paths stay archived and are not used here.
+ * Opens Paddle overlay for the requested tier, or sends the user to Pricing.
  */
 export async function startProCheckout(
   input: StartProCheckoutInput = {},
@@ -30,34 +33,36 @@ export async function startProCheckout(
     return { ok: true, url: "", openedExternally: true };
   }
 
-  const userId = input.userId?.trim();
-  const email = input.email?.trim();
-  const plan = input.plan ?? "pantheon";
+  const tierId = resolveTierId(input.plan);
+  const frequency = input.frequency ?? "month";
 
   if (paddleCheckoutAvailable()) {
-    if (!userId) {
-      return { ok: false, error: "Sign in before starting checkout.", needsSignIn: true };
+    try {
+      const tiers = readPricingTiers();
+      const tier = tiers.find((item) => item.id === tierId) ?? tiers[tiers.length - 1];
+      if (!tier) {
+        return { ok: false, error: "Pricing tiers are not configured." };
+      }
+      await openPaddleCheckout({
+        priceId: tier.priceId[frequency],
+        tierId: tier.id,
+        frequency,
+        userId: input.userId,
+        email: input.email,
+      });
+      return { ok: true, url: "", openedOverlay: true };
+    } catch (error) {
+      return {
+        ok: false,
+        error: error instanceof Error ? error.message : "Checkout could not be opened.",
+        needsSignIn: !input.userId,
+      };
     }
-    await openPaddleCheckout({
-      plan,
-      userId,
-      email,
-      trialEligible: input.trialEligible !== false,
-    });
-    return { ok: true, url: "", openedOverlay: true };
-  }
-
-  if (paddleConfiguredButAwaitingApproval()) {
-    return {
-      ok: false,
-      error:
-        "Paddle is configured but live checkout is awaiting approval (VITE_PADDLE_LIVE_CHECKOUT).",
-    };
   }
 
   return {
     ok: true,
-    url: `${SYNEXUS_PRICING_PATH}?plan=${plan}`,
+    url: `${SYNEXUS_PRICING_PATH}?plan=${tierId}`,
   };
 }
 

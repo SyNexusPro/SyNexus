@@ -18,6 +18,7 @@ const loaders: Record<string, () => Promise<RouteModule>> = {
   "/api/revenuecat/webhook": () => import("./_routes/revenuecat/webhook.js"),
   "/api/paddle/webhook": () => import("./_routes/paddle/webhook.js"),
   "/api/paddle/portal": () => import("./_routes/paddle/portal.js"),
+  "/api/paddle/geo": () => import("./_routes/paddle/geo.js"),
   "/api/trade/quote": () => import("./_routes/trade/quote.js"),
   "/api/trade/swap": () => import("./_routes/trade/quote.js"),
   "/api/dashboard": () => import("./_routes/dashboard.js"),

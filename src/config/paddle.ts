@@ -1,60 +1,68 @@
-/** Public Paddle.js / checkout config (VITE_* only). Never put API keys or webhook secrets here. */
+/** Public Paddle.js config (VITE_* only). Never put API keys or webhook secrets here. */
 
-export type PaddlePlanId = "next_level" | "pantheon";
-
-export type PaddlePublicConfig = {
-  clientToken: string;
-  nextLevelPriceId: string;
-  pantheonPriceId: string;
-  nextLevelPriceIdNoTrial: string | null;
-  pantheonPriceIdNoTrial: string | null;
-  environment: "sandbox" | "production";
-};
+import type { Environments } from "@paddle/paddle-js";
 
 function trim(value: string | undefined): string {
   return (value ?? "").trim();
 }
 
+/**
+ * Fail loudly if the environment var is unset — never silently default to sandbox or live.
+ */
+export function requirePaddleEnvironment(): Environments {
+  const raw = trim(import.meta.env.VITE_PADDLE_ENVIRONMENT as string | undefined).toLowerCase();
+  if (raw === "sandbox" || raw === "production") return raw;
+  throw new Error(
+    'VITE_PADDLE_ENVIRONMENT must be set to "sandbox" or "production" (never inferred).',
+  );
+}
+
+export function requirePaddleClientToken(): string {
+  const token = trim(import.meta.env.VITE_PADDLE_CLIENT_TOKEN as string | undefined);
+  if (!token) {
+    throw new Error("VITE_PADDLE_CLIENT_TOKEN is not set.");
+  }
+  const environment = requirePaddleEnvironment();
+  if (environment === "production" && !token.startsWith("live_")) {
+    throw new Error('Live Paddle requires a client token prefixed with "live_".');
+  }
+  if (environment === "sandbox" && !token.startsWith("test_") && !token.includes("_sdbx_")) {
+    throw new Error("Sandbox Paddle expects a sandbox/test client token.");
+  }
+  return token;
+}
+
+export type PaddlePublicConfig = {
+  clientToken: string;
+  environment: Environments;
+};
+
 export function readPaddlePublicConfig(): PaddlePublicConfig | null {
-  const clientToken = trim(import.meta.env.VITE_PADDLE_CLIENT_TOKEN as string | undefined);
-  const nextLevelPriceId = trim(import.meta.env.VITE_PADDLE_NEXT_LEVEL_PRICE_ID as string | undefined);
-  const pantheonPriceId = trim(import.meta.env.VITE_PADDLE_PANTHEON_PRICE_ID as string | undefined);
-  if (!clientToken || !nextLevelPriceId || !pantheonPriceId) return null;
-  const envHint = trim(import.meta.env.VITE_PADDLE_ENVIRONMENT as string | undefined).toLowerCase();
-  return {
-    clientToken,
-    nextLevelPriceId,
-    pantheonPriceId,
-    nextLevelPriceIdNoTrial: trim(import.meta.env.VITE_PADDLE_NEXT_LEVEL_PRICE_ID_NO_TRIAL as string | undefined) || null,
-    pantheonPriceIdNoTrial: trim(import.meta.env.VITE_PADDLE_PANTHEON_PRICE_ID_NO_TRIAL as string | undefined) || null,
-    environment: envHint === "sandbox" || clientToken.includes("_sdbx_") ? "sandbox" : "production",
-  };
+  try {
+    return {
+      clientToken: requirePaddleClientToken(),
+      environment: requirePaddleEnvironment(),
+    };
+  } catch {
+    return null;
+  }
 }
 
 export function isPaddleCheckoutConfigured(): boolean {
   return readPaddlePublicConfig() !== null;
 }
 
-/**
- * Live/production checkout stays off until you set VITE_PADDLE_LIVE_CHECKOUT=true
- * after Paddle business eligibility + your explicit approval.
- * Sandbox tokens can open checkout without that flag.
- */
+/** @deprecated Prefer requirePaddleEnvironment + requirePaddleClientToken. */
 export function isPaddleLiveCheckoutEnabled(): boolean {
-  const config = readPaddlePublicConfig();
-  if (!config) return false;
-  if (config.environment === "sandbox") return true;
-  const flag = trim(import.meta.env.VITE_PADDLE_LIVE_CHECKOUT as string | undefined).toLowerCase();
-  return flag === "true" || flag === "1" || flag === "yes";
-}
-
-export function paddlePriceIdForPlan(plan: PaddlePlanId, trialEligible: boolean): string | null {
-  const config = readPaddlePublicConfig();
-  if (!config) return null;
-  if (plan === "pantheon") {
-    if (!trialEligible && config.pantheonPriceIdNoTrial) return config.pantheonPriceIdNoTrial;
-    return config.pantheonPriceId;
+  try {
+    const environment = requirePaddleEnvironment();
+    if (environment === "sandbox") return true;
+    const flag = trim(import.meta.env.VITE_PADDLE_LIVE_CHECKOUT as string | undefined).toLowerCase();
+    // Live overlay is allowed when explicitly enabled OR when a live_ token is present
+    // after the operator has set VITE_PADDLE_ENVIRONMENT=production.
+    if (flag === "false" || flag === "0" || flag === "no") return false;
+    return Boolean(requirePaddleClientToken());
+  } catch {
+    return false;
   }
-  if (!trialEligible && config.nextLevelPriceIdNoTrial) return config.nextLevelPriceIdNoTrial;
-  return config.nextLevelPriceId;
 }
